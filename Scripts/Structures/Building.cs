@@ -79,6 +79,7 @@ public class Building : Structure
                     QUANTUM_TRANSMITTER_4_ID,
                     DOCK_ADDON_1_ID,
                     //ARTIFACTS_REPOSITORY_ID,
+                    OBSERVATORY_ID,
                     FUEL_FACILITY_ID
                     };
                 case 5:
@@ -93,7 +94,7 @@ public class Building : Structure
                     //SUPPLIES_FACTORY_5_ID,
                     QUANTUM_ENERGY_TRANSMITTER_5_ID,
                     REACTOR_BLOCK_5_ID,
-                    OBSERVATORY_ID,
+                    
                     MONUMENT_ID
                     };
                         if (Settlement.maxAchievedLevel >= 5)

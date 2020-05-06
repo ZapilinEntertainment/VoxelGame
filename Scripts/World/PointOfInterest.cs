@@ -640,7 +640,7 @@ public class PointOfInterest : MapPoint
         data.AddRange(System.BitConverter.GetBytes(danger)); // 4 - 7
         data.AddRange(System.BitConverter.GetBytes(mysteria)); // 8 - 11
         data.AddRange(System.BitConverter.GetBytes(friendliness)); // 12 - 15
-        data.Add((byte)path);
+        data.Add((byte)path); // 16
         if (challengeArray != null)
         {
             data.Add(1);
@@ -654,7 +654,7 @@ public class PointOfInterest : MapPoint
                 }
             }
         }
-        else data.Add(0);
+        else data.Add(0); // 17
         return data;
     }
     public void Load(System.IO.FileStream fs)
@@ -669,9 +669,7 @@ public class PointOfInterest : MapPoint
         path = (Path)data[16];
         if (data[17] == 1)
         {
-            data = new byte[4];
-            fs.Read(data, 0, data.Length);
-            int size = System.BitConverter.ToInt32(data, 0);
+            int size = fs.ReadByte();
             challengeArray = ChallengeField.Load(fs, size);
         }
     } 

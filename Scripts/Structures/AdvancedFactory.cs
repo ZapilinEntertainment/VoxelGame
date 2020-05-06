@@ -140,6 +140,7 @@ public sealed class AdvancedFactory : Factory
         if (ar == null)
         {
             recipe = AdvancedRecipe.NoRecipe;
+            ar = AdvancedRecipe.NoRecipe;
         }
         else recipe = ar;
         if (recipe != AdvancedRecipe.NoRecipe)

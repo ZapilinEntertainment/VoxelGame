@@ -856,6 +856,14 @@ public sealed class Knowledge
             current.routePoints[i] = System.BitConverter.ToSingle(data, 0);
         }
         //
+        data = new byte[PUZZLECOLORS_COUNT];        
+        fs.Read(data, 0, PUZZLECOLORS_COUNT);
+        current.puzzlePartsCount = new byte[PUZZLECOLORS_COUNT];
+        for (i = 0; i < PUZZLECOLORS_COUNT; i++)
+        {
+            current.puzzlePartsCount[i] = data[i];
+        }
+        //
         var cca = new byte[PUZZLEPARTS_COUNT];
         for (i = 0; i< PUZZLEPARTS_COUNT; i++)
         {

@@ -788,24 +788,24 @@ public static class Localization
             case Language.Russian:
                 switch (ca)
                 {
-                    case LocalizedCrewAction.Ready: return "Команда " + c.name + "готова к приключениям!";
+                    case LocalizedCrewAction.Ready: return "Команда \"" + c.name + "\" готова к приключениям!";
                     case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" не могут завершить миссию и возвращаются.";
                     case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" покинули нас.";
                     case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" завершили миссию";
-                    case LocalizedCrewAction.CannotReachDestination: return "Команда " + '"' + c.name + "\" не может достичь цели и возвращается.";
-                    case LocalizedCrewAction.Returned: return "Команда " + c.name + " вернулась с задания!";
+                    case LocalizedCrewAction.CannotReachDestination: return "Команда \"" + c.name + "\" не может достичь цели и возвращается.";
+                    case LocalizedCrewAction.Returned: return "Команда \"" + c.name + "\" вернулась с задания!";
                     default: return '"' + c.name + "\" просто топчег.";
                 }
             default:
                 {
                     switch (ca)
                     {
-                        case LocalizedCrewAction.Ready: return "Crew " + c.name + "is ready!";
+                        case LocalizedCrewAction.Ready: return "Crew \"" + c.name + "\" is ready!";
                         case LocalizedCrewAction.CannotCompleteMission: return '"' + c.name + "\" cannot complete mission and therefore return.";
                         case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
                         case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
                         case LocalizedCrewAction.CannotReachDestination: return "Crew " + '"' + c.name + "\" cannot reach destination and therefore returning.";
-                        case LocalizedCrewAction.Returned: return "Crew " + c.name + " has returned!";
+                        case LocalizedCrewAction.Returned: return "Crew \"" + c.name + "\" has returned!";
                         default: return '"' + c.name + "\" is da best.";
                     }
                 }

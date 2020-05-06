@@ -823,7 +823,6 @@ public sealed class UISurfacePanelController : UIObserver {
                     {
                         PrepareConstructionPlane();
                     }
-                    /*
                     if (strSize == res | Structure.PlaceInCenter(selectedStructureID)) {                        
                         if (s is IPlanable)
                         {
@@ -833,14 +832,9 @@ public sealed class UISurfacePanelController : UIObserver {
                             {
                                 var sbb = selectedBuildingButton;
                                 UIController.current.Select(p);                                
-                                BuildButton();
-                                SelectBuildingForConstruction(selectedStructureID, sbb);
                             }
-                            else ReturnButton();
-                        }
-                        else   ReturnButton();                        
+                        }                     
                     }
-                    */
                     ReturnButton();
                 }
                 else ReturnButton();

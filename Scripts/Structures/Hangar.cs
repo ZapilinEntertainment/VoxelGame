@@ -6,6 +6,7 @@ public sealed class Hangar : WorkBuilding
     public enum HangarStatus : byte { NoShuttle, ConstructingShuttle, ShuttleInside, ShuttleOnMission}
     public static List<Hangar> hangarsList { get; private set; }    
     public static int listChangesMarkerValue { get; private set; }
+    private static int nextShuttleID = 0;
 
     public bool correctLocation { get; private set; }
     public HangarStatus status { get; private set; }
@@ -65,19 +66,6 @@ public sealed class Hangar : WorkBuilding
                 }
             }
             return NO_SHUTTLE_VALUE;
-        }
-    }
-    private static int GenerateShuttleID()
-    {
-        if (hangarsList.Count == 0) return 1;
-        else
-        {
-            int x = 1;
-            foreach (var h in hangarsList)
-            {
-                if (h.status == HangarStatus.ShuttleInside && h.shuttleID > x) x = h.shuttleID + 1;
-            }
-            return x;
         }
     }
     public static bool OccupyShuttle(int s_id)
@@ -377,10 +365,9 @@ public sealed class Hangar : WorkBuilding
             else workSpeed = 0f;
         }
     }
-
     override protected void LabourResult()
     {
-        shuttleID = GenerateShuttleID();
+        shuttleID = nextShuttleID++;
         status = HangarStatus.ShuttleInside;
         if (workersCount > 0) FreeWorkers();
         workflow = 0f;
@@ -518,6 +505,7 @@ public sealed class Hangar : WorkBuilding
         }
 
         LoadWorkBuildingData(data,STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
+        if (shuttleID >= nextShuttleID) nextShuttleID = shuttleID + 1;
     }  
     #endregion
 }

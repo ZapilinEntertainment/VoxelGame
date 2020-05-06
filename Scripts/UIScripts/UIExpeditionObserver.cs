@@ -116,6 +116,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             if (selectedCrew != null)
             {
                 readyToStart = selectedCrew.atHome;
+                Debug.Log(readyToStart);
                 crewButton.SetActive(true);
             }
             else

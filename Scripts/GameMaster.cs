@@ -418,7 +418,11 @@ public sealed class GameMaster : MonoBehaviour
             if (Input.GetKeyDown("o")) TestMethod();
             if (Input.GetKeyDown("m"))
             {
-                if (colonyController != null) colonyController.AddEnergyCrystals(1000f);
+                if (colonyController != null)
+                {
+                    colonyController.AddEnergyCrystals(1000f);
+                    colonyController.storage.AddResource(ResourceType.Fuel, 1000f);
+                }
             }
             
         }

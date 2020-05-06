@@ -5,6 +5,7 @@ using UnityEngine;
 
 public sealed class QuantumTransmitter : Building {
 	public static List<QuantumTransmitter> transmittersList{get;private set;}
+    private static int nextTransmissionID = 0;
 
     private int transmissionID = NO_TRANSMISSION_VALUE;
     public const int NO_TRANSMISSION_VALUE = -1;
@@ -42,19 +43,6 @@ public sealed class QuantumTransmitter : Building {
             return null;
         }
     }
-    private static int GenerateTransmissionID()
-    {
-        if (transmittersList.Count == 0) return 1;
-        else
-        {
-            int x = 1;
-            foreach (var t in transmittersList)
-            {
-                if (t.transmissionID != NO_TRANSMISSION_VALUE && t.transmissionID > x) x = t.transmissionID; 
-            }
-            return x + 1;
-        }
-    }
     public static void StopTransmission(int x)
     {
         if (x == NO_TRANSMISSION_VALUE) return;
@@ -89,11 +77,13 @@ public sealed class QuantumTransmitter : Building {
     {
         base.SwitchActivityState();
         transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works", isActive & isEnergySupplied);
+        Debug.Log(isEnergySupplied);
     }
 
     public int StartTransmission()
     {
-        transmissionID = GenerateTransmissionID();
+        transmissionID = nextTransmissionID++;
+        SetActivationStatus(true, true);
         return transmissionID;
     } 
 
@@ -122,6 +112,8 @@ public sealed class QuantumTransmitter : Building {
         var data = new byte[4];
         fs.Read(data, 0, 4);
         transmissionID = System.BitConverter.ToInt32(data,0);
+        SetActivationStatus(transmissionID != NO_TRANSMISSION_VALUE, true);
+        if (transmissionID >= nextTransmissionID) nextTransmissionID = transmissionID + 1;
     }
     #endregion
 }
