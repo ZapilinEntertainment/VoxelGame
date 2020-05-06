@@ -7,7 +7,8 @@ using System.Threading;
 public sealed class GlobalMapUI : MonoBehaviour
 {
 #pragma warning disable 0649
-    [SerializeField] private RectTransform mapRect;
+    [SerializeField] private RectTransform mapRect, expeditionFastButtonsPanel;
+    [SerializeField] private Button[] expeditionsFastButtons;
     [SerializeField] private RawImage pointIcon;
     [SerializeField] private Text pointLabel, pointDescription;
     [SerializeField] private Texture sectorsTexture;
@@ -29,7 +30,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 
     private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow, inactiveSectorColor = new Color(1,1,1,0.3f);
     private const float ZOOM_BORDER = 9, DIST_BORDER = 1;
-    private const int SECTORS_TEXTURE_RESOLUTION = 8000;
+    private const int SECTORS_TEXTURE_RESOLUTION = 8000, MAX_EXPEDITIONS_FBUTTONS_COUNT = 20;
 
     //========================== PUBLIC METHODS
     public Transform GetMapCanvas() { return mapCanvas.transform; }
@@ -75,6 +76,25 @@ public sealed class GlobalMapUI : MonoBehaviour
         }        
         PreparePointDescription();
         infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
+    }
+    public void SelectExpedition(int ID)
+    {
+        FlyingExpedition fe;
+        if (mapPoints.Count > 0)
+        {
+            foreach (var p in mapPoints)
+            {
+                if (p.type == MapMarkerType.FlyingExpedition)
+                {
+                    fe = p as FlyingExpedition;
+                    if (fe != null && fe.expedition.ID == ID)
+                    {
+                        SelectPoint(p);
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     public void PreparePointDescription()
@@ -306,6 +326,81 @@ public sealed class GlobalMapUI : MonoBehaviour
                     if (!rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
                 }
                 mapRect.gameObject.SetActive(true);
+                //
+                var elist = Expedition.expeditionsList;
+                c = elist.Count;
+                if (c > 0)
+                {
+                    int i = 0, l = expeditionsFastButtons.Length;
+                    Button b;
+                    Expedition e;
+                    if (c != l)
+                    {
+                        if (c > l)
+                        { //увеличение списка
+                            var nb = new Button[c];
+                            for (; i < l; i++)
+                            {
+                                b = expeditionsFastButtons[i];
+                                b.onClick.RemoveAllListeners();
+                                e = elist[i];
+                                int id = e.ID;
+                                b.onClick.AddListener(() => this.SelectExpedition(id));
+                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                                b.gameObject.SetActive(true);
+                                nb[i] = b;
+                            }
+                            for (; i< c; i++)
+                            {
+                                b = Instantiate(expeditionsFastButtons[0]);
+                                rt = b.GetComponent<RectTransform>();
+                                rt.anchorMin = new Vector2(0f, 0.95f - 0.05f * i);
+                                rt.anchorMax = new Vector2(0f, 1f - i * 0.05f);
+                                rt.anchoredPosition = new Vector2(rt.sizeDelta.x / 2f, 0f);
+                                b.onClick.RemoveAllListeners();
+                                e = elist[i];
+                                int id = e.ID;
+                                b.onClick.AddListener(() => this.SelectExpedition(id));
+                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                                b.gameObject.SetActive(true);
+                                nb[i] = b;
+                            }
+                            expeditionsFastButtons = nb;
+                        }
+                        else
+                        { // сужение списка
+                            for (i = 0 ; i < c; i++)
+                            {
+                                b = expeditionsFastButtons[i];
+                                b.onClick.RemoveAllListeners();
+                                e = elist[i];
+                                int id = e.ID;
+                                b.onClick.AddListener(() => this.SelectExpedition(id));
+                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                                b.gameObject.SetActive(true);
+                            }
+                            for (;i < l; i++)
+                            {
+                                expeditionsFastButtons[i].gameObject.SetActive(false);
+                            }
+                        }                        
+                    }
+                    else
+                    { // просто перезапись
+                        for (i = 0; i < l; i++)
+                        {
+                            b = expeditionsFastButtons[i];
+                            b.onClick.RemoveAllListeners();
+                            e = elist[i];
+                            int id = e.ID;
+                            b.onClick.AddListener(() => this.SelectExpedition(id));
+                            b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                            b.gameObject.SetActive(true);
+                        }
+                    }
+                    expeditionFastButtonsPanel.gameObject.SetActive(true);
+                }
+                else expeditionFastButtonsPanel.gameObject.SetActive(false);
             }
             else
             {
@@ -317,6 +412,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                         mapMarkers.RemoveAt(0);
                     }
                 }
+                expeditionFastButtonsPanel.gameObject.SetActive(false);
             }
 
             RingSector[] sectorsData = globalMap.mapSectors;
