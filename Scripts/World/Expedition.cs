@@ -269,7 +269,12 @@ public sealed class Expedition
         else
         {
             GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Returned, crew));
-            if (crew != null) crew.SetCurrentExpedition(null);
+            if (crew != null)
+            {
+                crew.CountMission(missionCompleted);
+                crew.SetCurrentExpedition(null);
+                crew = null;
+            }
             QuantumTransmitter.StopTransmission(transmissionID);
             Hangar.ReturnShuttle(shuttleID);
             if (destination != null) destination.DeassignExpedition(this);

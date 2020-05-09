@@ -604,7 +604,7 @@ public class Building : Structure
                 break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
                 {
-                    canBePowerSwitched = true;
+                    canBePowerSwitched = true; // for debugging
                     level = 5;
                 }
                 break;
@@ -634,6 +634,7 @@ public class Building : Structure
             case QUANTUM_TRANSMITTER_4_ID:
                 {
                     level = 4;
+                    canBePowerSwitched = true;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
@@ -716,10 +717,10 @@ public class Building : Structure
     }
 
 
-    public void SetActivationStatus(bool x, bool sendRecalculationRequest)
+    virtual public void SetActivationStatus(bool x, bool sendRecalculationRequest)
     {
         bool activityStateChanged = false;
-        if (isActive != x)
+        if (isActive != x )
         {
             activityStateChanged = (isActive & isEnergySupplied) != (x & isEnergySupplied);
             isActive = x;
@@ -728,7 +729,7 @@ public class Building : Structure
         {
             GameMaster.realMaster.colonyController.powerGridRecalculationNeeded = true;
         }
-        if (activityStateChanged) SwitchActivityState();
+       if (activityStateChanged)  SwitchActivityState();
     }
     public void SetEnergySupply(bool x, bool recalculateAfter)
     {
@@ -744,6 +745,7 @@ public class Building : Structure
     virtual protected void SwitchActivityState()
     {
         ChangeRenderersView(isActive & isEnergySupplied);
+        //copy to QuantumTrasmitter.cs
     }
     virtual protected void ChangeRenderersView(bool setOnline)
     {

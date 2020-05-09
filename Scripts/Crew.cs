@@ -178,6 +178,11 @@ public sealed class Crew : MonoBehaviour {
         membersCount++;
         LoseUnity(1f);
     }
+    public void CountMission(bool victory)
+    {
+        missionsParticipated++;
+        if (victory) missionsSuccessed++;
+    }
 
     //system
     public void MarkAsDirty()

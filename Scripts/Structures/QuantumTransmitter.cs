@@ -64,24 +64,33 @@ public sealed class QuantumTransmitter : Building {
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos);
+        SetStructureData(b, pos);
         if (!transmittersList.Contains(this))
         {
             transmissionID = NO_TRANSMISSION_VALUE;
             transmittersList.Add(this);
-        }        
-        SetActivationStatus(false, true);
+        }
+        isActive = false;
+        connectedToPowerGrid = false;
+        SwitchActivityState();
     }
 
+    override public void SetActivationStatus(bool x, bool sendRecalculationRequest)
+    {
+        if (isActive != x)
+        {
+            isActive = x;
+            SwitchActivityState();
+        }
+    }
     protected override void SwitchActivityState()
     {
-        base.SwitchActivityState();
-        transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works", isActive & isEnergySupplied);
-        Debug.Log(isEnergySupplied);
+        ChangeRenderersView(isActive);
+        transform.GetChild(0).GetChild(0).GetComponent<Animator>().SetBool("works", isActive);
     }
 
     public int StartTransmission()
-    {
+    {       
         transmissionID = nextTransmissionID++;
         SetActivationStatus(true, true);
         return transmissionID;

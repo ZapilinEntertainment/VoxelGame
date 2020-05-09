@@ -404,6 +404,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         {
             var cpanel = crewPanel;
             cpanel.gameObject.SetActive(false);
+            /*
             var m = membersPanel;           
             int c = m.childCount;
             if (observingCrew.membersCount == Crew.MAX_MEMBER_COUNT)
@@ -426,6 +427,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                     m.GetChild(i).gameObject.SetActive(false);
                 }
             }
+            */
 
             staminaBar.fillAmount = observingCrew.stamina;
             staminaPercentage.text = ((int)(observingCrew.stamina * 100f)).ToString() + '%';

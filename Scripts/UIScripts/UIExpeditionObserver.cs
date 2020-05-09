@@ -362,16 +362,17 @@ public sealed class UIExpeditionObserver : MonoBehaviour
 
     public void OnCrewValueChanged(int i)
     {
+        
         if (i == 0)
         {
-            selectedCrew = null;
             if (crewButton.activeSelf) crewButton.SetActive(false);
         }
         else
         {
-            selectedCrew = Crew.crewsList[i - 1];
+            selectedCrew = Crew.GetCrewByID(crewsIDs[i]);
             selectedCrew.DrawCrewIcon(crewButton.transform.GetChild(0).GetComponent<RawImage>());
             if (!crewButton.activeSelf) crewButton.SetActive(true);
+            Debug.Log(selectedCrew.name + selectedCrew.atHome.ToString());
         }
     }
     public void OnSuppliesSliderChanged(float f)

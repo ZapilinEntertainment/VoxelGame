@@ -108,6 +108,7 @@ public sealed class GameMaster : MonoBehaviour
     [SerializeField] private GameMode _gameMode;
     [SerializeField] public bool testMode = false;
     [SerializeField] private float _gameSpeed = 1f;
+    [SerializeField] private string savenameToLoad = string.Empty;
     public bool weNeedNoResources { get; private set; }
     public bool generateChunk = true;
     public byte test_size = 100;
@@ -215,6 +216,11 @@ public sealed class GameMaster : MonoBehaviour
             //byte chunksize = gss.chunkSize;
             byte chunksize;
             chunksize = gameStartSettings.chunkSize;
+            if (testMode && savenameToLoad != string.Empty)
+            {
+                gameStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
+                savename = savenameToLoad;
+            }
             if (gameStartSettings.generationMode != ChunkGenerationMode.GameLoading)
             {
                 if (gameStartSettings.generationMode != ChunkGenerationMode.DontGenerate)

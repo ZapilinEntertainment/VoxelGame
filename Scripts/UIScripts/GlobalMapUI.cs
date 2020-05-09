@@ -82,15 +82,37 @@ public sealed class GlobalMapUI : MonoBehaviour
         FlyingExpedition fe;
         if (mapPoints.Count > 0)
         {
-            foreach (var p in mapPoints)
+            var e = Expedition.GetExpeditionByID(ID);
+            if (e != null)
             {
-                if (p.type == MapMarkerType.FlyingExpedition)
+                if (e.stage == Expedition.ExpeditionStage.WayIn | e.stage == Expedition.ExpeditionStage.WayOut)
                 {
-                    fe = p as FlyingExpedition;
-                    if (fe != null && fe.expedition.ID == ID)
+                    foreach (var p in mapPoints)
                     {
-                        SelectPoint(p);
-                        return;
+                        if (p.type == MapMarkerType.FlyingExpedition)
+                        {
+                            fe = p as FlyingExpedition;
+                            if (fe != null && fe.expedition.ID == ID)
+                            {
+                                SelectPoint(p);
+                                return;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (e.stage == Expedition.ExpeditionStage.OnMission)
+                    {
+                        int sid = e.destination.ID;
+                        foreach (var p in mapPoints)
+                        {
+                            if (p.ID == sid)
+                            {
+                                SelectPoint(p);
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -346,13 +368,14 @@ public sealed class GlobalMapUI : MonoBehaviour
                                 e = elist[i];
                                 int id = e.ID;
                                 b.onClick.AddListener(() => this.SelectExpedition(id));
-                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = 
+                                    GlobalMapUI.GetMarkerRect(e.stage == Expedition.ExpeditionStage.OnMission ? e.destination.type : MapMarkerType.FlyingExpedition);
                                 b.gameObject.SetActive(true);
                                 nb[i] = b;
                             }
                             for (; i< c; i++)
                             {
-                                b = Instantiate(expeditionsFastButtons[0]);
+                                b = Instantiate(expeditionsFastButtons[0], expeditionFastButtonsPanel);
                                 rt = b.GetComponent<RectTransform>();
                                 rt.anchorMin = new Vector2(0f, 0.95f - 0.05f * i);
                                 rt.anchorMax = new Vector2(0f, 1f - i * 0.05f);
@@ -376,7 +399,8 @@ public sealed class GlobalMapUI : MonoBehaviour
                                 e = elist[i];
                                 int id = e.ID;
                                 b.onClick.AddListener(() => this.SelectExpedition(id));
-                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
+                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect =
+                                   GlobalMapUI.GetMarkerRect(e.stage == Expedition.ExpeditionStage.OnMission ? e.destination.type : MapMarkerType.FlyingExpedition);
                                 b.gameObject.SetActive(true);
                             }
                             for (;i < l; i++)
