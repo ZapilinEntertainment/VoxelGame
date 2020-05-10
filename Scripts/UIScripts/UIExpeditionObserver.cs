@@ -122,7 +122,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             {
                 readyToStart = false;
                 crewButton.SetActive(false);
-            }     
+            }
             if (!crewDropdown.gameObject.activeSelf)
             {
                 crewDropdown.gameObject.SetActive(true);
@@ -270,6 +270,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         var opts = new List<Dropdown.OptionData>() { };
         if (showingExpedition == null)
         {
+            if (selectedCrew != null && !selectedCrew.atHome) selectedCrew = null;
             crewsIDs = new List<int>() { -1 };
             opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
             var clist = Crew.crewsList;
@@ -298,7 +299,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                         }
                     }
                 }
-                else selectedCrew = clist[0];
+                else selectedCrew = Crew.GetCrewByID(crewsIDs[1]);
                 crewDropdown.interactable = true;
             }
             else
@@ -371,8 +372,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         {
             selectedCrew = Crew.GetCrewByID(crewsIDs[i]);
             selectedCrew.DrawCrewIcon(crewButton.transform.GetChild(0).GetComponent<RawImage>());
-            if (!crewButton.activeSelf) crewButton.SetActive(true);
-            Debug.Log(selectedCrew.name + selectedCrew.atHome.ToString());
+            RedrawWindow();
         }
     }
     public void OnSuppliesSliderChanged(float f)
@@ -413,11 +413,11 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                                 if (workOnMainCanvas)
                                 {
                                     showingExpedition = e;
-                                    RedrawWindow();
-                                    return;
                                 }
                                 else
                                 {
+                                    showingExpedition = null;
+                                    selectedCrew = null;
                                     GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().PreparePointDescription();
                                     gameObject.SetActive(false);
                                 }
@@ -425,9 +425,8 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                             else
                             {
                                 GameLogUI.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.NotEnoughFuel));
-                                RedrawWindow();
-                                return;
                             }
+                            RedrawWindow();
                         }
                     }
                 }

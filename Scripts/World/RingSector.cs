@@ -34,9 +34,7 @@ public sealed class RingSector
         ID = lastFreeID;
         lastFreeID++;
         centralPoint = i_point;
-        centralPoint.SetStability(1f);
         environment = i_environment;
-        i_point.SetStability(1f);
         innerPointsIDs = new Dictionary<byte, int>();
         destroyed = false;
     }

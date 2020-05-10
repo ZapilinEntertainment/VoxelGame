@@ -1243,6 +1243,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 
     public void StopMissionButton()
     {
+        GameMaster.realMaster.globalMap.RemovePoint(observingPoint, false);
         if (observingExpedition != null)
         {
             observingExpedition.EndMission();
@@ -1250,7 +1251,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             observingPoint = null;
             observingCrew = null;
         }
-        gameObject.SetActive(false);
+        gameObject.SetActive(false);        
     }
 
     private void OnEnable()

@@ -251,7 +251,8 @@ public sealed class Expedition
     }
     public void SpendSupplyCrate()
     {
-        if (suppliesCount > 0) suppliesCount --;
+        if (GameMaster.realMaster.weNeedNoResources) return;
+        if ( suppliesCount > 0) suppliesCount --;
     }
 
     public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool onMainCanvas)
