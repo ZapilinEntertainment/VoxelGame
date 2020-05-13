@@ -620,8 +620,35 @@ public class PointOfInterest : MapPoint
 
         //check
         int sz = size - 1;
-        challengeArray[sz, sz].ChangeChallengeType(ChallengeType.ExitTest, 0);
+        challengeArray[sz, sz].ChangeChallengeType(ChallengeType.ExitTest, (byte)(maxDifficulty * (0.3f + 0.3f * friendliness + 0.4f * danger)));
         challengeArray[0, 0] = ChallengeField.emptyField;
+
+        int prevY = 0, ystep;
+        for (int i =1; i < size; i++)
+        {
+            v = Random.value;
+            if (v <= 0.5f) ystep = 1;
+            else
+            {
+                if (v >= 0.8f) ystep = -1;
+                else ystep = 0;
+            }
+            prevY += ystep;
+            if (prevY < 0)
+            {
+                if (Random.value > 0.5f) prevY = 1;
+                else prevY = 0;
+            }
+            else
+            {
+                if (prevY >= size)
+                {
+                    if (Random.value > 0.5f) prevY = sz - 1;
+                    else prevY = sz;
+                }
+            }
+        }
+
         if (challengeArray[sz - 1, sz].IsImpassable() && challengeArray[sz - 1, sz - 1].IsImpassable() && challengeArray[sz, sz - 1].IsImpassable())
         {
             challengeArray[sz - 1, sz - 1] = ChallengeField.emptyField;

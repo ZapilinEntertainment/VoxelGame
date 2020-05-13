@@ -6,11 +6,11 @@ using UnityEngine.UI;
 public sealed class KnowledgeTabUI : MonoBehaviour
 {
     [SerializeField] private GameObject zeroButton;
-    [SerializeField] private Image unsufficientLabel, unsufficientLight, puzzleParts;
+    [SerializeField] private Image unsufficientLabel, unsufficientLight;
     [SerializeField] private Transform holder, infoPanel;
     private Knowledge knowledge;
     private GameObject[] buttons;
-    private readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
+   
     private int lastChMarkerValue;
     private bool unsufficientMarkering = false, prepared = false;
 
@@ -22,25 +22,135 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private Transform blackpartsPanel { get { return infoPanel.GetChild(6); } }
     private Transform whitepartsPanel { get { return infoPanel.GetChild(7); } }
 
-    private static Dictionary<int, Texture> combinedPuzzleParts;
+    private static Dictionary<int, Texture2D> combinedPuzzleParts; // 0 is plain, 1 is pin, 2 is cut
+    private static Texture2D puzzleParts;
+    private static int puzzleTexSize;
 
+    private static readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
     private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), unvisibleColor = new Color(0f, 0f, 0f, 0f);
     private const float DISAPPEAR_SPEED = 1.5f;
+    private const int PLAIN = 0, PIN = 1, CUT = 2;
 
-    public static Texture GetPuzzlePart(int pinmask)
+    public static Texture2D GetPuzzlePart(int pinmask)
     {
-        Texture tx;
-        if (combinedPuzzleParts == null) combinedPuzzleParts = new Dictionary<int, Texture>();
-        else {
-            if (combinedPuzzleParts.TryGetValue(pinmask, out tx)) return tx;         
+        Texture2D tx;
+        if (combinedPuzzleParts == null)
+        {
+            combinedPuzzleParts = new Dictionary<int, Texture2D>();
+            var origin = Resources.Load<Texture2D>("Textures/puzzleParts");
+            int s = Screen.height / 5, s0 = origin.width, s1, x = 0, y = 0;
+            Color[] cls = origin.GetPixels(), ncls = new Color[s0 * s0  / 4];            
+            while (s0 > s)
+            {
+                s1 = s0 / 2;
+                for (; x < s1; x++)
+                {
+                    for (; y < s1; y++)
+                    {
+                        ncls[x * s1 + y] = cls[(2 * x) * s0 + 2 * y];
+                        //+ cls[(2 * x + 1) * s0 + 2 * y]
+                        //    + cls[(2 * x + 1) * s0 + 2 * (y + 1)] + cls[(2 * x) * s0 + 2 * (y + 1)]) / 4f;
+                    }
+                }
+                cls = ncls;
+                s0 = s1;
+            }
+            puzzleParts = new Texture2D(s0, s0, TextureFormat.ARGB32, false);
+            puzzleParts.SetPixels(cls);            
+            puzzleParts.Apply();
+            puzzleTexSize = s0 / 2;
+
+           // puzzleParts = new Texture2D(origin.width, origin.height, TextureFormat.ARGB32, false);
+            //puzzleParts.SetPixels(origin.GetPixels());
+           // puzzleParts.Apply();
+            //puzzleTexSize = origin.width / 2;
         }
+        else
+        {
+            if (combinedPuzzleParts.TryGetValue(pinmask, out tx)) return tx;
+        }
+        //creating
         int upPin = pinmask / 1000, rightPin = (pinmask / 100) % 10,
         downPin = (pinmask / 10) % 10, leftPin = pinmask % 10;
 
-        int sz = Mathf.NextPowerOfTwo(Screen.height / 4);
-        tx = new Texture2D(sz, sz);
-
-        return null;
+        tx = new Texture2D(puzzleTexSize, puzzleTexSize);
+        var clr = INLINE_GetDetail(upPin);
+        //
+        var nclr = INLINE_GetDetail(rightPin);
+        int i = 0, j = 0 ,index, index2;
+        float a;
+        for (i = 0;i < puzzleTexSize; i++)
+        {
+            for (j = 0; j < puzzleTexSize; j++)
+            {
+                index = i * puzzleTexSize + j;
+                index2 = j * puzzleTexSize + i;
+                a = clr[index].a;
+                if (a < 0.1f | a < nclr[index2].a)
+                {
+                    clr[index] = nclr[index2];
+                }
+            }
+        }
+        //
+        
+        nclr = INLINE_GetDetail(downPin);
+        for (i = 0; i < puzzleTexSize; i++)
+        {
+            for (j = 0; j < puzzleTexSize; j++)
+            {
+                index = i * puzzleTexSize + j;
+                index2 = (puzzleTexSize -1 - i) * puzzleTexSize + (puzzleTexSize - 1 - j);
+                a = clr[index].a;
+                if (a < 0.1f | a < nclr[index2].a)
+                {
+                    clr[index] = nclr[index2];
+                }
+            }
+        }
+        //
+        nclr = INLINE_GetDetail(leftPin);
+        for (i = 0; i < puzzleTexSize; i++)
+        {
+            for (j = 0; j < puzzleTexSize; j++)
+            {
+                index = i * puzzleTexSize + j;
+                index2 = (puzzleTexSize -1 - j) * puzzleTexSize + (puzzleTexSize -1 - i);
+                a = clr[index].a;
+                if (a < 0.1f | a < nclr[index2].a)
+                {
+                    clr[index] = nclr[index2];
+                }
+            }
+        }
+        //
+        tx.SetPixels(clr);
+        tx.Apply();
+        combinedPuzzleParts.Add(pinmask, tx);
+        return tx;
+    }
+    private static Color[] INLINE_GetDetail(int code)
+    {
+        int x0, y0;
+        switch (code)
+        {
+            case PIN:
+                x0 = (int)(pinSide.x * puzzleTexSize * 2);
+                y0 = (int)(pinSide.y * puzzleTexSize * 2);
+                break;
+            case CUT:
+                x0 = (int)(cutSide.x * puzzleTexSize * 2);
+                y0 = (int)(cutSide.y * puzzleTexSize * 2);
+                break;
+            default:
+                x0 = (int)(plainSide.x * puzzleTexSize * 2);
+                y0 = (int)(plainSide.y * puzzleTexSize * 2);
+                break;
+        }
+        int szx = x0 + puzzleTexSize, szy = y0 + puzzleTexSize;
+        if (szx > puzzleParts.width) szx = puzzleParts.width;
+        if (szy > puzzleParts.height) szy = puzzleParts.height;
+        return puzzleParts.GetPixels(x0, y0, puzzleTexSize , puzzleTexSize);
     }
 
     public void Prepare(Knowledge kn)
@@ -56,7 +166,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rt.rect.height);
             float xmin, ymin;
             var pps = knowledge.puzzlePins;
-            int row, column;
+            int row, column, pincode;
+            RawImage ri;
             for (int i = 1; i < 64; i++)
             {
                 row = i / 8;
@@ -69,7 +180,15 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 rt.anchorMax = new Vector2(xmin + 0.25f, ymin + 0.25f);
                 rt.offsetMax = Vector2.zero;
                 rt.offsetMin = Vector2.zero;
-                
+
+                pincode = (row == 7 ? PLAIN : (pps[row * 15 + 7 + column] == true ? PIN : CUT)) * 1000 +
+                    (column == 7 ? PLAIN : (pps[row * 15 + column] == true ? PIN : CUT)) * 100 +
+                     (row == 0 ? PLAIN : (pps[(row - 1) * 15 + 7 + column] == true ? CUT : PIN)) * 10 +
+                     (column == 0 ? PLAIN : (pps[row * 15 + column - 1] == false ? PIN : CUT));
+                ri = rt.GetChild(0).GetComponent<RawImage>();
+                ri.texture = GetPuzzlePart(pincode);
+                ri.uvRect = new Rect(0f, 0f, 1f,1f);
+                /*
                 //up
                 rt.GetChild(0).GetComponent<RawImage>().uvRect = (row == 7 ? plainSide : 
                     (pps[row * 15 + 7 + column] == true ? pinSide : cutSide )
@@ -86,13 +205,23 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 rt.GetChild(3).GetComponent<RawImage>().uvRect = (column == 0 ? plainSide :
                     (pps[row * 15 + column - 1] == false ? pinSide : cutSide)
                     );
+                    */
 
                 int f_index = i;
                 rt.GetChild(4).GetComponent<Button>().onClick.AddListener(delegate { this.Click(f_index); } );
                 buttons[i] = rt.gameObject;                
             }
-            zeroButton.transform.GetChild(4).GetComponent<Button>().onClick.AddListener(delegate { this.Click(0); });          
-        
+            // zero button:
+            zeroButton.transform.GetChild(4).GetComponent<Button>().onClick.AddListener(delegate { this.Click(0); });
+            ri = zeroButton.transform.GetChild(0).GetComponent<RawImage>();
+            pincode = (pps[0] == true ? PIN : CUT) * 1000 +
+                    (pps[0] == true ? PIN : CUT) * 100 +
+                     (PLAIN) * 10 +
+                     PLAIN;
+            ri.texture = GetPuzzlePart(pincode);
+            ri.uvRect = new Rect(0f, 0f, 1f, 1f);
+            //
+
             ascensionPanel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.AscensionIcon);
             redpartsPanel.GetChild(0).GetComponent<RawImage>().color = Knowledge.colors[Knowledge.REDCOLOR_CODE];
             greenpartsPanel.GetChild(0).GetComponent<RawImage>().color = Knowledge.colors[Knowledge.GREENCOLOR_CODE];

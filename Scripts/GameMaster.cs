@@ -693,6 +693,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool LoadGame() { return LoadGame("autosave"); }
     public bool LoadGame(string fullname)
     {
+        bool debug_noresource = weNeedNoResources;
         FileStream fs = File.Open(fullname, FileMode.Open);        
         double realHashSum = GetHashSum(fs, true);
         var data = new byte[8];
@@ -860,6 +861,7 @@ public sealed class GameMaster : MonoBehaviour
         print(errorReason);
         SetPause(true);
         fs.Close();
+        if (debug_noresource) weNeedNoResources = true;
         return false;
     }
 
