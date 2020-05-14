@@ -38,22 +38,38 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         {
             combinedPuzzleParts = new Dictionary<int, Texture2D>();
             var origin = Resources.Load<Texture2D>("Textures/puzzleParts");
-            int s = Screen.height / 5, s0 = origin.width, s1, x = 0, y = 0;
-            Color[] cls = origin.GetPixels(), ncls = new Color[s0 * s0  / 4];            
+            int s = Screen.height / 4, s0 = origin.width, s1, x = 0, y = 0;
+            Color[] cls = origin.GetPixels(), ncls;
             while (s0 > s)
             {
                 s1 = s0 / 2;
-                for (; x < s1; x++)
+                if (s1 % 2 != 0) s1 -= 1;
+                ncls = new Color[s1 * s1];
+                for (x = 0; x < s1; x++)
                 {
-                    for (; y < s1; y++)
+                    for (y = 0; y < s1; y++)
                     {
-                        ncls[x * s1 + y] = cls[(2 * x) * s0 + 2 * y];
-                        //+ cls[(2 * x + 1) * s0 + 2 * y]
-                        //    + cls[(2 * x + 1) * s0 + 2 * (y + 1)] + cls[(2 * x) * s0 + 2 * (y + 1)]) / 4f;
+                        ncls[x * s1 + y] =
+                            (cls[(2 * x) * s0 + 2 * y]
+                            + cls[(2 * x + 1) * s0 + 2 * y]
+                            + cls[(2 * x + 1) * s0 + 2 * y + 1]
+                            + cls[(2 * x) * s0 + 2 * y + 1]) / 4f;                         
                     }
                 }
-                cls = ncls;
+                cls = ncls;                
                 s0 = s1;
+            }
+            int ind;
+            float alpha;
+            for (x = 1; x < s0 -1; x++)
+            {
+                for (y = 1; y < s0 - 1; y++)
+                {
+                    ind = x * s0 + y;
+                    alpha = cls[(x - 1) * s0 + y].a + cls[(x + 1) * s0 + y].a + cls[x * s0 + y + 1].a + cls[x * s0 + y - 1].a;
+                    alpha /= 4f;
+                    if (cls[ind].a < alpha) cls[ind].a = alpha;
+                }
             }
             puzzleParts = new Texture2D(s0, s0, TextureFormat.ARGB32, false);
             puzzleParts.SetPixels(cls);            
@@ -74,10 +90,10 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         downPin = (pinmask / 10) % 10, leftPin = pinmask % 10;
 
         tx = new Texture2D(puzzleTexSize, puzzleTexSize);
+        int i = 0, j = 0, index, index2;
         var clr = INLINE_GetDetail(upPin);
         //
-        var nclr = INLINE_GetDetail(rightPin);
-        int i = 0, j = 0 ,index, index2;
+        var nclr = INLINE_GetDetail(rightPin);        
         float a;
         for (i = 0;i < puzzleTexSize; i++)
         {
@@ -86,7 +102,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 index = i * puzzleTexSize + j;
                 index2 = j * puzzleTexSize + i;
                 a = clr[index].a;
-                if (a < 0.1f | a < nclr[index2].a)
+                if (a < nclr[index2].a)
                 {
                     clr[index] = nclr[index2];
                 }
@@ -102,7 +118,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 index = i * puzzleTexSize + j;
                 index2 = (puzzleTexSize -1 - i) * puzzleTexSize + (puzzleTexSize - 1 - j);
                 a = clr[index].a;
-                if (a < 0.1f | a < nclr[index2].a)
+                if ( a < nclr[index2].a)
                 {
                     clr[index] = nclr[index2];
                 }
@@ -117,7 +133,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 index = i * puzzleTexSize + j;
                 index2 = (puzzleTexSize -1 - j) * puzzleTexSize + (puzzleTexSize -1 - i);
                 a = clr[index].a;
-                if (a < 0.1f | a < nclr[index2].a)
+                if ( a < nclr[index2].a)
                 {
                     clr[index] = nclr[index2];
                 }
@@ -208,11 +224,11 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     */
 
                 int f_index = i;
-                rt.GetChild(4).GetComponent<Button>().onClick.AddListener(delegate { this.Click(f_index); } );
+                rt.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate { this.Click(f_index); } );
                 buttons[i] = rt.gameObject;                
             }
             // zero button:
-            zeroButton.transform.GetChild(4).GetComponent<Button>().onClick.AddListener(delegate { this.Click(0); });
+            zeroButton.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate { this.Click(0); });
             ri = zeroButton.transform.GetChild(0).GetComponent<RawImage>();
             pincode = (pps[0] == true ? PIN : CUT) * 1000 +
                     (pps[0] == true ? PIN : CUT) * 100 +
@@ -256,9 +272,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             {
                 bt = buttons[i].transform;
                 bt.GetChild(0).GetComponent<RawImage>().color = colors[code];
-                bt.GetChild(1).GetComponent<RawImage>().color = colors[code];
-                bt.GetChild(2).GetComponent<RawImage>().color = colors[code];
-                bt.GetChild(3).GetComponent<RawImage>().color = colors[code];
                 if (!b.activeSelf) b.SetActive(true);
             }
             else
