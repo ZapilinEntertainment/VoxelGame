@@ -193,7 +193,11 @@ public sealed class Expedition
     /// <returns></returns>
     public bool SectorCollapsingTest() // INDEV
     {
-        return false;
+        return Mathf.Sqrt(crew.TechSkillsRoll() * crew.SecretKnowledgeRoll()) >= 25f;
+    }
+    public bool SuccessfulExitTest()
+    {
+        return crew.SurvivalSkillsRoll() * (0.5f + 0.5f * Random.value) + crew.IntelligenceRoll() * (0.5f + 0.5f * Random.value) >= 30;
     }
 
     public void ChangeTransmissionStatus(bool? x)

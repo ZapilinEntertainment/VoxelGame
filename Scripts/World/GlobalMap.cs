@@ -113,7 +113,7 @@ public sealed class GlobalMap : MonoBehaviour
                     int i = 0;
                     while (i < mapPoints.Count)
                     {
-                        if (mapPoints[i].DestructionTest())
+                        if (!mapPoints[i].DestructionTest())
                         {
                             mapPoints.RemoveAt(i);
                             placeCleared = true;
@@ -243,7 +243,7 @@ public sealed class GlobalMap : MonoBehaviour
                 foreach (var mp in rs.innerPointsIDs)
                 {
                     p = GetMapPointByID(mp.Value);
-                    if (p.DestructionTest()) RemovePoint(p, false);
+                    if (!p.DestructionTest()) RemovePoint(p, false);
                 }
                 rs.innerPointsIDs.Clear();
             }            
@@ -264,7 +264,7 @@ public sealed class GlobalMap : MonoBehaviour
                         x = DefineSectorIndex(mp.angle, mp.ringIndex);
                         if (x == arrayIndex)
                         {
-                            if (mp.DestructionTest()) RemovePoint(mp, true);
+                            if (!mp.DestructionTest()) RemovePoint(mp, true);
                         }
                         i++;
                     }

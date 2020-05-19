@@ -42,17 +42,17 @@ public sealed class Knowledge
     };
     public static readonly float[] STEPVALUES = new float[7] { 10f, 15f, 25f, 50f, 75f, 100f, 125f }; // 400 total
     public const float MAX_RESEARCH_PTS = 400f;
-    public readonly byte[,] routeButtonsIndexes = new byte[8, 7] {
+    public static readonly byte[,] routeButtonsIndexes = new byte[8, 7] {
         {36, 44, 43,51,52,60,59},
         {45, 53,46,54,62,55,63},
         {28,29,37,38,30,31,39 },
-        {21,22, 13,14,15,6,7},
+        {21,22, 13,14,6,15,7},
         {27,19,20,11,12,3,4 },
         {18, 10,17,9,1,8,0},
         {35,34,26,25,33,32,24 },
         {42,50,41,49,57,48,56 }
     };
-    private readonly byte[] blockedCells = new byte[8] { 2, 5, 16, 23, 40, 47, 58, 61 };
+    private static readonly byte[] blockedCells = new byte[8] { 2, 5, 16, 23, 40, 47, 58, 61 };
 
     #region boosting
     //foundation:
@@ -625,6 +625,7 @@ public sealed class Knowledge
         if (current == null) current = new Knowledge();
         return current;
     }
+    public static bool KnowledgePrepared() { return current != null; }
 
     private Knowledge()
     {
@@ -773,8 +774,8 @@ public sealed class Knowledge
     }
     public bool UnblockButton(int i)
     {
+        if (IsButtonUnblocked(i)) return true;
         var colorcode = colorCodesArray[i];
-        if (colorcode == NOCOLOR_CODE) return true;
         if (puzzlePartsCount[colorcode] > 0)
         {
             puzzlePartsCount[colorcode]--;
@@ -783,6 +784,55 @@ public sealed class Knowledge
             return true;
         }
         else return false;
+    }
+    public bool IsButtonUnblocked(int i)
+    {
+        return colorCodesArray[i] == NOCOLOR_CODE;
+    }
+
+    public void AddUnblockedBuildings(byte face, ref List<int> bdlist)
+    {
+        bool surf = face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX;
+        bool side = !surf & (face != Block.DOWN_FACE_INDEX) & (face != Block.CEILING_FACE_INDEX);
+        int index = routeButtonsIndexes[(byte)ResearchRoute.Foundation, STEPS_COUNT - 4];
+        if (IsButtonUnblocked(index)) bdlist.Add(Structure.HOTEL_BLOCK_6_ID);
+        index = routeButtonsIndexes[(byte)ResearchRoute.Foundation, STEPS_COUNT - 3];
+        if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.HOUSING_MAST_6_ID);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 4];
+        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.XSTATION_3_ID);
+        index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 3];
+        if (IsButtonUnblocked(index) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 4];
+        //if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.Engine);
+        index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 3];
+        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.CONNECT_TOWER_6_ID);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 4];
+        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
+        index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 3];
+        //if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CapacitorMast);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Crystal, STEPS_COUNT - 4];
+        //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.Crystalliser);
+        index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 3];
+        //if (IsButtonUnblocked(index) && !surf) bdlist.Add(Structure.CrystalLightingMast);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Monument, STEPS_COUNT - 4];
+        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.MONUMENT_ID);
+        index = routeButtonsIndexes[(byte)ResearchRoute.Monument, STEPS_COUNT - 3];
+        //if (IsButtonUnblocked(index) && !surf &7 !side) bdlist.Add(Structure.Anchhormast);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Blossom, STEPS_COUNT - 4];
+        //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.Gardens);
+        index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 3];
+        //if (IsButtonUnblocked(index) && !surf && !side) bdlist.Add(Structure.HANgingtowermast);
+        //
+        index = routeButtonsIndexes[(byte)ResearchRoute.Pollen, STEPS_COUNT - 4];
+        //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.ResourceFilter);
+        index = routeButtonsIndexes[(byte)ResearchRoute.Pollen, STEPS_COUNT - 3];
+        //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.ProtectorCore);
     }
 
     public void OpenResearchTab()

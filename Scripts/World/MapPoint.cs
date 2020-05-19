@@ -253,40 +253,39 @@ public class MapPoint
         return false;
     }
     /// <summary>
-    /// returns true if point shall dissappear
+    /// returns false if point shall dissappear
     /// </summary>
     /// <returns></returns>
     virtual public bool DestructionTest()
     {
-        if (destroyed) return true;
+        if (destroyed) return false;
         else
         {
-            if (Random.value < stability) return false;
+            if (Random.value < stability) return true;
             else
             {
                 switch (type)
                 {
-                    case MapMarkerType.Unknown: return (Random.value < 0.7f); // or changing!
-                    case MapMarkerType.MyCity: return false;
+                    case MapMarkerType.Unknown: return (Random.value > 0.7f); // or changing!
+                    case MapMarkerType.MyCity: return true;
                     case MapMarkerType.Star: // changing!
-
-                        break;
+                        return true;
                     case MapMarkerType.Station:
-                        return (Random.value > 0.5f);
-                    case MapMarkerType.Wreck: return Random.value > 0.33f;
-                    case MapMarkerType.FlyingExpedition: return true; // flyingExpedition.expedition.sectorCollapsingTest
-                    case MapMarkerType.Island: return Random.value > 0.5f;
-                    case MapMarkerType.SOS: return Random.value > 0.05f;
+                        return (Random.value < 0.5f);
+                    case MapMarkerType.Wreck: return Random.value < 0.33f;
+                    case MapMarkerType.FlyingExpedition: return false; // flyingExpedition.expedition.sectorCollapsingTest
+                    case MapMarkerType.Island: return Random.value < 0.5f;
+                    case MapMarkerType.SOS: return Random.value < 0.05f;
                     case MapMarkerType.Portal:
-                    case MapMarkerType.QuestMark: return true;
-                    case MapMarkerType.Colony: return Random.value > 0.65f;
-                    case MapMarkerType.Wiseman: return (Random.value > 0.85f);
+                    case MapMarkerType.QuestMark: return false;
+                    case MapMarkerType.Colony: return Random.value < 0.65f;
+                    case MapMarkerType.Wiseman: return (Random.value < 0.85f);
                     case MapMarkerType.Wonder: // changing
-                        return true;
+                        return false;
                     case MapMarkerType.Resources: // or changing!
-                        return true;
+                        return false;
                 }
-                return true;
+                return false;
             }
         }
     }

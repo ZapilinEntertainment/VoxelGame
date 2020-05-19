@@ -33,7 +33,7 @@ public sealed class FlyingExpedition : MapPoint {
 
     override public bool DestructionTest()
     {
-        if (expedition == null) return true;
+        if (expedition == null) return false;
         else return expedition.SectorCollapsingTest();
     }
 

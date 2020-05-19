@@ -237,7 +237,42 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             ri.texture = GetPuzzlePart(pincode);
             ri.uvRect = new Rect(0f, 0f, 1f, 1f);
             //
-
+            GameObject blockTechMarker;
+            int index;
+            for (int i =0; i < Knowledge.ROUTES_COUNT; i++)
+            {
+                index = Knowledge.routeButtonsIndexes[i, Knowledge.STEPS_COUNT - 3];
+                if (!knowledge.IsButtonUnblocked(index))
+                {
+                    rt = buttons[index].GetComponent<RectTransform>();
+                    blockTechMarker = new GameObject();
+                    blockTechMarker.transform.parent = rt;
+                    rt = blockTechMarker.AddComponent<RectTransform>();
+                    rt.anchorMin = Vector2.one * 0.4f;
+                    rt.anchorMax = Vector2.one * 0.6f;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    ri = blockTechMarker.AddComponent<RawImage>();
+                    ri.texture = UIController.current.iconsTexture;
+                    ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
+                }
+                index = Knowledge.routeButtonsIndexes[i, Knowledge.STEPS_COUNT - 4];
+                if (!knowledge.IsButtonUnblocked(index))
+                {
+                    rt = buttons[index].GetComponent<RectTransform>();
+                    blockTechMarker = new GameObject();
+                    blockTechMarker.transform.parent = rt;
+                    rt = blockTechMarker.AddComponent<RectTransform>();
+                    rt.anchorMin = Vector2.one * 0.4f;
+                    rt.anchorMax = Vector2.one * 0.6f;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    ri = blockTechMarker.AddComponent<RawImage>();
+                    ri.texture = UIController.current.iconsTexture;
+                    ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
+                }
+            }
+            //
             ascensionPanel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.AscensionIcon);
             redpartsPanel.GetChild(0).GetComponent<RawImage>().color = Knowledge.colors[Knowledge.REDCOLOR_CODE];
             greenpartsPanel.GetChild(0).GetComponent<RawImage>().color = Knowledge.colors[Knowledge.GREENCOLOR_CODE];

@@ -19,12 +19,13 @@ public class Building : Structure
     public static UIBuildingObserver buildingObserver;
     public static int[] GetApplicableBuildingsList(byte i_level, byte face)
     {
+        List<int> bdlist;
         if (face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX)
-        {
+        {            
             switch (i_level)
             {
                 case 1:
-                    return new int[] {
+                    bdlist = new List<int> {
                     WIND_GENERATOR_1_ID,
                     PSYCHOKINECTIC_GEN_ID,
                     STORAGE_1_ID,
@@ -36,9 +37,9 @@ public class Building : Structure
                    // MINE_ID,
                     DOCK_ID
                 };
+                    break;
                 case 2:
-                    return new int[]
-                    {
+                    bdlist = new List<int> {
                     STORAGE_2_ID,
                     //HOUSE_2_ID,
                     FARM_2_ID,
@@ -50,25 +51,23 @@ public class Building : Structure
                     HOSPITAL_2_ID,
                     WORKSHOP_ID
                     };
+                    break;
                 case 3:
                     {
-                        var blist = new List<int>()
-                {
+                        bdlist = new List<int> {
                     FARM_3_ID,
                     LUMBERMILL_3_ID,
                     SMELTERY_3_ID,
                     PLASTICS_FACTORY_3_ID,
                     MINI_GRPH_REACTOR_3_ID,
                     ENERGY_CAPACITOR_2_ID,
-                    XSTATION_3_ID,
                     GRPH_ENRICHER_3_ID
                 };
-                        if (Settlement.maxAchievedLevel >= 3) blist.Insert(0,SETTLEMENT_CENTER_ID);
-                        return blist.ToArray();
+                        if (Settlement.maxAchievedLevel >= 3) bdlist.Insert(0,SETTLEMENT_CENTER_ID);
                     }
+                    break;
                 case 4:
-                    return new int[]
-                    {
+                    bdlist = new List<int> {
                     COVERED_FARM,
                     COVERED_LUMBERMILL,
                     SUPPLIES_FACTORY_4_ID,
@@ -82,63 +81,59 @@ public class Building : Structure
                     OBSERVATORY_ID,
                     FUEL_FACILITY_ID
                     };
+                    break;
                 case 5:
                     {
-                        var blist = new List<int>
-                    {
+                        bdlist = new List<int> {
                     FOUNDATION_BLOCK_5_ID,
                     STORAGE_BLOCK_ID,
                     FARM_BLOCK_ID,
                     LUMBERMILL_BLOCK_ID,
                     SMELTERY_BLOCK_ID,
                     //SUPPLIES_FACTORY_5_ID,
-                    QUANTUM_ENERGY_TRANSMITTER_5_ID,
-                    REACTOR_BLOCK_5_ID,
-                    
-                    MONUMENT_ID
+                    REACTOR_BLOCK_5_ID,                    
+                    SCIENCE_LAB_ID
                     };
                         if (Settlement.maxAchievedLevel >= 5)
                         {
-                            blist.Insert(0, SETTLEMENT_CENTER_ID);
+                            bdlist.Insert(0, SETTLEMENT_CENTER_ID);
                         }
-                        return blist.ToArray();
                     }
+                    break;
                 case 6:
                     {
-                        var blist = new List<int>()
-                {
+                        bdlist = new List<int> {
                     //CONNECT_TOWER_6_ID,
                     //HOTEL_BLOCK_6_ID,
-                    HOUSING_MAST_6_ID,
-                    DOCK_ADDON_2_ID,
+                    //HOUSING_MAST_6_ID,
+                    DOCK_ADDON_2_ID
                     //SWITCH_TOWER_ID,
-                    SCIENCE_LAB_ID
+                    
                 };
                         if (Settlement.maxAchievedLevel >= 6)
                         {                            
                             if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
-                                blist.Insert(2, HOUSE_BLOCK_ID);
+                                bdlist.Insert(2, HOUSE_BLOCK_ID);
                         }
-                        return blist.ToArray();
                     }
-                default: return new int[0];
-            }
+                    break;
+                default: bdlist = new List<int>(); break;
+            }           
         }
         else
         {
             bool bottom = face == Block.DOWN_FACE_INDEX | face == Block.CEILING_FACE_INDEX;
-            List<int>blist;
             switch(i_level)
             {
                 case 1:
-                    blist = new List<int> {
+                    bdlist = new List<int> {
                     STORAGE_1_ID,
                     SMELTERY_1_ID,
                     ENERGY_CAPACITOR_1_ID,
                 };
                     break;
                 case 2:
-                    blist = new List<int>
+                    bdlist = new List<int>
                     {
                     STORAGE_2_ID,
                     SMELTERY_2_ID,
@@ -147,7 +142,7 @@ public class Building : Structure
                     break;
                 case 3:
                     {
-                        blist = new List<int>
+                        bdlist = new List<int>
                 {
                     SMELTERY_3_ID,
                     MINI_GRPH_REACTOR_3_ID,
@@ -155,7 +150,7 @@ public class Building : Structure
                     }
                     break;
                 case 4:
-                    blist = new List<int>
+                    bdlist = new List<int>
                     {
                          COVERED_FARM,
                     COVERED_LUMBERMILL,
@@ -163,7 +158,7 @@ public class Building : Structure
                     };
                     break;
                 case 5:
-                    blist = new List<int>
+                    bdlist = new List<int>
                     {
                     FOUNDATION_BLOCK_5_ID,
                     STORAGE_BLOCK_ID,
@@ -174,17 +169,18 @@ public class Building : Structure
                     };
                     break;
                 case 6:
-                    blist = new List<int>
+                    bdlist = new List<int>
                     {
                         HOUSE_BLOCK_ID
                     };
-                    if (bottom) blist.Add(HOUSING_MAST_6_ID);
+                    if (bottom) bdlist.Add(HOUSING_MAST_6_ID);
                     break;
-                default: blist = new List<int>(); break;
+                default: bdlist = new List<int>(); break;
             }
-            if ( bottom && i_level <= Settlement.maxAchievedLevel) blist.Add(SETTLEMENT_CENTER_ID);
-            return blist.ToArray();
+            if ( bottom && i_level <= Settlement.maxAchievedLevel) bdlist.Add(SETTLEMENT_CENTER_ID);
         }
+        if (i_level == 6 && Knowledge.KnowledgePrepared()) Knowledge.GetCurrent().AddUnblockedBuildings(face, ref bdlist);
+        return bdlist.ToArray();
     }
 
     public const int BUILDING_SERIALIZER_LENGTH = 5;

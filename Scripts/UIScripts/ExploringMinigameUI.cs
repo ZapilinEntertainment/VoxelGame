@@ -685,7 +685,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 case ChallengeType.ExitTest:
                     if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.LocationSuccessExit);
                     observingExpedition.CountMissionAsSuccess();
-                    StopMissionButton();
+                    StopMissionButton(false);
                     return;
                 default:
                     if (!cf.isPassed)
@@ -748,6 +748,16 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 case ChallengeType.TechSkillsTest:
                     {
                         result = observingCrew.TechSkillsRoll();
+                        break;
+                    }
+                case ChallengeType.ExitTest:
+                    {
+                        switch (observingCrew.exploringPath)
+                        {
+                            case Path.TechPath: result = (observingCrew.IntelligenceRoll() + observingCrew.TechSkillsRoll())/2f; break;
+                            case Path.SecretPath: result = (observingCrew.SecretKnowledgeRoll() + observingCrew.PerceptionRoll()) / 2f; break;
+                            default: result = (observingCrew.SurvivalSkillsRoll() + observingCrew.PersistenceRoll()) / 2f; break;
+                        }
                         break;
                     }
             }
@@ -1241,12 +1251,15 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         deckHolder.SetActive(true);
     }
 
-    public void StopMissionButton()
+    public void StopMissionButton(bool check)
     {
         GameMaster.realMaster.globalMap.RemovePoint(observingPoint, false);
         if (observingExpedition != null)
         {
-            observingExpedition.EndMission();
+            if (!check) observingExpedition.EndMission();
+            else {
+                if (!observingExpedition.SuccessfulExitTest()) observingExpedition.Disappear();
+            }
             observingExpedition = null;
             observingPoint = null;
             observingCrew = null;
