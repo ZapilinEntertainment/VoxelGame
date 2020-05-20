@@ -781,6 +781,25 @@ public sealed class Knowledge
             puzzlePartsCount[colorcode]--;
             colorCodesArray[i] = NOCOLOR_CODE;
             changesMarker++;
+            for (int a = 0; a < ROUTES_COUNT; a++)
+            {
+                int index = routeButtonsIndexes[a, STEPS_COUNT - 3];
+                if (i != index)
+                {
+                    index = routeButtonsIndexes[a, STEPS_COUNT - 4];
+                    if (i != index) index = -1;
+                    else index = 0;
+                }
+                else index = 1;
+                if (index != -1)
+                {
+                    if (observer.isActiveAndEnabled)
+                    {
+                        int x = GetBonusStructure((ResearchRoute)a, index);
+                        if (x != -1) observer.UnblockAnnouncement(x);
+                    }
+                }                
+            }
             return true;
         }
         else return false;
@@ -833,6 +852,41 @@ public sealed class Knowledge
         //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.ResourceFilter);
         index = routeButtonsIndexes[(byte)ResearchRoute.Pollen, STEPS_COUNT - 3];
         //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.ProtectorCore);
+
+        //connected with GetBonusStructure
+    }
+    private int GetBonusStructure(ResearchRoute r, int i)
+    {
+        if (i < 0) return -1;
+        switch(r)
+        {
+            case ResearchRoute.Foundation:
+                if (i == 0) return Structure.HOTEL_BLOCK_6_ID;
+                else return Structure.HOUSING_MAST_6_ID;
+            case ResearchRoute.CloudWhale:
+                if (i == 0) return Structure.XSTATION_3_ID;
+                else return Structure.STABILITY_ENFORCER_ID;
+            case ResearchRoute.Engine:
+                if (i == 0) return -1;//Structure.Engine;
+                else return Structure.CONNECT_TOWER_6_ID;
+            case ResearchRoute.Pipes:
+                if (i == 0) return Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID;
+                else return -1;// Structure.CapacitorMast;
+            case ResearchRoute.Crystal:
+                if (i == 0) return -1; //Structure.Crystalliser;
+                else return -1;// crystal lightning mast
+            case ResearchRoute.Monument:
+                if (i == 0) return Structure.MONUMENT_ID;
+                else return -1; // anchormast
+            case ResearchRoute.Blossom:
+                if (i == 0) return -1; // gardens
+                else return -1; //hanging tower mast
+            case ResearchRoute.Pollen:
+                if (i == 0) return -1; // resource filter
+                else return -1; // protector core
+            default: return -1;
+        }
+        //connected with AddUnblockedBuilding
     }
 
     public void OpenResearchTab()

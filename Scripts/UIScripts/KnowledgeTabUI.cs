@@ -8,6 +8,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     [SerializeField] private GameObject zeroButton;
     [SerializeField] private Image unsufficientLabel, unsufficientLight;
     [SerializeField] private Transform holder, infoPanel;
+    [SerializeField] private RectTransform unblockAnnouncePanel;
     private Knowledge knowledge;
     private GameObject[] buttons;
    
@@ -270,6 +271,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     ri = blockTechMarker.AddComponent<RawImage>();
                     ri.texture = UIController.current.iconsTexture;
                     ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
+                    ri.raycastTarget = false;
                 }
             }
             //
@@ -285,6 +287,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             unsufficientLight.gameObject.SetActive(false);
             infoPanel.gameObject.SetActive(true);
             holder.gameObject.SetActive(true);
+
+            unblockAnnouncePanel.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NewBuildingUnblocked);
 
             Redraw();
         }
@@ -433,6 +437,15 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         unsufficientLabel.color = unsufficientColor;
         unsufficientLabel.gameObject.SetActive(true);
         unsufficientMarkering = true;
+    }
+    public void UnblockAnnouncement(int b_id)
+    {
+        unblockAnnouncePanel.GetChild(1).GetComponent<RawImage>().uvRect = Structure.GetTextureRect(b_id);
+        unblockAnnouncePanel.GetChild(2).GetComponent<Text>().text = Localization.GetStructureName(b_id);
+        unblockAnnouncePanel.GetChild(3).gameObject.SetActive(false);
+        unblockAnnouncePanel.GetChild(4).gameObject.SetActive(false);
+        unblockAnnouncePanel.SetAsLastSibling();
+        unblockAnnouncePanel.gameObject.SetActive(true);
     }
 
     private void OnEnable()

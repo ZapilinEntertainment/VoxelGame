@@ -15,7 +15,7 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2472,6 +2472,7 @@ public static class Localization
                         case LocalizedPhrase.GoOnATrip: return "Отправить в путешествие";
                         case LocalizedPhrase.KnowledgePoints: return "Очки Знания";
                         case LocalizedPhrase.MembersCount: return "Число участников";
+                        case LocalizedPhrase.NewBuildingUnblocked: return "Новое здание разблокировано!";
                         case LocalizedPhrase.NoArtifact: return "Нет артефакта"; // у команды
                         case LocalizedPhrase.NoArtifacts: return "У вас нет артефактов"; // в хранилище
                         case LocalizedPhrase.NoCrews: return "Нет готовых команд";
@@ -2542,7 +2543,6 @@ public static class Localization
                         default: return "<...>";
                     }
                 }
-            case Language.English:
             default:
                 {
                     switch (lp)
@@ -2563,6 +2563,7 @@ public static class Localization
                         case LocalizedPhrase.GoOnATrip: return "Go on a trip";
                         case LocalizedPhrase.KnowledgePoints:return "Knowledge points";
                         case LocalizedPhrase.MembersCount: return "Members count";
+                        case LocalizedPhrase.NewBuildingUnblocked: return "New building unblocked!";
                         case LocalizedPhrase.NoArtifact: return "No artifact"; // crew has no artifact
                         case LocalizedPhrase.NoArtifacts: return "You have no artifacts"; // no artifacts in storage
                         case LocalizedPhrase.NoCrews: return "No crews available";

@@ -428,6 +428,14 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     colonyController.AddEnergyCrystals(1000f);
                     colonyController.storage.AddResource(ResourceType.Fuel, 1000f);
+                    var k = Knowledge.GetCurrent();
+                    for (int i = 0; i < 50; i++)
+                    {
+                        k.AddPuzzlePart(Knowledge.GREENCOLOR_CODE);
+                        k.AddPuzzlePart(Knowledge.BLUECOLOR_CODE);
+                        k.AddPuzzlePart(Knowledge.REDCOLOR_CODE);
+                    }
+                    k.AddResearchPoints(Knowledge.ResearchRoute.Foundation, 1000);
                 }
             }
             
