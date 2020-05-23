@@ -67,11 +67,11 @@ public sealed class Knowledge
 
     //order is important! 4 diff conds + 2 build conds + point cond + quest cond
     private enum FoundationRouteBoosters : byte {HappinessBoost, PopulationBoost, SettlementBoost, ImmigrantsBoost, HotelBoost, HousingMastBoost, PointBoost, QuestBoost }
-    private enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, AscensionEngineBoost, PointBoost, QuestBoost}
+    private enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, StabilityEnforcerBooster, PointBoost, QuestBoost}
     private enum EngineRouteBoosters : byte { EnergyBoost, CityMoveBoost,  GearsBoost, FactoryBoost, IslandEngineBoost, ControlCenterBoost, PointBoost, QuestBoost}
     private enum PipesRouteBoosters: byte { FarmsBoost, SizeBoost, FuelBoost, BiomesBoost, QETBoost, CapacitorMastBoost, PointBoost, QuestBoost}
     private enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointsBoost, QuestBoost};
-    public enum MonumentRouteBoosters : byte { MonumentPowerBoost, LifesourceBoost, BiomeBoost, ExpeditionsBoost, MonumentConstructionBoost, AnchorMastBoost, PointBoost, QuestBoost}
+    public enum MonumentRouteBoosters : byte { MonumentAffectionBoost, LifesourceBoost, BiomeBoost, ExpeditionsBoost, MonumentConstructionBoost, AnchorMastBoost, PointBoost, QuestBoost}
     private enum BlossomRouteBoosters : byte { GrasslandsBoost, ArtifactBoost, BiomeBoost, Unknown, GardensBoost, HTowerBoost, PointBoost, QuestBoost}
     public enum PollenRouteBoosters: byte { FlowersBoost, AscensionBoost, CrewAccidentBoost, BiomeBoost, FilterBoost, ProtectorCoreBoost, PointBoost, QuestBoost}
 
@@ -285,7 +285,7 @@ public sealed class Knowledge
                     {
                         CountRouteBonus(MonumentRouteBoosters.MonumentConstructionBoost);
                     }
-                    if (!BoostCounted(MonumentRouteBoosters.MonumentPowerBoost))
+                    if (!BoostCounted(MonumentRouteBoosters.MonumentAffectionBoost))
                     {
                         int count = 0;
                         var blist = GameMaster.realMaster.colonyController.powerGrid;
@@ -299,7 +299,7 @@ public sealed class Knowledge
                                     if (m.affectionPath == Path.TechPath && m.affectionValue > R_M_MONUMENTS_AFFECTION_CONDITION) count++;
                                 }
                             }
-                            if (count > R_M_MONUMENTS_COUNT_COND) CountRouteBonus(MonumentRouteBoosters.MonumentPowerBoost);
+                            if (count > R_M_MONUMENTS_COUNT_COND) CountRouteBonus(MonumentRouteBoosters.MonumentAffectionBoost);
                         }
                     }
                     break;
@@ -887,6 +887,223 @@ public sealed class Knowledge
             default: return -1;
         }
         //connected with AddUnblockedBuilding
+    }
+
+    public Quest GetHelpingQuest()
+    {
+        byte lvl = GameMaster.realMaster.colonyController.hq.level;
+        var rlist = new List<ResearchRoute>();
+        for (int i =0; i < ROUTES_COUNT; i++)
+        {
+            if (routeBonusesMask[i] < 255) rlist.Add((ResearchRoute)i);
+        }
+        if (rlist.Count > 0)
+        {
+            var n = Random.Range(0, rlist.Count);
+            var mlist = new List<byte>();
+            byte mask = routeBonusesMask[n];
+            byte x;
+            switch (rlist[n])
+            {
+                case ResearchRoute.Foundation:
+                    x = (byte)FoundationRouteBoosters.HappinessBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    x = (byte)FoundationRouteBoosters.PopulationBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    x = (byte)FoundationRouteBoosters.ImmigrantsBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    if (lvl >= 4)
+                    {
+                        x = (byte)FoundationRouteBoosters.PointBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 6)
+                        {
+                            x = (byte)FoundationRouteBoosters.SettlementBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)FoundationRouteBoosters.HotelBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)FoundationRouteBoosters.HousingMastBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        }
+                    }
+                    break;
+                case ResearchRoute.CloudWhale:
+                    x = (byte)CloudWhaleRouteBoosters.GrasslandsBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    x = (byte)CloudWhaleRouteBoosters.StreamGensBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    if (lvl >= 4)
+                    {
+                        x = (byte)CloudWhaleRouteBoosters.CrewsBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        x = (byte)CloudWhaleRouteBoosters.ArtifactBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        x = (byte)CloudWhaleRouteBoosters.PointBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 6)
+                        {
+                            x = (byte)CloudWhaleRouteBoosters.XStationBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)CloudWhaleRouteBoosters.StabilityEnforcerBooster;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        }
+                    }
+                    break;
+                case ResearchRoute.Engine:
+                    x = (byte)EngineRouteBoosters.EnergyBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    if (lvl >=2)
+                    {
+                        x = (byte)EngineRouteBoosters.GearsBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 4)
+                        {
+                            x = (byte)EngineRouteBoosters.PointBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            if (lvl >= 5)
+                            {
+                                x = (byte)EngineRouteBoosters.FactoryBoost;
+                                if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                if (lvl >= 6)
+                                {                                    
+                                    x = (byte)EngineRouteBoosters.IslandEngineBoost;
+                                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                    else
+                                    {
+                                        x = (byte)EngineRouteBoosters.CityMoveBoost;
+                                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                    }
+                                    x = (byte)EngineRouteBoosters.ControlCenterBoost;
+                                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                }
+                            }                            
+                        }
+                    }
+                    break;
+                case ResearchRoute.Pipes:                    
+                    if (lvl >= 4)
+                    {
+                        x = (byte)PipesRouteBoosters.FuelBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 4)
+                        {
+                            x = (byte)PipesRouteBoosters.PointBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            if (lvl >= 5)
+                            {
+                                x = (byte)PipesRouteBoosters.FarmsBoost;
+                                if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                if (lvl >= 6)
+                                {
+                                    x = (byte)PipesRouteBoosters.BiomesBoost;
+                                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                    x = (byte)PipesRouteBoosters.QETBoost;
+                                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                    x = (byte)PipesRouteBoosters.CapacitorMastBoost;
+                                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case ResearchRoute.Crystal:
+                    x = (byte)CrystalRouteBoosters.MoneyBoost;
+                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    if (lvl >= 4)
+                    {
+                        x = (byte)CrystalRouteBoosters.PointsBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 6)
+                        {
+                            x = (byte)CrystalRouteBoosters.PinesBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)CrystalRouteBoosters.GCubeBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)CrystalRouteBoosters.BiomeBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)CrystalRouteBoosters.CrystalliserBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)CrystalRouteBoosters.CrystalMastBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        }
+                    }
+                    break;
+                case ResearchRoute.Monument:
+                    if (lvl >= 4)
+                    {
+                        x = (byte)MonumentRouteBoosters.ExpeditionsBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        x = (byte)MonumentRouteBoosters.PointBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 5)
+                        {
+                            x = (byte)MonumentRouteBoosters.MonumentAffectionBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)MonumentRouteBoosters.LifesourceBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            if (lvl >= 6)
+                            {
+                                x = (byte)MonumentRouteBoosters.BiomeBoost;
+                                if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                x = (byte)MonumentRouteBoosters.MonumentConstructionBoost;
+                                if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                                x = (byte)MonumentRouteBoosters.AnchorMastBoost;
+                                if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            }
+                        }
+                    }
+                    break;
+                case ResearchRoute.Blossom:
+                    if (lvl >= 4)
+                    {
+                        x = (byte)BlossomRouteBoosters.PointBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 6)
+                        {
+                            x = (byte)BlossomRouteBoosters.GrasslandsBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)BlossomRouteBoosters.ArtifactBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)BlossomRouteBoosters.BiomeBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)BlossomRouteBoosters.GardensBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)BlossomRouteBoosters.HTowerBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        }
+                    }
+                    break;
+                case ResearchRoute.Pollen:
+                    if (lvl >= 4)
+                    {
+                        x = (byte)PollenRouteBoosters.PointBoost;
+                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        if (lvl >= 6)
+                        {
+                            x = (byte)PollenRouteBoosters.FlowersBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)PollenRouteBoosters.AscensionBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)PollenRouteBoosters.CrewAccidentBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)PollenRouteBoosters.BiomeBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)PollenRouteBoosters.FilterBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            x = (byte)PollenRouteBoosters.ProtectorCoreBoost;
+                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        }
+                    }
+                    break;
+            }
+            if (mlist.Count > 0)
+            {
+                int c = Random.Range(0, mlist.Count);
+                return new Quest((ResearchRoute)rlist[n], (byte)c);
+            }
+            else return null;
+        }
+        return null;
     }
 
     public void OpenResearchTab()

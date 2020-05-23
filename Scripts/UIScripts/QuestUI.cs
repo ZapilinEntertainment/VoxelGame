@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum QuestSection : byte { Progress, One, Two,Three, Four, Five, Six, Seven, Endgame, TotalCount}
+public enum QuestSection : byte { Progress, One, Two,Three, Four, Endgame, Six, Seven, Eight, TotalCount}
 
 public sealed class QuestUI : MonoBehaviour
 {
@@ -278,6 +278,9 @@ public sealed class QuestUI : MonoBehaviour
                         if (mask == 1) q = new Quest(QuestType.Endgame, 1);
                     }
                 }
+                break;
+            default:
+
                 break;
         }
 

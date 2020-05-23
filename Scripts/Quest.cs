@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Endgame, Total
+    System, Progress, Foundation, CloudWhale, Engine, Pipe, Crystal, Monument, Blossom, Pollen, Endgame, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte
@@ -157,6 +157,10 @@ public class Quest
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         Localization.FillProgressQuest(this);
+    }
+    public Quest(Knowledge.ResearchRoute rr, byte subID)
+    {
+
     }
 
     public void CheckQuestConditions()
@@ -564,7 +568,7 @@ public class Quest
                             if (conditionsMet == 2 & hotelFound)
                             {
                                 MakeQuestCompleted();
-                                GameMaster.realMaster.GameOver(GameEndingType.TransportHubVictory);
+                                GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
                             }
                         }
                         break;

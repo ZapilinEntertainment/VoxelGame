@@ -37,7 +37,8 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
 public enum GameMode: byte { Play, Editor, Menu, Cinematic }
-public enum GameEndingType : byte { Default, ColonyLost, TransportHubVictory, ConsumedByReal, ConsumedByLastSector}
+public enum GameEndingType : byte { Default, ColonyLost, ConsumedByReal, ConsumedByLastSector, FoundationRoute,
+    CloudWhaleRoute, EngineRoute, PipesRoute, CrystalRoute, MonumentRoute, BlossomRoute, PollenRoute, HimitsuRoute}
 //dependence - localization
 /// -----------------------------------------------------------------------------
 
@@ -588,7 +589,7 @@ public sealed class GameMaster : MonoBehaviour
         string reason = Localization.GetEndingTitle(endType);
         switch (endType)
         {
-            case GameEndingType.TransportHubVictory:
+            case GameEndingType.FoundationRoute:
                 {
                     Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
                     endpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
