@@ -160,11 +160,43 @@ public class Quest
     }
     public Quest(Knowledge.ResearchRoute rr, byte subID)
     {
-
+        subIndex = subID;
+        int stepsCount = 1;
+        switch (rr)
+        {
+            case Knowledge.ResearchRoute.Foundation:
+                type = QuestType.Foundation;
+                break;
+            case Knowledge.ResearchRoute.CloudWhale:
+                type = QuestType.CloudWhale;
+                break;
+            case Knowledge.ResearchRoute.Engine:
+                type = QuestType.Engine;
+                break;
+            case Knowledge.ResearchRoute.Pipes:
+                type = QuestType.Pipe;
+                break;
+            case Knowledge.ResearchRoute.Crystal:
+                type = QuestType.Crystal;
+                break;
+            case Knowledge.ResearchRoute.Monument:
+                type = QuestType.Monument;
+                break;
+            case Knowledge.ResearchRoute.Pollen:
+                type = QuestType.Pollen;
+                break;
+            case Knowledge.ResearchRoute.Blossom:
+                type = QuestType.Blossom;
+                break;
+        }
+        steps = new string[stepsCount];
+        stepsAddInfo = new string[stepsCount];
+        stepsFinished = new bool[stepsCount];
+        Localization.FillProgressQuest(this);
     }
 
     public void CheckQuestConditions()
-    {
+    {        
         ColonyController colony = GameMaster.realMaster.colonyController;
         switch (type)
         {
@@ -574,8 +606,23 @@ public class Quest
                         break;
                 }
                 break;
+            case QuestType.Foundation:
+                switch ((Knowledge.FoundationRouteBoosters)subIndex)
+                {
+                    case Knowledge.FoundationRouteBoosters.HappinessBoost:
+                        steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%' 
+                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                        break;
+                    case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
+                        steps[0] = "Количество прибывших: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
+                        break;
+                    case Knowledge.FoundationRouteBoosters.PopulationBoost:
+                        steps[0] = "Текущее население: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
+                        break;
+                }
+                break;
         }
-    }
+    }   
 
     public void MakeQuestCompleted()
     {
@@ -788,6 +835,38 @@ public class Quest
                     }
                     break;
                 }
+            case QuestType.Foundation:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.FoundationRoute);
+                break;
+            case QuestType.CloudWhale:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.CloudWhaleRoute);
+                break;
+            case QuestType.Engine:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.EngineRoute);
+                break;
+            case QuestType.Pipe:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.PipesRoute);
+                break;
+            case QuestType.Crystal:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.CrystalRoute);
+                break;
+            case QuestType.Monument:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.MonumentRoute);
+                break;
+            case QuestType.Blossom:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.BlossomRoute);
+                break;
+            case QuestType.Pollen:
+                icon = UIController.current.iconsTexture;
+                iconRect = UIController.GetIconUVRect(Icons.PollenRoute);
+                break;
             default: return;
         }
         if (icon != null)

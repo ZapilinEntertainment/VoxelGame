@@ -7,7 +7,7 @@ public sealed class DockSystem
     public int[] minValueForTrading { get; private set; }
     public bool immigrationEnabled { get; private set; }
     public int immigrationPlan { get; private set; }    
-    private uint immigrantsArrived = 0, emigrantsGone = 0;
+    public uint immigrantsArrived = 0, emigrantsGone = 0;
 
     #region save-load system
     public static void SaveDockSystem(System.IO.FileStream fs)
@@ -106,6 +106,11 @@ public sealed class DockSystem
             current = new DockSystem();
         }
         return current;
+    }
+    public static uint GetImmigrantsTotalCount()
+    {
+        if (current == null) return 0;
+        else return current.immigrantsArrived;
     }
 
     public void HandleShip(Dock d, Ship s, ColonyController colony) {		

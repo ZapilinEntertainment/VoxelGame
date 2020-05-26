@@ -2776,7 +2776,7 @@ public static class Localization
                     switch (endType)
                     {
                         case GameEndingType.ColonyLost: return "И никого не стало.";
-                        case GameEndingType.TransportHubVictory: return "Вы установили прочную связь между вашей колонией и другими Ограниченными Мирами. Благодаря вам, будущее колонии в безопасности. Теперь вы свободны.";
+                        //case GameEndingType.TransportHubVictory: return "Вы установили прочную связь между вашей колонией и другими Ограниченными Мирами. Благодаря вам, будущее колонии в безопасности. Теперь вы свободны.";
                         case GameEndingType.ConsumedByLastSector: return "Ваш остров пропал в Последнем Секторе. Теперь он в безопасности.";
                         case GameEndingType.ConsumedByReal: return "Ваш остров был выброшен обратно в реальный космос и теперь потерян навсегда.";
                         case GameEndingType.Default:
@@ -2790,7 +2790,7 @@ public static class Localization
                     switch (endType)
                     {
                         case GameEndingType.ColonyLost: return "And then there were none."; 
-                        case GameEndingType.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You are free now.";
+                        //case GameEndingType.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You are free now.";
                         case GameEndingType.ConsumedByLastSector: return "Your island has been consumed by the Last Sector. It is in safe now.";
                         case GameEndingType.ConsumedByReal: return "Your island has been pushed back to real space and now it is lost forever.";
                         case GameEndingType.Default:
@@ -3095,6 +3095,57 @@ public static class Localization
                                     break;
                             }
                             break;
+                        case QuestType.Foundation:
+                            {
+                                var colony = GameMaster.realMaster.colonyController;
+                                switch ((Knowledge.FoundationRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.FoundationRouteBoosters.HappinessBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
+                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.HotelBoost:
+                                        {
+                                            q.name = "Путь Основания";
+                                            q.description = "";
+                                            q.steps[0] = GetStructureName(Structure.HOTEL_BLOCK_6_ID) + " построен ";
+                                            break;
+                                        }
+                                    case Knowledge.FoundationRouteBoosters.HousingMastBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = GetStructureName(Structure.HOUSING_MAST_6_ID) + " построена ";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = "Количество прибывших: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.PointBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = "Найти другую Колонию ";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.PopulationBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = "Текущее население: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.QuestBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = "";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.SettlementBoost:
+                                        q.name = "Путь Основания";
+                                        q.description = "";
+                                        q.steps[0] = GetStructureName(Structure.SETTLEMENT_CENTER_ID) + " шестого уровня построен.";
+                                        break;
+                                }
+                                break;
+                            }
                         default: return;
                     }
                 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum QuestSection : byte { Progress, One, Two,Three, Four, Endgame, Six, Seven, Eight, TotalCount}
+public enum QuestSection : byte { Zero, One, Two,Three, Four, Endgame, Six, Seven, Eight, TotalCount}
 
 public sealed class QuestUI : MonoBehaviour
 {
@@ -39,7 +39,7 @@ public sealed class QuestUI : MonoBehaviour
             activeQuests[i] = Quest.NoQuest;
         }
         questAccessMap = new bool[totalCount];
-        questAccessMap[(int)QuestSection.Progress] = true ;
+        CheckQuestsAccessibility();
         questUpdateTimer = QUEST_UPDATE_TIME;
         
         for (int i = 0; i < questButtons.Length; i++)
@@ -230,29 +230,86 @@ public sealed class QuestUI : MonoBehaviour
 
     public void CheckQuestsAccessibility()
     {
-        ColonyController colony = GameMaster.realMaster.colonyController;
-        if (colony == null) return;
-        int i = (int)QuestSection.Progress;
-        if (questAccessMap[i] == false) UnblockQuestPosition(QuestSection.Progress);
-        else
+        questAccessMap[0] = true;
+        questAccessMap[1] = true;
+        questAccessMap[2] = true;  
+        HeadQuarters hq = GameMaster.realMaster.colonyController?.hq;
+        if (hq != null)
         {
-            if (activeQuests[i] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(i));
-        }
-
-        i = (int)QuestSection.Endgame;
-        if (colony.hq.level > 3)
-        {
-            if (questAccessMap[i] == false) UnblockQuestPosition(QuestSection.Endgame);
-            else if (activeQuests[i] != Quest.AwaitingQuest) StartCoroutine(WaitForNewQuest(i));
-        }
-        else
-        {
-            if (questAccessMap[i] == true) {
-                Quest q = activeQuests[i];
-                if (q != Quest.NoQuest & q != Quest.AwaitingQuest) activeQuests[i] = Quest.NoQuest;
-                questAccessMap[i] = false;
+            var lvl = hq.level;
+            if (lvl >= 2)
+            {
+                if (questAccessMap[3] == false) UnblockQuestPosition(QuestSection.Three);
+                else
+                {
+                    if (activeQuests[3] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(3));
+                }
+                if (lvl >= 3)
+                {
+                    if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Four);
+                    else
+                    {
+                        if (activeQuests[4] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(4));
+                    }
+                    if (lvl >= 4)
+                    {
+                        if (questAccessMap[6] == false) UnblockQuestPosition(QuestSection.Six);
+                        else
+                        {
+                            if (activeQuests[6] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(6));
+                        }
+                        if (lvl >= 5)
+                        {
+                            if (questAccessMap[7] == false) UnblockQuestPosition(QuestSection.Seven);
+                            else
+                            {
+                                if (activeQuests[7] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(7));
+                            }
+                            if (lvl >= 6)
+                            {
+                                if (questAccessMap[8] == false) UnblockQuestPosition(QuestSection.Eight);
+                                else
+                                {
+                                    if (activeQuests[8] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(8));
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+        else return;
+            
+    }
+    public Quest FindQuest(Knowledge.ResearchRoute rr, byte subIndex)
+    {
+        Quest q;
+        QuestType qt = QuestType.Total;
+        switch (rr)
+        {
+            case Knowledge.ResearchRoute.Foundation: qt = QuestType.Foundation; break;
+            case Knowledge.ResearchRoute.CloudWhale: qt = QuestType.CloudWhale; break;
+            case Knowledge.ResearchRoute.Engine: qt = QuestType.Engine; break;
+            case Knowledge.ResearchRoute.Pipes: qt = QuestType.Pipe; break;
+            case Knowledge.ResearchRoute.Crystal: qt = QuestType.Crystal; break;
+            case Knowledge.ResearchRoute.Monument: qt = QuestType.Monument; break;
+            case Knowledge.ResearchRoute.Blossom: qt = QuestType.Blossom; break;
+            case Knowledge.ResearchRoute.Pollen: qt = QuestType.Pollen; break;
+        }
+        for (int i = 0; i < activeQuests.Length; i++)
+        {
+            q = activeQuests[i];
+            if (q != Quest.NoQuest)
+            {
+                if (q.type == qt && q.subIndex == subIndex) return q;
+            }
+        }
+        return null;
+    }
+    public void FindAndCompleteQuest(Knowledge.ResearchRoute rr, byte subIndex)
+    {
+        var q = FindQuest(rr, subIndex);
+        q?.MakeQuestCompleted();
     }
 
     public void SetNewQuest(int i)
@@ -265,7 +322,7 @@ public sealed class QuestUI : MonoBehaviour
         // поиск подходящих среди отложенных
         Quest q = Quest.NoQuest;
         switch ((QuestSection)i) {
-            case QuestSection.Progress: q = Quest.GetProgressQuest(); break;
+            case QuestSection.Zero: q = Quest.GetProgressQuest(); break;
             case QuestSection.Endgame:
                 break;
                 uint mask = Quest.questsCompletenessMask[(int)QuestType.Endgame];
@@ -280,7 +337,7 @@ public sealed class QuestUI : MonoBehaviour
                 }
                 break;
             default:
-
+                q = Knowledge.GetCurrent().GetHelpingQuest();
                 break;
         }
 

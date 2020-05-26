@@ -56,23 +56,23 @@ public sealed class Knowledge
 
     #region boosting
     //foundation:
-    private const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
+    public const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
         R_C_MONEY_COND = 5000f, R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f,
         R_P_ASCENSIOND_COND = 0.85f;
-    private const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
+    public const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
         R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4, R_M_MONUMENTS_COUNT_COND = 2, R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND = 30;
     private const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_CREW_LEVEL_COND = 3, 
         POINT_MASK_POSITION = 6, BUILDINGS_MASK = (1 << 4) + (1 << 5), R_P_ISLAND_SIZE_COND = 8;
     private const uint R_F_IMMIGRANTS_COUNT_COND = 1000;
 
     //order is important! 4 diff conds + 2 build conds + point cond + quest cond
-    private enum FoundationRouteBoosters : byte {HappinessBoost, PopulationBoost, SettlementBoost, ImmigrantsBoost, HotelBoost, HousingMastBoost, PointBoost, QuestBoost }
-    private enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, StabilityEnforcerBooster, PointBoost, QuestBoost}
-    private enum EngineRouteBoosters : byte { EnergyBoost, CityMoveBoost,  GearsBoost, FactoryBoost, IslandEngineBoost, ControlCenterBoost, PointBoost, QuestBoost}
-    private enum PipesRouteBoosters: byte { FarmsBoost, SizeBoost, FuelBoost, BiomesBoost, QETBoost, CapacitorMastBoost, PointBoost, QuestBoost}
-    private enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointsBoost, QuestBoost};
+    public enum FoundationRouteBoosters : byte {HappinessBoost, PopulationBoost, SettlementBoost, ImmigrantsBoost, HotelBoost, HousingMastBoost, PointBoost, QuestBoost }
+    public enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, StabilityEnforcerBooster, PointBoost, QuestBoost}
+    public enum EngineRouteBoosters : byte { EnergyBoost, CityMoveBoost,  GearsBoost, FactoryBoost, IslandEngineBoost, ControlCenterBoost, PointBoost, QuestBoost}
+    public enum PipesRouteBoosters: byte { FarmsBoost, SizeBoost, FuelBoost, BiomesBoost, QETBoost, CapacitorMastBoost, PointBoost, QuestBoost}
+    public enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointsBoost, QuestBoost};
     public enum MonumentRouteBoosters : byte { MonumentAffectionBoost, LifesourceBoost, BiomeBoost, ExpeditionsBoost, MonumentConstructionBoost, AnchorMastBoost, PointBoost, QuestBoost}
-    private enum BlossomRouteBoosters : byte { GrasslandsBoost, ArtifactBoost, BiomeBoost, Unknown, GardensBoost, HTowerBoost, PointBoost, QuestBoost}
+    public enum BlossomRouteBoosters : byte { GrasslandsBoost, ArtifactBoost, BiomeBoost, Unknown, GardensBoost, HTowerBoost, PointBoost, QuestBoost}
     public enum PollenRouteBoosters: byte { FlowersBoost, AscensionBoost, CrewAccidentBoost, BiomeBoost, FilterBoost, ProtectorCoreBoost, PointBoost, QuestBoost}
 
     private void SetSubscriptions()
@@ -232,6 +232,8 @@ public sealed class Knowledge
             mask &= b;
         }
         if ((mask & (1 << POINT_MASK_POSITION)) != 0) GameMaster.realMaster.globalMap.pointsExploringEvent -= PointCheck;
+
+        // DEPENDENCY - Localization.FillQuest
     }
     private void BuildingConstructionCheck(Structure s)
     {
@@ -603,6 +605,7 @@ public sealed class Knowledge
         {
             routeBonusesMask[routeIndex] += mask;
             mask = routeBonusesMask[routeIndex];
+            QuestUI.current?.FindAndCompleteQuest(rr, boosterIndex);
             byte bonusIndex = 0;
             if ((mask & 1) != 0) bonusIndex++;
             if ((mask & 2) != 0) bonusIndex++;
@@ -618,6 +621,8 @@ public sealed class Knowledge
         }
         else return false;
     }
+
+    //dependence : Localization.FillQuest
     #endregion   
 
     public static Knowledge GetCurrent()
@@ -900,10 +905,11 @@ public sealed class Knowledge
         if (rlist.Count > 0)
         {
             var n = Random.Range(0, rlist.Count);
+            ResearchRoute rr = rlist[n];
             var mlist = new List<byte>();
             byte mask = routeBonusesMask[n];
             byte x;
-            switch (rlist[n])
+            switch (rr)
             {
                 case ResearchRoute.Foundation:
                     x = (byte)FoundationRouteBoosters.HappinessBoost;
@@ -1098,12 +1104,13 @@ public sealed class Knowledge
             }
             if (mlist.Count > 0)
             {
-                int c = Random.Range(0, mlist.Count);
-                return new Quest((ResearchRoute)rlist[n], (byte)c);
+                byte c = (byte)Random.Range(0, mlist.Count);
+                if (QuestUI.current.FindQuest(rr, c) == null) return new Quest(rr, c);
+                else return Quest.NoQuest;
             }
-            else return null;
+            else return Quest.NoQuest;
         }
-        return null;
+        return Quest.NoQuest;
     }
 
     public void OpenResearchTab()
