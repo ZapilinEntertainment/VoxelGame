@@ -9,6 +9,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     [SerializeField] private Image unsufficientLabel, unsufficientLight;
     [SerializeField] private Transform holder, infoPanel;
     [SerializeField] private RectTransform unblockAnnouncePanel;
+    [SerializeField] private RectTransform[] routeBackgrounds;
     private Knowledge knowledge;
     private GameObject[] buttons;
    
@@ -303,7 +304,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         GameObject b;
         Transform bt;
         byte code;
-        for (int i =0; i < 64; i++)
+        int i = 0;
+        for (; i < 64; i++)
         {
             code = carray[i];
             b = buttons[i];            
@@ -346,6 +348,45 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         else
         {
             if (t.gameObject.activeSelf) t.gameObject.SetActive(false);
+        }
+
+        var cca = knowledge.colorCodesArray;
+        var ia = Knowledge.routeButtonsIndexes;
+        bool unblocked;
+        var nocode = Knowledge.NOCOLOR_CODE;
+        for (i = 0; i< Knowledge.ROUTES_COUNT; i++)
+        {
+            unblocked = true;
+            for (int j = 0; j < Knowledge.STEPS_COUNT; j++)
+            {
+                if (cca[ia[i,j]] != nocode)
+                {
+                    unblocked = false;
+                    break;
+                }
+            }
+            if (unblocked)
+            {
+                var g = new GameObject();
+                RectTransform eqButton = g.AddComponent<RectTransform>();
+                eqButton.transform.parent = routeBackgrounds[i].transform;
+                eqButton.anchorMax = Vector2.zero;
+                eqButton.anchorMin = Vector2.zero;
+                eqButton.localPosition = Vector3.zero;
+                float s = Screen.height / 10f;
+                eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, s);
+                eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, s);
+                var ri = g.AddComponent<RawImage>();
+                ri.texture = UIController.current.iconsTexture;
+                ri.uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
+                var btn = g.AddComponent<Button>();
+                byte index = (byte)i;
+                btn.onClick.AddListener(() => GameLogUI.EnableDecisionWindow(
+                    Localization.GetPhrase(LocalizedPhrase.Ask_StartFinalQuest),
+                    () => QuestUI.current.StartEndQuest(index), Localization.GetWord(LocalizedWord.Yes),
+                    GameLogUI.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
+                    ));
+            }
         }
 
         lastChMarkerValue = knowledge.changesMarker;

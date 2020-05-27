@@ -1246,6 +1246,15 @@ MonoBehaviour:
   holder: {fileID: 885636901101809487}
   infoPanel: {fileID: 1948518255911250127}
   unblockAnnouncePanel: {fileID: 5620506767354914291}
+  routeBackgrounds:
+  - {fileID: 473626422564471639}
+  - {fileID: 7347514706185645562}
+  - {fileID: 8015477930174319320}
+  - {fileID: 8104022201468633611}
+  - {fileID: 3197800939898493761}
+  - {fileID: 774774924215858336}
+  - {fileID: 3545753888431888038}
+  - {fileID: 8538016399695128966}
 --- !u!1 &3054122751848140227
 GameObject:
   m_ObjectHideFlags: 0

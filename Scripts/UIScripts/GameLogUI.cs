@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameLogUI : MonoBehaviour {
+public sealed class GameLogUI : MonoBehaviour {
 #pragma warning disable 0649
     [SerializeField] private GameObject logButton,logWindow, lastMessagePanel, blockingMask, decisionPanel, decisionLeftButton, 
         decisionRightButton,decisionMonoButton, importantAnnouncePanel;
@@ -54,10 +54,10 @@ public class GameLogUI : MonoBehaviour {
         if (current == null) InitializeCurrent();
         current.PrepareDecisionWindow(monoaction,text);
     }
-    public static void EnableDecisionWindow(DecisionAction leftDecision, DecisionAction rightDecision, string text)
+    public static void EnableDecisionWindow(string question, DecisionAction leftDecision, string leftChoice, DecisionAction rightDecision, string rightChoice )
     {
         if (current == null) InitializeCurrent();
-        current.PrepareDecisionWindow(leftDecision, rightDecision,text);
+        current.PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
     }
 
     private static void InitializeCurrent()
@@ -71,6 +71,10 @@ public class GameLogUI : MonoBehaviour {
         {
             if (current.logWindow.activeSelf) current.LogButton();
         }
+    }
+    public static void DisableDecisionPanel()
+    {
+        current?.CloseDecisionPanel();
     }
     public static void ChangeVisibility(bool x) { if (current != null) current.gameObject.SetActive(x); }
     // =====================
@@ -167,11 +171,13 @@ public class GameLogUI : MonoBehaviour {
         decisionMonoButton.SetActive(true);
         decisionPanel.SetActive(true);
     }
-    private void PrepareDecisionWindow(DecisionAction leftDecision, DecisionAction rightDecision, string text)
+    private void PrepareDecisionWindow(string question, DecisionAction leftDecision, string leftChoice, DecisionAction rightDecision, string rightChoice)
     {
         blockingMask.SetActive(true);
-        decisionWindowText.text = text;
+        decisionWindowText.text = question;
+        decisionRightButton.GetComponent<Text>().text = rightChoice;
         decisionRightButton.SetActive(true);
+        decisionLeftButton.GetComponent<Text>().text = leftChoice;
         decisionLeftButton.SetActive(true);
         decisionMonoButton.SetActive(false);
         decisionPanel.SetActive(true);

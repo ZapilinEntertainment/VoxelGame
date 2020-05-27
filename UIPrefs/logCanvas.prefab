@@ -1575,7 +1575,7 @@ GameObject:
   - component: {fileID: 114662620064915936}
   - component: {fileID: 114478584704139738}
   m_Layer: 5
-  m_Name: confirmButton
+  m_Name: leftButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2429,7 +2429,7 @@ GameObject:
   - component: {fileID: 114647749586479276}
   - component: {fileID: 114609997713812658}
   m_Layer: 5
-  m_Name: declineButton
+  m_Name: rightButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

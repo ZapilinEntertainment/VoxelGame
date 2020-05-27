@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum QuestSection : byte { Zero, One, Two,Three, Four, Endgame, Six, Seven, Eight, TotalCount}
+public enum QuestSection : byte { Zero, One, Two,Three, Endgame, Five, Six, Seven, Eight, TotalCount}
 
 public sealed class QuestUI : MonoBehaviour
 {
@@ -246,7 +246,7 @@ public sealed class QuestUI : MonoBehaviour
                 }
                 if (lvl >= 3)
                 {
-                    if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Four);
+                    if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Five);
                     else
                     {
                         if (activeQuests[4] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(4));
@@ -355,6 +355,19 @@ public sealed class QuestUI : MonoBehaviour
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newQuestAvailable);
+    }
+    public void StartEndQuest(byte routeIndex)
+    {
+        int endIndex = (int)QuestType.Endgame;
+        if (activeQuests[endIndex] != Quest.NoQuest)
+        {
+            activeQuests[endIndex] = new Quest(QuestType.Endgame, routeIndex);
+            questAccessMap[endIndex] = true;
+        }
+        else
+        {
+            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.AlreadyHaveEndquest));
+        }
     }
     private void ReturnToQuestList()
     {

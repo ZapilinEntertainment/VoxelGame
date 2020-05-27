@@ -4,7 +4,7 @@ public enum Language : ushort { English, Russian }; // menuUI - options preparin
 public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
-    Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
+    Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return,
     Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills
 };
@@ -15,7 +15,7 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -25,7 +25,8 @@ public enum LocalizationActionLabels : ushort
 public enum GameAnnouncements : ushort
 {
     NotEnoughResources, NotEnoughEnergyCrystals, GameSaved, GameLoaded, SavingFailed, LoadingFailed, NewQuestAvailable, GamePaused,
-    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound, CrewsLimitReached
+    GameUnpaused, StorageOverloaded, ActionError, ShipArrived, NotEnoughFood, SetLandingPoint, IslandCollapsing, NewObjectFound, CrewsLimitReached,
+    AlreadyHaveEndquest
 };
 public enum LocalizedTutorialHint : byte { Landing }
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
@@ -558,6 +559,7 @@ public static class Localization
                 {
                     switch (announce)
                     {
+                        case GameAnnouncements.AlreadyHaveEndquest: return "Другой финальный квест уже выполняется";
                         case GameAnnouncements.NotEnoughResources: return "Недостаточно ресурсов";
                         case GameAnnouncements.NotEnoughEnergyCrystals: return "Недостаточно энергокристаллов";
                         case GameAnnouncements.NotEnoughFood: return "Нехватка продуктов!";
@@ -583,6 +585,7 @@ public static class Localization
                 {
                     switch (announce)
                     {
+                        case GameAnnouncements.AlreadyHaveEndquest: return "Another endquest already in action";
                         case GameAnnouncements.NotEnoughResources: return "Not enough resources";
                         case GameAnnouncements.NotEnoughEnergyCrystals: return "Not enough energy crystals";
                         case GameAnnouncements.NotEnoughFood: return "Not enough food!";
@@ -2286,6 +2289,7 @@ public static class Localization
                         case LocalizedWord.Launch: return "Запустить";
                         case LocalizedWord.Level: return "уровень"; // building technology level
                         case LocalizedWord.Mission: return "Миссия";
+                        case LocalizedWord.No: return "Нет";
                         case LocalizedWord.Offline: return "Не подключено"; // out of power		
                         case LocalizedWord.Owner: return "Владелец";
                         case LocalizedWord.Pass: return "Пройти";
@@ -2373,6 +2377,7 @@ public static class Localization
                         case LocalizedWord.Launch: return "Launch";
                         case LocalizedWord.Level: return "level"; // building technology level
                         case LocalizedWord.Mission: return "Mission";
+                        case LocalizedWord.No: return "No";
                         case LocalizedWord.Offline: return "offline"; // out of power	
                         case LocalizedWord.Owner: return "Owner"; // shuttle owner
                         case LocalizedWord.Pass: return "Pass";
@@ -2460,6 +2465,8 @@ public static class Localization
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Тип воздействия не совпадает";
                         case LocalizedPhrase.ArtifactNotResearched: return "Артефакт не изучен";
                         case LocalizedPhrase.AscensionLevel: return "Уровень Возвышения";
+                        case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Снести все пересекающиеся здания?";
+                        case LocalizedPhrase.Ask_StartFinalQuest: return "Начать финальный квест пути?";
                         case LocalizedPhrase.ClearSlot: return "< Очистить слот >";
                         case LocalizedPhrase.ConnectionOK: return "Есть связь";
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
@@ -2520,7 +2527,7 @@ public static class Localization
                         case LocalizedPhrase.CreateNewSave: return "Создать новое сохранение";
                         case LocalizedPhrase.LODdistance: return "Дистанция уровня детализации";
                         case LocalizedPhrase.GraphicQuality: return "Качество графики";
-                        case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Снести все пересекающиеся здания?";
+                        
                         case LocalizedPhrase.MakeSurface: return "Сделать поверхность";
                         case LocalizedPhrase.BufferOverflow: return "Буфер переполнен"; // factory resource buffer overflowed
                         case LocalizedPhrase.NoEnergySupply: return "Нет энергии";
@@ -2551,6 +2558,8 @@ public static class Localization
                         case LocalizedPhrase.AffectionTypeNotMatch: return "Affection type not match"; // artifact aff type
                         case LocalizedPhrase.ArtifactNotResearched: return "Artifact not researched";
                         case LocalizedPhrase.AscensionLevel: return "Ascension level";
+                        case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
+                        case LocalizedPhrase.Ask_StartFinalQuest: return "Start route's final quest?";
                         case LocalizedPhrase.ClearSlot: return "< Clear slot >";
                         case LocalizedPhrase.ConnectionOK: return "Real-time connection";
                         case LocalizedPhrase.ConnectionLost: return "Connection lost";
@@ -2611,7 +2620,7 @@ public static class Localization
                         case LocalizedPhrase.CreateNewSave: return "Create new save";
                         case LocalizedPhrase.LODdistance: return "LOD sprite distance";
                         case LocalizedPhrase.GraphicQuality: return "Graphic quality";
-                        case LocalizedPhrase.Ask_DestroyIntersectingBuildings: return "Destroy all intersecting buildings?";
+                       
                         case LocalizedPhrase.MakeSurface: return "Make surface";
                         case LocalizedPhrase.BufferOverflow: return "Buffer overflow"; // factory resource buffer overflowed
                         case LocalizedPhrase.NoEnergySupply: return "No energy supply";
@@ -2949,7 +2958,7 @@ public static class Localization
     }
 
     #region questsData
-    public static void FillProgressQuest(Quest q)
+    public static void FillQuestData(Quest q)
     {
         switch (currentLanguage)
         {
@@ -3093,6 +3102,14 @@ public static class Localization
                                     q.steps[1] = "Жилые шпили построены ";
                                     q.steps[2] = "Блок отеля построен ";
                                     break;
+                                case EndgameQuestID.FoundationEnd:
+                                    {
+                                        int b = Knowledge.R_F_QUEST_POPULATION_COND;
+                                        q.name = "Путь Основания - Завершение";
+                                        q.description = "Для победы по Пути Основания доведите популяцию до " + b.ToString();
+                                        q.steps[0] = "Текущее население: " + GameMaster.realMaster.colonyController.citizenCount.ToString() + " / " + b.ToString();
+                                        break;
+                                    }
                             }
                             break;
                         case QuestType.Foundation:
@@ -3134,7 +3151,7 @@ public static class Localization
                                         q.steps[0] = "Текущее население: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
                                         break;
                                     case Knowledge.FoundationRouteBoosters.QuestBoost:
-                                        q.name = "Путь Основания";
+                                        q.name = "Путь Основания - Квест";
                                         q.description = "";
                                         q.steps[0] = "";
                                         break;
@@ -3292,8 +3309,67 @@ public static class Localization
                                     q.steps[2] = "Hotel block built ";
                                     break;
                                 default: return;
+                                case EndgameQuestID.FoundationEnd:
+                                    {
+                                        int b = Knowledge.R_F_QUEST_POPULATION_COND;
+                                        q.name = "Foundation Route - Ending";
+                                        q.description = "For gaining victory raise population to " + b.ToString();
+                                        q.steps[0] = "Current population: " + GameMaster.realMaster.colonyController.citizenCount.ToString() + " / " + b.ToString();
+                                        break;
+                                    }
                             }
                             break;
+                        case QuestType.Foundation:
+                            {
+                                var colony = GameMaster.realMaster.colonyController;
+                                switch ((Knowledge.FoundationRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.FoundationRouteBoosters.HappinessBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = "Satisfying level: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
+                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.HotelBoost:
+                                        {
+                                            q.name = "Foundation Route";
+                                            q.description = "";
+                                            q.steps[0] = GetStructureName(Structure.HOTEL_BLOCK_6_ID) + " built ";
+                                            break;
+                                        }
+                                    case Knowledge.FoundationRouteBoosters.HousingMastBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = GetStructureName(Structure.HOUSING_MAST_6_ID) + " built ";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = "Incomers count: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.PointBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = "Find another colony ";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.PopulationBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = "Current population: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.QuestBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = "";
+                                        break;
+                                    case Knowledge.FoundationRouteBoosters.SettlementBoost:
+                                        q.name = "Foundation Route";
+                                        q.description = "";
+                                        q.steps[0] = GetStructureName(Structure.SETTLEMENT_CENTER_ID) + " level 6 built.";
+                                        break;
+                                }
+                                break;
+                            }
                         default: return;
                     }
                 }

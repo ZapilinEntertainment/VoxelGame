@@ -15,7 +15,7 @@ public enum ProgressQuestID : byte
 }
 public enum EndgameQuestID : byte
 {
-    Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3
+    Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3, FoundationEnd
 }
 
 public class Quest
@@ -156,7 +156,7 @@ public class Quest
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
-        Localization.FillProgressQuest(this);
+        Localization.FillQuestData(this);
     }
     public Quest(Knowledge.ResearchRoute rr, byte subID)
     {
@@ -192,7 +192,7 @@ public class Quest
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
-        Localization.FillProgressQuest(this);
+        Localization.FillQuestData(this);
     }
 
     public void CheckQuestConditions()
@@ -604,6 +604,17 @@ public class Quest
                             }
                         }
                         break;
+                    case EndgameQuestID.FoundationEnd:
+                        {
+                            int a = colony.citizenCount, b = Knowledge.R_F_QUEST_POPULATION_COND;
+                            steps[0] = "Текущее население: " + a.ToString() + " / " + b.ToString();
+                            if (a == b)
+                            {
+                                MakeQuestCompleted();
+                                GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
+                            }
+                            break;
+                        }
                 }
                 break;
             case QuestType.Foundation:

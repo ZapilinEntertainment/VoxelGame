@@ -59,7 +59,7 @@ public sealed class Knowledge
     public const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
         R_C_MONEY_COND = 5000f, R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f,
         R_P_ASCENSIOND_COND = 0.85f;
-    public const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
+    public const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_F_QUEST_POPULATION_COND = 10000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
         R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4, R_M_MONUMENTS_COUNT_COND = 2, R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND = 30;
     private const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_CREW_LEVEL_COND = 3, 
         POINT_MASK_POSITION = 6, BUILDINGS_MASK = (1 << 4) + (1 << 5), R_P_ISLAND_SIZE_COND = 8;
@@ -900,7 +900,7 @@ public sealed class Knowledge
         var rlist = new List<ResearchRoute>();
         for (int i =0; i < ROUTES_COUNT; i++)
         {
-            if (routeBonusesMask[i] < 255) rlist.Add((ResearchRoute)i);
+            if (routeBonusesMask[i] < 64) rlist.Add((ResearchRoute)i);
         }
         if (rlist.Count > 0)
         {

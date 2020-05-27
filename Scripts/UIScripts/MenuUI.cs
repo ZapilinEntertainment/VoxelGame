@@ -402,7 +402,7 @@ public sealed class MenuUI : MonoBehaviour
         switch (endType)
         {
             case GameEndingType.ColonyLost: return new Rect(0.5f, 0.75f, 0.25f, 0.25f);
-            case GameEndingType.TransportHubVictory: return new Rect(0.75f, 0.75f, 0.25f, 0.25f);            
+            case GameEndingType.FoundationRoute: return new Rect(0.75f, 0.75f, 0.25f, 0.25f);            
             case GameEndingType.ConsumedByReal: return new Rect(0, 0.75f, 0.25f,0.25f);
             case GameEndingType.ConsumedByLastSector: return new Rect( 0.25f, 0.75f, 0.25f, 0.25f);
             default: return Rect.zero;
