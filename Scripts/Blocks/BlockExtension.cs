@@ -366,7 +366,6 @@ public sealed class BlockExtension : IPlanable
         if (existingPlanesMask == 0) return null;
         else
         {
-            vismask = 255;
             var data = new List<BlockpartVisualizeInfo>();
             var cpos = myBlock.pos;
             var chunk = myBlock.myChunk;
@@ -383,10 +382,15 @@ public sealed class BlockExtension : IPlanable
                             var bvi = planes[i].GetVisualInfo(chunk, cpos);
                             if (bvi != null) data.Add(bvi);
                         }
-                        //{
-                        //    var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                        //    if (p != null) data.Add(p); else Debug.LogError("plane not created correctly");
-                        //}
+                        else
+                        {
+                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
+                            if (p != null) data.Add(p);
+                        }
+                    }
+                    else
+                    {
+                        if (planes != null && planes.ContainsKey(i)) DeactivatePlane(i);
                     }
                 }
                 if (data.Count != 0) return data;
@@ -400,8 +404,7 @@ public sealed class BlockExtension : IPlanable
         if ((existingPlanesMask & (1 << faceIndex)) != 0)
         {
             if (planes != null && planes.ContainsKey(faceIndex)) return planes[faceIndex].GetVisualInfo(myBlock.myChunk, myBlock.pos);
-            //else return CreatePlane(faceIndex, false)?.GetVisualInfo(myBlock.myChunk, myBlock.pos);
-            else return null;
+            else return null;           
         }
         else return null;
     }

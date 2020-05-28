@@ -602,7 +602,7 @@ sealed public class UIController : MonoBehaviour
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
                     workingObserver = selectedPlane.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(selectedPlane.GetCenterPosition());
+                    FollowingCamera.main.SetLookPoint(selectedPlane.GetCenterPosition());                 
                 }
                 break;              
 

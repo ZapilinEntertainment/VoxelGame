@@ -203,6 +203,9 @@ public sealed class EditorUI : MonoBehaviour
                         break;
                     }
             }
+
+
+
             if (action) chunk.RenderStatusUpdate();
         }
 

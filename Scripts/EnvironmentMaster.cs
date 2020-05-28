@@ -71,7 +71,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             SetEnvironment(Environment.defaultEnvironment);
         }       
         islandStability = DEFAULT_ISLAND_STABILITY;
-        gmap.LinkEnvironmentMaster(this);
+        gmap?.LinkEnvironmentMaster(this);
     }
     public void LinkColonyController(ColonyController cc)
     {
@@ -122,7 +122,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
 
         var skyColor = Color.Lerp(Color.white, currentEnvironment.skyColor, ambientColorSaturation);
-        var horColor = Color.Lerp(Color.cyan * Mathf.Cos(gmap.cityPoint.height * Mathf.PI / 2f), currentEnvironment.horizonColor, ambientColorSaturation);
+        float h = gmap?.cityPoint?.height ?? 0.5f;
+        var horColor = Color.Lerp(Color.cyan * Mathf.Cos(h * Mathf.PI / 2f), currentEnvironment.horizonColor, ambientColorSaturation);
         var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, ambientColorSaturation);
         RenderSettings.ambientSkyColor = skyColor;
         RenderSettings.ambientEquatorColor = horColor;
@@ -232,6 +233,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private void LateUpdate()
     {
+        if (gmap == null) return;
         float t = Time.deltaTime * GameMaster.gameSpeed,
             ascension = gmap.ascension;
             ;

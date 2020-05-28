@@ -357,16 +357,14 @@ public sealed partial class Chunk : MonoBehaviour
             if (blocks == null)  blocks = new Dictionary<ChunkPos, Block>();                
             else planesCheck = true;
             blocks.Add(f_pos, b);
-            if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
-
-            chunkDataUpdateRequired = true;
-            shadowsUpdateRequired = true;
+            if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);            
 
             RecalculateVisibilityAtPoint(f_pos, b.GetAffectionMask());
             if (planesCheck) PlanesCheck(b, i_naturalGeneration);
 
             if (b.ContainSurface()) needSurfacesUpdate = true;
 
+            chunkDataUpdateRequired = true;
             chunkRenderUpdateRequired = true;
             shadowsUpdateRequired = true;
             return b;
