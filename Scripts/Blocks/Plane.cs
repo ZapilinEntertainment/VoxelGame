@@ -258,7 +258,7 @@ public class Plane
         {
             extension?.RemoveGrassland();
         }
-        if (redrawCall & isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
+        if (redrawCall) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
     }
     public void SetWorksitePresence(bool x)
     {

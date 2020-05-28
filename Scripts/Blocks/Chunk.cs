@@ -535,6 +535,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (normal == Vector3.up)
                 {
+                    /*
                     if ((GetVisibilityMask(blockpos.x, blockpos.y, blockpos.z) & (1 << Block.UP_FACE_INDEX)) == 0)
                     {
                         b = GetBlock(blockpos.x, blockpos.y + 1, blockpos.z);
@@ -544,6 +545,8 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         face = Block.UP_FACE_INDEX;
                     }
+                    */
+                    face = Block.UP_FACE_INDEX;
                 }
             }
         }

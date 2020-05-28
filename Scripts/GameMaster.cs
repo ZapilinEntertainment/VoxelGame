@@ -921,6 +921,9 @@ public sealed class GameMaster : MonoBehaviour
 
     private void TestMethod()
     {
+        mainChunk.RenderDataFullRecalculation();
+
+        return;
         Vector3Int ecpos = Vector3Int.zero;
         byte ir = PlaneExtension.INNER_RESOLUTION;
         var slist = mainChunk.surfaces;

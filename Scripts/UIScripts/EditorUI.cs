@@ -160,9 +160,9 @@ public sealed class EditorUI : MonoBehaviour
                 case ClickAction.AddGrassland:
                     {
                         Plane p = b.FORCED_GetPlane(bh.faceIndex);
-                        if (p != null && !p.haveGrassland)
+                        if (p != null && !p.haveGrassland && p.isSurface)
                         {
-                            p.FORCED_GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION);
+                            p.FORCED_GetExtension().InitializeGrassland()?.FORCED_AddLifepower(LIFEPOWER_PORTION * 10);
                         }
                         break;
                     }

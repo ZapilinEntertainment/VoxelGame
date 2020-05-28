@@ -276,15 +276,13 @@ public sealed partial class Chunk : MonoBehaviour {
         if (b == null) return;
         byte visibilityMask = GetVisibilityMask(b.pos);
         BlockpartVisualizeInfo currentBlockInfo = null;
-        int arrayIndex = -1;
         for (int i = 0; i < blockVisualizersList.Count; i++)
         {
             var bvi = blockVisualizersList[i];
             if (bvi.pos == b.pos && bvi.meshInfo.faceIndex == face)
             {
                 currentBlockInfo = bvi;
-                arrayIndex = i;
-                break;
+                blockVisualizersList.RemoveAt(i);
             }
         }
 
@@ -301,7 +299,7 @@ public sealed partial class Chunk : MonoBehaviour {
             {
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
                 currentBlockInfo = b.GetFaceVisualData(face);
-                blockVisualizersList[arrayIndex] = currentBlockInfo;
+                blockVisualizersList.Add(currentBlockInfo);
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
             }
         }
@@ -309,7 +307,6 @@ public sealed partial class Chunk : MonoBehaviour {
         {
             if (currentBlockInfo != null)
             {
-                blockVisualizersList.RemoveAt(arrayIndex);
                 if (!redrawRequiredTypes.Contains(currentBlockInfo.meshInfo)) redrawRequiredTypes.Add(currentBlockInfo.meshInfo);
             }
         }

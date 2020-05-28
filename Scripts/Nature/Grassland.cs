@@ -208,28 +208,40 @@ public sealed class Grassland
                         if (plants.Length >= GetMaxPlantsCount()) creating = false;
                         else
                         {
-                            if (Random.value > 0.5f) creating = false;
+                            if (Random.value > 0.15f) creating = false;
                         }
                     }
                     //
+                    Plant p;
                     if (creating)
                     {
                         var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
-                        var p = Plant.GetNewPlant(nature.GetPlantType(pcat));
+                        p = Plant.GetNewPlant(nature.GetPlantType(pcat));
                         f -= CREATE_COST_VAL * nature.lifepowerSupport;
                         p?.SetBasement(plane);
+                        if (plants != null)
+                        {
+                            var pl2 = new Plant[plants.Length + 1];
+                            for (int a = 0; a < plants.Length; a++)
+                            {
+                                pl2[a] = plants[a];
+                            }
+                            pl2[pl2.Length - 1] = p;
+                            plants = pl2;
+                        }
+                        else
+                        {
+                            plants = new Plant[] { p };
+                        }
                     }
                     else
                     {
                         if (plants != null)
                         {
-                            foreach (var p in plants)
-                            {
-                                if (Random.value > 0.33f)
-                                {
-                                    p.UpdatePlant();
-                                    f -= BOOST_VALUE;
-                                }
+                            p = plants[Random.Range(0, plants.Length)];
+                            if (!p.IsFullGrown()) {
+                                p.UpdatePlant();
+                                f -= BOOST_VALUE * p.stage;
                             }
                         }
                     }
