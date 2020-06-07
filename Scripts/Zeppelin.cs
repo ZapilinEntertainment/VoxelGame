@@ -226,9 +226,9 @@ public sealed class Zeppelin : MonoBehaviour {
             {
                 if (UIController.current != null && UIController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
                 landPointSet = true;
-                Vector3 newPos = landingSurface.pos.ToWorldSpace() + Vector3.down * Block.QUAD_SIZE / 2f;
+                Vector3 newPos = landingSurface.pos.ToWorldSpace();
                 PoolMaster.current.BuildSplash(newPos);
-                transform.position = newPos + Vector3.up * 0.5f;
+                transform.position = newPos + Vector3.up;
                 if (landingByZAxis == true) transform.rotation = Quaternion.identity;
                 else transform.rotation = Quaternion.Euler(0, 90, 0);
                 lineDrawer.enabled = false;

@@ -58,24 +58,23 @@ public sealed class PoolMaster : MonoBehaviour {
     public void Load() {
 		if (current != null) return;
 		current = this;
-
+        int x = 1;
         qualityLevel = QualitySettings.GetQualityLevel();
         useAdvancedMaterials = (qualityLevel == MAX_QUALITY_LEVEL);
         shadowCasting = useAdvancedMaterials;
         useIlluminationSystem = !shadowCasting;
-
         if (qualityLevel != 0) // dependency : change quality level()
         {
-            buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
+        buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
             lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
-        }
-
+         }
         inactiveShips = new List<Ship>();       
 
 		lr_red_material = Resources.Load<Material>("Materials/GUI_Red");
 		lr_green_material = Resources.Load<Material>("Materials/GUI_Green");
 
-        zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);zoneCube.gameObject.SetActive(false);
+        zoneCube = Instantiate(Resources.Load<Transform>("Prefs/zoneCube"), transform);
+        zoneCube.gameObject.SetActive(false);
 
         default_material = Resources.Load<Material>("Materials/Default");
         darkness_material = Resources.Load<Material>("Materials/Darkness");		
@@ -85,11 +84,13 @@ public sealed class PoolMaster : MonoBehaviour {
 
         billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
-        celestialBillboardMaterial = new Material(Shader.Find("Custom/CelestialBillboard"));
-        celestialBillboardMaterial.SetColor("_MainColor", Color.white);
-        starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");        
+        // android errors here:
+       // celestialBillboardMaterial = new Material(Shader.Find("Custom/CelestialBillboard"));
+       // celestialBillboardMaterial.SetColor("_MainColor", Color.white);
+        starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");
+        celestialBillboardMaterial = starsBillboardMaterial;
 
-        mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
+        //mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
@@ -112,25 +113,16 @@ public sealed class PoolMaster : MonoBehaviour {
                 green_material = Resources.Load<Material>("Materials/Green");
                 
         }
-        if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
+        if (GameMaster.realMaster?.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
         if (useIlluminationSystem)
         {
             lightPoolMaterials = new Dictionary<LightPoolInfo, Material>();
             MAX_MATERIAL_LIGHT_DIVISIONS = QualitySettings.GetQualityLevel() == 0 ? (byte)8 : (byte)16;
         }
 
-        
         var rrs = Component.FindObjectsOfType<Renderer>();
-        if (rrs != null && rrs.Length != 0) ReplaceMaterials(rrs, useAdvancedMaterials);
-
-        //testzone
-        //GameObject g = new GameObject("quad");
-        //var mf = g.AddComponent<MeshFilter>();
-        //mf.mesh= quadMesh;
-        //var mr = g.AddComponent<MeshRenderer>();
-        //mr.sharedMaterial = basic_material;
-        //SetMaterialByID(ref mf, ref mr, MATERIAL_GRASS_20_ID, 255);
-        //g.transform.position += Vector3.up * 2;
+        //if (rrs != null && rrs.Length != 0) ReplaceMaterials(rrs, useAdvancedMaterials);
+        if (GameMaster.realMaster?.testMode ?? false) GameLogUI.MakeAnnouncement("Pool master loaded");
     }
 
     public static void ChangeQualityLevel (int newLevel)

@@ -44,7 +44,7 @@ public enum GameEndingType : byte { Default, ColonyLost, ConsumedByReal, Consume
 
 public sealed class GameMaster : MonoBehaviour
 {
-    public static GameMaster realMaster;
+    public static GameMaster realMaster { get; private set; }
     public static float gameSpeed { get; private set; }
     public static bool sceneClearing { get; private set; }
     public static bool needTutorial = false;
@@ -177,10 +177,10 @@ public sealed class GameMaster : MonoBehaviour
         //gameStartSettings.generationMode = ChunkGenerationMode.GameLoading;
         //savename = "test";
         //
-
         if (realMaster != null & realMaster != this)
         {
-            Destroy(this);
+            Destroy(realMaster);
+            realMaster = this;
             return;
         }
         gameMode = _gameMode;
@@ -188,8 +188,8 @@ public sealed class GameMaster : MonoBehaviour
         sceneClearing = false;
         if (PoolMaster.current == null)
         {
-            PoolMaster pm = gameObject.AddComponent<PoolMaster>();
-            pm.Load();
+            PoolMaster pm = gameObject.AddComponent(typeof(PoolMaster)) as PoolMaster;
+           pm.Load();
         }
         if (gameMode == GameMode.Play)
         {
@@ -199,6 +199,7 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();
         environmentMaster.Prepare();
+        
         if (audiomaster == null)
         {
             audiomaster = gameObject.AddComponent<Audiomaster>();
@@ -337,6 +338,7 @@ public sealed class GameMaster : MonoBehaviour
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
         gameStarted = true;
+        if (testMode) GameLogUI.MakeAnnouncement("game master loaded");
     }
 
     private void SetDefaultValues()
@@ -576,6 +578,7 @@ public sealed class GameMaster : MonoBehaviour
         Rect r = new Rect(0, Screen.height - 16, 200, 16);
         GUI.Box(r, GUIContent.none);
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
+        if (GUILayout.Button("testMethod")) TestMethod();
     }
     //
     public void GameOver(GameEndingType endType)
@@ -873,6 +876,185 @@ public sealed class GameMaster : MonoBehaviour
         if (debug_noresource) weNeedNoResources = true;
         return false;
     }
+    private bool TEST_LoadGame()
+    {
+        bool debug_noresource = weNeedNoResources;
+        var tfile = Resources.Load<TextAsset>("testsave");
+        var path = SaveSystemUI.GetSavesPath() + "/testsave.sav";
+        FileStream fs = File.Create(path);
+        var bytes = tfile.bytes;
+        fs.Write(bytes, 0, bytes.Length);
+        fs.Close();
+        fs = File.Open(path, FileMode.Open);
+        double realHashSum = GetHashSum(fs, true);
+        var data = new byte[8];
+        fs.Read(data, 0, 8);
+        double readedHashSum = System.BitConverter.ToDouble(data, 0);
+        string errorReason = "reason not stated";
+        if (realHashSum == readedHashSum)
+        {
+            fs.Position = 0;
+            SetPause(true);
+            loading = true;
+            // ОЧИСТКА
+            StopAllCoroutines();
+            if (Zeppelin.current != null)
+            {
+                Destroy(Zeppelin.current);
+            }
+            if (mainChunk != null) mainChunk.ClearChunk();
+            // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
+            Crew.Reset();
+            Expedition.GameReset();
+            Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
+            if (colonyController != null) colonyController.ResetToDefaults(); // подчищает все списки
+            else
+            {
+                colonyController = gameObject.AddComponent<ColonyController>();
+                colonyController.Prepare();
+            }
+            //UI.current.Reset();
+
+
+            // НАЧАЛО ЗАГРУЗКИ   
+            if (gameStarted) SetDefaultValues();
+            #region gms mainPartLoading            
+            data = new byte[4];
+            fs.Read(data, 0, 4);
+            uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
+            //start writing
+            data = new byte[65];
+            fs.Read(data, 0, data.Length);
+            gameSpeed = System.BitConverter.ToSingle(data, 0);
+            lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
+            demolitionLossesPercent = System.BitConverter.ToSingle(data, 8);
+            lifepowerLossesPercent = System.BitConverter.ToSingle(data, 12);
+            LUCK_COEFFICIENT = System.BitConverter.ToSingle(data, 16);
+            sellPriceCoefficient = System.BitConverter.ToSingle(data, 20);
+            tradeVesselsTrafficCoefficient = System.BitConverter.ToSingle(data, 24);
+            upgradeDiscount = System.BitConverter.ToSingle(data, 28);
+            upgradeCostIncrease = System.BitConverter.ToSingle(data, 32);
+            warProximity = System.BitConverter.ToSingle(data, 36);
+
+            difficulty = (Difficulty)data[40];
+            startGameWith = (GameStart)data[41];
+            prevCutHeight = data[42];
+            day = data[43];
+            month = data[44];
+
+            year = System.BitConverter.ToUInt32(data, 45);
+            timeGone = System.BitConverter.ToSingle(data, 49);
+            gearsDegradeSpeed = System.BitConverter.ToSingle(data, 53);
+            labourTimer = System.BitConverter.ToSingle(data, 57);
+            RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 61));
+            #endregion
+
+            DockSystem.LoadDockSystem(fs);
+            globalMap.Load(fs);
+            if (loadingFailed)
+            {
+                errorReason = "global map error";
+                goto FAIL;
+            }
+
+            environmentMaster.Load(fs);
+            if (loadingFailed)
+            {
+                errorReason = "environment error";
+                goto FAIL;
+            }
+
+            Artifact.LoadStaticData(fs); // crews & monuments
+            if (loadingFailed)
+            {
+                errorReason = "artifacts load failure";
+                goto FAIL;
+            }
+
+            Crew.LoadStaticData(fs);
+            if (loadingFailed)
+            {
+                errorReason = "crews load failure";
+                goto FAIL;
+            }
+
+            if (mainChunk == null)
+            {
+                GameObject g = new GameObject("chunk");
+                mainChunk = g.AddComponent<Chunk>();
+            }
+            mainChunk.LoadChunkData(fs);
+            if (loadingFailed)
+            {
+                errorReason = "chunk load failure";
+                goto FAIL;
+            }
+            else
+            {
+                if (blockersRestoreEvent != null) blockersRestoreEvent();
+            }
+
+
+            Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
+            if (loadingFailed)
+            {
+                errorReason = "settlements load failure";
+                goto FAIL;
+            }
+
+            colonyController.Load(fs); // < --- COLONY CONTROLLER
+            if (loadingFailed)
+            {
+                errorReason = "colony controller load failure";
+                goto FAIL;
+            }
+
+            if (loadingFailed)
+            {
+                errorReason = "dock load failure";
+                goto FAIL;
+            }
+            QuestUI.current.Load(fs);
+            if (loadingFailed)
+            {
+                errorReason = "quest load failure";
+                goto FAIL;
+            }
+            Expedition.LoadStaticData(fs);
+            Knowledge.Load(fs);
+            fs.Close();
+
+            FollowingCamera.main.WeNeedUpdate();
+            loading = false;
+            savename = "testsave";
+
+            if (afterloadRecalculationEvent != null)
+            {
+                afterloadRecalculationEvent();
+                afterloadRecalculationEvent = null;
+            }
+            SetPause(false);
+            colonyController.FORCED_PowerGridRecalculation();
+
+            return true;
+        }
+        else
+        {
+            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
+            if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
+            SetPause(true);
+            fs.Close();
+            return false;
+        }
+        FAIL:
+        GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
+        if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
+        print(errorReason);
+        SetPause(true);
+        fs.Close();
+        if (debug_noresource) weNeedNoResources = true;
+        return false;
+    }
 
     public bool SaveTerrain(string name)
     {
@@ -919,11 +1101,28 @@ public sealed class GameMaster : MonoBehaviour
     }
     #endregion
 
-    private void TestMethod()
+    public static void TestMethod2(Vector3 pos, Material mat)
     {
-        mainChunk.RenderDataFullRecalculation();
-
+        var m = new Mesh();
+        m.vertices = new Vector3[] { Vector3.zero, Vector3.forward, new Vector3(1, 0, 1), Vector3.right, new Vector3(1, 1, 0), Vector3.one, new Vector3(0, 1, 1), Vector3.up };
+        m.triangles = new int[] { 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 7, 4, 0, 1, 6, 0, 6, 7, 1, 5, 6, 1, 2, 5, 2, 4, 5, 2, 3, 4, 7, 6, 5, 7, 5, 4 };
+        var g = new GameObject();
+        var mf = g.AddComponent<MeshFilter>();
+        mf.sharedMesh = m;
+        var mr = g.AddComponent<MeshRenderer>();
+        mr.sharedMaterial = mat;
+        g.transform.position = pos;
+    }
+    public static void TestMethod3(Vector3 pos)
+    {
+        var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        g.transform.position = pos;
+    }
+    public static void TestMethod()
+    {       
+       
         return;
+        /*
         Vector3Int ecpos = Vector3Int.zero;
         byte ir = PlaneExtension.INNER_RESOLUTION;
         var slist = mainChunk.surfaces;
@@ -987,6 +1186,15 @@ public sealed class GameMaster : MonoBehaviour
         colonyController.AddEnergyCrystals(1000f);
 
         globalMap.FORCED_CreatePointOfInterest();
+        */
+    }
+    public static void Test_RepairGameMaster()
+    {
+        if (realMaster == null)
+        {
+            var g = new GameObject("gameMaster");
+            realMaster = g.AddComponent<GameMaster>();
+        }
     }
 }
   

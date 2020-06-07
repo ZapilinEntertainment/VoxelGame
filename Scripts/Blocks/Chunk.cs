@@ -124,12 +124,13 @@ public sealed partial class Chunk : MonoBehaviour
             }
         }
         PreparePlanes();
+        RenderDataFullRecalculation();
         RecalculateSurfacesList();
         if (surfaces != null & GameMaster.realMaster.gameMode != GameMode.Editor)
         {
            GameMaster.geologyModule.SpreadMinerals(surfaces);
         }
-        RenderDataFullRecalculation();
+        
         FollowingCamera.main.WeNeedUpdate();
     }
     private void PreparePlanes()
@@ -137,9 +138,9 @@ public sealed partial class Chunk : MonoBehaviour
         if (blocks != null)
         {
             Block[,,] blockArray = new Block[chunkSize, chunkSize, chunkSize];
-            Block b;
+            Block b;            
             foreach (var fb in blocks)
-            {
+            {              
                 b = fb.Value;
                 var cpos = b.pos;
                 blockArray[cpos.x, cpos.y, cpos.z] = b;
@@ -307,7 +308,16 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    if (p.isQuad) plist.Add(p);
+                    Block b;
+                    Plane p2;
+                    if (blocks.TryGetValue(fb.Key.OneBlockHigher(), out b) && b.TryGetPlane(Block.DOWN_FACE_INDEX, out p2) && !p2.isTransparent)
+                    {
+                        fb.Value.DeactivatePlane(Block.UP_FACE_INDEX);
+                    }
+                    else
+                    {
+                        if (p.isQuad) plist.Add(p);
+                    }
                 }
             }
             

@@ -119,6 +119,7 @@ sealed public class UIController : MonoBehaviour
 
     void Update()
     {
+
         float tm = Time.deltaTime * GameMaster.gameSpeed;
         statusUpdateTimer -= tm;
         if (statusUpdateTimer <= 0)
@@ -1186,6 +1187,12 @@ sealed public class UIController : MonoBehaviour
         showMenuWindow = !showMenuWindow;
         if (showMenuWindow)
         { // on            
+            if (GameMaster.realMaster == null)
+            {
+                var g = new GameObject();
+                g.AddComponent<GameMaster>();
+                GameLogUI.MakeImportantAnnounce("GameMaster reloaded");
+            }
             ChangeActiveWindow(ActiveWindowMode.GameMenu);            
         }
         else

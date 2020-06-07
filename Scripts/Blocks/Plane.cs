@@ -173,6 +173,10 @@ public class Plane
             }
         }
     } // является ли крайней плоскостью чанка
+    public bool isTransparent
+    {
+        get { return MeshMaster.IsMeshTransparent(meshType); }
+    }
 
     public Plane(IPlanable i_host, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
     {
