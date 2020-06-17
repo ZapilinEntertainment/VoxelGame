@@ -165,7 +165,7 @@ public class HarvestableResource : Structure
             SpriteRenderer sr = new GameObject("lod").AddComponent<SpriteRenderer>();
             sr.transform.parent = model.transform;
             sr.transform.localPosition = Vector3.up * height;
-            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
+            sr.sharedMaterial = !PoolMaster.useDefaultMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             LODController currentLC = LODController.GetCurrent();
             LODPackType lpackType = LODPackType.Point;
@@ -293,7 +293,7 @@ public class HarvestableResource : Structure
         model.parent = transform;
         model.localPosition = Vector3.zero;
         model.localRotation = Quaternion.Euler(Vector3.zero);
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model.gameObject, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model.gameObject);
     }
 
     public void Harvest()

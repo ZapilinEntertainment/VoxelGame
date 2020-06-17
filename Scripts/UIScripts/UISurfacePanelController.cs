@@ -316,7 +316,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 CheckGatherButton();
                 changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
                 columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.chunkSize);
-                blockCreateButton.gameObject.SetActive(colony.hq.level > 5);                
+                blockCreateButton.gameObject.SetActive(!observingSurface.isTerminate);                
                 break;
         }
     }

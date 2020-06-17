@@ -41,7 +41,7 @@ public class Platform : Structure, IPlanable
             }
             model.transform.parent = transform;
             model.transform.localPosition = Vector3.zero;
-            if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+            if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
         }
         placeInCenter = true;
         basement.AddStructure(this);

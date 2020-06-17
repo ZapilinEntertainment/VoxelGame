@@ -401,7 +401,7 @@ public sealed class GameMaster : MonoBehaviour
             RenderSettings.skybox.SetFloat("_Saturation", 0.75f + 0.25f * GameConstants.START_HAPPINESS);
         }
         else RenderSettings.skybox.SetFloat("_Saturation", 1f);
-        
+        DockSystem.ResetRequest();
     }
 
     public void SetMainChunk(Chunk c) { mainChunk = c; }
@@ -578,7 +578,7 @@ public sealed class GameMaster : MonoBehaviour
         Rect r = new Rect(0, Screen.height - 16, 200, 16);
         GUI.Box(r, GUIContent.none);
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
-        if (GUILayout.Button("testMethod")) TestMethod();
+        //if (GUILayout.Button("testMethod")) TestMethod();
     }
     //
     public void GameOver(GameEndingType endType)

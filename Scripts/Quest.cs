@@ -224,9 +224,12 @@ public class Quest
                         if (colony.hq.level >= 2) MakeQuestCompleted();
                         break;
                     case ProgressQuestID.Progress_300Population:
-                        stepsAddInfo[0] = colony.citizenCount.ToString() + "/300";
-                        if (colony.citizenCount >= 300) MakeQuestCompleted();
-                        break;
+                        {
+                            var ic = DockSystem.GetImmigrantsTotalCount();
+                            stepsAddInfo[0] = ic.ToString() + "/300";
+                            if (ic >= 300) MakeQuestCompleted();
+                            break;
+                        }
                     case ProgressQuestID.Progress_OreRefiner:
                         {
                             List<Building> powerGrid = colony.powerGrid;

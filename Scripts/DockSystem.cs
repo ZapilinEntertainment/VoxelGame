@@ -91,12 +91,20 @@ public sealed class DockSystem
 
     private DockSystem()
     {
+        SYSTEM_RESET();
+    }
+    private void SYSTEM_RESET()
+    {
         var resCount = ResourceType.TYPES_COUNT;
         isForSale = new bool?[resCount];
         for (int i = 0; i < resCount; i++) isForSale[i] = null;
         minValueForTrading = new int[resCount];
         immigrationPlan = 0;
         immigrationEnabled = true;
+    }
+    public static void ResetRequest()
+    {
+        current?.SYSTEM_RESET();
     }
 
     public static DockSystem GetCurrent()

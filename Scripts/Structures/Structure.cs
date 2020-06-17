@@ -515,7 +515,7 @@ public class Structure : MonoBehaviour
         model.transform.parent = transform;
         model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
         // copy to StorageBlock
         //copy to Gardens.cs
         //dependency at Platform.cs

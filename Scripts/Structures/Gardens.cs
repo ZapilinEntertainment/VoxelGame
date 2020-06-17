@@ -279,7 +279,7 @@ public sealed class Gardens : WorkBuilding
             i += 3;
         }
         //
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)

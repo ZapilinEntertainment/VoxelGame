@@ -23,7 +23,7 @@ public sealed class HeadQuarters : Building
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
         model.transform.localPosition = Vector3.zero;
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(model, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
     }
 
     public void SetLevel(byte x)

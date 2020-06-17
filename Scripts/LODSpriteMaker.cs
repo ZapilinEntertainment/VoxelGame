@@ -43,7 +43,7 @@ public class LODSpriteMaker : MonoBehaviour {
         {
             r.gameObject.layer = layerNumber;
         }
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, false);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(allObjects);
 
         cam.orthographicSize = shotSize;
         cam.backgroundColor = backgroundColor;
@@ -184,7 +184,7 @@ public class LODSpriteMaker : MonoBehaviour {
         {
             r.gameObject.layer = savedLayer;
         }
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(allObjects, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(allObjects);
          return lcontroller.RegisterLOD(new LODRegistrationTicket(regInfo, atlas, i_lpackType));
     }
 

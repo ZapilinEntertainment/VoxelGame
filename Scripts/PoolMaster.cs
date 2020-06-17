@@ -16,10 +16,11 @@ public sealed class PoolMaster : MonoBehaviour {
             illumination = i_light;
         }
     }
-
-    public static bool useAdvancedMaterials { get; private set; }
+    public enum MaterialsPack : byte { Standart, PBR, Simplified }
+    
     public static bool useIlluminationSystem { get; private set; }
     public static bool shadowCasting { get; private set; }
+    public static bool useDefaultMaterials { get { return currentMaterialsPack == MaterialsPack.Standart; } }
     public static int qualityLevel { get; private set; }
     public static PoolMaster current;	 
 	public static GameObject mineElevator_pref {get;private set;}    
@@ -42,30 +43,42 @@ public sealed class PoolMaster : MonoBehaviour {
     private static Transform zoneCube;
     private static Dictionary<LightPoolInfo, Material> lightPoolMaterials;
     private static Material metal_material, green_material, default_material, lr_red_material, lr_green_material, basic_material;
+    private static MaterialsPack currentMaterialsPack;
+    private static Sprite[] starsSprites;
 
     private List<Ship> inactiveShips;	
     private float shipsClearTimer = 0, clearTime = 30;
-    private ParticleSystem buildEmitter, citizensLeavingEmitter, lifepowerEmitter;
-    private static Sprite[] starsSprites;
+    private ParticleSystem buildEmitter, citizensLeavingEmitter, lifepowerEmitter;    
 
     public static byte MAX_MATERIAL_LIGHT_DIVISIONS { get; private set; }
     public const int NO_MATERIAL_ID = -1, MATERIAL_ADVANCED_COVERING_ID = -2, MATERIAL_GRASS_100_ID = -3, MATERIAL_GRASS_80_ID = -4, MATERIAL_GRASS_60_ID = -5,
         MATERIAL_GRASS_40_ID = -6, MATERIAL_GRASS_20_ID = -7, MATERIAL_LEAVES_ID = -8, MATERIAL_WHITE_METAL_ID = -9, MATERIAL_DEAD_LUMBER_ID = -10,
         MATERIAL_WHITEWALL_ID = -11, MATERIAL_MULTIMATERIAL_ID = -12, FIXED_UV_BASIC = -13;
     // зависимость - ResourceType.GetResourceByID
-    private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2;
+    private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2, BASIC_MAT_INDEX = 0, METAL_MAT_INDEX = 1, GREEN_MAT_INDEX = 2, GLASS_MAT_INDEX = 3, GLASS_OFF_MAT_INDEX = 4;
 
     public void Load() {
 		if (current != null) return;
 		current = this;
-        int x = 1;
+
         qualityLevel = QualitySettings.GetQualityLevel();
-        useAdvancedMaterials = (qualityLevel == MAX_QUALITY_LEVEL);
-        shadowCasting = useAdvancedMaterials;
+        switch (qualityLevel)
+        {
+            case 0:
+                currentMaterialsPack = MaterialsPack.Simplified;
+                break;
+            case 1:
+                currentMaterialsPack = MaterialsPack.Standart;
+                break;
+            case 2:
+                currentMaterialsPack = MaterialsPack.PBR;
+                break;
+        }
+        LoadMaterials();
         useIlluminationSystem = !shadowCasting;
         if (qualityLevel != 0) // dependency : change quality level()
         {
-        buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
+            buildEmitter = Instantiate(Resources.Load<ParticleSystem>("buildEmitter"));
             lifepowerEmitter = Instantiate(Resources.Load<ParticleSystem>("lifepowerEmitter"));
          }
         inactiveShips = new List<Ship>();       
@@ -96,23 +109,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
         energyMaterial = Resources.Load<Material>("Materials/ChargedMaterial");
-        if (useAdvancedMaterials)
-        {
-            glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
-            basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
-            glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
-            metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
-            green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-        }
-        else
-        {
-                glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
-                basic_material = Resources.Load<Material>("Materials/Basic");
-                glassMaterial = Resources.Load<Material>("Materials/Glass");
-                metal_material = Resources.Load<Material>("Materials/Metal");
-                green_material = Resources.Load<Material>("Materials/Green");
-                
-        }
+
         if (GameMaster.realMaster?.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
         if (useIlluminationSystem)
         {
@@ -123,6 +120,65 @@ public sealed class PoolMaster : MonoBehaviour {
         var rrs = Component.FindObjectsOfType<Renderer>();
         //if (rrs != null && rrs.Length != 0) ReplaceMaterials(rrs, useAdvancedMaterials);
         if (GameMaster.realMaster?.testMode ?? false) GameLogUI.MakeAnnouncement("Pool master loaded");
+    }
+    private static void LoadMaterials()
+    {
+        switch (currentMaterialsPack)
+        {
+            case MaterialsPack.PBR:
+                currentMaterialsPack = MaterialsPack.PBR;
+                shadowCasting = true;
+                break;
+            case MaterialsPack.Simplified:
+                currentMaterialsPack = MaterialsPack.Simplified;
+                shadowCasting = false;
+                break;
+            default:
+                currentMaterialsPack = MaterialsPack.Standart;
+                shadowCasting = false;                
+                break;
+        }
+        var mats = LoadMaterialPack(currentMaterialsPack);
+        glassMaterial_disabled = mats[GLASS_OFF_MAT_INDEX];
+        basic_material = mats[BASIC_MAT_INDEX];
+        glassMaterial = mats[GLASS_MAT_INDEX];
+        metal_material = mats[METAL_MAT_INDEX];
+        green_material = mats[GREEN_MAT_INDEX];
+    }
+    private static Material[] LoadMaterialPack(MaterialsPack mptype)
+    {
+        var mats = new Material[5];
+        switch (mptype)
+        {
+            case MaterialsPack.PBR:
+                {                    
+                    mats[BASIC_MAT_INDEX] = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
+                    mats[GLASS_MAT_INDEX] = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
+                    mats[METAL_MAT_INDEX] = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
+                    mats[GREEN_MAT_INDEX] = Resources.Load<Material>("Materials/Advanced/Green_PBR");
+                    mats[GLASS_OFF_MAT_INDEX] = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
+                    break;
+                }
+            case MaterialsPack.Simplified:
+                {
+                    mats[GLASS_OFF_MAT_INDEX] = Resources.Load<Material>("Materials/Simplified/GlassOffline");
+                    mats[BASIC_MAT_INDEX] = Resources.Load<Material>("Materials/Simplified/Basic");
+                    mats[GLASS_MAT_INDEX] = Resources.Load<Material>("Materials/Simplified/Glass");
+                    mats[METAL_MAT_INDEX] = Resources.Load<Material>("Materials/Simplified/Metal");
+                    mats[GREEN_MAT_INDEX] = Resources.Load<Material>("Materials/Simplified/Green");
+                    break;
+                }
+            default:
+                {
+                    mats[GLASS_OFF_MAT_INDEX] = Resources.Load<Material>("Materials/StandartPack/GlassOffline");
+                    mats[BASIC_MAT_INDEX] = Resources.Load<Material>("Materials/StandartPack/Basic");
+                    mats[GLASS_MAT_INDEX] = Resources.Load<Material>("Materials/StandartPack/Glass");
+                    mats[METAL_MAT_INDEX] = Resources.Load<Material>("Materials/StandartPack/Metal");
+                    mats[GREEN_MAT_INDEX] = Resources.Load<Material>("Materials/StandartPack/Green");
+                    break;
+                }                
+        }
+        return mats;
     }
 
     public static void ChangeQualityLevel (int newLevel)
@@ -145,33 +201,11 @@ public sealed class PoolMaster : MonoBehaviour {
                     }
                 }                
             }
-            if (newLevel == 2)
-            {
-                useAdvancedMaterials = true;
-                shadowCasting = true;
-                glassMaterial_disabled = Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR");
-                basic_material = Resources.Load<Material>("Materials/Advanced/Basic_PBR");
-                glassMaterial = Resources.Load<Material>("Materials/Advanced/Glass_PBR");
-                metal_material = Resources.Load<Material>("Materials/Advanced/Metal_PBR");
-                green_material = Resources.Load<Material>("Materials/Advanced/Green_PBR");
-            }
-            else
-            {
-                if (qualityLevel == 2)
-                {
-                    useAdvancedMaterials = false;
-                    shadowCasting = false;
-                    glassMaterial_disabled = Resources.Load<Material>("Materials/GlassOffline");
-                    basic_material = Resources.Load<Material>("Materials/Basic");
-                    glassMaterial = Resources.Load<Material>("Materials/Glass");
-                    metal_material = Resources.Load<Material>("Materials/Metal");
-                    green_material = Resources.Load<Material>("Materials/Green");                    
-                }
-            }
+            LoadMaterials();
             if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
             qualityLevel = newLevel;
             var rrs = Component.FindObjectsOfType<Renderer>();
-            ReplaceMaterials(rrs, useAdvancedMaterials);
+            ReplaceMaterials(rrs, currentMaterialsPack);
         }
     }
 
@@ -250,7 +284,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/passengerShip_1")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
+                        if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
                 }
@@ -277,7 +311,7 @@ public sealed class PoolMaster : MonoBehaviour {
                             default:  s = Instantiate(Resources.Load<GameObject>("Prefs/lightCargoShip")).GetComponent<Ship>();
                                 break;
                         }
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
+                        if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
                 }
@@ -299,7 +333,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/privateShip")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
+                        if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
                 }
@@ -321,7 +355,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/lightWarship")).GetComponent<Ship>();
-                        if (useAdvancedMaterials) ReplaceMaterials(s.gameObject, true);
+                        if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
                 }
@@ -526,58 +560,28 @@ public sealed class PoolMaster : MonoBehaviour {
         return (id == MATERIAL_GRASS_100_ID | id == MATERIAL_GRASS_20_ID | id == MATERIAL_GRASS_40_ID | id == MATERIAL_GRASS_60_ID | id == MATERIAL_GRASS_80_ID);
     }
 
-    public static void ReplaceMaterials(GameObject g, bool i_useAdvancedMaterials)
+    public static void ReplaceMaterials(GameObject g)
+    {
+        ReplaceMaterials(g, currentMaterialsPack);
+    }
+    public static void ReplaceMaterials(GameObject g, MaterialsPack mpack)
     {
         Renderer[] rrs = g.GetComponentsInChildren<Renderer>();
         if (rrs.Length > 0)
         {
-            ReplaceMaterials(rrs, i_useAdvancedMaterials);
+            ReplaceMaterials(rrs, mpack);
         }
     }
-    public static void ReplaceMaterials(Renderer[] rrs, bool i_useAdvancedMaterials)
+    public static void ReplaceMaterials(Renderer[] rrs)
     {
-        Material[] materials;
-        if (i_useAdvancedMaterials)
-        { // нужны улучшенные
-            if (useAdvancedMaterials) //сейчас используются улучшенные
-            {
-                materials = new Material[5]
-                {
-                basic_material,
-                glassMaterial,
-                glassMaterial_disabled,
-                green_material,
-                metal_material
-                };
-            }
-            else // сейчас используются обычные
-            {
-                materials = new Material[5]
-                {
-                Resources.Load<Material>("Materials/Advanced/Basic_PBR"),
-                Resources.Load<Material>("Materials/Advanced/Glass_PBR"),
-                Resources.Load<Material>("Materials/Advanced/GlassOffline_PBR"),
-                Resources.Load<Material>("Materials/Advanced/Green_PBR"),
-                Resources.Load<Material>("Materials/Advanced/Metal_PBR")
-                };
-            }
-        }
-        else // нужны обычные
+        ReplaceMaterials(rrs, currentMaterialsPack);
+    }
+    public static void ReplaceMaterials(Renderer[] rrs, MaterialsPack mpack)
+    {
+        Material[] materials;      
+        if (mpack == currentMaterialsPack)
         {
-            if (useAdvancedMaterials) // сейчас используются улучшенные
-            {
-                materials = new Material[5] 
-                {
-                Resources.Load<Material>("Materials/Basic"),
-                Resources.Load<Material>("Materials/Glass"),
-                Resources.Load<Material>("Materials/GlassOffline"),
-                Resources.Load<Material>("Materials/Green"),
-                Resources.Load<Material>("Materials/Metal"),
-                };
-            }
-            else // сейчас используются обычные
-            {
-                materials = new Material[5]
+            materials = new Material[5]
                 {
                 basic_material,
                 glassMaterial,
@@ -585,8 +589,12 @@ public sealed class PoolMaster : MonoBehaviour {
                 green_material,
                 metal_material
                 };
-            }
-        }        
+        }
+        else
+        {
+            materials = LoadMaterialPack(mpack);
+
+        }
         foreach (Renderer mr in rrs)
         {
             bool castShadows = false, receiveShadows = false;
@@ -631,7 +639,7 @@ public sealed class PoolMaster : MonoBehaviour {
                         break;
                     case "BillboardMaterial":
                     case "ShadedBillboard":
-                        if (i_useAdvancedMaterials) mr.sharedMaterial = billboardShadedMaterial;
+                        if (shadowCasting) mr.sharedMaterial = billboardShadedMaterial;
                         else mr.sharedMaterial = billboardMaterial;
                         castShadows = true;
                         receiveShadows = true;

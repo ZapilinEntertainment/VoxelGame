@@ -90,7 +90,7 @@ public sealed class OakTree : Plant
             SpriteRenderer sr = spriterCarrier.AddComponent<SpriteRenderer>();
             //сначала добавляется спрайт
             sr.sprite = lodPack_stage4[0];
-            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial: PoolMaster.billboardMaterial;
+            sr.sharedMaterial = !PoolMaster.useDefaultMaterials ? PoolMaster.billboardShadedMaterial: PoolMaster.billboardMaterial;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             spriterCarrier.transform.parent = fullModel.transform;
             spriterCarrier.transform.localPosition = Vector3.up * 0.211f;
@@ -124,7 +124,7 @@ public sealed class OakTree : Plant
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
+            sr.sharedMaterial = !PoolMaster.useDefaultMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage5[0];
             spriterCarrier.transform.parent = fullModel.transform;
@@ -159,7 +159,7 @@ public sealed class OakTree : Plant
             fullModel.SetActive(false);
             spriterCarrier = new GameObject("lodSpriter");
             sr = spriterCarrier.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = PoolMaster.useAdvancedMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
+            sr.sharedMaterial = !PoolMaster.useDefaultMaterials ? PoolMaster.billboardShadedMaterial : PoolMaster.billboardMaterial; ;
             if (PoolMaster.shadowCasting) sr.receiveShadows = true;
             sr.sprite = lodPack_stage6[0];
             spriterCarrier.transform.parent = fullModel.transform;
@@ -291,7 +291,7 @@ public sealed class OakTree : Plant
     static GameObject LoadModel(byte stage)
     {
         GameObject g =  Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
-        if (PoolMaster.useAdvancedMaterials) PoolMaster.ReplaceMaterials(g, true);
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(g);
         return g;
     }
 
