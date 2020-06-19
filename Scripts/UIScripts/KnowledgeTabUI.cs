@@ -24,8 +24,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private Transform blackpartsPanel { get { return infoPanel.GetChild(6); } }
     private Transform whitepartsPanel { get { return infoPanel.GetChild(7); } }
 
-    private static Dictionary<int, Texture2D> combinedPuzzleParts; // 0 is plain, 1 is pin, 2 is cut
-    private static Texture2D puzzleParts;
+    private static Texture2D puzzleparts_tx, puzzleParts_origin_resized;
     private static int puzzleTexSize;
 
     private static readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
@@ -33,18 +32,23 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private const float DISAPPEAR_SPEED = 1.5f;
     private const int PLAIN = 0, PIN = 1, CUT = 2;
 
-    public static Texture2D GetPuzzlePart(int pinmask)
+    public static void PreparePartsTexture()
     {
-        Texture2D tx;
-        if (combinedPuzzleParts == null)
+        string name = Application.persistentDataPath + "/puzzlesAll.png";
+        if (System.IO.File.Exists(name))
         {
-            combinedPuzzleParts = new Dictionary<int, Texture2D>();
+            var bytes = System.IO.File.ReadAllBytes(name);
+            puzzleparts_tx = new Texture2D(2, 2);
+            puzzleparts_tx.LoadImage(bytes);
+        }
+        else
+        {
             var origin = Resources.Load<Texture2D>("Textures/puzzleParts");
-            int s = Screen.height / 4, s0 = origin.width, s1, x = 0, y = 0;
+            int s = Screen.height / 4, originWidth = origin.width, s1, x = 0, y = 0;
             Color[] cls = origin.GetPixels(), ncls;
-            while (s0 > s)
+            while (originWidth > s)
             {
-                s1 = s0 / 2;
+                s1 = originWidth / 2;
                 if (s1 % 2 != 0) s1 -= 1;
                 ncls = new Color[s1 * s1];
                 for (x = 0; x < s1; x++)
@@ -52,100 +56,155 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     for (y = 0; y < s1; y++)
                     {
                         ncls[x * s1 + y] =
-                            (cls[(2 * x) * s0 + 2 * y]
-                            + cls[(2 * x + 1) * s0 + 2 * y]
-                            + cls[(2 * x + 1) * s0 + 2 * y + 1]
-                            + cls[(2 * x) * s0 + 2 * y + 1]) / 4f;                         
+                            (cls[(2 * x) * originWidth + 2 * y]
+                            + cls[(2 * x + 1) * originWidth + 2 * y]
+                            + cls[(2 * x + 1) * originWidth + 2 * y + 1]
+                            + cls[(2 * x) * originWidth + 2 * y + 1]) / 4f;
                     }
                 }
-                cls = ncls;                
-                s0 = s1;
+                cls = ncls;
+                originWidth = s1;
             }
             int ind;
             float alpha;
-            for (x = 1; x < s0 -1; x++)
+            for (x = 1; x < originWidth - 1; x++)
             {
-                for (y = 1; y < s0 - 1; y++)
+                for (y = 1; y < originWidth - 1; y++)
                 {
-                    ind = x * s0 + y;
-                    alpha = cls[(x - 1) * s0 + y].a + cls[(x + 1) * s0 + y].a + cls[x * s0 + y + 1].a + cls[x * s0 + y - 1].a;
+                    ind = x * originWidth + y;
+                    alpha = cls[(x - 1) * originWidth + y].a + cls[(x + 1) * originWidth + y].a + cls[x * originWidth + y + 1].a + cls[x * originWidth + y - 1].a;
                     alpha /= 4f;
                     if (cls[ind].a < alpha) cls[ind].a = alpha;
                 }
             }
-            puzzleParts = new Texture2D(s0, s0, TextureFormat.ARGB32, false);
-            puzzleParts.SetPixels(cls);            
-            puzzleParts.Apply();
-            puzzleTexSize = s0 / 2;
+            puzzleParts_origin_resized = new Texture2D(originWidth, originWidth, TextureFormat.ARGB32, false);
+            puzzleParts_origin_resized.SetPixels(cls);
+            puzzleParts_origin_resized.Apply();
+            puzzleTexSize = originWidth / 2;
+            //
+            int fsize = puzzleTexSize * 10;
+            puzzleparts_tx = new Texture2D(fsize, fsize);
+            cls = new Color[fsize * fsize];
+            int pinmask = 0, i, j, index, index2, upPin, downPin, rightPin, leftPin;
 
-           // puzzleParts = new Texture2D(origin.width, origin.height, TextureFormat.ARGB32, false);
-            //puzzleParts.SetPixels(origin.GetPixels());
-           // puzzleParts.Apply();
-            //puzzleTexSize = origin.width / 2;
+            Color[] clr = new Color[puzzleTexSize * puzzleTexSize];
+            for (x = 0; x < 9; x++)
+            {
+                for (y = 0; y < 9; y++)
+                {
+                    pinmask = DecimalToTernary(x * 9 + y);
+                    upPin = pinmask / 1000;
+                    rightPin = (pinmask / 100) % 10;
+                    downPin = (pinmask / 10) % 10;
+                    leftPin = pinmask % 10;
+                    clr = INLINE_GetDetail(upPin);
+                    var nclr = INLINE_GetDetail(rightPin);
+                    float a;
+                    for (i = 0; i < puzzleTexSize; i++)
+                    {
+                        for (j = 0; j < puzzleTexSize; j++)
+                        {
+                            index = i * puzzleTexSize + j;
+                            index2 = j * puzzleTexSize + i;
+                            a = clr[index].a;
+                            if (a < nclr[index2].a)
+                            {
+                                clr[index] = nclr[index2];
+                            }
+                        }
+                    }
+                    //
+
+                    nclr = INLINE_GetDetail(downPin);
+                    for (i = 0; i < puzzleTexSize; i++)
+                    {
+                        for (j = 0; j < puzzleTexSize; j++)
+                        {
+                            index = i * puzzleTexSize + j;
+                            index2 = (puzzleTexSize - 1 - i) * puzzleTexSize + (puzzleTexSize - 1 - j);
+                            a = clr[index].a;
+                            if (a < nclr[index2].a)
+                            {
+                                clr[index] = nclr[index2];
+                            }
+                        }
+                    }
+                    //
+                    nclr = INLINE_GetDetail(leftPin);
+                    for (i = 0; i < puzzleTexSize; i++)
+                    {
+                        for (j = 0; j < puzzleTexSize; j++)
+                        {
+                            index = i * puzzleTexSize + j;
+                            index2 = (puzzleTexSize - 1 - j) * puzzleTexSize + (puzzleTexSize - 1 - i);
+                            a = clr[index].a;
+                            if (a < nclr[index2].a)
+                            {
+                                clr[index] = nclr[index2];
+                            }
+                        }
+                    }
+
+                    for (int b = 0; b < puzzleTexSize; b++)
+                    {
+                        for (int c = 0; c < puzzleTexSize; c++)
+                        {
+                            cls[fsize * (x * puzzleTexSize + b) + puzzleTexSize * y + c] = clr[b * puzzleTexSize + c];
+                        }
+                    }
+                }
+            }
+
+            //puzzleparts_tx = new Texture2D(puzzleTexSize, puzzleTexSize);
+            puzzleparts_tx.SetPixels(cls);
+            puzzleparts_tx.Apply();
+
+            var data = puzzleparts_tx.EncodeToPNG();
+            using (System.IO.FileStream fs = new System.IO.FileStream(name, System.IO.FileMode.Create))
+            {
+                fs.Write(data, 0, data.Length);
+            }
         }
+    }
+    private static int DecimalToTernary(int x)
+    {
+        if (x >= 3)
+        {
+            var res = new List<int>();
+            int n;
+            while (x >= 3)
+            {
+                n = x / 3;
+                res.Add(x % 3);
+                x = n;
+            }
+            res.Add(x);
+            n = 0;
+            for(int i =0; i < res.Count; i++)
+            {
+                if (res[i] != 0)
+                {
+                    n += (int)(res[i] * Mathf.Pow(10, i));
+                }
+            }
+            return n;
+        }
+        else return x;
+    }
+    private static int TernaryToDecimal (int x)
+    {
+        if (x < 3) return x;
         else
         {
-            if (combinedPuzzleParts.TryGetValue(pinmask, out tx)) return tx;
-        }
-        //creating
-        int upPin = pinmask / 1000, rightPin = (pinmask / 100) % 10,
-        downPin = (pinmask / 10) % 10, leftPin = pinmask % 10;
-
-        tx = new Texture2D(puzzleTexSize, puzzleTexSize);
-        int i = 0, j = 0, index, index2;
-        var clr = INLINE_GetDetail(upPin);
-        //
-        var nclr = INLINE_GetDetail(rightPin);        
-        float a;
-        for (i = 0;i < puzzleTexSize; i++)
-        {
-            for (j = 0; j < puzzleTexSize; j++)
+            int result = 0, i =0;
+            while (x >10)
             {
-                index = i * puzzleTexSize + j;
-                index2 = j * puzzleTexSize + i;
-                a = clr[index].a;
-                if (a < nclr[index2].a)
-                {
-                    clr[index] = nclr[index2];
-                }
+                result += (int)((x % 10) * Mathf.Pow(3, i));
+                x = x / 10;
+                i++;
             }
+            return result;
         }
-        //
-        
-        nclr = INLINE_GetDetail(downPin);
-        for (i = 0; i < puzzleTexSize; i++)
-        {
-            for (j = 0; j < puzzleTexSize; j++)
-            {
-                index = i * puzzleTexSize + j;
-                index2 = (puzzleTexSize -1 - i) * puzzleTexSize + (puzzleTexSize - 1 - j);
-                a = clr[index].a;
-                if ( a < nclr[index2].a)
-                {
-                    clr[index] = nclr[index2];
-                }
-            }
-        }
-        //
-        nclr = INLINE_GetDetail(leftPin);
-        for (i = 0; i < puzzleTexSize; i++)
-        {
-            for (j = 0; j < puzzleTexSize; j++)
-            {
-                index = i * puzzleTexSize + j;
-                index2 = (puzzleTexSize -1 - j) * puzzleTexSize + (puzzleTexSize -1 - i);
-                a = clr[index].a;
-                if ( a < nclr[index2].a)
-                {
-                    clr[index] = nclr[index2];
-                }
-            }
-        }
-        //
-        tx.SetPixels(clr);
-        tx.Apply();
-        combinedPuzzleParts.Add(pinmask, tx);
-        return tx;
     }
     private static Color[] INLINE_GetDetail(int code)
     {
@@ -166,9 +225,16 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 break;
         }
         int szx = x0 + puzzleTexSize, szy = y0 + puzzleTexSize;
-        if (szx > puzzleParts.width) szx = puzzleParts.width;
-        if (szy > puzzleParts.height) szy = puzzleParts.height;
-        return puzzleParts.GetPixels(x0, y0, puzzleTexSize , puzzleTexSize);
+        if (szx > puzzleParts_origin_resized.width) szx = puzzleParts_origin_resized.width;
+        if (szy > puzzleParts_origin_resized.height) szy = puzzleParts_origin_resized.height;
+        return puzzleParts_origin_resized.GetPixels(x0, y0, puzzleTexSize , puzzleTexSize);
+    }
+    private static Rect GetPuzzlePartRect(int pincode)
+    {
+        int x = TernaryToDecimal(pincode);
+        int y = x % 9;
+        x /= 9;
+        return new Rect(y * 0.1f, x * 0.1f, 0.1f, 0.1f);
     }
 
     public void Prepare(Knowledge kn)
@@ -186,6 +252,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             var pps = knowledge.puzzlePins;
             int row, column, pincode;
             RawImage ri;
+            PreparePartsTexture();
             for (int i = 1; i < 64; i++)
             {
                 row = i / 8;
@@ -204,27 +271,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                      (row == 0 ? PLAIN : (pps[(row - 1) * 15 + 7 + column] == true ? CUT : PIN)) * 10 +
                      (column == 0 ? PLAIN : (pps[row * 15 + column - 1] == false ? PIN : CUT));
                 ri = rt.GetChild(0).GetComponent<RawImage>();
-                ri.texture = GetPuzzlePart(pincode);
-                ri.uvRect = new Rect(0f, 0f, 1f,1f);
-                /*
-                //up
-                rt.GetChild(0).GetComponent<RawImage>().uvRect = (row == 7 ? plainSide : 
-                    (pps[row * 15 + 7 + column] == true ? pinSide : cutSide )
-                    );
-                //right
-                rt.GetChild(1).GetComponent<RawImage>().uvRect = (column == 7 ? plainSide :
-                    (pps[row * 15 + column] == true ? pinSide : cutSide)
-                    );
-                //down
-                rt.GetChild(2).GetComponent<RawImage>().uvRect = (row == 0 ? plainSide :
-                    (pps[(row - 1) * 15 + 7 + column] == true ? cutSide : pinSide)
-                    );
-                //left
-                rt.GetChild(3).GetComponent<RawImage>().uvRect = (column == 0 ? plainSide :
-                    (pps[row * 15 + column - 1] == false ? pinSide : cutSide)
-                    );
-                    */
-
+                ri.texture = puzzleparts_tx;
+                ri.uvRect = GetPuzzlePartRect(pincode);
                 int f_index = i;
                 rt.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate { this.Click(f_index); } );
                 buttons[i] = rt.gameObject;                
@@ -236,8 +284,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     (pps[0] == true ? PIN : CUT) * 100 +
                      (PLAIN) * 10 +
                      PLAIN;
-            ri.texture = GetPuzzlePart(pincode);
-            ri.uvRect = new Rect(0f, 0f, 1f, 1f);
+            //ri.texture = GetPuzzlePart(pincode);
+            ri.uvRect = GetPuzzlePartRect(pincode);
             //
             GameObject blockTechMarker;
             int index;

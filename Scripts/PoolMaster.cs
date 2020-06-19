@@ -120,6 +120,8 @@ public sealed class PoolMaster : MonoBehaviour {
         var rrs = Component.FindObjectsOfType<Renderer>();
         //if (rrs != null && rrs.Length != 0) ReplaceMaterials(rrs, useAdvancedMaterials);
         if (GameMaster.realMaster?.testMode ?? false) GameLogUI.MakeAnnouncement("Pool master loaded");
+
+        KnowledgeTabUI.PreparePartsTexture();
     }
     private static void LoadMaterials()
     {
