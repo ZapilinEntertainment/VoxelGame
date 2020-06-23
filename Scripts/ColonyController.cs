@@ -76,7 +76,7 @@ public sealed class ColonyController : MonoBehaviour
         START_ENERGY_CRYSTALS_COUNT = 100,
         TICK_TIME = 1f,
         MIN_HAPPINESS = 0.3f,
-        FOOD_SUPPLY_MIN_HAPPINESS = 0.2f,
+        FOOD_SUPPLY_MIN_HAPPINESS = 0.8f,
         HOUSING_MIN_HAPPINESS = 0.15f,
         HEALTHCARE_MIN_HAPPINESS = 0.14f;
 

@@ -316,7 +316,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 CheckGatherButton();
                 changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
                 columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.chunkSize);
-                blockCreateButton.gameObject.SetActive(!observingSurface.isTerminate);                
+                blockCreateButton.gameObject.SetActive(!observingSurface.isTerminal);                
                 break;
         }
     }
@@ -515,7 +515,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         SetCostPanelMode(CostPanelMode.Disabled);
 
                         Plane p;
-                        if ((s as IPlanable).TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminate)
+                        if ((s as IPlanable).TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminal)
                         {
                             UIController.current.Select(p);
                         }
@@ -828,7 +828,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         {
                             var ip = s as IPlanable;
                             Plane p;
-                            if (ip.TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminate)
+                            if (ip.TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminal)
                             {
                                 var sbb = selectedBuildingButton;
                                 UIController.current.Select(p);                                
@@ -872,7 +872,7 @@ public sealed class UISurfacePanelController : UIObserver {
 	void RewriteBuildingButtons () {
         // поправка на материал
         // поправка на side-only
-		var abuildings = Building.GetApplicableBuildingsList(constructingLevel, observingSurface.faceIndex);
+		var abuildings = Building.GetApplicableBuildingsList(constructingLevel, observingSurface);
         if (abuildings != null)
         {
             for (int n = 0; n < buildingButtonsContainer.childCount; n++)

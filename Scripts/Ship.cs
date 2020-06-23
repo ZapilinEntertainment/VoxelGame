@@ -284,7 +284,8 @@ public sealed class Ship : MonoBehaviour {
         s.level = slevel;
         s.type = stype;
         s.destination = d;
-        s.docked = fs.ReadByte() == 1;
+        if (s.destination != null && !s.destination.IsDestroyed()) s.docked = fs.ReadByte() == 1;
+        else s.docked = false;
         var data = new byte[34];
         fs.Read(data, 0, data.Length);
         s.transform.position = new Vector3(

@@ -17,11 +17,11 @@ public class Building : Structure
     public byte level { get { return _level; } protected set { _level = value; } }
 
     public static UIBuildingObserver buildingObserver;
-    public static int[] GetApplicableBuildingsList(byte i_level, byte face)
+    public static int[] GetApplicableBuildingsList(byte i_level, Plane p)
     {
         List<int> bdlist;
-        if (face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX)
-        {            
+        if (p.faceIndex == Block.UP_FACE_INDEX | p.faceIndex == Block.SURFACE_FACE_INDEX)
+        {
             switch (i_level)
             {
                 case 1:
@@ -63,7 +63,7 @@ public class Building : Structure
                     ENERGY_CAPACITOR_2_ID,
                     GRPH_ENRICHER_3_ID
                 };
-                        if (Settlement.maxAchievedLevel >= 3) bdlist.Insert(0,SETTLEMENT_CENTER_ID);
+                        if (Settlement.maxAchievedLevel >= 3) bdlist.Insert(0, SETTLEMENT_CENTER_ID);
                     }
                     break;
                 case 4:
@@ -71,7 +71,6 @@ public class Building : Structure
                     COVERED_FARM,
                     COVERED_LUMBERMILL,
                     SUPPLIES_FACTORY_4_ID,
-                    GRPH_REACTOR_4_ID,
                     SHUTTLE_HANGAR_4_ID,
                     RECRUITING_CENTER_4_ID,
                     EXPEDITION_CORPUS_4_ID,
@@ -84,22 +83,25 @@ public class Building : Structure
                     break;
                 case 5:
                     {
-                        bdlist = new List<int> {
-                    FOUNDATION_BLOCK_5_ID,
-                    STORAGE_BLOCK_ID,
-                    FARM_BLOCK_ID,
-                    LUMBERMILL_BLOCK_ID,
-                    SMELTERY_BLOCK_ID,
-                    //SUPPLIES_FACTORY_5_ID,
-                    REACTOR_BLOCK_5_ID,                    
-                    SCIENCE_LAB_ID
-                    };
-                        if (Settlement.maxAchievedLevel >= 5)
+                        bdlist = new List<int>();
+                        if (!p.isTerminal)
                         {
-                            bdlist.Insert(0, SETTLEMENT_CENTER_ID);
-                        }
+
+                            bdlist.Add(FOUNDATION_BLOCK_5_ID);
+                            bdlist.Add(STORAGE_BLOCK_ID);
+                            bdlist.Add(FARM_BLOCK_ID);
+                            bdlist.Add(LUMBERMILL_BLOCK_ID);
+                            bdlist.Add(SMELTERY_BLOCK_ID);
+
+                        };
+                    bdlist.Add(GRPH_REACTOR_4_ID);
+                    bdlist.Add(SCIENCE_LAB_ID);
+                    if (Settlement.maxAchievedLevel >= 5)
+                    {
+                        bdlist.Insert(0, SETTLEMENT_CENTER_ID);
                     }
-                    break;
+                        break;
+                    }                            
                 case 6:
                     {
                         bdlist = new List<int> {
@@ -110,6 +112,7 @@ public class Building : Structure
                     //SWITCH_TOWER_ID,
                     
                 };
+                        if (!p.isTerminal) bdlist.Add(REACTOR_BLOCK_5_ID);
                         if (Settlement.maxAchievedLevel >= 6)
                         {                            
                             if (Settlement.maxAchievedLevel == Settlement.MAX_HOUSING_LEVEL)
@@ -122,7 +125,7 @@ public class Building : Structure
         }
         else
         {
-            bool bottom = face == Block.DOWN_FACE_INDEX | face == Block.CEILING_FACE_INDEX;
+            bool bottom = p.faceIndex == Block.DOWN_FACE_INDEX | p.faceIndex == Block.CEILING_FACE_INDEX;
             switch(i_level)
             {
                 case 1:
@@ -158,7 +161,9 @@ public class Building : Structure
                     };
                     break;
                 case 5:
-                    bdlist = new List<int>
+                    if (!p.isTerminal)
+                    {
+                        bdlist = new List<int>
                     {
                     FOUNDATION_BLOCK_5_ID,
                     STORAGE_BLOCK_ID,
@@ -167,19 +172,25 @@ public class Building : Structure
                     SMELTERY_BLOCK_ID,
                     REACTOR_BLOCK_5_ID,
                     };
+                    }
+                    else bdlist = new List<int>();
                     break;
                 case 6:
-                    bdlist = new List<int>
+                    if (!p.isTerminal)
+                    {
+                        bdlist = new List<int>
                     {
                         HOUSE_BLOCK_ID
                     };
+                    }
+                    else bdlist = new List<int>();
                     if (bottom) bdlist.Add(HOUSING_MAST_6_ID);
                     break;
                 default: bdlist = new List<int>(); break;
             }
             if ( bottom && i_level <= Settlement.maxAchievedLevel) bdlist.Add(SETTLEMENT_CENTER_ID);
         }
-        if (i_level == 6 && Knowledge.KnowledgePrepared()) Knowledge.GetCurrent().AddUnblockedBuildings(face, ref bdlist);
+        if (i_level == 6 && Knowledge.KnowledgePrepared()) Knowledge.GetCurrent().AddUnblockedBuildings(p.faceIndex, ref bdlist);
         return bdlist.ToArray();
     }
 

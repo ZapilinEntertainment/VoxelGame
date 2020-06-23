@@ -12,7 +12,7 @@ public enum LocalizedWord : ushort
 public enum LocalizedPhrase : ushort
 {
     AddBuilding,ArtifactNotResearched, AscensionLevel, AffectionTypeNotMatch, ClearSlot,ConnectionOK, ConnectionLost, ConvertToBlock, CrewFoundArtifact,CrystalsCollected, GoOnATrip, KnowledgePoints, MembersCount, NoCrews, NoExpeditions, NoSuitableArtifacts, NoSuitableShuttles, NoShuttles, NotEnoughEnergySupply, PressToTurnOn, RecallExpedition, StopDig, StopGather,SuppliesLeft, UnoccupiedTransmitters, RequiredSurface,
-    ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PointsSec, PerSecond, BirthrateMode,
+    ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PathBlocked, PointsSec, PerSecond, BirthrateMode,
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest
@@ -2491,6 +2491,7 @@ public static class Localization
                         case LocalizedPhrase.NotEnoughEnergySupply: return "Недостаточно мощная энергосеть";
                         case LocalizedPhrase.NotResearched: return "Не исследован"; // artifact
                         case LocalizedPhrase.OpenExpeditionWindow: return "Открыть окно экспедиции";
+                        case LocalizedPhrase.PathBlocked: return "Заблокирован";
                         case LocalizedPhrase.PointsSec: return " ед./сек";
                         case LocalizedPhrase.PerSecond: return "в секунду";
                         case LocalizedPhrase.PressToTurnOn: return "Нажмите, чтобы включить";
@@ -2584,6 +2585,7 @@ public static class Localization
                         case LocalizedPhrase.NotEnoughEnergySupply: return "Energy supply is low";
                         case LocalizedPhrase.NotResearched: return "Not researched"; // artifact
                         case LocalizedPhrase.OpenExpeditionWindow: return "Open expedition window";
+                        case LocalizedPhrase.PathBlocked: return "Blocked";
                         case LocalizedPhrase.PointsSec: return "points/sec";
                         case LocalizedPhrase.PerSecond: return "per second";
                         case LocalizedPhrase.PressToTurnOn: return "Press to turn on";

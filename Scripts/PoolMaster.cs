@@ -59,21 +59,8 @@ public sealed class PoolMaster : MonoBehaviour {
 
     public void Load() {
 		if (current != null) return;
-		current = this;
-
-        qualityLevel = QualitySettings.GetQualityLevel();
-        switch (qualityLevel)
-        {
-            case 0:
-                currentMaterialsPack = MaterialsPack.Simplified;
-                break;
-            case 1:
-                currentMaterialsPack = MaterialsPack.Standart;
-                break;
-            case 2:
-                currentMaterialsPack = MaterialsPack.PBR;
-                break;
-        }
+		current = this;        
+        DefineMaterialPack();
         LoadMaterials();
         useIlluminationSystem = !shadowCasting;
         if (qualityLevel != 0) // dependency : change quality level()
@@ -187,6 +174,7 @@ public sealed class PoolMaster : MonoBehaviour {
     {
         if (qualityLevel != newLevel)
         {
+            QualitySettings.SetQualityLevel(newLevel);
             if (current != null)
             {
                 if (qualityLevel == 0)
@@ -203,11 +191,26 @@ public sealed class PoolMaster : MonoBehaviour {
                     }
                 }                
             }
-            LoadMaterials();
-            if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);
+            DefineMaterialPack();
             qualityLevel = newLevel;
+            LoadMaterials();
+            if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);            
             var rrs = Component.FindObjectsOfType<Renderer>();
-            ReplaceMaterials(rrs, currentMaterialsPack);
+            ReplaceMaterials(rrs);
+        }
+    }
+    private static void DefineMaterialPack()
+    {
+        qualityLevel = QualitySettings.GetQualityLevel();
+        switch (qualityLevel)
+        {
+            case 0:
+                currentMaterialsPack = MaterialsPack.Simplified;
+                break;
+            case 2:
+                currentMaterialsPack = MaterialsPack.PBR;
+                break;
+            default: currentMaterialsPack = MaterialsPack.Standart; break;
         }
     }
 

@@ -712,8 +712,8 @@ public class Quest
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:
                     case ProgressQuestID.Progress_CoveredLumbermill:
-                    case ProgressQuestID.Progress_Reactor:
                     case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_Reactor: if (lvl > 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier5: if (lvl == 4) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_FactoryComplex: if (lvl > 4) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_SecondFloor: if (lvl > 2) acceptableQuest.Add(q); break;

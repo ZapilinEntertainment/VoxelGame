@@ -156,7 +156,7 @@ public class Plane
     {
         get { return extension?.HaveGrassland() ?? false; }
     }
-    public bool isTerminate
+    public bool isTerminal
     {
         get
         {

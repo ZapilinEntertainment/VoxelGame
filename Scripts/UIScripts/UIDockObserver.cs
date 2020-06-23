@@ -44,6 +44,7 @@ public sealed class UIDockObserver : UIObserver
             if (tradingListPanel.activeSelf) PrepareTradingPanel();
             else PrepareImmigrationPanel();
             if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
+            else nextShipTimer.text = Localization.GetPhrase(LocalizedPhrase.PathBlocked);
         }
     }
 
@@ -124,12 +125,13 @@ public sealed class UIDockObserver : UIObserver
                 }
             }
             if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
+            else nextShipTimer.text = Localization.GetPhrase(LocalizedPhrase.PathBlocked);
         }
     } 
 
     public void ImmigrationToggleButton()
     {
-        dockSystem.SetImmigrationStatus((!dockSystem.immigrationEnabled), 0);
+        dockSystem.SetImmigrationStatus((!dockSystem.immigrationEnabled), showingImmigrationLimit);
         PrepareImmigrationPanel();
     }
     public void ChangeImmigrationLimitButton(int x)

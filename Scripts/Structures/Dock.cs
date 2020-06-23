@@ -56,7 +56,7 @@ public sealed class Dock : WorkBuilding {
         var loading = GameMaster.loading;
         SetWorkbuildingData(b, pos);	
         colony.AddDock(this);		
-        if (!subscribedToUpdate)
+        if (!subscribedToUpdate && !loading)
         {
             if (!loading)
             {
@@ -93,7 +93,7 @@ public sealed class Dock : WorkBuilding {
             }
         }
         SetModelRotation(modelRotation);
-        CheckAddons();
+        CheckAddons();        
     }
     public void RestoreBlockers()
     {

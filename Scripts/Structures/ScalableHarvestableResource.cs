@@ -150,8 +150,9 @@ public sealed class ScalableHarvestableResource : Structure {
 		return i_volume - addingVolume;
 	}
 	public void Harvest() {
-		resourceCount -= (byte)GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);
-		if (resourceCount == 0) Annihilate(true, false, false);
+		resourceCount = (byte)GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);
+        if (resourceCount == 0) Annihilate(true, false, false);
+        else SetModel();
 	}
     
 	override public void Annihilate( bool clearFromSurface, bool returnResources, bool leaveRuins ) { // for pooling
