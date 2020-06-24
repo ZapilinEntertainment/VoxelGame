@@ -57,10 +57,11 @@ public class Platform : Structure, IPlanable
 
     override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
     {
+        if (destroyed) return;
         if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
         else
         {
-            myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
+           myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
         }
         
     }

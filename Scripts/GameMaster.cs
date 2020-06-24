@@ -209,6 +209,8 @@ public sealed class GameMaster : MonoBehaviour
     }
     void Start()
     {
+        Debug.Log(KnowledgeTabUI.TernaryToDecimal(1000));
+
         if (gameStarted) return;
         
         if (gameMode != GameMode.Editor)

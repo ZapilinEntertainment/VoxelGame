@@ -818,11 +818,10 @@ public sealed partial class Chunk : MonoBehaviour
         int x = pos.x, y = pos.y, z = pos.z;
         if (b.ContainSurface()) needSurfacesUpdate = true;
         var affectionMask = b.GetAffectionMask();
-        b.Annihilate(compensateStructures);
         blocks.Remove(b.pos);
+        b.Annihilate(compensateStructures);        
         RemoveBlockVisualisers(b.pos);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(pos);
-
         if (affectionMask != 0)
         {
             if ((affectionMask & (1 << Block.FWD_FACE_INDEX)) != 0) GetBlock(pos.OneBlockForward())?.InitializePlane(Block.BACK_FACE_INDEX);

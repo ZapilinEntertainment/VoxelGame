@@ -44,7 +44,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         else
         {
             var origin = Resources.Load<Texture2D>("Textures/puzzleParts");
-            int s = Screen.height / 4, originWidth = origin.width, s1, x = 0, y = 0;
+            int s = Screen.height / 2, originWidth = origin.width, s1, x = 0, y = 0;
             Color[] cls = origin.GetPixels(), ncls;
             while (originWidth > s)
             {
@@ -191,18 +191,19 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         }
         else return x;
     }
-    private static int TernaryToDecimal (int x)
+    public static int TernaryToDecimal (int x)
     {
         if (x < 3) return x;
         else
         {
             int result = 0, i =0;
-            while (x >10)
+            while (x >9 )
             {
                 result += (int)((x % 10) * Mathf.Pow(3, i));
                 x = x / 10;
                 i++;
             }
+            result += (int)(x * Mathf.Pow(3, i));
             return result;
         }
     }
@@ -265,7 +266,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 rt.anchorMax = new Vector2(xmin + 0.25f, ymin + 0.25f);
                 rt.offsetMax = Vector2.zero;
                 rt.offsetMin = Vector2.zero;
-
+               
                 pincode = (row == 7 ? PLAIN : (pps[row * 15 + 7 + column] == true ? PIN : CUT)) * 1000 +
                     (column == 7 ? PLAIN : (pps[row * 15 + column] == true ? PIN : CUT)) * 100 +
                      (row == 0 ? PLAIN : (pps[(row - 1) * 15 + 7 + column] == true ? CUT : PIN)) * 10 +

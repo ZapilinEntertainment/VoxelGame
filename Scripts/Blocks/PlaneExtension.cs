@@ -57,6 +57,7 @@ public sealed class PlaneExtension
                 }
             }
             structuresCount = structures.Count;
+            if (structuresCount == 0) structures = null;
         }
         fs.Write(System.BitConverter.GetBytes(structuresCount), 0, 4);
         if (structuresCount > 0)
@@ -368,9 +369,10 @@ public sealed class PlaneExtension
             {
                 for (int i = 0; i < structures.Count; i++)
                 {
-                    structures[i].Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
-                }                
-                structures.Clear();
+                    structures[i]?.Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
+                    if (structures == null) break;
+                }
+                structures = null;
                 grassland?.Annihilate(false, false);
             }
             if (check) RecalculateSurface();
@@ -512,6 +514,7 @@ public sealed class PlaneExtension
                             if (s != null) i++;
                         }
                     }
+                    if (structures.Count == 0) structures = null;
                 }
             }
         }
