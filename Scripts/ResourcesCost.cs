@@ -392,7 +392,13 @@
                   new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_K, 200), new ResourceContainer(ResourceType.Plastics, 250),
                  new ResourceContainer(ResourceType.metal_E, 50), new ResourceContainer(ResourceType.metal_N, 50)
                 };
-                 break;
+                break;
+            case Structure.COMPOSTER_ID:
+                cost = new ResourceContainer[] {
+                new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 30), new ResourceContainer(ResourceType.Plastics, 120),
+                new ResourceContainer(ResourceType.Concrete, 100)
+            };
+                break;
         }
         return cost;
     }

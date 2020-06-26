@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum FactorySpecialization : byte { Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher, SuppliesFactory }
+public enum FactorySpecialization : byte { Unspecialized, Smeltery, OreRefiner, FuelFacility, PlasticsFactory, GraphoniumEnricher, SuppliesFactory, Composter }
 public enum FactoryProductionMode : byte { NoLimit, Limit, Iterations } // if changing, change UIFactoryObserver prefab also
 
 public class Factory : WorkBuilding
@@ -47,6 +47,9 @@ public class Factory : WorkBuilding
             case SUPPLIES_FACTORY_4_ID:
             case SUPPLIES_FACTORY_5_ID:
                 specialization = FactorySpecialization.SuppliesFactory;
+                break;
+            case COMPOSTER_ID:
+                specialization = FactorySpecialization.Composter;
                 break;
             default: specialization = FactorySpecialization.Unspecialized;
                 break;
@@ -303,6 +306,7 @@ public class Factory : WorkBuilding
             case FactorySpecialization.PlasticsFactory: return Recipe.plasticFactoryRecipes;
             case FactorySpecialization.GraphoniumEnricher: return Recipe.graphoniumEnricherRecipes;
             case FactorySpecialization.SuppliesFactory: return AdvancedRecipe.supplyFactoryRecipes;
+            case FactorySpecialization.Composter: return Recipe.composterRecipes;
             default: return new Recipe[1] { Recipe.NoRecipe};
         }
     }

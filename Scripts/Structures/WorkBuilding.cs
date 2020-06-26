@@ -275,6 +275,12 @@ public abstract class WorkBuilding : Building
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.14f;
                     break;
                 }
+            case COMPOSTER_ID:
+                {
+                    maxWorkers = 60;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.3f;
+                    break;
+                }
         }
         colony = GameMaster.realMaster.colonyController;
     }

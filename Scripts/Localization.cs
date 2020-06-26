@@ -61,6 +61,7 @@ public static class Localization
             case Language.Russian:
                 switch (id)
                 {
+                    case Structure.COMPOSTER_ID: return "Компостер";
                     case Structure.PLANT_ID: return "Растение";
                     case Structure.STORAGE_0_ID: return "Основной склад";
                     case Structure.STORAGE_1_ID: 
@@ -133,6 +134,7 @@ public static class Localization
             default:
                 switch (id)
                 {
+                    case Structure.COMPOSTER_ID: return "Composter";
                     case Structure.PLANT_ID: return "Some plant";
                     case Structure.STORAGE_0_ID: return "Primary storage";
                     case Structure.STORAGE_1_ID:
@@ -285,6 +287,7 @@ public static class Localization
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
                     case Structure.SCIENCE_LAB_ID: return "Исследует найденные Закономерности или вырабатывает очки Знания.";
+                    case Structure.COMPOSTER_ID: return "Превращает органику в плодородную почву.";
                     default: return "Описание отсутствует";
                 }
             case Language.English:
@@ -367,6 +370,7 @@ public static class Localization
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
                     case Structure.SCIENCE_LAB_ID: return "Investigates Regularities found or generates Knowledge points.";
+                    case Structure.COMPOSTER_ID: return "Converts organic materials to fertile soil";
                     default: return "No description.";
                 }
         }

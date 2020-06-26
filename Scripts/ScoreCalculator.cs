@@ -108,6 +108,7 @@
         structuresCost[Structure.DOCK_ADDON_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 4;
         structuresCost[Structure.DOCK_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 2;
         structuresCost[Structure.DOCK_3_ID] = structuresCost[Structure.DOCK_ADDON_2_ID] * 2;
+        structuresCost[Structure.COMPOSTER_ID] = structuresCost[Structure.SMELTERY_2_ID];
         #endregion
 
         Chunk c = gm.mainChunk;

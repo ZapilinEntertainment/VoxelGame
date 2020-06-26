@@ -42,7 +42,10 @@ public sealed class UIFactoryObserver : UIObserver
         recipesDropdown.enabled = true;       
        
         int positionInDropdown = 0;
-        if (recipes.Length == 1) recipesDropdown.interactable = false;
+        if (recipes.Length == 1 && recipes[0] == Recipe.NoRecipe)
+        {
+            recipesDropdown.interactable = false;        
+        }
         else
         {
             List<Dropdown.OptionData> recipeButtons = new List<Dropdown.OptionData>();
@@ -65,7 +68,7 @@ public sealed class UIFactoryObserver : UIObserver
                             ));
                     }
                     if (r.ID == ar.ID) positionInDropdown = i;
-                }                
+                }
             }
             else
             {
@@ -76,7 +79,7 @@ public sealed class UIFactoryObserver : UIObserver
                     recipeButtons.Add(new Dropdown.OptionData(Localization.GetResourceName(r.input.ID) + " -> " + Localization.GetResourceName(r.output.ID)));
                     if (r.ID == rx.ID) positionInDropdown = i;
                 }
-            }            
+            }
             recipesDropdown.options = recipeButtons;
             recipesDropdown.interactable = true;
         }

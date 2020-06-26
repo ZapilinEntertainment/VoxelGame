@@ -1131,8 +1131,12 @@ sealed public class UIController : MonoBehaviour
         {
             if (activeFastButtons.Contains(s.ID)) return;
             buttonGO = Instantiate(rightFastPanel.transform.GetChild(0).gameObject, rightFastPanel.transform);
+            int i = activeFastButtons.Count;
             RectTransform rt = buttonGO.GetComponent<RectTransform>();
-            rt.position += Vector3.down * rt.rect.height * activeFastButtons.Count;
+            rt.anchorMin = new Vector2(0f, 0.9f - 0.1f * i);
+            rt.anchorMax = new Vector2(1f, 1f - 0.1f * i);
+            rt.offsetMax = Vector2.zero;
+            rt.offsetMin = Vector2.zero;
         }
         Button b = buttonGO.GetComponent<Button>();
         b.onClick.RemoveAllListeners();

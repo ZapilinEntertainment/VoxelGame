@@ -48,6 +48,7 @@ public class Building : Structure
                     ORE_ENRICHER_2_ID,
                     BIOGENERATOR_2_ID,
                     MINERAL_POWERPLANT_2_ID,
+                    COMPOSTER_ID,
                     HOSPITAL_2_ID,
                     WORKSHOP_ID
                     };
@@ -263,7 +264,9 @@ public class Building : Structure
             case CONNECT_TOWER_6_ID: return 192f;
 
             case OBSERVATORY_ID:
-            case REACTOR_BLOCK_5_ID: return 200f;
+            case REACTOR_BLOCK_5_ID:
+            case COMPOSTER_ID:
+                return 200f;
 
             case HOTEL_BLOCK_6_ID: return 300f;
 
@@ -302,7 +305,8 @@ public class Building : Structure
             case MINE_ID: return -2f;
 
             case SMELTERY_1_ID: return -8f;
-            case SMELTERY_2_ID: return -15f;
+            case SMELTERY_2_ID:
+            case COMPOSTER_ID:  return -15f;
             case SMELTERY_3_ID: return -40f;
             case SMELTERY_BLOCK_ID: return -80f;
 
@@ -702,6 +706,12 @@ public class Building : Structure
             case SCIENCE_LAB_ID:
                 {
                     level = 6;
+                    break;
+                }
+            case COMPOSTER_ID:
+                {
+                    level = 2;
+                    canBePowerSwitched = true;
                     break;
                 }
         }
