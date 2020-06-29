@@ -325,7 +325,7 @@ public sealed class Knowledge
         switch (b.ID)
         {
             case Structure.SETTLEMENT_CENTER_ID:
-                if (b.level == R_F_SETTLEMENT_LEVEL_COND)
+                if (b.level >= R_F_SETTLEMENT_LEVEL_COND)
                 {
                     var x = (byte)FoundationRouteBoosters.SettlementBoost;
                     CountRouteBonus(ResearchRoute.Foundation, x);
@@ -816,25 +816,25 @@ public sealed class Knowledge
 
     public void AddUnblockedBuildings(byte face, ref List<int> bdlist)
     {
-        bool surf = face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX;
+        bool surf = face == Block.UP_FACE_INDEX | face == Block.SURFACE_FACE_INDEX, testmode = GameMaster.realMaster.IsInTestMode;
         bool side = !surf & (face != Block.DOWN_FACE_INDEX) & (face != Block.CEILING_FACE_INDEX);
         int index = routeButtonsIndexes[(byte)ResearchRoute.Foundation, STEPS_COUNT - 4];
-        if (IsButtonUnblocked(index)) bdlist.Add(Structure.HOTEL_BLOCK_6_ID);
+        if (IsButtonUnblocked(index) | testmode) bdlist.Add(Structure.HOTEL_BLOCK_6_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Foundation, STEPS_COUNT - 3];
-        if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.HOUSING_MAST_6_ID);
+        if ( (IsButtonUnblocked(index) | testmode) && !side ) bdlist.Add(Structure.HOUSING_MAST_6_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 4];
-        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.XSTATION_3_ID);
+        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.XSTATION_3_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 3];
-        if (IsButtonUnblocked(index) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
+        if ((IsButtonUnblocked(index) | testmode) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 4];
         //if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.Engine);
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 3];
-        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.CONNECT_TOWER_6_ID);
+        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.CONNECT_TOWER_6_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 4];
-        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
+        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 3];
         //if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CapacitorMast);
         //
@@ -844,7 +844,7 @@ public sealed class Knowledge
         //if (IsButtonUnblocked(index) && !surf) bdlist.Add(Structure.CrystalLightingMast);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Monument, STEPS_COUNT - 4];
-        if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.MONUMENT_ID);
+        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.MONUMENT_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Monument, STEPS_COUNT - 3];
         //if (IsButtonUnblocked(index) && !surf &7 !side) bdlist.Add(Structure.Anchhormast);
         //

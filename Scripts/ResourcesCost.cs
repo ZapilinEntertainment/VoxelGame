@@ -117,7 +117,7 @@
             case Structure.STORAGE_BLOCK_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_K, 50), new ResourceContainer(ResourceType.metal_E, 12),
-                new ResourceContainer(ResourceType.Concrete, 270), new ResourceContainer(ResourceType.metal_M, 15)
+                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.metal_M, 15)
             };
                 break;
             case Structure.HOUSE_BLOCK_ID:
@@ -299,7 +299,7 @@
             case Structure.FOUNDATION_BLOCK_5_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 300), new ResourceContainer(ResourceType.metal_M, 100), new ResourceContainer(ResourceType.metal_E, 50),
-                new ResourceContainer(ResourceType.Concrete, 2000),
+                new ResourceContainer(ResourceType.Concrete, 1000),
             };
                 break;
             case Structure.CONNECT_TOWER_6_ID:

@@ -505,7 +505,7 @@ public class Structure : MonoBehaviour
             case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
             case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;  
             case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
-            case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/hotelBlock")); break;
+            case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
             case DOCK_ADDON_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon2")); break;

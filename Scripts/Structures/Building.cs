@@ -191,7 +191,7 @@ public class Building : Structure
             }
             if ( bottom && i_level <= Settlement.maxAchievedLevel) bdlist.Add(SETTLEMENT_CENTER_ID);
         }
-        if (i_level == 6 && Knowledge.KnowledgePrepared()) Knowledge.GetCurrent().AddUnblockedBuildings(p.faceIndex, ref bdlist);
+        if (i_level == 6 && (Knowledge.KnowledgePrepared() | GameMaster.realMaster.IsInTestMode)) Knowledge.GetCurrent().AddUnblockedBuildings(p.faceIndex, ref bdlist);
         return bdlist.ToArray();
     }
 
@@ -282,6 +282,7 @@ public class Building : Structure
             case SETTLEMENT_STRUCTURE_ID: return -0.5f;
             case HOUSE_BLOCK_ID: return -200f;
             case HOUSING_MAST_6_ID: return -120f;
+            case HOTEL_BLOCK_6_ID:  return -100f;
 
             case DOCK_ID: return -10f;
             case DOCK_2_ID: return -20f;
@@ -334,18 +335,12 @@ public class Building : Structure
             case WIND_GENERATOR_1_ID:
                 return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
-            case MINI_GRPH_REACTOR_3_ID:
-            case HOTEL_BLOCK_6_ID:
-                return 100f;
+            case MINI_GRPH_REACTOR_3_ID:            
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
             case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
 
             default: return 0;
         }
-    }
-    new public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
-    {
-        return true;
     }
 
     override public void Prepare() { PrepareBuilding(); }

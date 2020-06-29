@@ -108,6 +108,7 @@ public sealed class GameMaster : MonoBehaviour
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
     [SerializeField] public bool testMode = false;
+    public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     [SerializeField] private string savenameToLoad = string.Empty;
     public bool weNeedNoResources { get; private set; }
@@ -147,14 +148,19 @@ public sealed class GameMaster : MonoBehaviour
         }
         sceneClearing = true;
         SceneManager.LoadScene(index);
-        sceneClearing = false;
-        Structure.ResetToDefaults_Static();
+        ResetValues();
+        sceneClearing = false;        
     }
     public static void LoadingFail()
     {
         loadingFailed = true;
         SetPause(true);
         Debug.Log("loading failed");
+    }
+    private static void ResetValues()
+    {
+        Structure.ResetToDefaults_Static();
+        DockSystem.ResetRequest();
     }
     #endregion
 
@@ -856,7 +862,7 @@ public sealed class GameMaster : MonoBehaviour
             }            
             SetPause(false);
             colonyController.FORCED_PowerGridRecalculation();
-
+            colonyController.SYSTEM_DocksRecalculation();
             return true;
         }
         else

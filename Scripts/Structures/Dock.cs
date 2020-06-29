@@ -21,11 +21,6 @@ public sealed class Dock : WorkBuilding {
     public const int SMALL_SHIPS_PATH_WIDTH = 2, MEDIUM_SHIPS_PATH_WIDTH = 3, HEAVY_SHIPS_PATH_WIDTH = 4;
     private const float WORK_PER_WORKER = 10f;
 
-    static Dock()
-    {
-        AddToResetList(typeof(Dock));
-    }
-
 	override public void Prepare() {
 		PrepareWorkbuilding();
         if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
@@ -56,7 +51,7 @@ public sealed class Dock : WorkBuilding {
         var loading = GameMaster.loading;
         SetWorkbuildingData(b, pos);	
         colony.AddDock(this);		
-        if (!subscribedToUpdate && !loading)
+        if (!subscribedToUpdate)
         {
             if (!loading)
             {
@@ -111,8 +106,8 @@ public sealed class Dock : WorkBuilding {
         return shipArrivingTimer;
     }
     override public void LabourUpdate () {
-		if ( !isEnergySupplied ) return;
-		if ( maintainingShip ) {
+        if ( !isEnergySupplied ) return;
+		if ( maintainingShip ) {           
 			if (loadingTimer > 0) {
 					loadingTimer -= GameMaster.LABOUR_TICK;
 					if (loadingTimer <= 0) {
@@ -121,9 +116,9 @@ public sealed class Dock : WorkBuilding {
 					}
 			}
 		}
-		else {
-			// ship arriving
-			if (shipArrivingTimer > 0 & correctLocation) { 
+		else {            // ship arriving
+            
+            if (shipArrivingTimer > 0 & correctLocation) { 
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
@@ -265,6 +260,11 @@ public sealed class Dock : WorkBuilding {
                 //end
             }
             else PoolMaster.current.DisableFlightZone();
+        }
+        if (!correctLocation)
+        {
+            maintainingShip = false;
+            loadingShip = null;
         }
         // end
     }
@@ -568,6 +568,7 @@ public sealed class Dock : WorkBuilding {
         if (maintainingShip)
         {
             loadingShip = Ship.Load(fs, this);
+            if (loadingShip == null) maintainingShip = false;
         }
         data = new byte[8];
         fs.Read(data, 0, 8);        

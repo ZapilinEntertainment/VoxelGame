@@ -691,6 +691,17 @@ public sealed class ColonyController : MonoBehaviour
         if (energyStored > totalEnergyCapacity) energyStored = totalEnergyCapacity;
     }
 
+    public void SYSTEM_DocksRecalculation()
+    {
+        if (powerGrid != null && powerGrid.Count > 0)
+        {
+            foreach (var p in powerGrid)
+            {
+                if (p is Dock) (p as Dock).CheckPositionCorrectness();
+            }
+        }
+    }
+
     public void AddDock(Dock d)
     {
         if (d == null) return;

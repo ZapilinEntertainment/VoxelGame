@@ -227,7 +227,7 @@ public class Plane
             t.parent = host.GetBlock().myChunk.transform;
             t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
             t.position = GetCenterPosition();
-            s.SetVisibility(isVisible);
+            if (!s.IsIPlanable()) s.SetVisibility(isVisible);
         }
     }
     public void RemoveStructure(Structure s)

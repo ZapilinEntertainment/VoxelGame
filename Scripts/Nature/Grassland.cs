@@ -306,7 +306,7 @@ public sealed class Grassland
         {
             if (level > MAX_LEVEL) level = MAX_LEVEL;
             level = l;
-            if (!cultivating)
+            if (!cultivating && plane.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
             {
                 //var fi = plane.faceIndex;
                 {

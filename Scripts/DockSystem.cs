@@ -27,7 +27,9 @@ public sealed class DockSystem
     {
         current = null;
         int x = fs.ReadByte();
-        if (x == 0) return;
+        if (x == 0) {
+            return;
+        }
         else
         {
             current = new DockSystem();
