@@ -610,24 +610,22 @@ sealed public class UIController : MonoBehaviour
             case ChosenObjectType.Structure:
                 if (!(chosenStructure is IPlanable))
                 {
-                    selectedFaceIndex = Chunk.NO_FACE_VALUE;
-                    selectionFrame.position = chosenStructure.transform.position;
-                    selectionFrame.rotation = chosenStructure.transform.rotation;
-                    selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
-                    sframeColor = new Vector3(1f, 0f, 1f);
-                    workingObserver = chosenStructure.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+                    INLINE_STR_SELECT(ref sframeColor);
                 }
                 else
                 {
                     var ip = chosenStructure as IPlanable;
                     var p = ip.FORCED_GetPlane(selectedFaceIndex);
-                    selectionFrame.position = p.GetCenterPosition();
-                    selectionFrame.rotation = Quaternion.Euler(p.GetEulerRotationForQuad());
-                    selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
-                    sframeColor = new Vector3(140f / 255f, 1f, 1f);
-                    workingObserver = chosenStructure.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(selectionFrame.position);
+                    if (p == null) INLINE_STR_SELECT(ref sframeColor);
+                    else
+                    {
+                        selectionFrame.position = p.GetCenterPosition();
+                        selectionFrame.rotation = Quaternion.Euler(p.GetEulerRotationForQuad());
+                        selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
+                        sframeColor = new Vector3(140f / 255f, 1f, 1f);
+                        workingObserver = chosenStructure.ShowOnGUI();
+                        FollowingCamera.main.SetLookPoint(selectionFrame.position);
+                    }
                 }
                 break;
 
@@ -645,6 +643,17 @@ sealed public class UIController : MonoBehaviour
             selectionFrame.gameObject.SetActive(true);
         }
     }
+    private void INLINE_STR_SELECT(ref Vector3 sframeColor)
+    {
+        selectedFaceIndex = Chunk.NO_FACE_VALUE;
+        selectionFrame.position = chosenStructure.transform.position;
+        selectionFrame.rotation = chosenStructure.transform.rotation;
+        selectionFrame.localScale = new Vector3(chosenStructure.surfaceRect.size, 1, chosenStructure.surfaceRect.size);
+        sframeColor = new Vector3(1f, 0f, 1f);
+        workingObserver = chosenStructure.ShowOnGUI();
+        FollowingCamera.main.SetLookPoint(chosenStructure.transform.position);
+    }
+
     public void ShowWorksite(Worksite ws)
     {
         chosenWorksite = ws;

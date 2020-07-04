@@ -23,6 +23,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     private Transform cyanpartsPanel { get { return infoPanel.GetChild(5); } }
     private Transform blackpartsPanel { get { return infoPanel.GetChild(6); } }
     private Transform whitepartsPanel { get { return infoPanel.GetChild(7); } }
+    private GameObject[] endQuestButtons = new GameObject[8];
 
     private static Texture2D puzzleparts_tx, puzzleParts_origin_resized;
     private static int puzzleTexSize;
@@ -401,20 +402,9 @@ public sealed class KnowledgeTabUI : MonoBehaviour
 
         var cca = knowledge.colorCodesArray;
         var ia = Knowledge.routeButtonsIndexes;
-        bool unblocked;
-        var nocode = Knowledge.NOCOLOR_CODE;
         for (i = 0; i< Knowledge.ROUTES_COUNT; i++)
-        {
-            unblocked = true;
-            for (int j = 0; j < Knowledge.STEPS_COUNT; j++)
-            {
-                if (cca[ia[i,j]] != nocode)
-                {
-                    unblocked = false;
-                    break;
-                }
-            }
-            if (unblocked)
+        {                    
+            if (knowledge.IsRouteUnblocked(i) && endQuestButtons[i] == null)
             {
                 var g = new GameObject();
                 RectTransform eqButton = g.AddComponent<RectTransform>();
@@ -435,6 +425,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     () => QuestUI.current.StartEndQuest(index), Localization.GetWord(LocalizedWord.Yes),
                     GameLogUI.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
                     ));
+                endQuestButtons[i] = g;
             }
         }
 

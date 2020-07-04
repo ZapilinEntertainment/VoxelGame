@@ -99,10 +99,11 @@ public class UIBuildingObserver : UIObserver {
         }
         else
         {
+            bool ps = observingBuilding.canBePowerSwitched;
             chargeButton.SetActive(false);
-            energyValue.text = Localization.GetPhrase(LocalizedPhrase.PressToTurnOn);
+            energyValue.text = ps ? Localization.GetPhrase( LocalizedPhrase.PressToTurnOn) : Localization.GetWord(LocalizedWord.Offline);
             energyValue.enabled = true;            
-            energyImage.uvRect = UIController.GetIconUVRect(Icons.TurnOn);
+            energyImage.uvRect = UIController.GetIconUVRect(ps ? Icons.TurnOn : Icons.OutOfPowerButton);
             energyImage.enabled = true;
         }
         energyButton.interactable = observingBuilding.canBePowerSwitched;

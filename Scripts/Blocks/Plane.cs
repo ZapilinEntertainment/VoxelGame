@@ -225,8 +225,22 @@ public class Plane
             mainStructure = s;
             var t = s.transform;
             t.parent = host.GetBlock().myChunk.transform;
-            t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
-            t.position = GetCenterPosition();
+            if (!(s.IsIPlanable())) t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
+            if (!(s is Hotel)) t.position = GetCenterPosition(); else //костыль
+            {
+
+                switch(faceIndex)
+                {
+                    case Block.FWD_FACE_INDEX:
+                    case Block.RIGHT_FACE_INDEX:
+                    case Block.LEFT_FACE_INDEX:
+                    case Block.BACK_FACE_INDEX:
+                        t.position = GetCenterPosition() + GetLookVector() * 0.5f * Block.QUAD_SIZE + Vector3.down * 0.5f * Block.QUAD_SIZE; break;
+                    case Block.DOWN_FACE_INDEX:
+                        t.position = GetCenterPosition() + GetLookVector() * Block.QUAD_SIZE; break;
+                    default: t.position = GetCenterPosition();break;
+                }
+            }
             if (!s.IsIPlanable()) s.SetVisibility(isVisible);
         }
     }

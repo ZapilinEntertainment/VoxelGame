@@ -171,15 +171,17 @@ public sealed class GameLogUI : MonoBehaviour {
         decisionMonoButton.SetActive(true);
         decisionPanel.SetActive(true);
     }
-    private void PrepareDecisionWindow(string question, DecisionAction leftDecision, string leftChoice, DecisionAction rightDecision, string rightChoice)
+    private void PrepareDecisionWindow(string question, DecisionAction i_leftDecision, string leftChoice, DecisionAction i_rightDecision, string rightChoice)
     {
         blockingMask.SetActive(true);
         decisionWindowText.text = question;
-        decisionRightButton.GetComponent<Text>().text = rightChoice;
+        decisionRightButton.transform.GetChild(0).GetComponent<Text>().text = rightChoice;
         decisionRightButton.SetActive(true);
-        decisionLeftButton.GetComponent<Text>().text = leftChoice;
+        decisionLeftButton.transform.GetChild(0).GetComponent<Text>().text = leftChoice;
         decisionLeftButton.SetActive(true);
         decisionMonoButton.SetActive(false);
+        leftDecision = i_leftDecision;
+        rightDecision = i_rightDecision;
         decisionPanel.SetActive(true);
     }
     //====

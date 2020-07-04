@@ -263,8 +263,8 @@ public sealed class ColonyController : MonoBehaviour
             }
             if (happinessAffects != null )
             {
-                int i = happinessAffects.Count;
-                while (i > 0)
+                int i = happinessAffects.Count - 1;
+                while (i >= 0)
                 {
                     var ha = happinessAffects[i];
                     targetHappiness += ha.volume;

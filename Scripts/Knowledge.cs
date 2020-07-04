@@ -17,7 +17,8 @@ public sealed class Knowledge
     private static Knowledge current;
 
     public readonly bool[] puzzlePins;
-    public bool allRoutesUnblocked { get; private set; }
+    public bool allRoutesUnblocked { get { return routeCompletenessMask == 255; } }
+    private byte routeCompletenessMask = 0;
     public float[] routePoints { get; private set; }
     public byte[] puzzlePartsCount { get; private set; }
     public byte[] colorCodesArray{get; private set;}
@@ -805,6 +806,7 @@ public sealed class Knowledge
                     }
                 }                
             }
+            RecalculateCompletenessMask();
             return true;
         }
         else return false;
@@ -812,6 +814,33 @@ public sealed class Knowledge
     public bool IsButtonUnblocked(int i)
     {
         return colorCodesArray[i] == NOCOLOR_CODE;
+    }
+    public bool IsRouteUnblocked(ResearchRoute rr)
+    {
+        int rc = (int)rr;
+        return ((routeCompletenessMask & (1 << rc)) != 0);
+    }
+    public bool IsRouteUnblocked(int i)
+    {
+        return ((routeCompletenessMask & (1 << i)) != 0);
+    }
+    private void RecalculateCompletenessMask()
+    {
+        int j;
+        bool complete = true;
+        routeCompletenessMask = 0;
+        for (int i = 0; i < ROUTES_COUNT; i++)
+        {
+            for (j = 0; j < STEPS_COUNT; j++)
+            {
+                if (!IsButtonUnblocked(routeButtonsIndexes[i, j]))
+                {
+                    complete = false;
+                    break;
+                }
+            }
+            if (complete) routeCompletenessMask += (byte)(1 << i);
+        }
     }
 
     public void AddUnblockedBuildings(byte face, ref List<int> bdlist)
@@ -1204,6 +1233,8 @@ public sealed class Knowledge
         {
             current.routeBonusesMask[i] = (byte)fs.ReadByte();
         }
+
+        current.RecalculateCompletenessMask();
     }
     #endregion
 }

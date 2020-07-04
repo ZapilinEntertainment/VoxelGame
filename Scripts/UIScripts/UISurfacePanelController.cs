@@ -582,7 +582,7 @@ public sealed class UISurfacePanelController : UIObserver {
             }
             savedHqLevel = hq.level;
 			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
-			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && observingSurface.pos.y < Chunk.chunkSize - 1);
+			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && !observingSurface.isTerminal);
             changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
 			UIController.current.closePanelButton.gameObject.SetActive(true);
 		}

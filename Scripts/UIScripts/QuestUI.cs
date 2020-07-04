@@ -358,8 +358,8 @@ public sealed class QuestUI : MonoBehaviour
     }
     public void StartEndQuest(byte routeIndex)
     {
-        int endIndex = (int)QuestType.Endgame;
-        if (activeQuests[endIndex] != Quest.NoQuest)
+        int endIndex = (int)QuestSection.Endgame;
+        if (activeQuests[endIndex] == Quest.NoQuest || activeQuests[endIndex] == null)
         {
             activeQuests[endIndex] = new Quest(QuestType.Endgame, routeIndex);
             questAccessMap[endIndex] = true;

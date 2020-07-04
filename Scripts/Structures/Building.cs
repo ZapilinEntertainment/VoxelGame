@@ -280,9 +280,9 @@ public class Building : Structure
         {
             case SETTLEMENT_CENTER_ID: return -2f;
             case SETTLEMENT_STRUCTURE_ID: return -0.5f;
-            case HOUSE_BLOCK_ID: return -200f;
-            case HOUSING_MAST_6_ID: return -120f;
-            case HOTEL_BLOCK_6_ID:  return -100f;
+            case HOUSE_BLOCK_ID: return -400f;
+            case HOUSING_MAST_6_ID: return -350f;
+            case HOTEL_BLOCK_6_ID:  return -200f;
 
             case DOCK_ID: return -10f;
             case DOCK_2_ID: return -20f;
@@ -335,7 +335,7 @@ public class Building : Structure
             case WIND_GENERATOR_1_ID:
                 return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
-            case MINI_GRPH_REACTOR_3_ID:            
+            case MINI_GRPH_REACTOR_3_ID: return Powerplant.GRPH_REACTOR_OUTPUT * 0.6f;
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
             case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
 
@@ -640,7 +640,6 @@ public class Building : Structure
             case QUANTUM_TRANSMITTER_4_ID:
                 {
                     level = 4;
-                    canBePowerSwitched = true;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
@@ -700,6 +699,7 @@ public class Building : Structure
                 }
             case SCIENCE_LAB_ID:
                 {
+                    canBePowerSwitched = true;
                     level = 6;
                     break;
                 }

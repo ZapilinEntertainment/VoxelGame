@@ -626,13 +626,24 @@ public class Quest
                     case Knowledge.FoundationRouteBoosters.HappinessBoost:
                         steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%' 
                             + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                        if (colony.happiness_coefficient == Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
                         break;
                     case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
-                        steps[0] = "Количество прибывших: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
-                        break;
+                        {
+                            var ic = DockSystem.GetImmigrantsTotalCount();
+                            var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
+                            steps[0] = "Количество прибывших: " + ic.ToString() + " / " + nic.ToString();
+                            if (ic == nic) MakeQuestCompleted();
+                            break;
+                        }
                     case Knowledge.FoundationRouteBoosters.PopulationBoost:
-                        steps[0] = "Текущее население: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
-                        break;
+                        {
+                            var cc = colony.citizenCount;
+                            var nc = Knowledge.R_F_POPULATION_COND;
+                            steps[0] = "Текущее население: " + cc.ToString() + " / " + nc.ToString();
+                            if (cc == nc) MakeQuestCompleted();
+                            break;
+                        }
                 }
                 break;
         }

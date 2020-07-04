@@ -8,7 +8,7 @@ public class Powerplant : WorkBuilding
     public float fuelLeft { get; protected set; }
     protected int tickTimer = 0;
 
-    public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 180, GRPH_REACTOR_OUTPUT = 800, REACTOR_BLOCK_5_OUTPUT = 1600;
+    public const int BIOGEN_OUTPUT = 40, MINERAL_F_PP_OUTPUT = 180, GRPH_REACTOR_OUTPUT = 1000, REACTOR_BLOCK_5_OUTPUT = 3000;
 
     override public void Prepare()
     {

@@ -58,7 +58,10 @@ public class UIStructureObserver : UIObserver {
     {
         if (observingStructure != null)
         {
-            if (observingStructure is IPlanable) observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            if (observingStructure is IPlanable && !(observingStructure is Hotel))
+            {
+                observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            }
             else
             {
                 int r = observingStructure.modelRotation;
@@ -73,7 +76,10 @@ public class UIStructureObserver : UIObserver {
     {
         if (observingStructure != null)
         {
-            if (observingStructure is IPlanable) observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            if (observingStructure is IPlanable && !(observingStructure is Hotel))
+            {
+                observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+            }
             else
             {
                 int r = observingStructure.modelRotation;

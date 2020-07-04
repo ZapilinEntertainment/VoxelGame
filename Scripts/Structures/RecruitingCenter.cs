@@ -6,7 +6,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     public static List<RecruitingCenter> recruitingCentersList;
     private static float hireCost = -1;       
 
-    float backupSpeed = 0.02f;
+    private float backupSpeed = 0.02f;
     public bool finding = false;
     const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
     public const int REPLENISH_COST = 50;	
@@ -63,7 +63,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 	}
 
 	override public void LabourUpdate() {
-		if ( !isActive | !isEnergySupplied) return;
+        if (!isActive || !isEnergySupplied || GameMaster.loading) return;
 		if (workersCount > 0) {
 			if (finding) {
                 workSpeed = (FIND_SPEED * 0.8f * colony.workspeed + 0.2f * Random.value) * GameMaster.LABOUR_TICK / workflowToProcess;
