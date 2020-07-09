@@ -25,6 +25,27 @@ public class StorageHouse : Building {
             default: return 1000;
         }
     }
+    override public bool IsLevelUpPossible(ref string refusalReason)
+    {
+        if (ID == STORAGE_2_ID)
+        {
+            if (GameMaster.realMaster.colonyController.hq.level >= 5) return true;
+            else
+            {
+                refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
+                return false;
+            }
+        }
+        else
+        {
+            if (level < GameMaster.realMaster.colonyController.hq.level) return true;
+            else
+            {
+                refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
+                return false;
+            }
+        }
+    }
 
     override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;

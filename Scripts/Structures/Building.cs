@@ -33,7 +33,7 @@ public class Building : Structure
                     FARM_1_ID,
                     LUMBERMILL_1_ID,
                     SMELTERY_1_ID,
-                    ENERGY_CAPACITOR_1_ID,
+                    COMPOSTER_ID,
                    // MINE_ID,
                     DOCK_ID
                 };
@@ -41,14 +41,13 @@ public class Building : Structure
                 case 2:
                     bdlist = new List<int> {
                     STORAGE_2_ID,
-                    //HOUSE_2_ID,
                     FARM_2_ID,
                     LUMBERMILL_2_ID,
                     SMELTERY_2_ID,
                     ORE_ENRICHER_2_ID,
                     BIOGENERATOR_2_ID,
                     MINERAL_POWERPLANT_2_ID,
-                    COMPOSTER_ID,
+                    ENERGY_CAPACITOR_1_ID,                    
                     HOSPITAL_2_ID,
                     WORKSHOP_ID
                     };
@@ -132,8 +131,7 @@ public class Building : Structure
                 case 1:
                     bdlist = new List<int> {
                     STORAGE_1_ID,
-                    SMELTERY_1_ID,
-                    ENERGY_CAPACITOR_1_ID,
+                    SMELTERY_1_ID,                    
                 };
                     break;
                 case 2:
@@ -141,7 +139,7 @@ public class Building : Structure
                     {
                     STORAGE_2_ID,
                     SMELTERY_2_ID,
-                    ENERGY_CAPACITOR_2_ID,
+                    ENERGY_CAPACITOR_1_ID,
                     };
                     break;
                 case 3:
@@ -150,6 +148,7 @@ public class Building : Structure
                 {
                     SMELTERY_3_ID,
                     MINI_GRPH_REACTOR_3_ID,
+                    ENERGY_CAPACITOR_2_ID
                 };
                     }
                     break;
@@ -335,7 +334,7 @@ public class Building : Structure
             case WIND_GENERATOR_1_ID:
                 return 10f;
             case BIOGENERATOR_2_ID: return Powerplant.BIOGEN_OUTPUT;
-            case MINI_GRPH_REACTOR_3_ID: return Powerplant.GRPH_REACTOR_OUTPUT * 0.6f;
+            case MINI_GRPH_REACTOR_3_ID: return Powerplant.GRPH_REACTOR_OUTPUT * 0.1f;
             case GRPH_REACTOR_4_ID: return Powerplant.GRPH_REACTOR_OUTPUT;
             case REACTOR_BLOCK_5_ID: return Powerplant.REACTOR_BLOCK_5_OUTPUT;
 
@@ -389,7 +388,7 @@ public class Building : Structure
                 break;
             case STORAGE_2_ID:
                 {
-                    // upgradedIndex = STORAGE_3_ID;
+                    upgradedIndex = STORAGE_BLOCK_ID;
                     level = 2;
                 }
                 break;

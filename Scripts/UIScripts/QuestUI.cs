@@ -361,7 +361,19 @@ public sealed class QuestUI : MonoBehaviour
         int endIndex = (int)QuestSection.Endgame;
         if (activeQuests[endIndex] == Quest.NoQuest || activeQuests[endIndex] == null)
         {
-            activeQuests[endIndex] = new Quest(QuestType.Endgame, routeIndex);
+            byte subID = 0;
+            switch ((Knowledge.ResearchRoute)routeIndex)
+            {
+                case Knowledge.ResearchRoute.Foundation: subID = (byte)EndgameQuestID.FoundationEnd; break;
+                case Knowledge.ResearchRoute.CloudWhale: subID = (byte)EndgameQuestID.CloudWhaleEnd; break;
+                case Knowledge.ResearchRoute.Engine: subID = (byte)EndgameQuestID.EngineEnd; break;
+                case Knowledge.ResearchRoute.Pipes: subID = (byte)EndgameQuestID.PipesEnd; break;
+                case Knowledge.ResearchRoute.Crystal: subID = (byte)EndgameQuestID.CrystalEnd; break;
+                case Knowledge.ResearchRoute.Monument: subID = (byte)EndgameQuestID.MonumentEnd; break;
+                case Knowledge.ResearchRoute.Blossom: subID = (byte)EndgameQuestID.BlossomEnd; break;
+                case Knowledge.ResearchRoute.Pollen: subID = (byte)EndgameQuestID.PollenEnd; break;
+            }
+            activeQuests[endIndex] = new Quest(QuestType.Endgame, subID);
             questAccessMap[endIndex] = true;
         }
         else

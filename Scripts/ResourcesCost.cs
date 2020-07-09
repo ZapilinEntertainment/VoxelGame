@@ -98,19 +98,19 @@
             case Structure.DOCK_2_ID:
             case Structure.DOCK_3_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 10), new ResourceContainer(ResourceType.metal_E, 2),
+                new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 10), 
                 new ResourceContainer(ResourceType.Concrete, 300)
             };
                 break;
             case Structure.STORAGE_1_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.metal_M, 10),
+                new ResourceContainer(ResourceType.Concrete, 200), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 10),
                 new ResourceContainer(ResourceType.Plastics, 100)
             };
                 break;
             case Structure.STORAGE_2_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 70), new ResourceContainer(ResourceType.metal_M, 25),
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 25),
                 new ResourceContainer(ResourceType.Plastics, 200)
             };
                 break;
@@ -242,7 +242,7 @@
                 break;
             case Structure.HOSPITAL_2_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.metal_K, 15), new ResourceContainer(ResourceType.metal_E, 5)
+                new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.Plastics, 100), new ResourceContainer(ResourceType.metal_E, 25),
             };
                 break;
             case Structure.MINI_GRPH_REACTOR_3_ID:

@@ -15,7 +15,8 @@ public enum ProgressQuestID : byte
 }
 public enum EndgameQuestID : byte
 {
-    Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3, FoundationEnd
+    Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3, FoundationEnd, CloudWhaleEnd,
+    EngineEnd, PipesEnd, CrystalEnd, MonumentEnd, BlossomEnd, PollenEnd
 }
 
 public class Quest
@@ -145,6 +146,20 @@ public class Quest
                     case EndgameQuestID.Endgame_TransportHub_step3:
                         stepsCount = 3;
                         reward = 1000;
+                        break;
+                    case EndgameQuestID.FoundationEnd:
+                        break;
+                    case EndgameQuestID.CloudWhaleEnd:
+                        break;
+                    case EndgameQuestID.EngineEnd:
+                        break;
+                    case EndgameQuestID.CrystalEnd:
+                        break;
+                    case EndgameQuestID.MonumentEnd:
+                        break;
+                    case EndgameQuestID.BlossomEnd:
+                        break;
+                    case EndgameQuestID.PollenEnd:
                         break;
                 }
                 break;
@@ -719,7 +734,7 @@ public class Quest
                     case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_100Fuel: if (resources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
+                    //case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:
                     case ProgressQuestID.Progress_CoveredLumbermill:

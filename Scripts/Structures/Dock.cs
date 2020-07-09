@@ -195,6 +195,7 @@ public sealed class Dock : WorkBuilding {
             else corridorWidth = HEAVY_SHIPS_PATH_WIDTH;
         }
 
+        if (basement == null) { Annihilate(false, true, false); return; }
         if (basement.faceIndex == Block.SURFACE_FACE_INDEX)
         {
             switch (modelRotation)

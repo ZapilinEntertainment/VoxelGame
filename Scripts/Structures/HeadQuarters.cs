@@ -17,11 +17,18 @@ public sealed class HeadQuarters : Building
     protected override void SetModel()
     {
         GameObject model;
-        if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
+        Quaternion prevRot = Quaternion.identity;
+        if (transform.childCount != 0)
+        {
+            var p = transform.GetChild(0);
+            prevRot = p.localRotation;
+            Destroy(p.gameObject);
+        }
+        else prevRot = Quaternion.Euler(0f, 45f * modelRotation, 0f);
         if (level < 2) model = Instantiate(Resources.Load<GameObject>("Structures/ZeppelinBasement"));
         else model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/HQ_level_" + level.ToString()));
         model.transform.parent = transform;
-        model.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
         if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
     }
