@@ -157,13 +157,20 @@ public abstract class WorkBuilding : Building
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.2f;
                 }
                 break;
-            case HOSPITAL_2_ID:
+            case HOSPITAL_ID:
                 {
-                    workflowToProcess = 1;
+                    workflowToProcess = 1f;
                     maxWorkers = 50;
                     gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
                 }
                 break;
+            case HOSPITAL_2_ID:
+                {
+                    workflowToProcess = 1f;
+                    maxWorkers = 200;
+                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.4f;
+                    break;
+                }
             case MINERAL_POWERPLANT_2_ID:
                 {
                     workflowToProcess = 1;

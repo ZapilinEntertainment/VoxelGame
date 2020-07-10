@@ -2,9 +2,18 @@
 
 public class Hospital : WorkBuilding {
 	public float coverage {get;private set;}	
-    const int STANDART_COVERAGE = 1000;
+    const int STANDART_COVERAGE = 500;
 
-	public override void SetBasement(Plane b, PixelPosByte pos) {		
+    override public bool IsLevelUpPossible(ref string refusalReason)
+    {
+        if (GameMaster.realMaster.colonyController.hq.level >= 5) return true;
+        else
+        {
+            refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
+            return false;
+        }
+    }
+    public override void SetBasement(Plane b, PixelPosByte pos) {		
 		if (b == null) return;
         SetWorkbuildingData(b, pos);        
         if (!GameMaster.loading)
@@ -26,7 +35,7 @@ public class Hospital : WorkBuilding {
     private void RecalculateCoverage()
     {
         float prevCoverage = coverage;
-        coverage = STANDART_COVERAGE * ((float)workersCount / (float)maxWorkers);
+        coverage = STANDART_COVERAGE * level * ((float)workersCount / (float)maxWorkers);
         if (prevCoverage != coverage) colony.RecalculateHospitals();
     }
     override public int AddWorkers(int x)

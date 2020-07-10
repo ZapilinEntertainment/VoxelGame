@@ -48,7 +48,7 @@ public class Building : Structure
                     BIOGENERATOR_2_ID,
                     MINERAL_POWERPLANT_2_ID,
                     ENERGY_CAPACITOR_1_ID,                    
-                    HOSPITAL_2_ID,
+                    HOSPITAL_ID,
                     WORKSHOP_ID
                     };
                     break;
@@ -94,6 +94,7 @@ public class Building : Structure
                             bdlist.Add(SMELTERY_BLOCK_ID);
 
                         };
+                        bdlist.Add(HOSPITAL_2_ID);
                     bdlist.Add(GRPH_REACTOR_4_ID);
                     bdlist.Add(SCIENCE_LAB_ID);
                     if (Settlement.maxAchievedLevel >= 5)
@@ -252,7 +253,8 @@ public class Building : Structure
                 return 40f;
 
             case FUEL_FACILITY_ID:
-            case HOSPITAL_2_ID: return 50f;
+            case HOSPITAL_ID: return 50f;
+            case HOSPITAL_2_ID: return 150f;
 
             case DOCK_ADDON_1_ID:
             case DOCK_ADDON_2_ID:
@@ -310,7 +312,8 @@ public class Building : Structure
             case SMELTERY_3_ID: return -40f;
             case SMELTERY_BLOCK_ID: return -80f;
 
-            case HOSPITAL_2_ID: return -6f;
+            case HOSPITAL_ID: return -15f;
+            case HOSPITAL_2_ID: return -45f;
             case SHUTTLE_HANGAR_4_ID:
             case MONUMENT_ID:
             case XSTATION_3_ID: return -10f;
@@ -538,12 +541,19 @@ public class Building : Structure
                     level = 2;
                 }
                 break;
-            case HOSPITAL_2_ID:
+            case HOSPITAL_ID:
                 {
+                    upgradedIndex = HOSPITAL_2_ID;
                     canBePowerSwitched = true;
                     level = 2;
                 }
                 break;
+            case HOSPITAL_2_ID:
+                {
+                    canBePowerSwitched = true;
+                    level = 5;
+                    break;
+                }
             case MINERAL_POWERPLANT_2_ID:
                 {
                     level = 2;
@@ -575,6 +585,7 @@ public class Building : Structure
             case GRPH_REACTOR_4_ID:
                 {
                     level = 4;
+                    upgradedIndex = REACTOR_BLOCK_5_ID;
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:

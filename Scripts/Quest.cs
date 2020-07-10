@@ -659,6 +659,26 @@ public class Quest
                             if (cc == nc) MakeQuestCompleted();
                             break;
                         }
+                    case Knowledge.FoundationRouteBoosters.SettlementBoost:
+                        {
+                            var hs = colony.houses;
+                            if (hs != null && hs.Count > 0)
+                            {
+                                foreach (var h in hs)
+                                {
+                                    if (h is Settlement)
+                                    {
+                                        var s = h as Settlement;
+                                        if (s.level >= Knowledge.R_F_SETTLEMENT_LEVEL_COND)
+                                        {
+                                            MakeQuestCompleted();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
                 }
                 break;
         }
@@ -796,7 +816,7 @@ public class Quest
                             break;
                         case ProgressQuestID.Progress_HospitalCoverage:
                             icon = UIController.current.buildingsIcons;
-                            iconRect = Structure.GetTextureRect(Structure.HOSPITAL_2_ID);
+                            iconRect = Structure.GetTextureRect(Structure.HOSPITAL_ID);
                             break;
                         case ProgressQuestID.Progress_Tier3:
                             icon = UIController.current.buildingsIcons;

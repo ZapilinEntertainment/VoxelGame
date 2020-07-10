@@ -350,7 +350,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 mapRect.gameObject.SetActive(true);
                 //
                 var elist = Expedition.expeditionsList;
-                c = elist.Count;
+                c = elist.Count;                
                 if (c > 0)
                 {
                     int i = 0, l = expeditionsFastButtons.Length;

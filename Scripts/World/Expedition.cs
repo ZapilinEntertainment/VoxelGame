@@ -197,7 +197,8 @@ public sealed class Expedition
     }
     public bool SuccessfulExitTest()
     {
-        return crew.SurvivalSkillsRoll() * (0.5f + 0.5f * Random.value) + crew.IntelligenceRoll() * (0.5f + 0.5f * Random.value) >= 30;
+        return true;
+        //return crew.SurvivalSkillsRoll() * (0.5f + 0.5f * Random.value) + crew.IntelligenceRoll() * (0.5f + 0.5f * Random.value) >= 30;
     }
 
     public void ChangeTransmissionStatus(bool? x)
@@ -297,8 +298,6 @@ public sealed class Expedition
                 Knowledge.GetCurrent()?.ExpeditionsCheck(expeditionsSucceed);
             }
 
-            expeditionsList.Remove(this);
-
             if (subscribedToUpdate & !GameMaster.sceneClearing)
             {
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
@@ -325,6 +324,7 @@ public sealed class Expedition
                 GameMaster.realMaster.labourUpdateEvent -= this.LabourUpdate;
                 subscribedToUpdate = false;
             }
+            expeditionsList.Remove(this);
             changesMarkerValue++;
         }
         changesMarkerValue++;
@@ -405,7 +405,7 @@ public sealed class Expedition
         {
             foreach (Expedition e in expeditionsList)
             {
-                if (e != null && e.stage != ExpeditionStage.Dismissed)
+                if (e != null && (e.stage != ExpeditionStage.Dismissed & e.stage != ExpeditionStage.Disappeared))
                 {
                     savedata.AddRange(e.Save());
                     realCount++;
@@ -443,9 +443,8 @@ public sealed class Expedition
                 int r_id = System.BitConverter.ToInt32(data, 0);
                 Expedition e = new Expedition(r_id);
                 e.Load(fs);
-
             }
-        }
+        }        
         data = new byte[12];
         fs.Read(data, 0, data.Length);
         nextID = System.BitConverter.ToInt32(data, 0);

@@ -61,7 +61,7 @@
         structuresCost[Structure.BIOGENERATOR_2_ID] = val * 6;
         structuresCost[Structure.MINE_ID] = val * 8;
         structuresCost[Structure.SMELTERY_1_ID] = val * 8;             
-        structuresCost[Structure.HOSPITAL_2_ID] = val * 25;
+        structuresCost[Structure.HOSPITAL_ID] = val * 25;
         structuresCost[Structure.MINERAL_POWERPLANT_2_ID] = val * 12;
         structuresCost[Structure.ORE_ENRICHER_2_ID] = val * 14;
         structuresCost[Structure.WORKSHOP_ID] = val * 16;
@@ -109,6 +109,7 @@
         structuresCost[Structure.DOCK_2_ID] = structuresCost[Structure.DOCK_ADDON_1_ID] * 2;
         structuresCost[Structure.DOCK_3_ID] = structuresCost[Structure.DOCK_ADDON_2_ID] * 2;
         structuresCost[Structure.COMPOSTER_ID] = structuresCost[Structure.SMELTERY_2_ID];
+        structuresCost[Structure.HOSPITAL_2_ID] = structuresCost[Structure.HOSPITAL_ID];
         #endregion
 
         Chunk c = gm.mainChunk;

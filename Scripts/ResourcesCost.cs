@@ -240,9 +240,14 @@
                 new ResourceContainer(ResourceType.metal_E, 4)
             };
                 break;
-            case Structure.HOSPITAL_2_ID:
+            case Structure.HOSPITAL_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.Plastics, 100), new ResourceContainer(ResourceType.metal_E, 25),
+            };
+                break;
+            case Structure.HOSPITAL_2_ID:
+                cost = new ResourceContainer[]{
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.Plastics, 400), new ResourceContainer(ResourceType.metal_E, 50),
             };
                 break;
             case Structure.MINI_GRPH_REACTOR_3_ID:
@@ -253,7 +258,7 @@
             case Structure.GRPH_REACTOR_4_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 40), new ResourceContainer(ResourceType.metal_N, 30),
-                new ResourceContainer(ResourceType.Concrete, 120), new ResourceContainer(ResourceType.Plastics, 100)
+                new ResourceContainer(ResourceType.Concrete, 600), new ResourceContainer(ResourceType.Plastics, 100)
             };
                 break;
             case Structure.MINERAL_POWERPLANT_2_ID:
@@ -299,7 +304,7 @@
             case Structure.FOUNDATION_BLOCK_5_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 300), new ResourceContainer(ResourceType.metal_M, 100), new ResourceContainer(ResourceType.metal_E, 50),
-                new ResourceContainer(ResourceType.Concrete, 1000),
+                new ResourceContainer(ResourceType.Concrete, 800),
             };
                 break;
             case Structure.CONNECT_TOWER_6_ID:
@@ -316,8 +321,8 @@
                 break;
             case Structure.HOUSING_MAST_6_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Plastics, 2100), new ResourceContainer(ResourceType.metal_K, 850), new ResourceContainer(ResourceType.metal_E, 180),
-                new ResourceContainer(ResourceType.Concrete, 3200)
+                new ResourceContainer(ResourceType.Plastics, 1800), new ResourceContainer(ResourceType.metal_K, 500), new ResourceContainer(ResourceType.metal_S, 150),
+                new ResourceContainer(ResourceType.Concrete, 1200)
             };
                 break;
             case Structure.DOCK_ADDON_1_ID:

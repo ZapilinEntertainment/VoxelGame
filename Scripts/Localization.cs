@@ -95,7 +95,9 @@ public static class Localization
                     case Structure.SMELTERY_BLOCK_ID: return "Плавильный блок";
                     case Structure.WIND_GENERATOR_1_ID: return "Потоковый генератор";
                     case Structure.BIOGENERATOR_2_ID: return "Биореактор";
-                    case Structure.HOSPITAL_2_ID: return "Клиника";
+                    case Structure.HOSPITAL_ID:
+                    case Structure.HOSPITAL_2_ID:
+                        return "Клиника";
                     case Structure.MINERAL_POWERPLANT_2_ID: return "Электростанция на минерале F";
                     case Structure.ORE_ENRICHER_2_ID: return "Обогатитель руды";
                     case Structure.WORKSHOP_ID: return "Мастерская";
@@ -168,7 +170,9 @@ public static class Localization
                     case Structure.SMELTERY_BLOCK_ID: return "Smeltery Block";
                     case Structure.WIND_GENERATOR_1_ID: return "Stream generator";
                     case Structure.BIOGENERATOR_2_ID: return "Biogenerator";
-                    case Structure.HOSPITAL_2_ID: return "Hospital";
+                    case Structure.HOSPITAL_ID:
+                    case Structure.HOSPITAL_2_ID:
+                        return "Hospital";
                     case Structure.MINERAL_POWERPLANT_2_ID: return "Mineral F powerplant";
                     case Structure.ORE_ENRICHER_2_ID: return "Ore enricher";
                     case Structure.WORKSHOP_ID: return "Workshop";
@@ -257,7 +261,9 @@ public static class Localization
                     case Structure.SMELTERY_BLOCK_ID: return "Перерабатывает ресурсы.";
                     case Structure.WIND_GENERATOR_1_ID: return "Нестабильно вырабатывает энергию в зависимости от силы местных потоков. Лучше располагать как можно выше.";
                     case Structure.BIOGENERATOR_2_ID: return "Вырабатывает энергию, потребляя органическую материю, эффективность зависит от количества рабочих.";
-                    case Structure.HOSPITAL_2_ID: return "Обеспечивает колонию медицинской помощью. Может регулировать темп появления новых жителей.";
+                    case Structure.HOSPITAL_ID:
+                    case Structure.HOSPITAL_2_ID:
+                        return "Обеспечивает колонию медицинской помощью. Может регулировать темп появления новых жителей.";
                     case Structure.MINERAL_POWERPLANT_2_ID: return "Вырабатывает энергию, потребляя минерал F. Выход энергии зависит от количества рабочих.";
                     case Structure.ORE_ENRICHER_2_ID: return "Позволяет добывать нужные руды из обычной горной породы.";
                     case Structure.WORKSHOP_ID: return "Улучшает или поддерживает в норме оборудование колонистов.";
@@ -340,7 +346,9 @@ public static class Localization
                     case Structure.SMELTERY_BLOCK_ID: return "Process resources.";
                     case Structure.WIND_GENERATOR_1_ID: return "Generates energy in dependence of local streams. Build it as high as possible.";
                     case Structure.BIOGENERATOR_2_ID: return "Generates energy from organic. Energy production depends on the number of workers.";
-                    case Structure.HOSPITAL_2_ID: return "Supplies colony with healthcare. Can control the spawnrate.";
+                    case Structure.HOSPITAL_ID:
+                    case Structure.HOSPITAL_2_ID:
+                        return "Supplies colony with healthcare. Can control the spawnrate.";
                     case Structure.MINERAL_POWERPLANT_2_ID: return "Generates energy from mineral F. Energy production depends on the number of workers.";
                     case Structure.ORE_ENRICHER_2_ID: return "Extracts ores from stone.";
                     case Structure.WORKSHOP_ID: return "Improves or stabilizes colonist's gears.";

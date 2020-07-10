@@ -1258,6 +1258,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             if (!check) observingExpedition.EndMission();
             else {
                 if (!observingExpedition.SuccessfulExitTest()) observingExpedition.Disappear();
+                else observingExpedition.EndMission();
             }
             observingExpedition = null;
             observingPoint = null;
