@@ -1260,11 +1260,14 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 if (!observingExpedition.SuccessfulExitTest()) observingExpedition.Disappear();
                 else observingExpedition.EndMission();
             }
-            observingExpedition = null;
-            observingPoint = null;
+            observingExpedition = null;            
             observingCrew = null;
         }
-        GameMaster.realMaster.globalMap.RemovePoint(observingPoint, false);
+        if (observingPoint != null)
+        {
+            GameMaster.realMaster.globalMap.RemovePoint(observingPoint, true);
+            observingPoint = null;
+        }
         gameObject.SetActive(false);        
     }
 

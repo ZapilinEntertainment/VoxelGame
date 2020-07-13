@@ -133,7 +133,6 @@ public sealed class GlobalMap : MonoBehaviour
     public void RemovePoint(MapPoint mp, bool forced)
     {
         if (mp == null || mp.destroyed) return;
-        Debug.Log(mp.stability);
         if (!forced & mp.stability == 1) return;
         else 
         {

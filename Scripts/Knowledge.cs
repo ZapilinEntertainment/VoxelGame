@@ -746,6 +746,85 @@ public sealed class Knowledge
     {
         if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255) puzzlePartsCount[colorcode]++;  
     }
+    public void AddRewardResearchPoints(PointOfInterest poi)
+    {
+        switch (poi.type)
+        {
+            case MapMarkerType.Colony: AddResearchPoints(ResearchRoute.Foundation, 8f * poi.difficulty); break;
+            case MapMarkerType.Wiseman:
+                {
+                    switch(poi.path)
+                    {
+                        case Path.TechPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
+                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Pipes, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.CloudWhale, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.SOS:
+                {
+                    switch(poi.path)
+                    {
+                        case Path.TechPath:
+                        case Path.SecretPath:
+                            AddResearchPoints(ResearchRoute.CloudWhale, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.Station:
+                {
+                    switch(poi.path)
+                    {
+                        case Path.TechPath: AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
+                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.Wreck:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.TechPath:  AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
+                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.Wonder:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
+                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.Portal:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.TechPath:
+                        case Path.SecretPath:
+                            AddResearchPoints(ResearchRoute.Pipes, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+            case MapMarkerType.Island:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
+                        case Path.TechPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
+                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
+                    }
+                    break;
+                }
+        }
+    }
     public void AddResearchPoints (ResearchRoute route, float pts)
     {
         byte routeIndex = (byte)route;
@@ -1141,7 +1220,6 @@ public sealed class Knowledge
         }
         return Quest.NoQuest;
     }
-
     public void OpenResearchTab()
     {
         GameMaster.realMaster.environmentMaster.DisableDecorations();

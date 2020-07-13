@@ -656,7 +656,7 @@ public class Quest
                             var cc = colony.citizenCount;
                             var nc = Knowledge.R_F_POPULATION_COND;
                             steps[0] = "Текущее население: " + cc.ToString() + " / " + nc.ToString();
-                            if (cc == nc) MakeQuestCompleted();
+                            if (cc >= nc) MakeQuestCompleted();
                             break;
                         }
                     case Knowledge.FoundationRouteBoosters.SettlementBoost:
