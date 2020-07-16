@@ -1,7 +1,6 @@
 ﻿public class ScoreCalculator
 {
-
-    public double GetScore(GameMaster gm)
+    public static double GetScore(GameMaster gm)
     {
         double score = 0;
         // подготовка

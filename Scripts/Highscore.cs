@@ -6,16 +6,14 @@ using System.Collections.Generic;
 [System.Serializable]
 public class Highscore
 {
-    public System.DateTime date;
-    public string colonyName;
-    public double score;
-    public GameEndingType endType;
+    public readonly string colonyName;
+    public readonly ulong score;
+    public readonly GameEndingType endType;
 
-    public const int SAVED_HIGHSCORES_COUNT = 10;
+    public const int MAX_HIGHSCORES_COUNT = 10;
 
-    public Highscore(string i_cname, double i_score, GameEndingType i_endType )
+    public Highscore(string i_cname, ulong i_score, GameEndingType i_endType )
     {
-        date = System.DateTime.UtcNow;
         colonyName = i_cname;
         score = i_score;
         endType = i_endType;
@@ -25,14 +23,14 @@ public class Highscore
     {
         var highscores = GetHighscores();
         Highscore[] newHighscores;
-        if (highscores == null)
+        if (highscores == null || highscores.Length == 0)
         {
             newHighscores = new Highscore[] { h };
         }
         else
         {            
             int hcount = highscores.Length;
-            if (hcount < SAVED_HIGHSCORES_COUNT )
+            if (hcount < MAX_HIGHSCORES_COUNT )
             {
                 newHighscores = new Highscore[hcount + 1];
                 if (h.score > highscores[0].score)
@@ -82,18 +80,18 @@ public class Highscore
             }
             else
             {
-                newHighscores = new Highscore[SAVED_HIGHSCORES_COUNT];
+                newHighscores = new Highscore[MAX_HIGHSCORES_COUNT];
                 if (highscores[0].score < h.score)
                 { //FIRST
                     newHighscores[0] = h;
-                    for (int i = 1; i < SAVED_HIGHSCORES_COUNT; i++)
+                    for (int i = 1; i < MAX_HIGHSCORES_COUNT; i++)
                     {
                         newHighscores[i] = highscores[i - 1];
                     }
                 }
                 else
                 {
-                    if (highscores[SAVED_HIGHSCORES_COUNT - 1].score > h.score)
+                    if (highscores[MAX_HIGHSCORES_COUNT - 1].score > h.score)
                     {//LAST
                         return;
                     }
@@ -101,7 +99,7 @@ public class Highscore
                     {//INSIDE                        
                         newHighscores[0] = highscores[0];
                         int i = 1, oldArrayIndex = 1;
-                        while (oldArrayIndex < SAVED_HIGHSCORES_COUNT)
+                        while (oldArrayIndex < MAX_HIGHSCORES_COUNT)
                         {
                             if (highscores[i].score > h.score)
                             {
@@ -116,7 +114,7 @@ public class Highscore
                                 break;
                             }
                         }
-                        for (; i < SAVED_HIGHSCORES_COUNT; i++)
+                        for (; i < MAX_HIGHSCORES_COUNT; i++)
                         {
                             newHighscores[i] = highscores[oldArrayIndex];
                             oldArrayIndex++;
@@ -126,9 +124,21 @@ public class Highscore
             }
         }
 
+        highscores = newHighscores;
         FileStream fs = File.Create(Application.persistentDataPath + "/Highscores.lwhs");
-        BinaryFormatter bf = new BinaryFormatter();
-        bf.Serialize(fs, newHighscores);
+        fs.WriteByte((byte)highscores.Length);
+        byte[] data;
+        int bytesCount = 0;
+        foreach (var hs in highscores)
+        {
+            data = System.Text.Encoding.Default.GetBytes(hs.colonyName);
+            bytesCount = data.Length;
+            fs.Write(System.BitConverter.GetBytes(bytesCount), 0, 4); //  количество байтов, не длина строки
+            fs.Write(data, 0, bytesCount);
+            data = System.BitConverter.GetBytes(hs.score);
+            fs.Write(data, 0, data.Length);
+            fs.WriteByte((byte)hs.endType);
+        }
         fs.Close();
     }
 
@@ -137,11 +147,44 @@ public class Highscore
         string path = Application.persistentDataPath + "/Highscores.lwhs";
         if (File.Exists(path))
         {
-            FileStream file = File.Open(path, FileMode.Open);
-            BinaryFormatter bf = new BinaryFormatter();
-            Highscore[] hs = (Highscore[])bf.Deserialize(file);
-            file.Close();
-            return hs;
+            FileStream fs = File.Open(path, FileMode.Open);
+            int count = fs.ReadByte();
+            if (count == 0)
+            {
+                fs.Close();
+                return null;
+            }
+            else
+            {
+                if (count > MAX_HIGHSCORES_COUNT) count = MAX_HIGHSCORES_COUNT;
+                var hsa = new Highscore[count];
+                string name = "highscore";
+                var data = new byte[4];
+                System.Text.Decoder decoder = System.Text.Encoding.Default.GetDecoder();
+                char[] chars;
+                int bytesCount = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    fs.Read(data, 0, 4);
+                    bytesCount = System.BitConverter.ToInt32(data, 0);
+                    if (bytesCount > 0 && bytesCount < 100000)
+                    {
+                        data = new byte[bytesCount];
+                        fs.Read(data, 0, bytesCount);
+                        chars = new char[decoder.GetCharCount(data, 0, bytesCount)];
+                        decoder.GetChars(data, 0, bytesCount, chars, 0, true);
+                        name = new string(chars);
+                    }
+                    else name = "highscore";
+                    //
+                    bytesCount = 9;
+                    data = new byte[bytesCount];
+                    fs.Read(data, 0, bytesCount);
+                    hsa[i] = new Highscore(name, System.BitConverter.ToUInt64(data, 0), (GameEndingType)data[bytesCount - 1]);
+                }
+                fs.Close();
+                return hsa;
+            }                       
         }
         else
         {

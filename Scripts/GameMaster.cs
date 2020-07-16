@@ -36,7 +36,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 // StabilityEnforcer - LabourUpdate
 
 public enum GameStart : byte {Nothing, Zeppelin, Headquarters}
-public enum GameMode: byte { Play, Editor, Menu, Cinematic }
+public enum GameMode: byte { Play, Editor, Menu, Cinematic, Ended }
 public enum GameEndingType : byte { Default, ColonyLost, ConsumedByReal, ConsumedByLastSector, FoundationRoute,
     CloudWhaleRoute, EngineRoute, PipesRoute, CrystalRoute, MonumentRoute, BlossomRoute, PollenRoute, HimitsuRoute}
 //dependence - localization
@@ -353,6 +353,7 @@ public sealed class GameMaster : MonoBehaviour
         gameSpeed = 1;
         pauseRequests = 0;        
         if (savename == null || savename == string.Empty) savename = "autosave";
+        if (gameMode == GameMode.Ended) gameMode = GameMode.Play;
         if (gameMode != GameMode.Editor)
         {
             lifeGrowCoefficient = 1;
@@ -422,12 +423,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading) return;
 
-        if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
-        if (Input.GetKeyDown("p"))
-        {
-            Knowledge.GetCurrent().OpenResearchTab();
-            UIController.current.gameObject.SetActive(false);
-        }
+        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
         if (testMode)
         {
             if (Input.GetKeyDown("o")) TestMethod();
@@ -437,6 +433,7 @@ public sealed class GameMaster : MonoBehaviour
                 {
                     colonyController.AddEnergyCrystals(1000f);
                     colonyController.storage.AddResource(ResourceType.Fuel, 1000f);
+                    colonyController.AddCitizens(1000);
                     var k = Knowledge.GetCurrent();
                     for (int i = 0; i < 50; i++)
                     {
@@ -589,10 +586,11 @@ public sealed class GameMaster : MonoBehaviour
     //
     public void GameOver(GameEndingType endType)
     {
+        if (gameMode == GameMode.Ended) return;
         SetPause(true);
         UIController.current.FullDeactivation();
 
-        double score = new ScoreCalculator().GetScore(this);
+        ulong score =(ulong) ScoreCalculator.GetScore(this);
         Highscore.AddHighscore(new Highscore(colonyController.cityName, score, endType));
 
         string reason = Localization.GetEndingTitle(endType);
@@ -608,7 +606,7 @@ public sealed class GameMaster : MonoBehaviour
                     b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
                     b = endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>();
                     b.onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Continue);
+                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Continue);                    
                     break;
                 }
             case GameEndingType.ColonyLost:
@@ -626,6 +624,7 @@ public sealed class GameMaster : MonoBehaviour
                     break;
                 }
         }
+        gameMode = GameMode.Ended;
     }
     public void ReturnToMenuAfterGameOver()
     {
@@ -637,7 +636,8 @@ public sealed class GameMaster : MonoBehaviour
     {
         Destroy(panel);
         UIController.current.FullReactivation();
-        gameSpeed = 1;
+        SetPause(false);
+        gameMode = GameMode.Play;
     }
 
     public void OnApplicationQuit()

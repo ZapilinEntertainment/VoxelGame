@@ -100,6 +100,17 @@ public sealed class GlobalMap : MonoBehaviour
         envMaster = em;
     }
 
+    public bool IsPointCentral(MapPoint mp)
+    {
+        if (mp == null || mp.destroyed || (mp is MovingMapPoint)) return false;
+        else
+        {
+            var rsn = DefineSectorIndex(mp);
+            var rs = mapSectors[rsn];
+            if (rs != null && rs.centralPoint == mp) return true;
+            else return false;
+        }
+    }
     public bool AddPoint(MapPoint mp, bool forced)
     {
         if (mapPoints.Contains(mp)) return false;
@@ -130,7 +141,7 @@ public sealed class GlobalMap : MonoBehaviour
             return true;
         }
     }    
-    public void RemovePoint(MapPoint mp, bool forced)
+    private void RemovePoint(MapPoint mp, bool forced)
     {
         if (mp == null || mp.destroyed) return;
         if (!forced & mp.stability == 1) return;
@@ -144,7 +155,7 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
-    public void RemovePoint(int s_id, bool forced)
+    private void RemovePoint(int s_id, bool forced)
     {
         if (mapPoints.Count > 0)
         {
@@ -285,6 +296,33 @@ public sealed class GlobalMap : MonoBehaviour
             {
                 RemoveSector(i);
                 return;
+            }
+        }
+    }
+    public void RemoveSector(MapPoint mp)
+    {
+        if (mp == null || mp.destroyed) return;
+        else
+        {
+            foreach (var rs in mapSectors)
+            {
+                if (rs != null && rs.centralPoint == mp)
+                {
+                    RemoveSector(rs);
+                    return;
+                }
+            }
+        }
+    }
+    public void RockSector(MapPoint mp)
+    {
+        if (mp == null || mp.destroyed) return;
+        if (IsPointCentral(mp)) {
+            var rs = mapSectors[DefineSectorIndex(mp)];
+            if (rs != null)
+            {
+                var sv = rs.GetStabilityValue();
+                if (sv < Random.value * 0.3f + 0.7f * ascension) RemoveSector(rs);                
             }
         }
     }

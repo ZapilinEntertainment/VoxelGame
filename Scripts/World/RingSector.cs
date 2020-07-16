@@ -104,7 +104,8 @@ public sealed class RingSector
             centralPoint.height + (gmap.ringsBorders[ring] - gmap.ringsBorders[ring + 1]) * 0.5f * localPos.y
             );
     }
-    public void AddInnerPoint(MapPoint mp, byte index)
+    /*
+    public void AddInnerPoint(MapMarkerType mtype, byte index)
     {        
         if (innerPointsIDs.ContainsKey(index)) {
             int pti = -1;
@@ -116,7 +117,7 @@ public sealed class RingSector
         mp.SetCoords(GetInnerPointPosition(index));
         innerPointsIDs.Add(index, mp.ID);
     }
-      
+      */
 
     public void MarkAsDestroyed()
     {
@@ -125,6 +126,10 @@ public sealed class RingSector
     public void SetFertility(bool x)
     {
         fertile = x;
+    }
+    public float GetStabilityValue()
+    {
+        return environment.stability + (centralPoint != null ? centralPoint.stability : 0f);
     }
 
     public bool CreateNewPoint(byte positionIndex, float ascension, float visibility)
@@ -201,7 +206,9 @@ public sealed class RingSector
         int count = System.BitConverter.ToInt32(data, 0), readVal1 = -1, readVal2 = -1;
         var sectors = new RingSector[count];
         MapPoint f_centralPoint = null;
+        RingSector rs = null;
         var gmap = GameMaster.realMaster.globalMap;
+        bool correctData = true;
         for (int i = 0; i < count; i++)
         {
             readVal1 = fs.ReadByte();
@@ -214,20 +221,28 @@ public sealed class RingSector
                 readVal2 = System.BitConverter.ToInt32(data, 4);
                 f_centralPoint = gmap.GetMapPointByID(readVal2);
 
-                var rs = new RingSector(readVal1, f_centralPoint, (Environment.EnvironmentPreset)data[8]);
+                if (f_centralPoint != null)
+                {
+                    rs = new RingSector(readVal1, f_centralPoint, (Environment.EnvironmentPreset)data[8]);
+                    correctData = true;
+                }
+                else correctData = false;
                 readVal1 = System.BitConverter.ToInt32(data, 9);
                 if (readVal1 > 0)
                 {
                     data = new byte[5 * readVal1 + 1]; // byte + int
                     fs.Read(data, 0, data.Length);
-                    for (int j = 0; j< readVal1;j++)
+                    if (correctData)
                     {
-                        rs.innerPointsIDs.Add(data[j * 5], System.BitConverter.ToInt32(data, 5 * j + 1));
-                    }                    
+                        for (int j = 0; j < readVal1; j++)
+                        {
+                            rs.innerPointsIDs.Add(data[j * 5], System.BitConverter.ToInt32(data, 5 * j + 1));
+                        }
+                    }
                 }
                 rs.fertile = data[data.Length - 1] == 1;
 
-                if (f_centralPoint != null) sectors[i] = rs;
+                if (correctData) sectors[i] = rs;
             }
         }
         data = new byte[4];

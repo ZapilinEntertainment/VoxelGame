@@ -212,44 +212,6 @@ public class MapPoint
     /// <returns></returns>
     public bool Update() // INDEV
     {
-        if (destroyed) return false;
-        bool destroyPoint = true;
-        switch (type)
-        {
-            case MapMarkerType.Unknown:
-                break;
-            case MapMarkerType.MyCity:
-                break;
-            case MapMarkerType.Star:
-                break;
-            case MapMarkerType.Station:
-                break;
-            case MapMarkerType.Wreck:
-                break;
-            case MapMarkerType.FlyingExpedition:
-                break;
-            case MapMarkerType.Island:
-                break;
-            case MapMarkerType.SOS:
-                break;
-            case MapMarkerType.Portal:
-                break;
-            case MapMarkerType.QuestMark:
-                break;
-            case MapMarkerType.Colony:
-                break;
-            case MapMarkerType.Wiseman:
-                break;
-            case MapMarkerType.Wonder:
-                break;
-            case MapMarkerType.Resources:
-                break;
-        }
-        if (destroyPoint)
-        {
-            destroyed = true;
-            GameMaster.realMaster.globalMap.RemovePoint(this, true);
-        }
         return false;
     }
     /// <summary>

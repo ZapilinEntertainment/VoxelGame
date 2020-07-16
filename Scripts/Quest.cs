@@ -34,6 +34,7 @@ public class Quest
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
     public static readonly Quest NoQuest, AwaitingQuest;
 
+    private bool completed = false;
     private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
@@ -176,7 +177,8 @@ public class Quest
     public Quest(Knowledge.ResearchRoute rr, byte subID)
     {
         subIndex = subID;
-        int stepsCount = 1;
+        int stepsCount = 1, pointBoosterIndex = (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost;
+        var gmap = GameMaster.realMaster.globalMap;
         switch (rr)
         {
             case Knowledge.ResearchRoute.Foundation:
@@ -184,6 +186,7 @@ public class Quest
                 break;
             case Knowledge.ResearchRoute.CloudWhale:
                 type = QuestType.CloudWhale;
+                if (subIndex == pointBoosterIndex) gmap.pointsExploringEvent += PointEventCheck;
                 break;
             case Knowledge.ResearchRoute.Engine:
                 type = QuestType.Engine;
@@ -208,6 +211,44 @@ public class Quest
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         Localization.FillQuestData(this);
+    }
+
+    private void PointEventCheck(MapPoint mp)
+    {
+        if (!completed)
+        {
+            if (mp is PointOfInterest)
+            {
+                switch (Knowledge.GetBoostedRoute(mp as PointOfInterest))
+                {
+                    case Knowledge.ResearchRoute.Foundation:
+                        if (type == QuestType.Foundation && subIndex == (byte)Knowledge.FoundationRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.CloudWhale:
+                        if (type == QuestType.CloudWhale && subIndex == (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Engine:
+                        if (type == QuestType.Engine && subIndex == (byte)Knowledge.EngineRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Pipes:
+                        if (type == QuestType.Pipe && subIndex == (byte)Knowledge.PipesRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Crystal:
+                        if (type == QuestType.Crystal && subIndex == (byte)Knowledge.CrystalRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Monument:
+                        if (type == QuestType.Monument && subIndex == (byte)Knowledge.MonumentRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Blossom:
+                        if (type == QuestType.Blossom && subIndex == (byte)Knowledge.BlossomRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                    case Knowledge.ResearchRoute.Pollen:
+                        if (type == QuestType.Pollen && subIndex == (byte)Knowledge.PollenRouteBoosters.PointBoost) MakeQuestCompleted();
+                        break;
+                }
+            }
+        }
+        GameMaster.realMaster.globalMap.pointsExploringEvent -= this.PointEventCheck;
     }
 
     public void CheckQuestConditions()
@@ -626,7 +667,7 @@ public class Quest
                         {
                             int a = colony.citizenCount, b = Knowledge.R_F_QUEST_POPULATION_COND;
                             steps[0] = "Текущее население: " + a.ToString() + " / " + b.ToString();
-                            if (a == b)
+                            if (a >= b)
                             {
                                 MakeQuestCompleted();
                                 GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
@@ -636,66 +677,139 @@ public class Quest
                 }
                 break;
             case QuestType.Foundation:
-                switch ((Knowledge.FoundationRouteBoosters)subIndex)
                 {
-                    case Knowledge.FoundationRouteBoosters.HappinessBoost:
-                        steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%' 
-                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
-                        if (colony.happiness_coefficient == Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
-                        break;
-                    case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
-                        {
-                            var ic = DockSystem.GetImmigrantsTotalCount();
-                            var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
-                            steps[0] = "Количество прибывших: " + ic.ToString() + " / " + nic.ToString();
-                            if (ic == nic) MakeQuestCompleted();
+                    switch ((Knowledge.FoundationRouteBoosters)subIndex)
+                    {
+                        case Knowledge.FoundationRouteBoosters.HappinessBoost:
+                            steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
+                                + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                            if (colony.happiness_coefficient == Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
                             break;
-                        }
-                    case Knowledge.FoundationRouteBoosters.PopulationBoost:
-                        {
-                            var cc = colony.citizenCount;
-                            var nc = Knowledge.R_F_POPULATION_COND;
-                            steps[0] = "Текущее население: " + cc.ToString() + " / " + nc.ToString();
-                            if (cc >= nc) MakeQuestCompleted();
-                            break;
-                        }
-                    case Knowledge.FoundationRouteBoosters.SettlementBoost:
-                        {
-                            var hs = colony.houses;
-                            if (hs != null && hs.Count > 0)
+                        case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
                             {
-                                foreach (var h in hs)
+                                var ic = DockSystem.GetImmigrantsTotalCount();
+                                var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
+                                steps[0] = "Количество прибывших: " + ic.ToString() + " / " + nic.ToString();
+                                if (ic == nic) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.FoundationRouteBoosters.PopulationBoost:
+                            {
+                                var cc = colony.citizenCount;
+                                var nc = Knowledge.R_F_POPULATION_COND;
+                                steps[0] = "Текущее население: " + cc.ToString() + " / " + nc.ToString();
+                                if (cc >= nc) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.FoundationRouteBoosters.SettlementBoost:
+                            {
+                                var hs = colony.houses;
+                                if (hs != null && hs.Count > 0)
                                 {
-                                    if (h is Settlement)
+                                    foreach (var h in hs)
                                     {
-                                        var s = h as Settlement;
-                                        if (s.level >= Knowledge.R_F_SETTLEMENT_LEVEL_COND)
+                                        if (h is Settlement)
+                                        {
+                                            var s = h as Settlement;
+                                            if (s.level >= Knowledge.R_F_SETTLEMENT_LEVEL_COND)
+                                            {
+                                                MakeQuestCompleted();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                    }
+                    break;
+                }
+            case QuestType.CloudWhale:
+                {
+                    switch ((Knowledge.CloudWhaleRouteBoosters)subIndex)
+                    {
+                        case Knowledge.CloudWhaleRouteBoosters.StreamGensBoost:
+                            {
+                                var pgrid = colony.powerGrid;
+                                int count = 0, sid = Structure.WIND_GENERATOR_1_ID;
+                                foreach (var p in pgrid)
+                                {
+                                    if (p == null || p.energySurplus <= 0f) continue;
+                                    else
+                                    {
+                                        if (p.ID == sid) count++;
+                                    }
+                                }
+                                if (count >= Knowledge.R_CW_STREAMGENS_COUNT_COND) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CloudWhaleRouteBoosters.CrewsBoost:
+                            {
+                                if (Knowledge.GetCurrent().R_CW_CrewsCheck()) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CloudWhaleRouteBoosters.ArtifactBoost:
+                            {
+                                var alist = Artifact.artifactsList;
+                                if (alist != null && alist.Count > 0)
+                                {
+                                    foreach (var a in alist)
+                                    {
+                                        if (a.affectionPath == Path.SecretPath)
+                                        {
+                                            if (a.status != Artifact.ArtifactStatus.Uncontrollable) MakeQuestCompleted();
+                                            break;
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        case Knowledge.CloudWhaleRouteBoosters.XStationBoost:
+                            {
+                                if (XStation.current != null) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CloudWhaleRouteBoosters.StabilityEnforcerBooster:
+                            {
+                                var pgrid = colony.powerGrid;
+                                var sid = Structure.STABILITY_ENFORCER_ID;
+                                if (pgrid != null && pgrid.Count > 0)
+                                {
+                                    foreach (var p in pgrid)
+                                    {
+                                        if (p != null && p.ID == sid)
                                         {
                                             MakeQuestCompleted();
                                             break;
                                         }
                                     }
                                 }
+                                break;
                             }
-                            break;
-                        }
+                    }
+                    break;
                 }
-                break;
         }
     }   
 
     public void MakeQuestCompleted()
     {
+        if (completed) return;
         GameLogUI.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
-        if (type == QuestType.Endgame & subIndex != 2)
+        if (type == QuestType.Endgame)
         {
-            QuestUI.current.SetNewQuest((int)QuestSection.Endgame);
+            switch ((EndgameQuestID)subIndex)
+            {
+                case EndgameQuestID.FoundationEnd:
+                    GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
+                    break;
+            }
         }
         else QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
-
+        completed = true;
     }
     public static void ResetHousingQuest() // if hq lvl up
     {
@@ -891,6 +1005,10 @@ public class Quest
                         case EndgameQuestID.Endgame_TransportHub_step2:
                         case EndgameQuestID.Endgame_TransportHub_step3:
                             iconRect = new Rect(0.75f, 0.75f, 0.25f, 0.25f);
+                            break;
+                        case EndgameQuestID.FoundationEnd:
+                            icon = UIController.current.iconsTexture;
+                            iconRect = UIController.GetIconUVRect(Icons.FoundationRoute);
                             break;
                     }
                     break;

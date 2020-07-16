@@ -144,6 +144,7 @@ public sealed class Expedition
     {
         stage = ExpeditionStage.OnMission;
         changesMarkerValue++;
+        GlobalMapUI.needExpeditionsRedraw = true;
     }
     public void EndMission()
     {
@@ -163,14 +164,22 @@ public sealed class Expedition
                 changesMarkerValue++;
                 break;
         }
+        GlobalMapUI.needExpeditionsRedraw = true;
     }
     public void DropMapMarker()
     {
         mapMarker = null;
+        GlobalMapUI.needExpeditionsRedraw = true;
+    }
+    public MapMarkerType GetDestinationIcon()
+    {
+        if (stage == ExpeditionStage.OnMission) return destination.type;
+        else return MapMarkerType.FlyingExpedition;
     }
     public void CountMissionAsSuccess()
     {
         missionCompleted = true;
+        if (destination != null) Knowledge.GetCurrent().AddRewardResearchPoints(destination);
     }
     
     private void LabourUpdate()
@@ -237,6 +246,7 @@ public sealed class Expedition
                 }
             }
         }
+        GlobalMapUI.needExpeditionsRedraw = true;
     }
     public void PayFee(byte cost)
     {
@@ -328,6 +338,7 @@ public sealed class Expedition
             changesMarkerValue++;
         }
         changesMarkerValue++;
+        GlobalMapUI.needExpeditionsRedraw = true;
     }
 
     #region save-load system

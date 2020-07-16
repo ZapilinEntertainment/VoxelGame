@@ -30,6 +30,10 @@ public class PointOfInterest : MapPoint
         if (workingExpedition == e) workingExpedition = null;
     }
 
+    public void ResetChallengesArray()
+    {
+        challengeArray = null;
+    }
     public ref ChallengeField[,] GetChallengesArrayRef()
     {
         if (challengeArray == null) GenerateChallengesArray();

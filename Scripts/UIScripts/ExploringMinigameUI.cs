@@ -1265,7 +1265,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         }
         if (observingPoint != null)
         {
-            GameMaster.realMaster.globalMap.RemovePoint(observingPoint, true);
+            observingPoint.ResetChallengesArray();
+            GameMaster.realMaster.globalMap.RockSector(observingPoint);
             observingPoint = null;
         }
         gameObject.SetActive(false);        

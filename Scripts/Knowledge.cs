@@ -71,10 +71,83 @@ public sealed class Knowledge
     public enum CloudWhaleRouteBoosters: byte { GrasslandsBoost, StreamGensBoost, CrewsBoost, ArtifactBoost, XStationBoost, StabilityEnforcerBooster, PointBoost, QuestBoost}
     public enum EngineRouteBoosters : byte { EnergyBoost, CityMoveBoost,  GearsBoost, FactoryBoost, IslandEngineBoost, ControlCenterBoost, PointBoost, QuestBoost}
     public enum PipesRouteBoosters: byte { FarmsBoost, SizeBoost, FuelBoost, BiomesBoost, QETBoost, CapacitorMastBoost, PointBoost, QuestBoost}
-    public enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointsBoost, QuestBoost};
+    public enum CrystalRouteBoosters : byte { MoneyBoost, PinesBoost, GCubeBoost, BiomeBoost, CrystalliserBoost, CrystalMastBoost, PointBoost, QuestBoost};
     public enum MonumentRouteBoosters : byte { MonumentAffectionBoost, LifesourceBoost, BiomeBoost, ExpeditionsBoost, MonumentConstructionBoost, AnchorMastBoost, PointBoost, QuestBoost}
     public enum BlossomRouteBoosters : byte { GrasslandsBoost, ArtifactBoost, BiomeBoost, Unknown, GardensBoost, HTowerBoost, PointBoost, QuestBoost}
     public enum PollenRouteBoosters: byte { FlowersBoost, AscensionBoost, CrewAccidentBoost, BiomeBoost, FilterBoost, ProtectorCoreBoost, PointBoost, QuestBoost}
+
+    public static ResearchRoute GetBoostedRoute(PointOfInterest poi)
+    {
+        if (poi == null) return ResearchRoute.Pollen;
+        else {
+            switch (poi.type)
+            {
+                case MapMarkerType.Colony: return ResearchRoute.Foundation;
+                case MapMarkerType.Wiseman:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath: return ResearchRoute.Crystal;
+                            case Path.SecretPath: return ResearchRoute.Pipes;
+                            default: return ResearchRoute.CloudWhale;
+                        }
+                    }
+                case MapMarkerType.SOS:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath:
+                            case Path.SecretPath: return ResearchRoute.CloudWhale;
+                            default: return ResearchRoute.Pollen;
+                        }
+                    }
+                case MapMarkerType.Station:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath: return ResearchRoute.Engine;
+                            case Path.SecretPath: return ResearchRoute.Monument;
+                            default: return ResearchRoute.Pollen;
+                        }
+                    }
+                case MapMarkerType.Wreck:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath: return ResearchRoute.Engine;
+                            case Path.SecretPath: return ResearchRoute.Monument;
+                            default: return ResearchRoute.Pollen;
+                        }
+                    }
+                case MapMarkerType.Wonder:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath: return ResearchRoute.Engine;
+                            case Path.SecretPath: return ResearchRoute.Crystal;
+                            default: return ResearchRoute.Blossom;
+                        }
+                    }
+                case MapMarkerType.Portal:
+                    {
+                        switch (poi.path)
+                        {
+                            case Path.TechPath:
+                            case Path.SecretPath: return ResearchRoute.Pipes;
+                            default: return ResearchRoute.Blossom;
+                        }
+                    }
+                case MapMarkerType.Island:
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: return ResearchRoute.Monument;
+                        case Path.SecretPath: return ResearchRoute.Crystal;
+                        default: return ResearchRoute.Blossom;
+                    }
+                default: return ResearchRoute.Pollen;
+            }
+        }
+    }
 
     private void SetSubscriptions()
     {
@@ -151,80 +224,7 @@ public sealed class Knowledge
     {
         var poi = mp as PointOfInterest;
         if (poi != null) {
-            switch (mp.type)
-            {
-                case MapMarkerType.Colony:
-                    CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.PointBoost);
-                    break;
-                case MapMarkerType.Wiseman:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(CloudWhaleRouteBoosters.PointBoost); break;
-                            case Path.TechPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
-                            case Path.SecretPath: CountRouteBonus(PipesRouteBoosters.PointBoost); break;
-                        }
-                    break;
-                    }
-                case MapMarkerType.SOS:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(PollenRouteBoosters.PointBoost); break;
-                            case Path.TechPath: 
-                            case Path.SecretPath: CountRouteBonus(CloudWhaleRouteBoosters.PointBoost); break;
-                        }
-                        break;
-                    }
-                case MapMarkerType.Station:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(PollenRouteBoosters.PointBoost); break;
-                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
-                            case Path.SecretPath: CountRouteBonus(MonumentRouteBoosters.PointBoost); break;
-                        }
-                        break;
-                    }
-                case MapMarkerType.Wreck:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(PollenRouteBoosters.PointBoost); break;
-                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
-                            case Path.SecretPath: CountRouteBonus(MonumentRouteBoosters.PointBoost); break;
-                        }
-                        break;
-                    }
-                case MapMarkerType.Wonder:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(BlossomRouteBoosters.PointBoost); break;
-                            case Path.TechPath: CountRouteBonus(EngineRouteBoosters.PointBoost); break;
-                            case Path.SecretPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
-                        }
-                        break;
-                    }
-                case MapMarkerType.Portal:
-                    {
-                        switch (poi.path)
-                        {
-                            case Path.LifePath: CountRouteBonus(BlossomRouteBoosters.PointBoost); break;
-                            case Path.TechPath: 
-                            case Path.SecretPath: CountRouteBonus(PipesRouteBoosters.PointBoost); break;
-                        }
-                        break;
-                    }
-                case MapMarkerType.Island:
-                    switch (poi.path)
-                    {
-                        case Path.LifePath: CountRouteBonus(BlossomRouteBoosters.PointBoost); break;
-                        case Path.TechPath: CountRouteBonus(MonumentRouteBoosters.PointBoost); break;
-                        case Path.SecretPath: CountRouteBonus(CrystalRouteBoosters.PointsBoost); break;
-                    }
-                    break; 
-            }
+            CountRouteBonus(GetBoostedRoute(poi), (byte)FoundationRouteBoosters.PointBoost);
         }
 
         byte mask = 255;
@@ -233,8 +233,6 @@ public sealed class Knowledge
             mask &= b;
         }
         if ((mask & (1 << POINT_MASK_POSITION)) != 0) GameMaster.realMaster.globalMap.pointsExploringEvent -= PointCheck;
-
-        // DEPENDENCY - Localization.FillQuest
     }
     private void BuildingConstructionCheck(Structure s)
     {
@@ -459,22 +457,12 @@ public sealed class Knowledge
         byte unsubscribeVotes = 0;        
         var gm = GameMaster.realMaster;
         var colony = gm.colonyController;
-        int count = 0;
 
         #region cloud whale route + blossom - 3 positions       
         //crews
         if (!BoostCounted(CloudWhaleRouteBoosters.CrewsBoost))
         {
-            var crewslist = Crew.crewsList;
-            if (crewslist != null)
-            {
-                count = 0;
-                foreach (var c in crewslist)
-                {
-                    if (c.level > R_CW_CREW_LEVEL_COND) count++;
-                }
-                if (count >= R_CW_CREWS_COUNT_COND) CountRouteBonus(CloudWhaleRouteBoosters.CrewsBoost);
-            }
+            if (R_CW_CrewsCheck()) CountRouteBonus(CloudWhaleRouteBoosters.CrewsBoost);
         }
         else unsubscribeVotes++;
         //artifacts
@@ -532,6 +520,21 @@ public sealed class Knowledge
         else unsubscribeVotes++;
 
         if (unsubscribeVotes == 7) GameMaster.realMaster.everydayUpdate -= EverydayUpdate;
+    }
+
+    public bool R_CW_CrewsCheck()
+    {
+        var crewslist = Crew.crewsList;
+        if (crewslist != null)
+        {
+            var count = 0;
+            foreach (var c in crewslist)
+            {
+                if (c.level > R_CW_CREW_LEVEL_COND) count++;
+            }
+            return (count >= R_CW_CREWS_COUNT_COND);
+        }
+        else return false;
     }
     
     private bool BoostCounted(CloudWhaleRouteBoosters type)
@@ -748,82 +751,7 @@ public sealed class Knowledge
     }
     public void AddRewardResearchPoints(PointOfInterest poi)
     {
-        switch (poi.type)
-        {
-            case MapMarkerType.Colony: AddResearchPoints(ResearchRoute.Foundation, 8f * poi.difficulty); break;
-            case MapMarkerType.Wiseman:
-                {
-                    switch(poi.path)
-                    {
-                        case Path.TechPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
-                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Pipes, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.CloudWhale, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.SOS:
-                {
-                    switch(poi.path)
-                    {
-                        case Path.TechPath:
-                        case Path.SecretPath:
-                            AddResearchPoints(ResearchRoute.CloudWhale, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.Station:
-                {
-                    switch(poi.path)
-                    {
-                        case Path.TechPath: AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
-                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.Wreck:
-                {
-                    switch (poi.path)
-                    {
-                        case Path.TechPath:  AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
-                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Pollen, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.Wonder:
-                {
-                    switch (poi.path)
-                    {
-                        case Path.TechPath: AddResearchPoints(ResearchRoute.Engine, 8f * poi.difficulty); break;
-                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.Portal:
-                {
-                    switch (poi.path)
-                    {
-                        case Path.TechPath:
-                        case Path.SecretPath:
-                            AddResearchPoints(ResearchRoute.Pipes, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-            case MapMarkerType.Island:
-                {
-                    switch (poi.path)
-                    {
-                        case Path.SecretPath: AddResearchPoints(ResearchRoute.Crystal, 8f * poi.difficulty); break;
-                        case Path.TechPath: AddResearchPoints(ResearchRoute.Monument, 8f * poi.difficulty); break;
-                        default: AddResearchPoints(ResearchRoute.Blossom, 8f * poi.difficulty); break;
-                    }
-                    break;
-                }
-        }
+        AddResearchPoints(GetBoostedRoute(poi), 8f * poi.difficulty);
     }
     public void AddResearchPoints (ResearchRoute route, float pts)
     {
@@ -1042,8 +970,8 @@ public sealed class Knowledge
                     }
                     break;
                 case ResearchRoute.CloudWhale:
-                    x = (byte)CloudWhaleRouteBoosters.GrasslandsBoost;
-                    if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                    //x = (byte)CloudWhaleRouteBoosters.GrasslandsBoost;
+                   // if ((mask & (1 >> x)) == 0) mlist.Add(x);
                     x = (byte)CloudWhaleRouteBoosters.StreamGensBoost;
                     if ((mask & (1 >> x)) == 0) mlist.Add(x);
                     if (lvl >= 4)
@@ -1125,7 +1053,7 @@ public sealed class Knowledge
                     if ((mask & (1 >> x)) == 0) mlist.Add(x);
                     if (lvl >= 4)
                     {
-                        x = (byte)CrystalRouteBoosters.PointsBoost;
+                        x = (byte)CrystalRouteBoosters.PointBoost;
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {

@@ -18,6 +18,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 #pragma warning restore 0649
     private Text sendButtonLabel { get { return sendExpeditionButton.transform.GetChild(0).GetComponent<Text>(); } }
 
+    public static bool needExpeditionsRedraw = false;
     private bool prepared = false, showExpeditionInfo = false;
     private float infoPanelWidth = 0f;
     private float[] ringsRotation;
@@ -349,82 +350,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                 }
                 mapRect.gameObject.SetActive(true);
                 //
-                var elist = Expedition.expeditionsList;
-                c = elist.Count;                
-                if (c > 0)
-                {
-                    int i = 0, l = expeditionsFastButtons.Length;
-                    Button b;
-                    Expedition e;
-                    if (c != l)
-                    {
-                        if (c > l)
-                        { //увеличение списка
-                            var nb = new Button[c];
-                            for (; i < l; i++)
-                            {
-                                b = expeditionsFastButtons[i];
-                                b.onClick.RemoveAllListeners();
-                                e = elist[i];
-                                int id = e.ID;
-                                b.onClick.AddListener(() => this.SelectExpedition(id));
-                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = 
-                                    GlobalMapUI.GetMarkerRect(e.stage == Expedition.ExpeditionStage.OnMission ? e.destination.type : MapMarkerType.FlyingExpedition);
-                                b.gameObject.SetActive(true);
-                                nb[i] = b;
-                            }
-                            for (; i< c; i++)
-                            {
-                                b = Instantiate(expeditionsFastButtons[0], expeditionFastButtonsPanel);
-                                rt = b.GetComponent<RectTransform>();
-                                rt.anchorMin = new Vector2(0f, 0.95f - 0.05f * i);
-                                rt.anchorMax = new Vector2(0f, 1f - i * 0.05f);
-                                rt.anchoredPosition = new Vector2(rt.sizeDelta.x / 2f, 0f);
-                                b.onClick.RemoveAllListeners();
-                                e = elist[i];
-                                int id = e.ID;
-                                b.onClick.AddListener(() => this.SelectExpedition(id));
-                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
-                                b.gameObject.SetActive(true);
-                                nb[i] = b;
-                            }
-                            expeditionsFastButtons = nb;
-                        }
-                        else
-                        { // сужение списка
-                            for (i = 0 ; i < c; i++)
-                            {
-                                b = expeditionsFastButtons[i];
-                                b.onClick.RemoveAllListeners();
-                                e = elist[i];
-                                int id = e.ID;
-                                b.onClick.AddListener(() => this.SelectExpedition(id));
-                                b.transform.GetChild(0).GetComponent<RawImage>().uvRect =
-                                   GlobalMapUI.GetMarkerRect(e.stage == Expedition.ExpeditionStage.OnMission ? e.destination.type : MapMarkerType.FlyingExpedition);
-                                b.gameObject.SetActive(true);
-                            }
-                            for (;i < l; i++)
-                            {
-                                expeditionsFastButtons[i].gameObject.SetActive(false);
-                            }
-                        }                        
-                    }
-                    else
-                    { // просто перезапись
-                        for (i = 0; i < l; i++)
-                        {
-                            b = expeditionsFastButtons[i];
-                            b.onClick.RemoveAllListeners();
-                            e = elist[i];
-                            int id = e.ID;
-                            b.onClick.AddListener(() => this.SelectExpedition(id));
-                            b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.destination.type);
-                            b.gameObject.SetActive(true);
-                        }
-                    }
-                    expeditionFastButtonsPanel.gameObject.SetActive(true);
-                }
-                else expeditionFastButtonsPanel.gameObject.SetActive(false);
+                ExpeditionsButtonsRedraw();
             }
             else
             {
@@ -457,6 +383,87 @@ public sealed class GlobalMapUI : MonoBehaviour
             lastDrawnStateHash = globalMap.actionsHash;
         }
     }
+    public void ExpeditionsButtonsRedraw()
+    {
+        var elist = Expedition.expeditionsList;
+        var c = elist.Count;
+        if (c > 0)
+        {
+            int i = 0, l = expeditionsFastButtons.Length;
+            Button b;
+            Expedition e;
+            if (c != l)
+            {
+                if (c > l)
+                { //увеличение списка
+                    var nb = new Button[c];
+                    for (; i < l; i++)
+                    {
+                        b = expeditionsFastButtons[i];
+                        b.onClick.RemoveAllListeners();
+                        e = elist[i];
+                        int id = e.ID;
+                        b.onClick.AddListener(() => this.SelectExpedition(id));
+                        b.transform.GetChild(0).GetComponent<RawImage>().uvRect =
+                            GlobalMapUI.GetMarkerRect(e.GetDestinationIcon());
+                        b.gameObject.SetActive(true);
+                        nb[i] = b;
+                    }
+                    RectTransform rt = null;
+                    for (; i < c; i++)
+                    {
+                        b = Instantiate(expeditionsFastButtons[0], expeditionFastButtonsPanel);
+                        rt = b.GetComponent<RectTransform>();
+                        rt.anchorMin = new Vector2(0f, 0.95f - 0.05f * i);
+                        rt.anchorMax = new Vector2(0f, 1f - i * 0.05f);
+                        rt.anchoredPosition = new Vector2(rt.sizeDelta.x / 2f, 0f);
+                        b.onClick.RemoveAllListeners();
+                        e = elist[i];
+                        int id = e.ID;
+                        b.onClick.AddListener(() => this.SelectExpedition(id));
+                        b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(e.GetDestinationIcon());
+                        b.gameObject.SetActive(true);
+                        nb[i] = b;
+                    }
+                    expeditionsFastButtons = nb;
+                }
+                else
+                { // сужение списка
+                    for (i = 0; i < c; i++)
+                    {
+                        b = expeditionsFastButtons[i];
+                        b.onClick.RemoveAllListeners();
+                        e = elist[i];
+                        int id = e.ID;
+                        b.onClick.AddListener(() => this.SelectExpedition(id));
+                        b.transform.GetChild(0).GetComponent<RawImage>().uvRect =
+                           GlobalMapUI.GetMarkerRect(e.GetDestinationIcon());
+                        b.gameObject.SetActive(true);
+                    }
+                    for (; i < l; i++)
+                    {
+                        expeditionsFastButtons[i].gameObject.SetActive(false);
+                    }
+                }
+            }
+            else
+            { // просто перезапись
+                for (i = 0; i < l; i++)
+                {
+                    b = expeditionsFastButtons[i];
+                    b.onClick.RemoveAllListeners();
+                    e = elist[i];
+                    int id = e.ID;
+                    b.onClick.AddListener(() => this.SelectExpedition(id));
+                    b.transform.GetChild(0).GetComponent<RawImage>().uvRect = GetMarkerRect(e.GetDestinationIcon());
+                    b.gameObject.SetActive(true);
+                }
+            }
+            expeditionFastButtonsPanel.gameObject.SetActive(true);
+        }
+        else expeditionFastButtonsPanel.gameObject.SetActive(false);
+        needExpeditionsRedraw = false;
+    }
 
     private void Update()
     {
@@ -485,131 +492,131 @@ public sealed class GlobalMapUI : MonoBehaviour
             }
         }
 
-            if (chosenPoint != null)
-            {
-                
-            }
+        if (chosenPoint != null)
+        {
 
-            //
+        }
+        //
 
-            float deltaX = 0, deltaY = 0, deltaZoom = 0;
-            if (FollowingCamera.touchscreen)
+        float deltaX = 0, deltaY = 0, deltaZoom = 0;
+        if (FollowingCamera.touchscreen)
+        {
+            if (Input.touchCount > 0)
             {
-                if (Input.touchCount > 0)
+                Touch tc = Input.GetTouch(0);
+                if (Input.touchCount == 2)
                 {
-                    Touch tc = Input.GetTouch(0);
-                    if (Input.touchCount == 2)
+                    Touch tc2 = Input.GetTouch(1);
+                    Vector2 tPrevPos = tc.position - tc.deltaPosition;
+                    Vector2 t2PrevPos = tc2.position - tc2.deltaPosition;
+                    deltaZoom = ((tPrevPos - t2PrevPos).magnitude - (tc.position - tc2.position).magnitude) / (float)Screen.height * (-2);
+                }
+                else
+                {
+                    if (Input.touchCount == 1)
                     {
-                        Touch tc2 = Input.GetTouch(1);
-                        Vector2 tPrevPos = tc.position - tc.deltaPosition;
-                        Vector2 t2PrevPos = tc2.position - tc2.deltaPosition;
-                        deltaZoom = ((tPrevPos - t2PrevPos).magnitude - (tc.position - tc2.position).magnitude) / (float)Screen.height * (-2);
-                    }
-                    else
-                    {
-                        if (Input.touchCount == 1)
+                        if (tc.phase == TouchPhase.Began | tc.phase == TouchPhase.Moved)
                         {
-                            if (tc.phase == TouchPhase.Began | tc.phase == TouchPhase.Moved)
-                            {
-                                float delta = tc.deltaPosition.x / (float)Screen.width * 10;
-                                float swp = Screen.width / 10f;
-                                deltaX = tc.deltaPosition.x / swp;
-                                deltaY = tc.deltaPosition.y / swp;
-                            }
+                            float delta = tc.deltaPosition.x / (float)Screen.width * 10;
+                            float swp = Screen.width / 10f;
+                            deltaX = tc.deltaPosition.x / swp;
+                            deltaY = tc.deltaPosition.y / swp;
                         }
                     }
                 }
             }
+        }
+        else
+        {
+            if (Input.GetMouseButton(2))
+            {
+                deltaX = Input.GetAxis("Mouse X");
+                deltaY = Input.GetAxis("Mouse Y");
+            }
+            deltaZoom = Input.GetAxis("Mouse ScrollWheel");
+        }
+
+        if (deltaZoom != 0)
+        {
+            float newScale = mapRect.localScale.y + deltaZoom * mapRect.localScale.y;
+            if (newScale > ZOOM_BORDER) newScale = ZOOM_BORDER;
             else
             {
-                if (Input.GetMouseButton(2))
-                {
-                    deltaX = Input.GetAxis("Mouse X");
-                    deltaY = Input.GetAxis("Mouse Y");
-                }
-                deltaZoom = Input.GetAxis("Mouse ScrollWheel");
+                if (newScale < DIST_BORDER) newScale = DIST_BORDER;
             }
-
-            if (deltaZoom != 0)
+            Vector3 one = Vector3.one;
+            if (newScale != mapRect.localScale.x)
             {
-                float newScale = mapRect.localScale.y + deltaZoom * mapRect.localScale.y;
-                if (newScale > ZOOM_BORDER) newScale = ZOOM_BORDER;
-                else
-                {
-                    if (newScale < DIST_BORDER) newScale = DIST_BORDER;
-                }
-                Vector3 one = Vector3.one;
-                if (newScale != mapRect.localScale.x)
-                {
-                    mapRect.localScale = one * newScale;
-                }
-                if (mapMarkers.Count > 0)
-                {
-                    foreach (RectTransform marker in mapMarkers)
-                    {
-                        marker.localScale = one * (1f / newScale);
-                    }
-                }
-
+                mapRect.localScale = one * newScale;
             }
-            float xpos = mapRect.position.x, ypos = mapRect.position.y;
-            float sw = Screen.width - infoPanelWidth;
-            int sh = Screen.height;
-            float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
-
-            if (2 * radius <= sw)
+            if (mapMarkers.Count > 0)
             {
-                xpos = sw / 2f;
-            }
-            else
-            {
-                if (deltaX != 0)
+                foreach (RectTransform marker in mapMarkers)
                 {
-                    xpos += deltaX * 30;
-                }
-                float leftExpart = xpos - radius;
-                float rightExpart = sw - (xpos + radius);
-                if (leftExpart > 0)
-                {
-                    if (rightExpart < 0)
-                    {
-                        xpos = radius;
-                    }
-                }
-                else
-                {
-                    if (rightExpart > 0)
-                    {
-                        xpos = sw - (radius);
-                    }
+                    marker.localScale = one * (1f / newScale);
                 }
             }
 
-            if (2 * radius <= sh)
+        }
+        float xpos = mapRect.position.x, ypos = mapRect.position.y;
+        float sw = Screen.width - infoPanelWidth;
+        int sh = Screen.height;
+        float radius = mapRect.rect.width * mapRect.localScale.x / 2f;
+
+        if (2 * radius <= sw)
+        {
+            xpos = sw / 2f;
+        }
+        else
+        {
+            if (deltaX != 0)
             {
-                ypos = sh / 2f;
+                xpos += deltaX * 30;
+            }
+            float leftExpart = xpos - radius;
+            float rightExpart = sw - (xpos + radius);
+            if (leftExpart > 0)
+            {
+                if (rightExpart < 0)
+                {
+                    xpos = radius;
+                }
             }
             else
             {
-                if (deltaY != 0)
+                if (rightExpart > 0)
                 {
-                    ypos += deltaY * 30;
-
-                }
-                float upExpart = sh - ypos - radius;
-                float downExpart = ypos - radius;
-                if (upExpart > 0)
-                {
-                    if (downExpart < 0) ypos = sh - radius;
-                }
-                else
-                {
-                    if (downExpart > 0) ypos = radius;
+                    xpos = sw - (radius);
                 }
             }
+        }
 
+        if (2 * radius <= sh)
+        {
+            ypos = sh / 2f;
+        }
+        else
+        {
+            if (deltaY != 0)
+            {
+                ypos += deltaY * 30;
 
-            mapRect.position = new Vector3(xpos, ypos, 0);
+            }
+            float upExpart = sh - ypos - radius;
+            float downExpart = ypos - radius;
+            if (upExpart > 0)
+            {
+                if (downExpart < 0) ypos = sh - radius;
+            }
+            else
+            {
+                if (downExpart > 0) ypos = radius;
+            }
+        }
+
+        mapRect.position = new Vector3(xpos, ypos, 0);
+
+        if (needExpeditionsRedraw) ExpeditionsButtonsRedraw();
     }
    
     private void OnEnable()

@@ -215,7 +215,7 @@ public class Plane
             return;
         }
         else
-        {
+        {            
             if (extension != null)
             {
                 extension.Annihilate(false);
@@ -228,7 +228,6 @@ public class Plane
             if (!(s.IsIPlanable())) t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
             if (!(s is Hotel)) t.position = GetCenterPosition(); else //костыль
             {
-
                 switch(faceIndex)
                 {
                     case Block.FWD_FACE_INDEX:
