@@ -3134,8 +3134,7 @@ public static class Localization
                                     case Knowledge.FoundationRouteBoosters.HappinessBoost:
                                         q.name = "Путь Основания";
                                         q.description = "";
-                                        q.steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
-                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                                        q.steps[0] = "Уровень довольства: " ;
                                         break;
                                     case Knowledge.FoundationRouteBoosters.HotelBoost:
                                         {
@@ -3152,7 +3151,7 @@ public static class Localization
                                     case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
                                         q.name = "Путь Основания";
                                         q.description = "";
-                                        q.steps[0] = "Количество прибывших: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
+                                        q.steps[0] = "Количество прибывших: ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.PointBoost:
                                         q.name = "Путь Основания";
@@ -3162,7 +3161,7 @@ public static class Localization
                                     case Knowledge.FoundationRouteBoosters.PopulationBoost:
                                         q.name = "Путь Основания";
                                         q.description = "";
-                                        q.steps[0] = "Текущее население: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
+                                        q.steps[0] = "Текущее население: ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.QuestBoost:
                                         q.name = "Путь Основания - Квест";
@@ -3173,6 +3172,77 @@ public static class Localization
                                         q.name = "Путь Основания";
                                         q.description = "";
                                         q.steps[0] = GetStructureName(Structure.SETTLEMENT_CENTER_ID) + " шестого уровня построен.";
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.CloudWhale:
+                            {
+                                switch ((Knowledge.CloudWhaleRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.CloudWhaleRouteBoosters.StreamGensBoost:
+                                        q.name = "Путь Облачного Кита";
+                                        q.description = "Постройте " + GetStructureName(Structure.WIND_GENERATOR_1_ID) + " в количестве " + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString();
+                                        q.steps[0] = "Потоковые генераторы: ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.CrewsBoost:
+                                        q.name = "Путь Облачного Кита";
+                                        q.description = "Набрать не менее " + Knowledge.R_CW_CREWS_COUNT_COND.ToString() + " команд не ниже уровня " + Knowledge.R_CW_CREW_LEVEL_COND.ToString() + " для охраны острова.";
+                                        q.steps[0] = "Команд собрано: ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.ArtifactBoost:
+                                        q.name = "Путь Облачного Кита";
+                                        q.description = "Найдите артефакт Тайного Пути";
+                                        q.steps[0] = "Артефакт найден ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.XStationBoost:
+                                        q.name = "Путь Облачного Кита";
+                                        q.description = "Постройте следующее сооружение: " + GetStructureName(Structure.XSTATION_3_ID);
+                                        q.steps[0] = "Станция построена ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.StabilityEnforcerBooster:
+                                        q.name = "Путь Облачного Кита";
+                                        q.description = "Постройте следующее сооружение: " + GetStructureName(Structure.STABILITY_ENFORCER_ID);
+                                        q.steps[0] = "Стабилизатор построен ";
+                                        break;
+                                    //case Knowledge.CloudWhaleRouteBoosters.PointBoost:
+                                    //case Knowledge.CloudWhaleRouteBoosters.QuestBoost:
+                                }
+                                break;
+                            }
+                        case QuestType.Engine:
+                            {
+                                switch((Knowledge.EngineRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.EngineRouteBoosters.EnergyBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = "Попробуйте накопить достаточно энергии, чтобы оценить накопительный потенциал вашей колонии."
+                                        q.steps[0] = "Энергии накоплено: ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.CityMoveBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = "Попробуйте изменить положение острова в Последнем Секторе.";
+                                        q.steps[0] = "Остров сдвинулся ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.GearsBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = "Попробуйте изменить положение острова в Последнем Секторе.";
+                                        q.steps[0] = "Остров сдвинулся ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.FactoryBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = "Нам потребуются немалые мощности, чтобы подготовить путешествие.";
+                                        q.steps[0] = "Построено фабрик-кубов: ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.IslandEngineBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = string.Empty;
+                                        q.steps[0] = "Движитель построен ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.ControlCenterBoost:
+                                        q.name = "Путь Движителя";
+                                        q.description = string.Empty;
+                                        q.steps[0] = "Контрольный центр построен ";
                                         break;
                                 }
                                 break;

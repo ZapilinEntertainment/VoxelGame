@@ -462,7 +462,17 @@ public sealed class Knowledge
         //crews
         if (!BoostCounted(CloudWhaleRouteBoosters.CrewsBoost))
         {
-            if (R_CW_CrewsCheck()) CountRouteBonus(CloudWhaleRouteBoosters.CrewsBoost);
+            var crewslist = Crew.crewsList;
+            if (crewslist != null)
+            {
+                var count = 0;
+                foreach (var c in crewslist)
+                {
+                    if (c.level > R_CW_CREW_LEVEL_COND) count++;
+                }
+                if (count >= R_CW_CREWS_COUNT_COND) CountRouteBonus(CloudWhaleRouteBoosters.CrewsBoost);
+            }
+            
         }
         else unsubscribeVotes++;
         //artifacts
@@ -520,21 +530,6 @@ public sealed class Knowledge
         else unsubscribeVotes++;
 
         if (unsubscribeVotes == 7) GameMaster.realMaster.everydayUpdate -= EverydayUpdate;
-    }
-
-    public bool R_CW_CrewsCheck()
-    {
-        var crewslist = Crew.crewsList;
-        if (crewslist != null)
-        {
-            var count = 0;
-            foreach (var c in crewslist)
-            {
-                if (c.level > R_CW_CREW_LEVEL_COND) count++;
-            }
-            return (count >= R_CW_CREWS_COUNT_COND);
-        }
-        else return false;
     }
     
     private bool BoostCounted(CloudWhaleRouteBoosters type)
@@ -980,8 +975,8 @@ public sealed class Knowledge
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         x = (byte)CloudWhaleRouteBoosters.ArtifactBoost;
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
-                        x = (byte)CloudWhaleRouteBoosters.PointBoost;
-                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        //x = (byte)CloudWhaleRouteBoosters.PointBoost;
+                        //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {
                             x = (byte)CloudWhaleRouteBoosters.XStationBoost;

@@ -681,7 +681,7 @@ public class Quest
                     switch ((Knowledge.FoundationRouteBoosters)subIndex)
                     {
                         case Knowledge.FoundationRouteBoosters.HappinessBoost:
-                            steps[0] = "Уровень довольства: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
+                            stepsAddInfo[0] = string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
                                 + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
                             if (colony.happiness_coefficient == Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
                             break;
@@ -689,7 +689,7 @@ public class Quest
                             {
                                 var ic = DockSystem.GetImmigrantsTotalCount();
                                 var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
-                                steps[0] = "Количество прибывших: " + ic.ToString() + " / " + nic.ToString();
+                                steps[0] = ic.ToString() + " / " + nic.ToString();
                                 if (ic == nic) MakeQuestCompleted();
                                 break;
                             }
@@ -697,7 +697,7 @@ public class Quest
                             {
                                 var cc = colony.citizenCount;
                                 var nc = Knowledge.R_F_POPULATION_COND;
-                                steps[0] = "Текущее население: " + cc.ToString() + " / " + nc.ToString();
+                                steps[0] = cc.ToString() + " / " + nc.ToString();
                                 if (cc >= nc) MakeQuestCompleted();
                                 break;
                             }
@@ -741,11 +741,28 @@ public class Quest
                                     }
                                 }
                                 if (count >= Knowledge.R_CW_STREAMGENS_COUNT_COND) MakeQuestCompleted();
+                                else
+                                {
+                                    steps[0] = count.ToString()+ " /" + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString();
+                                }
                                 break;
                             }
                         case Knowledge.CloudWhaleRouteBoosters.CrewsBoost:
                             {
-                                if (Knowledge.GetCurrent().R_CW_CrewsCheck()) MakeQuestCompleted();
+                                int count = 0;
+                                var crewslist = Crew.crewsList;
+                                if (crewslist != null)
+                                {
+                                    foreach (var c in crewslist)
+                                    {
+                                        if (c.level > Knowledge.R_CW_CREW_LEVEL_COND) count++;
+                                    }
+                                }
+                                if (count >= Knowledge.R_CW_CREWS_COUNT_COND) MakeQuestCompleted();
+                                else
+                                {
+                                    steps[0] = count.ToString() + " /" + Knowledge.R_CW_CREWS_COUNT_COND.ToString();
+                                }
                                 break;
                             }
                         case Knowledge.CloudWhaleRouteBoosters.ArtifactBoost:
@@ -786,6 +803,61 @@ public class Quest
                                 }
                                 break;
                             }
+                    }
+                    break;
+                }
+            case QuestType.Engine:
+                {
+                    switch((Knowledge.EngineRouteBoosters)subIndex)
+                    {
+                        case Knowledge.EngineRouteBoosters.EnergyBoost:
+                            {
+                                var e = colony.energyStored;
+                                if (e >= Knowledge.R_E_ENERGY_STORED_COND) MakeQuestCompleted();
+                                else
+                                {
+                                    stepsAddInfo[0] = e.ToString() + " / " + Knowledge.R_E_ENERGY_STORED_COND.ToString();
+                                }
+                                break;
+                            }                       
+                        case Knowledge.EngineRouteBoosters.GearsBoost:
+                            {
+                                var g = colony.gears_coefficient;
+                                if (g >= Knowledge.R_E_GEARS_COND) MakeQuestCompleted();
+                                else
+                                {
+                                    stepsAddInfo[0] = string.Format("{0:0.#}", g) + " / " + Knowledge.R_E_GEARS_COND.ToString();
+                                }
+                                break;
+                            }
+                        case Knowledge.EngineRouteBoosters.FactoryBoost:
+                            {
+                                int count = 0;
+                                var sid = Structure.SMELTERY_BLOCK_ID;
+                                var pg = colony.powerGrid;
+                                if (pg != null && pg.Count > 0)
+                                {
+                                    foreach (var p in pg)
+                                    {
+                                        if (p.ID == sid) count++;
+                                    }
+                                }
+                                if (count >= Knowledge.R_E_FACTORYCUBES_COUNT) MakeQuestCompleted();
+                                else stepsAddInfo[0] = count.ToString() + " / " + Knowledge.R_E_FACTORYCUBES_COUNT.ToString();
+                                break;
+                            }
+                        case Knowledge.EngineRouteBoosters.IslandEngineBoost:
+                            {
+                                var pg = colony.powerGrid;
+                                //var sid = Structure.Engi
+                                //if ()
+                                break;
+                            }
+                        case Knowledge.EngineRouteBoosters.ControlCenterBoost:
+                            {
+                                break;
+                            }
+                            break;
                     }
                     break;
                 }
