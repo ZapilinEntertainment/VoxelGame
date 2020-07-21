@@ -2934,15 +2934,15 @@ public static class Localization
         switch (currentLanguage)
         {
             case Language.Russian:
-                return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2019гг н.э. \n" +
-                    "Собрано на Unity Engine 2018.3.11 \n" +
+                return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2020гг н.э. \n" +
+                    "Собрано на Unity Engine 2019.3.15 \n" +
                     "В процессе разработки использовались следующие freeware - программы: \n" +
                     " - Blender от Blender Foundations \n" +
                     " - Paint.net \n" +
                     " - Audacity \n" +
                     " - MS Visual Studio Community 2017\n" +
                     "\n" +
-                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу). \n" +
+                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу) и Amplify Occlusion Plugin \n" +                    
                     "\n" +
                     "\n" +
                     "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds (в недалеком будущем) или сделав пожертвование на один из следующих кошельков: \n" +
@@ -2950,7 +2950,7 @@ public static class Localization
                     "Paypal: paypal.me/mahariusls\n" +
                     "Не забудьте приложить к дотации комментарий :)";
             case Language.English:
-                return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2019 AD \n" +
+                return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2020 AD \n" +
                     "Builded on Unity Engine 2018.3.11 \n" +
                     "The following freeware was used in the development: \n" +
                     " - Blender by Blender Foundations \n" +
@@ -2958,7 +2958,7 @@ public static class Localization
                     " - Audacity \n" +
                     " - MS Visual Studio Community 2017\n" +
                     "\n" +
-                    "Used font \"neuropolitical rg\" by Typodermic Fonts Inc. \n" +
+                    "Used font \"neuropolitical rg\" by Typodermic Fonts Inc. and Amplify Occlusion Plugin\n" +
                     "\n" +
                     "\n" +
                     "You can support my development by buying storyline addons for Limited Worlds (not released yet) or making a donation to one of this accounts: \n" +
@@ -3216,7 +3216,7 @@ public static class Localization
                                 {
                                     case Knowledge.EngineRouteBoosters.EnergyBoost:
                                         q.name = "Путь Движителя";
-                                        q.description = "Попробуйте накопить достаточно энергии, чтобы оценить накопительный потенциал вашей колонии."
+                                        q.description = "Попробуйте накопить достаточно энергии, чтобы оценить накопительный потенциал вашей колонии.";
                                         q.steps[0] = "Энергии накоплено: ";
                                         break;
                                     case Knowledge.EngineRouteBoosters.CityMoveBoost:

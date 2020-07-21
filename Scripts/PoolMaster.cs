@@ -586,75 +586,145 @@ public sealed class PoolMaster : MonoBehaviour {
         Material[] materials;      
         if (mpack == currentMaterialsPack)
         {
-            materials = new Material[5]
-                {
-                basic_material,
-                glassMaterial,
-                glassMaterial_disabled,
-                green_material,
-                metal_material
-                };
+            materials = new Material[5];
+            materials[BASIC_MAT_INDEX] = basic_material;
+            materials[GLASS_MAT_INDEX] = glassMaterial;
+            materials[GLASS_OFF_MAT_INDEX] = glassMaterial_disabled;
+            materials[GREEN_MAT_INDEX] = green_material;
+            materials[METAL_MAT_INDEX] = metal_material;
         }
         else
         {
             materials = LoadMaterialPack(mpack);
-
         }
         foreach (Renderer mr in rrs)
         {
             bool castShadows = false, receiveShadows = false;
-            if (mr.sharedMaterial != null)
+
+            if (mr.sharedMaterials != null)
             {
-                switch (mr.sharedMaterial.name)
+                if (mr.sharedMaterials.Length == 1)
                 {
-                    case "Basic":
-                    case "Basic_PBR":
-                        mr.sharedMaterial = materials[0];
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "Glass":
-                    case "Glass_PBR":
-                        mr.sharedMaterial = materials[1];
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "GlassOffline":
-                    case "GlassOffline_PBR":
-                        mr.sharedMaterial = materials[2];
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "Vegetation":
-                    case "Green":
-                    case "Green_PBR":
-                        mr.sharedMaterial = materials[3];
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "Metal":
-                    case "Metal_PBR":
-                        mr.sharedMaterial = materials[4];
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "Sailcloth":
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "BillboardMaterial":
-                    case "ShadedBillboard":
-                        if (shadowCasting) mr.sharedMaterial = billboardShadedMaterial;
-                        else mr.sharedMaterial = billboardMaterial;
-                        castShadows = true;
-                        receiveShadows = true;
-                        break;
-                    case "ChargedMaterial":
-                    case "ChargedMaterial_advanced":
-                        mr.sharedMaterial = energyMaterial;
-                        castShadows = true;
-                        receiveShadows = false;
-                        break;
+                    if (mr.sharedMaterial != null)
+                    {
+                        switch (mr.sharedMaterial.name)
+                        {
+                            case "Basic":
+                            case "Basic_PBR":
+                                mr.sharedMaterial = materials[BASIC_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Glass":
+                            case "Glass_PBR":
+                                mr.sharedMaterial = materials[GLASS_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "GlassOffline":
+                            case "GlassOffline_PBR":
+                                mr.sharedMaterial = materials[GLASS_OFF_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Vegetation":
+                            case "Green":
+                            case "Green_PBR":
+                                mr.sharedMaterial = materials[GREEN_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Metal":
+                            case "Metal_PBR":
+                                mr.sharedMaterial = materials[METAL_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Sailcloth":
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "BillboardMaterial":
+                            case "ShadedBillboard":
+                                if (shadowCasting) mr.sharedMaterial = billboardShadedMaterial;
+                                else mr.sharedMaterial = billboardMaterial;
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "ChargedMaterial":
+                            case "ChargedMaterial_advanced":
+                                mr.sharedMaterial = energyMaterial;
+                                castShadows = true;
+                                receiveShadows = false;
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    var sm = mr.sharedMaterials;
+                    var sm2 = new Material[sm.Length];
+                    for (int i =0; i < sm.Length; i++)
+                    {
+                        if (sm[i] == null)
+                        {
+                            sm2[i] = null;
+                            continue;
+                        }
+                        switch (sm[i].name)
+                        {
+                            case "Basic":
+                            case "Basic_PBR":
+                                sm2[i] = materials[BASIC_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Glass":
+                            case "Glass_PBR":
+                                sm2[i] = materials[GLASS_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "GlassOffline":
+                            case "GlassOffline_PBR":
+                                sm2[i] = materials[GLASS_OFF_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Vegetation":
+                            case "Green":
+                            case "Green_PBR":
+                                sm2[i] = materials[GREEN_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Metal":
+                            case "Metal_PBR":
+                                sm2[i] = materials[METAL_MAT_INDEX];
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "Sailcloth":
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "BillboardMaterial":
+                            case "ShadedBillboard":
+                                if (shadowCasting) sm2[i] = billboardShadedMaterial;
+                                else sm2[i] = billboardMaterial;
+                                castShadows = true;
+                                receiveShadows = true;
+                                break;
+                            case "ChargedMaterial":
+                            case "ChargedMaterial_advanced":
+                                sm2[i] = energyMaterial;
+                                castShadows = true;
+                                receiveShadows = false;
+                                break;
+                            default: sm2[i] = sm[i]; break;
+                        }
+                    }
+                    mr.sharedMaterials = sm2;
                 }
             }
             if (shadowCasting)
@@ -670,6 +740,8 @@ public sealed class PoolMaster : MonoBehaviour {
             }
         }
     }
+
+
     public static void SwitchMaterialsToOnline(ICollection<Renderer> renderers)
     {
         if (renderers == null || renderers.Count == 0) return;
