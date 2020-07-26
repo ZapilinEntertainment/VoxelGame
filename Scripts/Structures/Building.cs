@@ -201,8 +201,11 @@ public class Building : Structure
     {
         switch (id)
         {
-            case ENERGY_CAPACITOR_1_ID: return 1000f;
+            case ENERGY_CAPACITOR_1_ID:
+            case ENGINE_ID:
+                return 1000f;
             case ENERGY_CAPACITOR_2_ID: return 4000f;
+            case CAPACITOR_MAST_ID: return 10000f;
 
             case SETTLEMENT_CENTER_ID: return 100f;
             case HOUSE_BLOCK_ID: return 150f;
@@ -283,6 +286,7 @@ public class Building : Structure
             case SETTLEMENT_STRUCTURE_ID: return -0.5f;
             case HOUSE_BLOCK_ID: return -400f;
             case HOUSING_MAST_6_ID: return -350f;
+            case ENGINE_ID:
             case HOTEL_BLOCK_6_ID:  return -200f;
 
             case DOCK_ID: return -10f;
@@ -668,6 +672,7 @@ public class Building : Structure
                     level = 6;
                 }
                 break;
+            case ENGINE_ID:
             case HOTEL_BLOCK_6_ID:
                 {
                     canBePowerSwitched = true;
@@ -768,6 +773,7 @@ public class Building : Structure
     {
         ChangeRenderersView(isActive & isEnergySupplied);
         //copy to QuantumTrasmitter.cs
+        // copy to Engine.cs
     }
     virtual protected void ChangeRenderersView(bool setOnline)
     {

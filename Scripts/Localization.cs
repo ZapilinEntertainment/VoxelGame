@@ -130,6 +130,8 @@ public static class Localization
                     case Structure.SETTLEMENT_CENTER_ID: return "Центр поселения";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Психокинетический генератор";
                     case Structure.SCIENCE_LAB_ID: return "Исследовательская лаборатория";
+                    case Structure.ENGINE_ID: return "Движитель";
+                    case Structure.CAPACITOR_MAST_ID: return "Накопительная мачта";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -205,6 +207,8 @@ public static class Localization
                     case Structure.SETTLEMENT_CENTER_ID: return "Settlement center";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Psychokinetic generator";
                     case Structure.SCIENCE_LAB_ID: return "Research laboratory";
+                    case Structure.ENGINE_ID: return "Engine Tower";
+                    case Structure.CAPACITOR_MAST_ID: return "Capacitor Mast";
                     default: return "Unknown building";
                 }
         }
@@ -294,6 +298,7 @@ public static class Localization
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
                     case Structure.SCIENCE_LAB_ID: return "Исследует найденные Закономерности или вырабатывает очки Знания.";
                     case Structure.COMPOSTER_ID: return "Превращает органику в плодородную почву.";
+                    case Structure.ENGINE_ID: return "Перемещает остров внутри кольца.";
                     default: return "Описание отсутствует";
                 }
             case Language.English:
@@ -379,6 +384,7 @@ public static class Localization
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
                     case Structure.SCIENCE_LAB_ID: return "Investigates Regularities found or generates Knowledge points.";
                     case Structure.COMPOSTER_ID: return "Converts organic materials to fertile soil";
+                    case Structure.ENGINE_ID: return "Moves island within the ring";
                     default: return "No description.";
                 }
         }
@@ -3134,7 +3140,7 @@ public static class Localization
                                     case Knowledge.FoundationRouteBoosters.HappinessBoost:
                                         q.name = "Путь Основания";
                                         q.description = "";
-                                        q.steps[0] = "Уровень довольства: " ;
+                                        q.steps[0] = "Уровень довольства: ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.HotelBoost:
                                         {
@@ -3205,14 +3211,14 @@ public static class Localization
                                         q.description = "Постройте следующее сооружение: " + GetStructureName(Structure.STABILITY_ENFORCER_ID);
                                         q.steps[0] = "Стабилизатор построен ";
                                         break;
-                                    //case Knowledge.CloudWhaleRouteBoosters.PointBoost:
-                                    //case Knowledge.CloudWhaleRouteBoosters.QuestBoost:
+                                        //case Knowledge.CloudWhaleRouteBoosters.PointBoost:
+                                        //case Knowledge.CloudWhaleRouteBoosters.QuestBoost:
                                 }
                                 break;
                             }
                         case QuestType.Engine:
                             {
-                                switch((Knowledge.EngineRouteBoosters)q.subIndex)
+                                switch ((Knowledge.EngineRouteBoosters)q.subIndex)
                                 {
                                     case Knowledge.EngineRouteBoosters.EnergyBoost:
                                         q.name = "Путь Движителя";
@@ -3226,8 +3232,8 @@ public static class Localization
                                         break;
                                     case Knowledge.EngineRouteBoosters.GearsBoost:
                                         q.name = "Путь Движителя";
-                                        q.description = "Попробуйте изменить положение острова в Последнем Секторе.";
-                                        q.steps[0] = "Остров сдвинулся ";
+                                        q.description = "Улучшите оснащение своих фабрик и мастерских";
+                                        q.steps[0] = "Уровень оснащения ";
                                         break;
                                     case Knowledge.EngineRouteBoosters.FactoryBoost:
                                         q.name = "Путь Движителя";
@@ -3243,6 +3249,74 @@ public static class Localization
                                         q.name = "Путь Движителя";
                                         q.description = string.Empty;
                                         q.steps[0] = "Контрольный центр построен ";
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.Pipe:
+                            {
+                                switch ((Knowledge.PipesRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.PipesRouteBoosters.FarmsBoost:
+                                        q.name = "Путь Труб";
+                                        q.description = "В качестве подготовки, замените все оычные фермы крытыми";
+                                        q.steps[0] = "Обычные фермы: ";
+                                        q.steps[1] = "Крытые фермы: ";
+                                        break;
+                                    case Knowledge.PipesRouteBoosters.SizeBoost:
+                                        {
+                                            q.name = "Путь Труб";
+                                            q.description = "Крупный объект не сможет пройти сквозь Врата Труб. Убедитесь, что ваш остров достаточно компактный (Достаточно выполнить два условия из трех).";
+                                            q.steps[0] = "Ширина: ";
+                                            q.steps[1] = "Высота: ";
+                                            q.steps[2] = "Длина: ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.FuelBoost:
+                                        {
+                                            q.name = "Путь Труб";
+                                            q.description = "Нас понадобится большой запас топлива для путешествия.";
+                                            q.steps[0] = "Собрано топлива: ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.BiomesBoost:
+                                        {
+                                            q.name = "Путь Труб";
+                                            q.description = "Подготовьте остров к дальнему путешествию - посетите 4 биома";
+                                            q.steps[0] = "Видели океан ";
+                                            q.steps[1] = "Видели огненный биом ";
+                                            q.steps[2] = "Посетили внешний космос ";
+                                            q.steps[3] = "Посетили луга ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.QETBoost:
+                                        {
+                                            q.name = "Путь Труб";
+                                            q.description = "Энергокристаллы будут нужны всегда. Постройте " + GetStructureName(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
+                                            q.steps[0] = "Строение готово ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.CapacitorMastBoost:
+                                        {
+                                            q.name = "Путь Труб";
+                                            q.description = "Нам понадобится крупный накопитель энергии - " + GetStructureName(Structure.CAPACITOR_MAST_ID);
+                                            q.steps[0] = "Накопитель построен ";
+                                            break;
+                                        }
+                                }
+                                break;
+                            }
+                        case QuestType.Crystal:
+                            {
+                                switch ((Knowledge.CrystalRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.CrystalRouteBoosters.MoneyBoost:
+                                    case Knowledge.CrystalRouteBoosters.PinesBoost:
+                                    case Knowledge.CrystalRouteBoosters.GCubeBoost:
+                                    case Knowledge.CrystalRouteBoosters.BiomeBoost:
+                                    case Knowledge.CrystalRouteBoosters.CrystalliserBoost:
+                                    case Knowledge.CrystalRouteBoosters.CrystalMastBoost:
+                                    case Knowledge.CrystalRouteBoosters.PointBoost:
                                         break;
                                 }
                                 break;
@@ -3450,6 +3524,169 @@ public static class Localization
                                         q.name = "Foundation Route";
                                         q.description = "";
                                         q.steps[0] = GetStructureName(Structure.SETTLEMENT_CENTER_ID) + " level 6 built.";
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.CloudWhale:
+                            {
+                                switch ((Knowledge.CloudWhaleRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.CloudWhaleRouteBoosters.StreamGensBoost:
+                                        q.name = "Cloud Whale Route";
+                                        q.description = "Build " + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString() + " " + GetStructureName(Structure.WIND_GENERATOR_1_ID) + "s";
+                                        q.steps[0] = "Потоковые генераторы: ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.CrewsBoost:
+                                        q.name = "Cloud Whale Route";
+                                        q.description = "Gain " + Knowledge.R_CW_CREWS_COUNT_COND.ToString() + " or more crews level " + Knowledge.R_CW_CREW_LEVEL_COND.ToString() + " for island guard.";
+                                        q.steps[0] = "Команд собрано: ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.ArtifactBoost:
+                                        q.name = "Cloud Whale Route";
+                                        q.description = "Find an artifact of the Secret Path";
+                                        q.steps[0] = "Artifact found ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.XStationBoost:
+                                        q.name = "Cloud Whale Route";
+                                        q.description = "Build " + GetStructureName(Structure.XSTATION_3_ID);
+                                        q.steps[0] = "Station completed ";
+                                        break;
+                                    case Knowledge.CloudWhaleRouteBoosters.StabilityEnforcerBooster:
+                                        q.name = "Cloud Whale Route";
+                                        q.description = "Build " + GetStructureName(Structure.STABILITY_ENFORCER_ID);
+                                        q.steps[0] = "Stabilizer built ";
+                                        break;
+                                        //case Knowledge.CloudWhaleRouteBoosters.PointBoost:
+                                        //case Knowledge.CloudWhaleRouteBoosters.QuestBoost:
+                                }
+                                break;
+                            }
+                        case QuestType.Engine:
+                            {
+                                switch ((Knowledge.EngineRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.EngineRouteBoosters.EnergyBoost:
+                                        q.name = "Engine Route";
+                                        q.description = "Try to gain enough energy for your colony's effectiveness test.";
+                                        q.steps[0] = "Energy stored: ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.CityMoveBoost:
+                                        q.name = "Engine Route";
+                                        q.description = "Try to change city's positions in the Last Sector";
+                                        q.steps[0] = "Island moved ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.GearsBoost:
+                                        q.name = "Engine Route";
+                                        q.description = "Improve your island's industry gears";
+                                        q.steps[0] = "Gears level ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.FactoryBoost:
+                                        q.name = "Engine Route";
+                                        q.description = "We need massive industry for journey preparing";
+                                        q.steps[0] = "Cube-smelteries built: ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.IslandEngineBoost:
+                                        q.name = "Engine Route";
+                                        q.description = string.Empty;
+                                        q.steps[0] = "Engine built ";
+                                        break;
+                                    case Knowledge.EngineRouteBoosters.ControlCenterBoost:
+                                        q.name = "Engine Route";
+                                        q.description = string.Empty;
+                                        q.steps[0] = "Control center built ";
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.Pipe:
+                            {
+                                switch ((Knowledge.PipesRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.PipesRouteBoosters.FarmsBoost:
+                                        q.name = "Pipes Route";
+                                        q.description = "As a preparation, replace all your traditional farms to covered ones.";
+                                        q.steps[0] = "Basic farms left: ";
+                                        q.steps[1] = "Covered farms count: ";
+                                        break;
+                                    case Knowledge.PipesRouteBoosters.SizeBoost:
+                                        {
+                                            q.name = "Pipes Route";
+                                            q.description = "A massive island obviously can not come through the Pipes Gate. Make sure you cut the edges. (Need two of three conditions met)";
+                                            q.steps[0] = "Width: ";
+                                            q.steps[1] = "Height: ";
+                                            q.steps[2] = "Length: ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.FuelBoost:
+                                        {
+                                            q.name = "Pipes Route";
+                                            q.description = "We need huge fuel reserves for the journey";
+                                            q.steps[0] = "Fuel collected: ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.BiomesBoost:
+                                        {
+                                            q.name = "Pipes Route";
+                                            q.description = "Prepare island for a long flight - visit four different biomes.";
+                                            q.steps[0] = "Ocean visited ";
+                                            q.steps[1] = "Flames visited ";
+                                            q.steps[2] = "Outer space visited ";
+                                            q.steps[3] = "Meadows visited ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.QETBoost:
+                                        {
+                                            q.name = "Pipes Route";
+                                            q.description = "Crystals always will be useful. Build " + GetStructureName(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
+                                            q.steps[0] = "Constructed ";
+                                            break;
+                                        }
+                                    case Knowledge.PipesRouteBoosters.CapacitorMastBoost:
+                                        {
+                                            q.name = "Pipes Route";
+                                            q.description = "Massive capacitor will be useful. Construct " + GetStructureName(Structure.CAPACITOR_MAST_ID);
+                                            q.steps[0] = "Capacitor built ";
+                                            break;
+                                        }
+                                }
+                                break;
+                            }
+                        case QuestType.Crystal:
+                            {
+                                switch ((Knowledge.CrystalRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.CrystalRouteBoosters.MoneyBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Collect " + Knowledge.R_C_MONEY_COND.ToString() +" energy crystals.";
+                                        q.steps[0] = "Basic farms left: ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.PinesBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Grow up crystal pines on your island.";
+                                        q.steps[0] = "First pine grown ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.GCubeBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Build a block full of Graphonium as an catalyst.";
+                                        q.steps[0] = "Graphonium block built ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.BiomeBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Move your island to the Crystal biome.";
+                                        q.steps[0] = "City is in the Crytal biome: ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.CrystalliserBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Build " + GetStructureName(Structure.CRYSTALLISER_ID);
+                                        q.steps[0] = "Constructed: ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.CrystalMastBoost:
+                                        q.name = "Crystal Route";
+                                        q.description = "Build " + GetStructureName(Structure.CRYSTAL_MAST_ID);
+                                        q.steps[0] = "Constructed: ";
+                                        break;
+                                    case Knowledge.CrystalRouteBoosters.PointBoost:
                                         break;
                                 }
                                 break;

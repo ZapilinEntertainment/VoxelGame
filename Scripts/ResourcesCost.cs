@@ -404,7 +404,24 @@
                 new ResourceContainer(ResourceType.Concrete, 100)
             };
                 break;
-        }
+            case Structure.ENGINE_ID:
+                {
+                    cost = new ResourceContainer[] {
+                new ResourceContainer(ResourceType.metal_K, 250), new ResourceContainer(ResourceType.metal_S, 400), new ResourceContainer(ResourceType.metal_N, 100),
+                new ResourceContainer(ResourceType.Concrete, 1000)
+            };
+                    break;
+                }
+                    case Structure.CAPACITOR_MAST_ID:
+                {
+                    cost = new ResourceContainer[] {
+                new ResourceContainer(ResourceType.Concrete, 400), new ResourceContainer(ResourceType.metal_K, 250),
+                    new ResourceContainer(ResourceType.metal_E, 400), new ResourceContainer(ResourceType.metal_N, 120)
+
+            };
+                    break;
+                }
+        }                      
         return cost;
     }
     public static ResourceContainer[] GetAdditionalSettlementBuildingCost(byte level)

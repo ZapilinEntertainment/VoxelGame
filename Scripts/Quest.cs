@@ -193,6 +193,12 @@ public class Quest
                 break;
             case Knowledge.ResearchRoute.Pipes:
                 type = QuestType.Pipe;
+                switch ((Knowledge.PipesRouteBoosters)subID)
+                {
+                    case Knowledge.PipesRouteBoosters.FarmsBoost: stepsCount = 2; break;
+                    case Knowledge.PipesRouteBoosters.BiomesBoost: stepsCount = 4; break;
+                    case Knowledge.PipesRouteBoosters.SizeBoost: stepsCount = 3; break;
+                }
                 break;
             case Knowledge.ResearchRoute.Crystal:
                 type = QuestType.Crystal;
@@ -730,16 +736,7 @@ public class Quest
                     {
                         case Knowledge.CloudWhaleRouteBoosters.StreamGensBoost:
                             {
-                                var pgrid = colony.powerGrid;
-                                int count = 0, sid = Structure.WIND_GENERATOR_1_ID;
-                                foreach (var p in pgrid)
-                                {
-                                    if (p == null || p.energySurplus <= 0f) continue;
-                                    else
-                                    {
-                                        if (p.ID == sid) count++;
-                                    }
-                                }
+                                int count = colony.GetBuildingsCount(Structure.WIND_GENERATOR_1_ID);
                                 if (count >= Knowledge.R_CW_STREAMGENS_COUNT_COND) MakeQuestCompleted();
                                 else
                                 {
@@ -788,19 +785,7 @@ public class Quest
                             }
                         case Knowledge.CloudWhaleRouteBoosters.StabilityEnforcerBooster:
                             {
-                                var pgrid = colony.powerGrid;
-                                var sid = Structure.STABILITY_ENFORCER_ID;
-                                if (pgrid != null && pgrid.Count > 0)
-                                {
-                                    foreach (var p in pgrid)
-                                    {
-                                        if (p != null && p.ID == sid)
-                                        {
-                                            MakeQuestCompleted();
-                                            break;
-                                        }
-                                    }
-                                }
+                                if (colony.CheckForBuildingPresence(Structure.STABILITY_ENFORCER_ID)) MakeQuestCompleted();
                                 break;
                             }
                     }
@@ -832,32 +817,181 @@ public class Quest
                             }
                         case Knowledge.EngineRouteBoosters.FactoryBoost:
                             {
-                                int count = 0;
-                                var sid = Structure.SMELTERY_BLOCK_ID;
-                                var pg = colony.powerGrid;
-                                if (pg != null && pg.Count > 0)
-                                {
-                                    foreach (var p in pg)
-                                    {
-                                        if (p.ID == sid) count++;
-                                    }
-                                }
+                                int count = colony.GetBuildingsCount(Structure.SMELTERY_BLOCK_ID);
                                 if (count >= Knowledge.R_E_FACTORYCUBES_COUNT) MakeQuestCompleted();
                                 else stepsAddInfo[0] = count.ToString() + " / " + Knowledge.R_E_FACTORYCUBES_COUNT.ToString();
                                 break;
                             }
                         case Knowledge.EngineRouteBoosters.IslandEngineBoost:
                             {
-                                var pg = colony.powerGrid;
-                                //var sid = Structure.Engi
-                                //if ()
+                                if (colony.CheckForBuildingPresence(Structure.ENGINE_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.EngineRouteBoosters.ControlCenterBoost:
                             {
+                                if (colony.CheckForBuildingPresence(Structure.CONTROL_CENTER_ID)) MakeQuestCompleted();
                                 break;
                             }
-                            break;
+                    }
+                    break;
+                }
+            case QuestType.Pipe:
+                {
+                    switch((Knowledge.PipesRouteBoosters)subIndex)
+                    {
+                        case Knowledge.PipesRouteBoosters.FarmsBoost:
+                            {
+                                int count1 = colony.GetBuildingsCount<CoveredFarm>(), 
+                                    count2 = colony.GetBuildingsCount<Farm>();
+                                if (count2 == 0 && count1 > 0) MakeQuestCompleted();
+                                else
+                                {
+                                    stepsAddInfo[0] = count2.ToString();
+                                    stepsAddInfo[1] = count1.ToString();
+                                }                               
+                                break;
+                            }
+                        case Knowledge.PipesRouteBoosters.SizeBoost:
+                            {
+                                var blocks = GameMaster.realMaster.mainChunk.blocks;
+                                byte xmax = 0, ymax = xmax, zmax = xmax;
+                                if (blocks != null)
+                                {
+                                    //#islandSizeCheck
+                                    if (blocks.Count < Knowledge.R_P_ISLAND_SIZE_COND)
+                                    {
+                                        MakeQuestCompleted();
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        var csize = Chunk.chunkSize;
+                                        byte xmin = csize, ymin = xmin,  zmin = xmin;
+                                        ChunkPos cpos;
+                                        foreach (var b in blocks)
+                                        {
+                                            cpos = b.Value.pos;
+                                            if (cpos.x > xmax) xmax = cpos.x;
+                                            else
+                                            {
+                                                if (cpos.x < xmin) xmin = cpos.x;
+                                            }
+                                            if (cpos.y > ymax) ymax = cpos.y;
+                                            else
+                                            {
+                                                if (cpos.y < ymin) ymin = cpos.y;
+                                            }
+                                            if (cpos.z > zmax) zmax = cpos.z;
+                                            else
+                                            {
+                                                if (cpos.z < zmin) zmin = cpos.z;
+                                            }
+                                        }
+                                        int xsize = xmax - xmin, ysize = ymax - ymin, zsize = zmax - zmin;
+                                        byte cond = 0;
+                                        int sc = Knowledge.R_P_ISLAND_SIZE_COND;
+                                        if (xsize <= sc) cond++;
+                                        if (ysize <= sc) cond++;
+                                        if (zsize <= sc) cond++;
+                                        if (cond >= 2)
+                                        {
+                                            MakeQuestCompleted();
+                                        }
+                                    }
+                                }
+                                stepsAddInfo[0] = xmax.ToString();
+                                stepsAddInfo[1] = ymax.ToString();
+                                stepsAddInfo[2] = zmax.ToString();
+                                //
+                                break;
+                            }
+                        case Knowledge.PipesRouteBoosters.FuelBoost:
+                            {
+                                if (GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID] >= Knowledge.R_P_FUEL_CONDITION) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PipesRouteBoosters.BiomesBoost:
+                            {
+                                var e = GameMaster.realMaster.globalMap.GetCurrentEnvironment();
+                                if (e.presetType == Environment.EnvironmentPreset.Ocean) stepsFinished[0] = true;
+                                else
+                                {
+                                    if (e.presetType == Environment.EnvironmentPreset.Fire) stepsFinished[1] = true;
+                                    else
+                                    {
+                                        if (e.presetType == Environment.EnvironmentPreset.Space) stepsFinished[2] = true;
+                                        else
+                                        {
+                                            if (e.presetType == Environment.EnvironmentPreset.Meadows) stepsFinished[3] = true;
+                                        }
+                                    }
+                                }
+                                if (stepsFinished[0] & stepsFinished[1] & stepsFinished[2] & stepsFinished[3]) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PipesRouteBoosters.QETBoost:
+                            {
+                                if (QuantumEnergyTransmitter.current != null) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PipesRouteBoosters.CapacitorMastBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.CAPACITOR_MAST_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                    }
+                    break;
+                }
+            case QuestType.Crystal:
+                {
+                    switch ((Knowledge.CrystalRouteBoosters)subIndex)
+                    {
+                        case Knowledge.CrystalRouteBoosters.MoneyBoost:
+                            {
+                                int count = (int)colony.energyCrystalsCount;
+                                stepsAddInfo[0] = ((int)count).ToString() + " / " + Knowledge.R_C_MONEY_COND.ToString();
+                                if (count >= Knowledge.R_C_MONEY_COND) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CrystalRouteBoosters.PinesBoost:
+                            {
+                                if (GameMaster.realMaster.mainChunk?.CheckForPlanttype(PlantType.CrystalPine) ?? false) MakeQuestCompleted(); 
+                                break;
+                            }
+                        case Knowledge.CrystalRouteBoosters.GCubeBoost:
+                            {
+                                var blocks = GameMaster.realMaster.mainChunk?.blocks;
+                                if (blocks != null)
+                                {
+                                    Block b;
+                                    var sm = ResourceType.GRAPHONIUM_ID;
+                                    foreach (var bv in blocks)
+                                    {
+                                        b = bv.Value;
+                                        if (b != null && b.GetMaterialID() == sm)
+                                        {
+                                            MakeQuestCompleted();
+                                            break;
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        case Knowledge.CrystalRouteBoosters.BiomeBoost:
+                            {
+                                if (GameMaster.realMaster.globalMap.GetCurrentEnvironment().presetType == Environment.EnvironmentPreset.Crystal) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CrystalRouteBoosters.CrystalliserBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.CRYSTALLISER_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.CrystalRouteBoosters.CrystalMastBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.CRYSTAL_MAST_ID)) MakeQuestCompleted();
+                                break;
+                            }
                     }
                     break;
                 }

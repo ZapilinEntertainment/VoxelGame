@@ -97,6 +97,10 @@ public sealed partial class Chunk : MonoBehaviour
         }
         return nature;
     }
+    public bool CheckForPlanttype(PlantType pt)
+    {
+       return nature?.islandFlora?.Contains(pt) ?? false;
+    }
 
     #region operating blocks data
 

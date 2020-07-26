@@ -73,6 +73,7 @@
         structuresCost[Structure.RECRUITING_CENTER_4_ID] = val * 45;
         structuresCost[Structure.EXPEDITION_CORPUS_4_ID] = val * 48;
         //structuresCost[Structure.CONTROL_CENTER_6_ID] = val * 60;
+        structuresCost[Structure.ENGINE_ID] = val * 60;
         structuresCost[Structure.OBSERVATORY_ID] = 100 * val;
         structuresCost[Structure.ARTIFACTS_REPOSITORY_ID] = 16 * val;      
 
@@ -109,6 +110,7 @@
         structuresCost[Structure.DOCK_3_ID] = structuresCost[Structure.DOCK_ADDON_2_ID] * 2;
         structuresCost[Structure.COMPOSTER_ID] = structuresCost[Structure.SMELTERY_2_ID];
         structuresCost[Structure.HOSPITAL_2_ID] = structuresCost[Structure.HOSPITAL_ID];
+        structuresCost[Structure.CAPACITOR_MAST_ID] = structuresCost[Structure.ENERGY_CAPACITOR_2_ID] * 1.5f;
         #endregion
 
         Chunk c = gm.mainChunk;

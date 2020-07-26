@@ -4,18 +4,20 @@ using UnityEngine;
 
 public sealed class Nature : MonoBehaviour
 {
-    private EnvironmentMaster env;
-    private Chunk myChunk;
-    private GameMaster gm;
+    
     public bool needRecalculation = false;
     public float lifepowerSupport { get; private set; }
+    public List<PlantType> islandFlora { get; private set; }
+
     private bool prepared = false, sideGrasslandsSupport = false, ceilGrasslandsSupport = false;
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
     private int lastUpdateIndex = 0;
+    private EnvironmentMaster env;
+    private Chunk myChunk;
+    private GameMaster gm;
     private List<Grassland> grasslands;
     private List<LifeSource> lifesources;
-    private List<PlantType> flowerTypes, bushTypes, treeTypes;
-    private List<PlantType> islandFlora;
+    private List<PlantType> flowerTypes, bushTypes, treeTypes;    
     private Dictionary<int, float> lifepowerAffectionList;
     private int nextLPowerAffectionID = 1;
 

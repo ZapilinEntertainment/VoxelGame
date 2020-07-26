@@ -36,19 +36,18 @@ public class Structure : MonoBehaviour
 
     public const int EMPTY_ID = -1, PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
     TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
-    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14,  FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
+    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
-        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35,  STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 37, STABILITY_ENFORCER_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
+        SCIENCE_LAB_ID = 34, STORAGE_1_ID = 35, STORAGE_2_ID = 36, STORAGE_BLOCK_ID = 37, STABILITY_ENFORCER_ID = 38, PSYCHOKINECTIC_GEN_ID = 39,
     COMPOSTER_ID = 40, HOUSE_BLOCK_ID = 42, ENERGY_CAPACITOR_2_ID = 43, HOSPITAL_2_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, COVERED_FARM = 47, FARM_BLOCK_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, COVERED_LUMBERMILL = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
-    SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, QUANTUM_TRANSMITTER_4_ID = 60,
+    SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, ENGINE_ID = 58, CAPACITOR_MAST_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
     COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
-         HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
-        OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78;
-    //free ids 58, 59, 69
+        CONTROL_CENTER_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
+        OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78, CRYSTALLISER_ID = 79, CRYSTAL_MAST_ID = 80;
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
@@ -209,6 +208,10 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Science Lab"); break;
             case STABILITY_ENFORCER_ID:
                 s = new GameObject("Stability Enforcer");break;
+            case ENGINE_ID:
+                s = new GameObject("Engine"); break;
+            case CAPACITOR_MAST_ID:
+                s = new GameObject("Capacitor mast");break;
             default:
                 throw new System.Exception("structure with ID " + i_id.ToString() + "not found");
                 return null;
@@ -367,6 +370,7 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
+            case CAPACITOR_MAST_ID:
                 return typeof(Building);            
             case XSTATION_3_ID:
                 return typeof(XStation);
@@ -393,7 +397,7 @@ public class Structure : MonoBehaviour
             case HOTEL_BLOCK_6_ID:
                 return typeof(Hotel);
             case HOUSING_MAST_6_ID:
-                return typeof(House);
+                return typeof(HousingMast);
             case DOCK_ADDON_1_ID:
             case DOCK_ADDON_2_ID:
                 return typeof(DockAddon);
@@ -411,6 +415,8 @@ public class Structure : MonoBehaviour
                 return typeof(PsychokineticGenerator);
             case SCIENCE_LAB_ID:
                 return typeof(ScienceLab);
+            case ENGINE_ID:
+                return typeof(Engine);
             default: return typeof(Structure);
         }
     }
@@ -426,7 +432,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_3_ID:
                 return Farm.CheckSpecialBuildingCondition(p, ref refusalReason);
             case CONNECT_TOWER_6_ID:
-            case HOUSING_MAST_6_ID:
             case SCIENCE_LAB_ID:
             case GRPH_REACTOR_4_ID:
             case HOSPITAL_2_ID:
@@ -436,14 +441,24 @@ public class Structure : MonoBehaviour
                     return false;
                 }
                 else return true;
+            case HOUSING_MAST_6_ID:
+                if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+                {
+                    refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
+                    return false;
+                }
+                else {
+                    if (HousingMast.CheckForSpace(p)) return true;
+                    else
+                    {
+                        refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                        return false;
+                    }
+                }
             case OBSERVATORY_ID:
                 return Observatory.CheckSpecialBuildingCondition(p, ref refusalReason);
             default: return true;
         }
-    }
-    public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
-    {
-        return true;
     }
 
 
@@ -522,6 +537,7 @@ public class Structure : MonoBehaviour
             case PSYCHOKINECTIC_GEN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator"));break;
             case SCIENCE_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/scienceLab")); break;
             case COMPOSTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/composter")); break;
+            case ENGINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/engineTower")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = prevRot;
@@ -1074,6 +1090,13 @@ public class Structure : MonoBehaviour
                     maxHp = 1500;
                     rotate90only = false;
                     isArtificial = true;                    
+                    break;
+                }
+            case ENGINE_ID:
+                {
+                    maxHp = 15000;
+                    rotate90only = true;
+                    isArtificial = true;
                     break;
                 }
         }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 public enum PlantCategory : byte { Flower, Bush, Tree} // dependency : grassland, nature
-public enum PlantType : byte { Abstract,OakTree, Corn}
+public enum PlantType : byte { Abstract,OakTree, Corn, CrystalPine}
 public abstract class Plant : Structure {
     public byte stage { get; protected set; }
     public PlantType type { get; protected set; }

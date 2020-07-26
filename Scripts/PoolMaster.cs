@@ -197,6 +197,17 @@ public sealed class PoolMaster : MonoBehaviour {
             if (GameMaster.realMaster.mainChunk != null) GameMaster.realMaster.mainChunk.SetShadowCastingMode(shadowCasting);            
             var rrs = Component.FindObjectsOfType<Renderer>();
             ReplaceMaterials(rrs);
+
+            var aoe = FollowingCamera.cam.GetComponent<AmplifyOcclusionEffect>();
+            var ql = QualitySettings.GetQualityLevel();
+            if ( ql == 2)
+            {
+                if (aoe.enabled == false) aoe.enabled = true;
+            }
+            else
+            {
+                if (aoe.enabled) aoe.enabled = false;
+            }
         }
     }
     private static void DefineMaterialPack()

@@ -58,10 +58,10 @@ public sealed class Knowledge
     #region boosting
     //foundation:
     public const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
-        R_C_MONEY_COND = 5000f, R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f,
+        R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f,
         R_P_ASCENSIOND_COND = 0.85f;
     public const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_F_QUEST_POPULATION_COND = 10000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
-        R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4, R_M_MONUMENTS_COUNT_COND = 2, R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND = 30;
+        R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4, R_C_MONEY_COND = 5000, R_M_MONUMENTS_COUNT_COND = 2, R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND = 30;
     public const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_CREW_LEVEL_COND = 3, 
         POINT_MASK_POSITION = 6, BUILDINGS_MASK = (1 << 4) + (1 << 5), R_P_ISLAND_SIZE_COND = 8;
     private const uint R_F_IMMIGRANTS_COUNT_COND = 1000;
@@ -359,6 +359,7 @@ public sealed class Knowledge
             byte unsubscribeVotes = 0;
             if (!BoostCounted(PipesRouteBoosters.SizeBoost))
             {
+                //#islandSizeCheck
                 if (blocks.Count < R_P_ISLAND_SIZE_COND)
                 {
                     CountRouteBonus(PipesRouteBoosters.SizeBoost);
@@ -397,6 +398,7 @@ public sealed class Knowledge
                         CountRouteBonus(PipesRouteBoosters.SizeBoost);
                     }
                 }
+                //
             }
             else unsubscribeVotes++;
             if (!BoostCounted(CrystalRouteBoosters.GCubeBoost))
@@ -860,14 +862,14 @@ public sealed class Knowledge
         if ((IsButtonUnblocked(index) | testmode) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 4];
-        //if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.Engine);
+        if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.ENGINE_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 3];
-        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.CONNECT_TOWER_6_ID);
+        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.CONTROL_CENTER_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 4];
         if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 3];
-        //if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CapacitorMast);
+        if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CAPACITOR_MAST_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Crystal, STEPS_COUNT - 4];
         //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.Crystalliser);

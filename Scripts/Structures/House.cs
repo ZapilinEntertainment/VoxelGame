@@ -2,7 +2,7 @@
 public class House : Building {
 	public int housing { get; protected set; }
     public const int TENT_VOLUME = 2;
-    private bool subscribedToRestoreBlockersUpdate = false;
+    
 
     public static int GetHousingValue (int id)
     {
@@ -25,41 +25,8 @@ public class House : Building {
 		if (b == null) return;
         //#set house data
         SetBuildingData(b, pos);
-        GameMaster.realMaster.colonyController.AddHousing(this);
-        if (ID == HOUSING_MAST_6_ID )
-        {
-            if (!GameMaster.loading) SetBlockersForHousingMast();
-            else
-            {
-                if (!subscribedToRestoreBlockersUpdate)
-                {
-                    GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
-                    subscribedToRestoreBlockersUpdate = true;
-                }
-            }
-        }
-        //#
-    }
-    private void SetBlockersForHousingMast()
-    {
-        if (basement != null)
-        {
-            var c = basement.myChunk;
-            var bpos = basement.pos.OneBlockHigher();
-            c.CreateBlocker(bpos, this, false, false);
-            c.CreateBlocker(bpos.OneBlockHigher(), this, false, false);
-        }
-        else UnityEngine.Debug.LogError("house cannot set blockers - no basement set");
-    }
-    public void RestoreBlockers()
-    {
-        if (subscribedToRestoreBlockersUpdate)
-        {
-            SetBlockersForHousingMast();
-            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
-            subscribedToRestoreBlockersUpdate = false;
-        }
-    }
+        GameMaster.realMaster.colonyController.AddHousing(this);        
+    }      
 
     protected override void SwitchActivityState()
     {
@@ -78,11 +45,6 @@ public class House : Building {
             var bpos = basement.pos;
             basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
             basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
-        }
-        if (subscribedToRestoreBlockersUpdate)
-        {
-            GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
-            subscribedToRestoreBlockersUpdate = false;
         }
         Destroy(gameObject);
     }

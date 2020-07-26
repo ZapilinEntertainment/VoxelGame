@@ -36,6 +36,7 @@ public sealed class ColonyController : MonoBehaviour
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
     private Dictionary<(ChunkPos pos, byte face), Worksite> worksites;
+    private Dictionary<int, Engine> engines;
     public byte docksLevel { get; private set; }
     public float housingLevel { get; private set; }
     public float foodMonthConsumption
@@ -808,6 +809,86 @@ public sealed class ColonyController : MonoBehaviour
             if (w != null) w.StopWork(false);
             worksites.Remove(key);
             if (worksites.Count == 0) worksites = null;
+        }
+    }
+
+    public int AddEngine(Engine e)
+    {
+        if (engines == null)
+        {
+            engines = new Dictionary<int, Engine>() ;
+            engines.Add(0, e);
+            return 0;
+        }
+        else
+        {
+            if (engines.ContainsValue(e)) return -1;
+            else
+            {
+                int nextID = -1;
+                foreach (var fe in engines)
+                {
+                    if (fe.Key >= nextID) nextID = fe.Key;                    
+                }
+                nextID++;
+                engines.Add(nextID, e);
+                return nextID;
+            }
+        }
+    }
+    public void RemoveEngine(int id)
+    {
+        engines?.Remove(id);
+    }
+
+    public bool CheckForBuildingPresence(int sid)
+    {
+        if (powerGrid != null && powerGrid.Count > 0)
+        {
+            foreach (var p in powerGrid)
+            {
+                if (p == null) { powerGridRecalculationNeeded = true; continue; }
+                else
+                {
+                    if (p.ID == sid) return true;
+                }
+            }
+            return false;
+        }
+        else return false;
+    }
+    public int GetBuildingsCount(int sid)
+    {
+        if (powerGrid == null || powerGrid.Count == 0) return 0;
+        else
+        {
+            int count = 0;
+            foreach (var p in powerGrid)
+            {
+                if (p == null) { powerGridRecalculationNeeded = true; continue; }
+                else
+                {
+                    if (p.ID == sid) count++;
+                }
+            }
+            return count;
+        }
+    }
+    public int GetBuildingsCount<T>()
+    {
+        if (powerGrid == null || powerGrid.Count == 0) return 0;
+        else
+        {
+            int count = 0;
+            foreach (var p in powerGrid)
+            {
+                if (p == null) { powerGridRecalculationNeeded = true; continue; }
+                else
+                {
+                    if (p is T) count++;
+                }
+            }
+            return count;
         }
     }
     #endregion
