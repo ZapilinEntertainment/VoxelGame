@@ -485,14 +485,14 @@ public sealed class Knowledge
             {
                 foreach (var a in alist)
                 {
-                    if (a.affectionPath == Path.SecretPath )
+                    if (a.affectionPath == Path.TechPath )
                     {
                         if (a.status != Artifact.ArtifactStatus.Uncontrollable) CountRouteBonus(CloudWhaleRouteBoosters.ArtifactBoost);
                         break;
                     }
                     else
                     {
-                        if (a.affectionPath == Path.TechPath && a.status != Artifact.ArtifactStatus.Uncontrollable)
+                        if (a.affectionPath == Path.SecretPath && a.status != Artifact.ArtifactStatus.Uncontrollable)
                             CountRouteBonus(BlossomRouteBoosters.ArtifactBoost);
                     }
                 }
@@ -1122,8 +1122,6 @@ public sealed class Knowledge
                             x = (byte)PollenRouteBoosters.FlowersBoost;
                             if ((mask & (1 >> x)) == 0) mlist.Add(x);
                             x = (byte)PollenRouteBoosters.AscensionBoost;
-                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
-                            x = (byte)PollenRouteBoosters.CrewAccidentBoost;
                             if ((mask & (1 >> x)) == 0) mlist.Add(x);
                             x = (byte)PollenRouteBoosters.BiomeBoost;
                             if ((mask & (1 >> x)) == 0) mlist.Add(x);

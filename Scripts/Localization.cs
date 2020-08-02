@@ -3535,16 +3535,16 @@ public static class Localization
                                     case Knowledge.CloudWhaleRouteBoosters.StreamGensBoost:
                                         q.name = "Cloud Whale Route";
                                         q.description = "Build " + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString() + " " + GetStructureName(Structure.WIND_GENERATOR_1_ID) + "s";
-                                        q.steps[0] = "Потоковые генераторы: ";
+                                        q.steps[0] = "Stream gens: ";
                                         break;
                                     case Knowledge.CloudWhaleRouteBoosters.CrewsBoost:
                                         q.name = "Cloud Whale Route";
-                                        q.description = "Gain " + Knowledge.R_CW_CREWS_COUNT_COND.ToString() + " or more crews level " + Knowledge.R_CW_CREW_LEVEL_COND.ToString() + " for island guard.";
-                                        q.steps[0] = "Команд собрано: ";
+                                        q.description = "Prepare " + Knowledge.R_CW_CREWS_COUNT_COND.ToString() + " or more crews level " + Knowledge.R_CW_CREW_LEVEL_COND.ToString() + " for island guard.";
+                                        q.steps[0] = "Crews count: ";
                                         break;
                                     case Knowledge.CloudWhaleRouteBoosters.ArtifactBoost:
                                         q.name = "Cloud Whale Route";
-                                        q.description = "Find an artifact of the Secret Path";
+                                        q.description = "Find an artifact of the Tech Path";
                                         q.steps[0] = "Artifact found ";
                                         break;
                                     case Knowledge.CloudWhaleRouteBoosters.XStationBoost:
@@ -3687,6 +3687,145 @@ public static class Localization
                                         q.steps[0] = "Constructed: ";
                                         break;
                                     case Knowledge.CrystalRouteBoosters.PointBoost:
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.Monument:
+                            {
+                                switch ((Knowledge.MonumentRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Build " + Knowledge.R_M_MONUMENTS_COUNT_COND.ToString() + " monuments of a Tech Path with affection value more than " + Knowledge.R_M_MONUMENTS_AFFECTION_CONDITION.ToString();
+                                            q.steps[0] = "Monuments count: ";
+                                            q.steps[1] = "With suitable affection: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.LifesourceBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Add one more Lifepower Source to your island.";
+                                            q.steps[0] = "Lifesources: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.BiomeBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Move your city to a Ruins Biome.";
+                                            q.steps[0] = "City moved: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.ExpeditionsBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Successfully end more expeditions to gain this boost";
+                                            q.steps[0] = "Expeditions succeed: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.MonumentConstructionBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Build at least one " + GetStructureName(Structure.MONUMENT_ID);
+                                            q.steps[0] = "Monument built: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.AnchorMastBoost:
+                                        {
+                                            q.name = "Monument Route";
+                                            q.description = "Build an " + GetStructureName(Structure.ANCHOR_MAST_ID);
+                                            q.steps[0] = "Anchor built: ";
+                                            break;
+                                        }
+                                    case Knowledge.MonumentRouteBoosters.PointBoost:
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.Blossom:
+                            {
+                                switch ((Knowledge.BlossomRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.BlossomRouteBoosters.GrasslandsBoost:
+                                        {
+                                            q.name = "Blossom Route";
+                                            q.description = "A lot of nature entities must be";
+                                            q.steps[0] = "Grasslands percentage: ";
+                                            break;
+                                        }
+                                    case Knowledge.BlossomRouteBoosters.ArtifactBoost:
+                                        {
+                                            q.name = "Blossom Route";
+                                            q.description = "We need a special item";
+                                            q.steps[0] = "Artifact of the Secret Path found: ";
+                                            break;
+                                        }
+                                    case Knowledge.BlossomRouteBoosters.BiomeBoost:
+                                        {
+                                            q.name = "Blossom Route";
+                                            q.description = "Our way to Blossom is foing through Forest Biome";
+                                            q.steps[0] = "Biome found: ";
+                                            break;
+                                        }
+                                    case Knowledge.BlossomRouteBoosters.Unknown:
+                                        break;
+                                    case Knowledge.BlossomRouteBoosters.GardensBoost:
+                                        {
+                                            break;
+                                        }
+                                    case Knowledge.BlossomRouteBoosters.HTowerBoost:
+                                        {
+                                            q.name = "Blossom Route";
+                                            q.description = "Build " + GetStructureName(Structure.HANGING_TMAST_ID);
+                                            q.steps[0] = "Constructed: ";
+                                            break;
+                                        }
+                                    case Knowledge.BlossomRouteBoosters.PointBoost:
+                                        break;
+                                }
+                                break;
+                            }
+                        case QuestType.Pollen:
+                            {
+                                switch ((Knowledge.PollenRouteBoosters)q.subIndex)
+                                {
+                                    case Knowledge.PollenRouteBoosters.FlowersBoost:
+                                        {
+                                            q.name = "Pollen Route";
+                                            q.description = "Let flowers grow";
+                                            q.steps[0] = "Pollen flowers on our island: ";
+                                            break;
+                                        }
+                                    case Knowledge.PollenRouteBoosters.AscensionBoost:
+                                        {
+                                            q.name = "Pollen Route";
+                                            q.description = "Ascend and Rise";
+                                            q.steps[0] = "Ascension level: ";
+                                            break;
+                                        }
+                                    case Knowledge.PollenRouteBoosters.BiomeBoost:
+                                        {
+                                            q.name = "Pollen Route";
+                                            q.description = "Move the city to the Pollen Biome";
+                                            q.steps[0] = "On position ";
+                                            break;
+                                        }
+                                    case Knowledge.PollenRouteBoosters.FilterBoost:
+                                        {
+                                            q.name = "Pollen Route";
+                                            q.description = "Build " + GetStructureName(Structure.RESOURCE_FILTER_ID);
+                                            q.steps[0] = "Constructed ";
+                                            break;
+                                        }
+                                    case Knowledge.PollenRouteBoosters.ProtectorCoreBoost:
+                                        {
+                                            q.name = "Pollen Route";
+                                            q.description = "Build " + GetStructureName(Structure.PROTECTION_CORE_ID);
+                                            q.steps[0] = "Constructed ";
+                                            break;
+                                        }
+                                    case Knowledge.PollenRouteBoosters.PointBoost:
                                         break;
                                 }
                                 break;

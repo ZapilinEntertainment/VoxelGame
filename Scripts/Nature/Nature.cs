@@ -16,7 +16,7 @@ public sealed class Nature : MonoBehaviour
     private Chunk myChunk;
     private GameMaster gm;
     private List<Grassland> grasslands;
-    private List<LifeSource> lifesources;
+    public List<LifeSource> lifesources { get; private set; }
     private List<PlantType> flowerTypes, bushTypes, treeTypes;    
     private Dictionary<int, float> lifepowerAffectionList;
     private int nextLPowerAffectionID = 1;

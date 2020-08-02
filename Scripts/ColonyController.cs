@@ -891,6 +891,23 @@ public sealed class ColonyController : MonoBehaviour
             return count;
         }
     }
+    public List<T> GetBuildings<T> () where T : class
+    {
+        if (powerGrid == null || powerGrid.Count == 0) return null;
+        else
+        {
+            var list = new List<T>();
+            foreach (var p in powerGrid)
+            {
+                if (p == null) { powerGridRecalculationNeeded = true; continue; }
+                else
+                {
+                    if (p is T) list.Add(p as T);
+                }
+            }
+            if (list.Count == 0) return null; else return list;
+        }
+    }
     #endregion
 
     public void RenameColony(string nm)

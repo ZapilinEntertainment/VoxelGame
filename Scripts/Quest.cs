@@ -769,7 +769,7 @@ public class Quest
                                 {
                                     foreach (var a in alist)
                                     {
-                                        if (a.affectionPath == Path.SecretPath)
+                                        if (a.affectionPath == Path.TechPath && a.status != Artifact.ArtifactStatus.Uncontrollable)
                                         {
                                             if (a.status != Artifact.ArtifactStatus.Uncontrollable) MakeQuestCompleted();
                                             break;
@@ -994,6 +994,161 @@ public class Quest
                             }
                     }
                     break;
+                }
+            case QuestType.Monument:
+                {
+                    switch((Knowledge.MonumentRouteBoosters)subIndex)
+                    {
+                        case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost:
+                            {
+                                var mlist = colony.GetBuildings<Monument>();
+                                int mcount = 0, count = 0;
+                                if (mlist != null && mlist.Count >= Knowledge.R_M_MONUMENTS_COUNT_COND)
+                                {
+                                    mcount = mlist.Count;
+                                    foreach (var m in mlist)
+                                    {
+                                        if (m.affectionPath == Path.TechPath && m.affectionValue == Knowledge.R_M_MONUMENTS_AFFECTION_CONDITION) count++;
+                                    }
+                                }
+                                string s = " / " + Knowledge.R_M_MONUMENTS_COUNT_COND.ToString();
+                                stepsAddInfo[0] = mcount.ToString() + s;
+                                stepsAddInfo[1] = count.ToString() + s;
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.LifesourceBoost:
+                            {
+                                var list = GameMaster.realMaster.mainChunk?.TryGetNature()?.lifesources;
+                                int count = 0;
+                                if (list != null)
+                                {
+                                    count = list.Count;
+                                    if (count >= 2) MakeQuestCompleted();
+                                }
+                                stepsAddInfo[0] = count.ToString() + " / 2";
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.BiomeBoost:
+                            {
+                                if (GameMaster.realMaster.globalMap.GetCurrentEnvironment().presetType == Environment.EnvironmentPreset.Ruins) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.ExpeditionsBoost:
+                            {
+                                var count = Expedition.expeditionsSucceed;
+                                if (count >= Knowledge.R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND) MakeQuestCompleted();
+                                else stepsAddInfo[0] = count.ToString() + " / " + Knowledge.R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND.ToString();
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.MonumentConstructionBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.MONUMENT_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.AnchorMastBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.ANCHOR_MAST_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.MonumentRouteBoosters.PointBoost:
+                            break;
+                    }
+                    break;
+                }
+            case QuestType.Blossom:
+                {
+                    switch ((Knowledge.BlossomRouteBoosters)subIndex)
+                    {
+                        case Knowledge.BlossomRouteBoosters.GrasslandsBoost:
+                            {
+                                var c = GameMaster.realMaster.mainChunk;
+                                var glist = c?.TryGetNature()?.GetGrasslandsList();
+                                int count = 0;
+                                if (glist != null)
+                                {
+                                    count = glist.Count;
+                                }
+                                if (c != null && c.surfaces != null && c.surfaces.Length > 0)
+                                {
+                                    var f = count / (float)c.surfaces.Length;
+                                    int pc = (int)(f * 100f);
+                                    stepsAddInfo[0] = pc.ToString() + "% / " + ((int)Knowledge.R_B_GRASSLAND_RATIO_COND * 100f).ToString();
+                                }
+                                else stepsAddInfo[0] = "0% / " + ((int)Knowledge.R_B_GRASSLAND_RATIO_COND * 100f).ToString();
+                                break;
+                            }
+                        case Knowledge.BlossomRouteBoosters.ArtifactBoost:
+                            {
+                                var alist = Artifact.artifactsList;
+                                if (alist != null && alist.Count > 0)
+                                {
+                                    foreach (var a in alist)
+                                    {
+                                        if (a != null && a.affectionPath == Path.SecretPath)
+                                        {
+                                            MakeQuestCompleted();
+                                            break;
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        case Knowledge.BlossomRouteBoosters.BiomeBoost:
+                            {
+                                if (GameMaster.realMaster.globalMap.GetCurrentEnvironment().presetType == Environment.EnvironmentPreset.Forest) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.BlossomRouteBoosters.Unknown:
+                            break;
+                        case Knowledge.BlossomRouteBoosters.GardensBoost:
+                            {
+                                break;
+                            }
+                        case Knowledge.BlossomRouteBoosters.HTowerBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.HANGING_TMAST_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.BlossomRouteBoosters.PointBoost:
+                            break;
+                    }
+                    break;
+                }
+            case QuestType.Pollen:
+                {
+                    switch ((Knowledge.PollenRouteBoosters)subIndex)
+                    {
+                        case Knowledge.PollenRouteBoosters.FlowersBoost:
+                            {
+                                if (GameMaster.realMaster.mainChunk?.CheckForPlanttype(PlantType.PollenFlower) ?? false) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PollenRouteBoosters.AscensionBoost:
+                            {
+                                var asc = GameMaster.realMaster.globalMap.ascension;
+                                if (asc >= Knowledge.R_P_ASCENSIOND_COND) MakeQuestCompleted();
+                                else stepsAddInfo[0] = ((int)(asc * 100f)).ToString() + ((int)(Knowledge.R_P_ASCENSIOND_COND * 100f)).ToString();
+                                break;
+                            }
+                        case Knowledge.PollenRouteBoosters.BiomeBoost:
+                            {
+                                if (GameMaster.realMaster.globalMap.GetCurrentEnvironment().presetType == Environment.EnvironmentPreset.Pollen) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PollenRouteBoosters.FilterBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.RESOURCE_FILTER_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PollenRouteBoosters.ProtectorCoreBoost:
+                            {
+                                if (colony.CheckForBuildingPresence(Structure.PROTECTION_CORE_ID)) MakeQuestCompleted();
+                                break;
+                            }
+                        case Knowledge.PollenRouteBoosters.PointBoost:
+                            break;
+                    }
+                        break;
                 }
         }
     }   
