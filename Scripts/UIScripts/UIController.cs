@@ -23,7 +23,8 @@ sealed public class UIController : MonoBehaviour
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, optionsPanel, leftPanel, colonyRenameButton, landingButton, rightFastPanel; // fiti
+    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, optionsPanel, leftPanel, 
+        colonyRenameButton, landingButton, rightFastPanel, housingNotEnoughMarker, gearsProblemMarker; // fiti
     [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] private Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] private Transform storagePanelContent;
@@ -75,7 +76,8 @@ sealed public class UIController : MonoBehaviour
 
     public static UIController current;
 
-    const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
+    private const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
+    private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
 
     public static void SetActivity(bool x)
     {
@@ -158,11 +160,13 @@ sealed public class UIController : MonoBehaviour
                     {
                         showingGearsCf = colony.gears_coefficient;
                         gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+                        gearsText.color = showingGearsCf > GEARS_LOW_VALUE ? Color.white : Color.red;
                     }
                     if (showingHappinessCf != colony.happiness_coefficient)
                     {
                         showingHappinessCf = colony.happiness_coefficient;
                         happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
+                        happinessText.color = showingHappinessCf > HAPPINESS_LOW_VALUE ? (showingHappinessCf > HAPPINESS_HIGH_VALUE ? Color.green : Color.white) : Color.red;
                     }
                     if (showingBirthrate != colony.realBirthrate)
                     {
@@ -282,9 +286,8 @@ sealed public class UIController : MonoBehaviour
                     }
                 }
 
-                //up panel values:
-                {
-                    bool valuesChanged = false;
+                #region up panel values
+                bool valuesChanged = false;
                     if (saved_freeWorkersCount != colony.freeWorkers)
                     {
                         saved_freeWorkersCount = colony.freeWorkers;
@@ -303,8 +306,12 @@ sealed public class UIController : MonoBehaviour
                     if (valuesChanged)
                     {
                         citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
+                        housingNotEnoughMarker.SetActive(saved_citizenCount > saved_livespaceCount);
                     }
+                    //
 
+                    gearsProblemMarker.SetActive(colony.gears_coefficient < GEARS_LOW_VALUE && ((colony.hq?.level ?? 0) > 1 ));
+                //
                     valuesChanged = false;
                     if (saved_energyCount != colony.energyStored)
                     {
@@ -396,9 +403,9 @@ sealed public class UIController : MonoBehaviour
                             }
                         }
                     }
+                    #endregion
                 }
-            }
-            if (moneyFlySpeed != 0)
+            if (moneyFlySpeed != 0) // Почему не работает?
             {
                 Vector3 pos = moneyFlyingText.rectTransform.position;
                 if (moneyFlySpeed > 0)
@@ -431,7 +438,6 @@ sealed public class UIController : MonoBehaviour
                 }
             }
         }
-
         if (powerFailureTimer > 0)
         {
             powerFailureTimer -= tm;
@@ -830,10 +836,15 @@ sealed public class UIController : MonoBehaviour
             showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);
+            gearsText.color = showingGearsCf > GEARS_LOW_VALUE ? Color.white : Color.red;
             happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
             birthrateText.text = showingBirthrate > 0 ? '+' + string.Format("{0:0.#####}", showingBirthrate) : string.Format("{0:0.#####}", showingBirthrate);
+            happinessText.color = showingHappinessCf > HAPPINESS_LOW_VALUE ? (showingHappinessCf > HAPPINESS_HIGH_VALUE ? Color.green : Color.white) : Color.red;
             int housingPercent = 0;
-            if (colony.totalLivespace > 0) housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
+            if (colony.totalLivespace > 0)
+            {
+                housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);                
+            }
             housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + housingPercent.ToString() + "%)";
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
         }

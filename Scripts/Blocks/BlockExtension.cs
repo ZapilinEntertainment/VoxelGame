@@ -10,6 +10,17 @@ public sealed class BlockExtension : IPlanable
     private Dictionary<byte, Plane> planes;
     public const float MAX_VOLUME = 4096;
     //private const byte SURFACE_MASK = (1 << Block.SURFACE_FACE_INDEX) + ( 1 << Block.UP_FACE_INDEX);
+    public bool isInvincible {
+        get
+        {
+            if (planes == null || planes.Count == 0) return false;
+            else
+            {
+                foreach (var p in planes.Values) { if (p.isInvicible) return true; }
+                return false;
+            }
+        }
+    }
 
     public override bool Equals(object obj)
     {
@@ -472,7 +483,7 @@ public sealed class BlockExtension : IPlanable
                 GameMaster.realMaster.colonyController.RemoveWorksite(p);
                 p.SetWorksitePresence(false);
             }
-            myBlock.myChunk.DeleteBlock(myBlock.pos, true);
+             myBlock.myChunk.DeleteBlock(myBlock.pos, true);
             return 0f;
         }
         else

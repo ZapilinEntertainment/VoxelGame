@@ -17,6 +17,12 @@ public sealed class Block {
     private GameObject blockingMarker;
     private BlockExtension extension;
     public bool haveExtension { get { return extension != null; } }
+    public bool isInvincible {
+        get {
+            if (extension == null) return mainStructure?.indestructible ?? false;
+            else return extension.isInvincible;
+        }
+    }
 
     public override bool Equals(object obj)
     {
@@ -275,7 +281,7 @@ public sealed class Block {
         if (mainStructure != null)
         {
             if (mainStructureIsABlocker) mainStructure.SectionDeleted(pos);
-            else (mainStructure as IPlanable).Delete(true, compensateStructures, false);
+            else mainStructure.Annihilate(true, compensateStructures, false); // было Delete
             mainStructure = null;
         }
     }

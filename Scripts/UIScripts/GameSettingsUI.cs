@@ -50,7 +50,7 @@ public sealed class GameSettingsUI : MonoBehaviour
     public void Options_ApplyGraphicsChange()
     {
         QualitySettings.SetQualityLevel(qualityDropdown.value);
-        FollowingCamera.cam.GetComponent<AmplifyOcclusionEffect>().enabled = qualityDropdown.value == 2;
+        //FollowingCamera.cam.GetComponent<AmplifyOcclusionEffect>().enabled = qualityDropdown.value == 2;
         PoolMaster.ChangeQualityLevel(qualityDropdown.value);
         graphicsApplyButton.SetActive(false); // apply button
     }

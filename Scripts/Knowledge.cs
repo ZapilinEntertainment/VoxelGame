@@ -905,11 +905,11 @@ public sealed class Knowledge
                 if (i == 0) return Structure.XSTATION_3_ID;
                 else return Structure.STABILITY_ENFORCER_ID;
             case ResearchRoute.Engine:
-                if (i == 0) return -1;//Structure.Engine;
+                if (i == 0) return Structure.ENGINE_ID;
                 else return Structure.CONNECT_TOWER_6_ID;
             case ResearchRoute.Pipes:
                 if (i == 0) return Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID;
-                else return -1;// Structure.CapacitorMast;
+                else return  Structure.CAPACITOR_MAST_ID;
             case ResearchRoute.Crystal:
                 if (i == 0) return -1; //Structure.Crystalliser;
                 else return -1;// crystal lightning mast
@@ -977,7 +977,7 @@ public sealed class Knowledge
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         x = (byte)CloudWhaleRouteBoosters.ArtifactBoost;
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
-                        //x = (byte)CloudWhaleRouteBoosters.PointBoost;
+                       // x = (byte)CloudWhaleRouteBoosters.PointBoost;
                         //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {
@@ -997,8 +997,8 @@ public sealed class Knowledge
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 4)
                         {
-                            x = (byte)EngineRouteBoosters.PointBoost;
-                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            //x = (byte)EngineRouteBoosters.PointBoost;
+                            //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                             if (lvl >= 5)
                             {
                                 x = (byte)EngineRouteBoosters.FactoryBoost;
@@ -1026,8 +1026,8 @@ public sealed class Knowledge
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 4)
                         {
-                            x = (byte)PipesRouteBoosters.PointBoost;
-                            if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                            //x = (byte)PipesRouteBoosters.PointBoost;
+                            //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                             if (lvl >= 5)
                             {
                                 x = (byte)PipesRouteBoosters.FarmsBoost;
@@ -1050,8 +1050,8 @@ public sealed class Knowledge
                     if ((mask & (1 >> x)) == 0) mlist.Add(x);
                     if (lvl >= 4)
                     {
-                        x = (byte)CrystalRouteBoosters.PointBoost;
-                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        //x = (byte)CrystalRouteBoosters.PointBoost;
+                        //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {
                             x = (byte)CrystalRouteBoosters.PinesBoost;
@@ -1072,8 +1072,8 @@ public sealed class Knowledge
                     {
                         x = (byte)MonumentRouteBoosters.ExpeditionsBoost;
                         if ((mask & (1 >> x)) == 0) mlist.Add(x);
-                        x = (byte)MonumentRouteBoosters.PointBoost;
-                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        //x = (byte)MonumentRouteBoosters.PointBoost;
+                        //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 5)
                         {
                             x = (byte)MonumentRouteBoosters.MonumentAffectionBoost;
@@ -1095,8 +1095,8 @@ public sealed class Knowledge
                 case ResearchRoute.Blossom:
                     if (lvl >= 4)
                     {
-                        x = (byte)BlossomRouteBoosters.PointBoost;
-                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        //x = (byte)BlossomRouteBoosters.PointBoost;
+                        //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {
                             x = (byte)BlossomRouteBoosters.GrasslandsBoost;
@@ -1115,8 +1115,8 @@ public sealed class Knowledge
                 case ResearchRoute.Pollen:
                     if (lvl >= 4)
                     {
-                        x = (byte)PollenRouteBoosters.PointBoost;
-                        if ((mask & (1 >> x)) == 0) mlist.Add(x);
+                        //x = (byte)PollenRouteBoosters.PointBoost;
+                        //if ((mask & (1 >> x)) == 0) mlist.Add(x);
                         if (lvl >= 6)
                         {
                             x = (byte)PollenRouteBoosters.FlowersBoost;

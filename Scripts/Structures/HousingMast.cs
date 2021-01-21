@@ -12,19 +12,15 @@ public class HousingMast : House
         //#set house data
         SetBuildingData(b, pos);
         GameMaster.realMaster.colonyController.AddHousing(this);
-        if (ID == HOUSING_MAST_6_ID)
+        if (!GameMaster.loading) SetBlockersForHousingMast();
+        else
         {
-            if (!GameMaster.loading) SetBlockersForHousingMast();
-            else
+            if (!subscribedToRestoreBlockersUpdate)
             {
-                if (!subscribedToRestoreBlockersUpdate)
-                {
-                    GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
-                    subscribedToRestoreBlockersUpdate = true;
-                }
+                GameMaster.realMaster.blockersRestoreEvent += RestoreBlockers;
+                subscribedToRestoreBlockersUpdate = true;
             }
         }
-        //#
     }
 
     public static  bool CheckForSpace(Plane p)
@@ -38,10 +34,10 @@ public class HousingMast : House
                 var c = p.myChunk;
                 var pos = p.pos.OneBlockHigher();
                 var b = c.GetBlock(pos);
-                if (b == null || b.IsBlocker())
+                if (b == null )
                 {
                     b = c.GetBlock(pos.OneBlockHigher());
-                    if (b == null || b.IsBlocker()) return true;
+                    if (b == null ) return true;
                     else return false;
                 }
                 else return false;
@@ -57,7 +53,7 @@ public class HousingMast : House
             c.CreateBlocker(bpos, this, false, false);
             c.CreateBlocker(bpos.OneBlockHigher(), this, false, false);
         }
-        else UnityEngine.Debug.LogError("house cannot set blockers - no basement set");
+        else UnityEngine.Debug.LogError("housing mast cannot set blockers - no basement set");
     }
     public void RestoreBlockers()
     {
@@ -75,7 +71,7 @@ public class HousingMast : House
         else destroyed = true;
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         GameMaster.realMaster.colonyController.DeleteHousing(this);
-        if (ID == HOUSING_MAST_6_ID & basement != null)
+        if (basement != null)
         {
             var bpos = basement.pos;
             basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);

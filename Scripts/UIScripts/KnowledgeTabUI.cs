@@ -528,6 +528,10 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         unblockAnnouncePanel.SetAsLastSibling();
         unblockAnnouncePanel.gameObject.SetActive(true);
     }
+    public void UnblockAnnouncement(Rect txRect, string text)
+    {
+
+    }
 
     private void OnEnable()
     {

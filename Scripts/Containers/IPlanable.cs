@@ -48,8 +48,9 @@ public static class IPlanableSupportClass
         }
         myBlock = chunk.AddBlock(cpos, s, false, checkPlanes);
         if (myBlock == null)
-        {
+        {            
             s.Delete(true, true, false);
+            Debug.LogException(new System.Exception("new IPlanable block cannot be created"));
             return;
         }
         else

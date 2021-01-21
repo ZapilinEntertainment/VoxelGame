@@ -165,7 +165,7 @@ public class Plane
                 case Block.FWD_FACE_INDEX: return pos.z == Chunk.chunkSize - 1;
                 case Block.RIGHT_FACE_INDEX: return pos.x == Chunk.chunkSize - 1;
                 case Block.BACK_FACE_INDEX: return pos.z == 0;
-                case Block.LEFT_FACE_INDEX: return pos.z == 0;
+                case Block.LEFT_FACE_INDEX: return pos.x == 0;
                 case Block.UP_FACE_INDEX: return pos.y == Chunk.chunkSize - 1;
                 case Block.DOWN_FACE_INDEX: return pos.y == 0;
                 default:
@@ -176,6 +176,14 @@ public class Plane
     public bool isTransparent
     {
         get { return MeshMaster.IsMeshTransparent(meshType); }
+    }
+    public bool isInvicible
+    {
+        get
+        {
+            if (extension == null) return mainStructure?.indestructible ?? false;
+            else return extension.isInvincible;
+        }
     }
 
     public Plane(IPlanable i_host, MeshType i_meshType, int i_materialID, byte i_faceIndex, byte i_meshRotation)
@@ -576,7 +584,7 @@ public class Plane
                 return Vector3.up;
         }
     }
-    public ChunkPos GetBlockingPosition()
+    public ChunkPos GetLookingPosition()
     {
         switch(faceIndex)
         {
@@ -585,6 +593,7 @@ public class Plane
                 return pos;
             case Block.RIGHT_FACE_INDEX: return pos.OneBlockRight();
             case Block.BACK_FACE_INDEX: return pos.OneBlockBack();
+            case Block.FWD_FACE_INDEX: return pos.OneBlockForward();
             case Block.LEFT_FACE_INDEX: return pos.OneBlockLeft();
             case Block.DOWN_FACE_INDEX: return pos.OneBlockDown();
             default: return pos.OneBlockHigher();

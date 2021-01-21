@@ -45,8 +45,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     {
         if (prepared) return; else prepared = true;
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
-        windVector = Random.insideUnitCircle;
-        newWindVector = windVector;
+        if (!GameMaster.loading)
+        {
+            windVector = Random.insideUnitCircle;
+            newWindVector = windVector;
+        }
 
         Shader.SetGlobalFloat(vegetationShaderWindPropertyID, 1);
         sun = FindObjectOfType<Light>();
@@ -353,9 +356,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             }
 
             //sunlight changing
-            var clv = gmap.cityLookVector;
-            var rightVector = Vector3.Cross(clv, Vector3.down);
-            sunTransform.forward = Quaternion.AngleAxis(15f + ascension * 75f ,rightVector) * clv;
+            var clv = gmap.cityLookVector * -1f;
+            clv.y = -0.3f;
+            //var rightVector = Vector3.Cross(clv, Vector3.down);
+            // sunTransform.forward = Quaternion.AngleAxis(15f + ascension * 75f ,rightVector) * clv;
+            sunTransform.forward = clv;
 
             #region stability            
             if (colonyController != null)
@@ -478,8 +483,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         var data = new byte[24];
         fs.Read(data, 0, data.Length);
         newWindVector = new Vector2(System.BitConverter.ToSingle(data, 0), System.BitConverter.ToSingle(data, 4));
-        windVector = new Vector2(System.BitConverter.ToSingle(data, 8), System.BitConverter.ToSingle(data, 12));
-        
+        windVector = new Vector2(System.BitConverter.ToSingle(data, 8), System.BitConverter.ToSingle(data, 12));        
         windTimer = System.BitConverter.ToSingle(data, 20);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");

@@ -33,9 +33,10 @@ public class Platform : Structure, IPlanable
                 model = Instantiate(Resources.Load<GameObject>("Structures/ColumnEdge"));
                 switch (fi)
                 {
-                    case Block.FWD_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); break;
-                    case Block.RIGHT_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, -90f, 0f); break;
-                    case Block.LEFT_FACE_INDEX: model.transform.localRotation = Quaternion.Euler(0f, 90f, 0f); break;
+                    case Block.FWD_FACE_INDEX: model.transform.rotation = Quaternion.Euler(0f, 180f, 0f); break;
+                    case Block.RIGHT_FACE_INDEX: model.transform.rotation = Quaternion.Euler(0f, -90f, 0f); break;
+                    case Block.LEFT_FACE_INDEX: model.transform.rotation = Quaternion.Euler(0f, 90f, 0f); break;
+                    case Block.BACK_FACE_INDEX: model.transform.rotation = Quaternion.Euler(Vector3.zero); break;
                 }
                 surfaceRect = SurfaceRect.full;
             }
@@ -63,7 +64,6 @@ public class Platform : Structure, IPlanable
         {
            myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
         }
-        
     }
     #region interface
     public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)

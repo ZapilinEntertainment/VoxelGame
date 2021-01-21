@@ -4,9 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class UIWorkbuildingObserver : UIObserver { // работает и на workbuilding, и на worksite
-	public Button minusAllButton, minusButton, plusButton, plusAllButton; // fiti
-	public Slider slider; // fiti
-    public Text workersCountField, workSpeedField, actionLabel; // fiti
+	 
 	int showingWorkersCount, showingWorkersMaxCount;
 	float showingWorkspeed;
     private bool workbuildingMode = true, workspeedStringEnabled = true, ignoreWorkersSlider = false;
@@ -14,7 +12,10 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 	public WorkBuilding observingWorkbuilding { get; private set; }
     public Worksite observingWorksite { get; private set; }
 #pragma warning disable 0649
-    [SerializeField] GameObject stopButton;
+    [SerializeField] private GameObject stopButton;
+    [SerializeField] private Button minusAllButton, minusButton, plusButton, plusAllButton;
+    [SerializeField] private Slider slider; // fiti
+    [SerializeField] private Text workersCountField, workSpeedField, actionLabel;
 #pragma warning restore 0649
 
     public static UIWorkbuildingObserver InitializeWorkbuildingObserverScript()

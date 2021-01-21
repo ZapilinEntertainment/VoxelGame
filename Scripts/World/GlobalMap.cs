@@ -31,6 +31,14 @@ public sealed class GlobalMap : MonoBehaviour
     public GameObject observer { get; private set; }
     public System.Action<MapPoint> pointsExploringEvent;
 
+    //Island Engine
+    public Engine.ThrustDirection engineThrustDirection { get; private set; }
+    private Dictionary<int, Engine> engines;
+    public float engineThrust { get; private set; }
+    public bool engineControlCenterBuilt { get { return controlCenter != null; } }
+    private Building controlCenter;
+    //
+
     public const byte RINGS_COUNT = 5; // dependence : Environment.GetEnvironment
     private const byte MAX_OBJECTS_COUNT = 50;
     private const float MAX_RINGS_ROTATION_SPEED = 1;
@@ -40,6 +48,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     //affection value?
     private Dictionary<int, float> worldAffectionsList;
+    
     private int nextWAffectionID = 1;
 
     private void Start()
@@ -348,6 +357,47 @@ public sealed class GlobalMap : MonoBehaviour
         {
             worldAffectionsList[id] = newVal;
         }
+    }
+
+    public int AddEngine(Engine e)
+    {
+        if (engines == null)
+        {
+            engines = new Dictionary<int, Engine>();
+            engines.Add(0, e);
+            return 0;
+        }
+        else
+        {
+            if (engines.ContainsValue(e)) return -1;
+            else
+            {
+                int nextID = -1;
+                foreach (var fe in engines)
+                {
+                    if (fe.Key >= nextID) nextID = fe.Key;
+                }
+                nextID++;
+                engines.Add(nextID, e);
+                return nextID;
+            }
+        }
+    }
+    public void RemoveEngine(int id)
+    {
+        engines?.Remove(id);
+    }
+    public void RegisterEngineControlCenter(Building b)
+    {
+        controlCenter = b;
+    }
+    public void UnregisterEngineControlCenter(Building b)
+    {
+        if (controlCenter == b) controlCenter = null;
+    }
+    public void ChangeThrustDirection(Engine.ThrustDirection etd)
+    {
+        engineThrustDirection = etd;
     }
 
     public void ChangeCityPointHeight(float delta)

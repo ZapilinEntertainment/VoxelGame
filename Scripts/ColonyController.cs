@@ -35,8 +35,7 @@ public sealed class ColonyController : MonoBehaviour
     public List<Building> powerGrid { get; private set; }
     public List<Dock> docks { get; private set; }
     public List<House> houses { get; private set; }
-    private Dictionary<(ChunkPos pos, byte face), Worksite> worksites;
-    private Dictionary<int, Engine> engines;
+    private Dictionary<(ChunkPos pos, byte face), Worksite> worksites; 
     public byte docksLevel { get; private set; }
     public float housingLevel { get; private set; }
     public float foodMonthConsumption
@@ -77,9 +76,9 @@ public sealed class ColonyController : MonoBehaviour
         START_ENERGY_CRYSTALS_COUNT = 100,
         TICK_TIME = 1f,
         MIN_HAPPINESS = 0.3f,
-        FOOD_SUPPLY_MIN_HAPPINESS = 0.8f,
-        HOUSING_MIN_HAPPINESS = 0.15f,
-        HEALTHCARE_MIN_HAPPINESS = 0.14f;
+        FOOD_SUPPLY_MIN_HAPPINESS = 0.2f,
+        HOUSING_MIN_HAPPINESS = 0.25f,
+        HEALTHCARE_MIN_HAPPINESS = 0.25f;
 
 
     void Awake()
@@ -216,8 +215,7 @@ public sealed class ColonyController : MonoBehaviour
                 }
                 else {
                     float fmc = foodMonthConsumption;
-                    foodSupplyHappiness = storage.standartResources[ResourceType.FOOD_ID] / fmc;
-                    if (foodSupplyHappiness < FOOD_SUPPLY_MIN_HAPPINESS) foodSupplyHappiness = FOOD_SUPPLY_MIN_HAPPINESS;
+                    foodSupplyHappiness = 1f;
                     if (fmc >= 1f) happinessIncreaseMultiplier++;
                 }
             }
@@ -242,17 +240,8 @@ public sealed class ColonyController : MonoBehaviour
 
             // HOUSING
             byte level = hq.level;
-            float housingHappiness = HOUSING_MIN_HAPPINESS * lvlCf;
-            if (housingLevel < 1)
-            {
-                happinessDecreaseMultiplier++;
-            }
-            else
-            {
-                if (level > MAX_HOUSING_LEVEL) level = MAX_HOUSING_LEVEL;
-                float supply = housingLevel / level;
-                housingHappiness += (1 - housingHappiness) * supply;
-            }
+            float housingHappiness = (float)citizenCount / (float)totalLivespace;
+            if (housingHappiness < HOUSING_MIN_HAPPINESS) housingHappiness = HOUSING_MIN_HAPPINESS;
             // HAPPINESS CALCULATION
             targetHappiness = 1f;
             if (happinessModifiers != null)
@@ -810,36 +799,7 @@ public sealed class ColonyController : MonoBehaviour
             worksites.Remove(key);
             if (worksites.Count == 0) worksites = null;
         }
-    }
-
-    public int AddEngine(Engine e)
-    {
-        if (engines == null)
-        {
-            engines = new Dictionary<int, Engine>() ;
-            engines.Add(0, e);
-            return 0;
-        }
-        else
-        {
-            if (engines.ContainsValue(e)) return -1;
-            else
-            {
-                int nextID = -1;
-                foreach (var fe in engines)
-                {
-                    if (fe.Key >= nextID) nextID = fe.Key;                    
-                }
-                nextID++;
-                engines.Add(nextID, e);
-                return nextID;
-            }
-        }
-    }
-    public void RemoveEngine(int id)
-    {
-        engines?.Remove(id);
-    }
+    }    
 
     public bool CheckForBuildingPresence(int sid)
     {

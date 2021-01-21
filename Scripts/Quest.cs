@@ -205,6 +205,10 @@ public class Quest
                 break;
             case Knowledge.ResearchRoute.Monument:
                 type = QuestType.Monument;
+                switch ((Knowledge.MonumentRouteBoosters)subID)
+                {
+                    case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost: stepsCount = 2; break;
+                }
                 break;
             case Knowledge.ResearchRoute.Pollen:
                 type = QuestType.Pollen;
@@ -689,13 +693,13 @@ public class Quest
                         case Knowledge.FoundationRouteBoosters.HappinessBoost:
                             stepsAddInfo[0] = string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
                                 + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
-                            if (colony.happiness_coefficient == Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
+                            if (colony.happiness_coefficient >= Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
                             break;
                         case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
                             {
                                 var ic = DockSystem.GetImmigrantsTotalCount();
                                 var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
-                                steps[0] = ic.ToString() + " / " + nic.ToString();
+                                stepsAddInfo[0] = ic.ToString() + " / " + nic.ToString();
                                 if (ic == nic) MakeQuestCompleted();
                                 break;
                             }
@@ -703,7 +707,7 @@ public class Quest
                             {
                                 var cc = colony.citizenCount;
                                 var nc = Knowledge.R_F_POPULATION_COND;
-                                steps[0] = cc.ToString() + " / " + nc.ToString();
+                                stepsAddInfo[0] = cc.ToString() + " / " + nc.ToString();
                                 if (cc >= nc) MakeQuestCompleted();
                                 break;
                             }

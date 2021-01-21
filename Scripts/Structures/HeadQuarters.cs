@@ -86,7 +86,7 @@ public sealed class HeadQuarters : Building
         if (basement != null)
         {
             var chunk = basement.myChunk;
-            var cpos = basement.GetBlockingPosition();
+            var cpos = basement.GetLookingPosition();
             chunk.CreateBlocker(cpos, this, false,false);
             if (level == 6) chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false, false);
         }

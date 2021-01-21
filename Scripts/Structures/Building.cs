@@ -861,7 +861,7 @@ public class Building : Structure
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
         if (destroyed) return;
-        else destroyed = true;
+        else destroyed = true;        
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         Destroy(gameObject);
     }

@@ -88,7 +88,8 @@ public sealed class PoolMaster : MonoBehaviour {
        // celestialBillboardMaterial = new Material(Shader.Find("Custom/CelestialBillboard"));
        // celestialBillboardMaterial.SetColor("_MainColor", Color.white);
         starsBillboardMaterial = Resources.Load<Material>("Materials/StarsBillboardMaterial");
-        celestialBillboardMaterial = starsBillboardMaterial;
+        celestialBillboardMaterial = new Material(starsBillboardMaterial);
+        celestialBillboardMaterial.SetFloat("_Tick", 1);
 
         //mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
         gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
@@ -200,6 +201,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
             var aoe = FollowingCamera.cam.GetComponent<AmplifyOcclusionEffect>();
             var ql = QualitySettings.GetQualityLevel();
+            /*
             if ( ql == 2)
             {
                 if (aoe.enabled == false) aoe.enabled = true;
@@ -208,6 +210,7 @@ public sealed class PoolMaster : MonoBehaviour {
             {
                 if (aoe.enabled) aoe.enabled = false;
             }
+            */
         }
     }
     private static void DefineMaterialPack()

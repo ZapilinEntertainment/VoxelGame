@@ -27,6 +27,19 @@ public sealed class PlaneExtension
         return myPlane.GetHashCode() + map.GetHashCode() + artificialStructuresCount;
     }
 
+    public bool isInvincible
+    {
+        get
+        {
+            if (structures == null || structures.Count == 0) return false;
+            else
+            {
+                foreach (var s in structures) if (s.indestructible) return true;
+                return false;
+            }
+        }
+    }
+
     #region save-load system
     public void Save(System.IO.FileStream fs)
     {

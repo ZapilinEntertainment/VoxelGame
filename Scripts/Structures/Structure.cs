@@ -211,6 +211,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Stability Enforcer");break;
             case ENGINE_ID:
                 s = new GameObject("Engine"); break;
+            case CONTROL_CENTER_ID:
+                s = new GameObject("Control Center"); break;
             case CAPACITOR_MAST_ID:
                 s = new GameObject("Capacitor mast");break;
             default:
@@ -371,7 +373,7 @@ public class Structure : MonoBehaviour
             case MINI_GRPH_REACTOR_3_ID:
             case ENERGY_CAPACITOR_1_ID:
             case ENERGY_CAPACITOR_2_ID:
-            case CAPACITOR_MAST_ID:
+            case CAPACITOR_MAST_ID:            
                 return typeof(Building);            
             case XSTATION_3_ID:
                 return typeof(XStation);
@@ -393,8 +395,6 @@ public class Structure : MonoBehaviour
                 return typeof(FoundationBlock);
             case CONNECT_TOWER_6_ID:
                 return typeof(ConnectTower);
-            // case CONTROL_CENTER_6_ID:
-            // s = new GameObject("Command center").AddComponent<ControlCenter>(); break;
             case HOTEL_BLOCK_6_ID:
                 return typeof(Hotel);
             case HOUSING_MAST_6_ID:
@@ -418,6 +418,8 @@ public class Structure : MonoBehaviour
                 return typeof(ScienceLab);
             case ENGINE_ID:
                 return typeof(Engine);
+            case CONTROL_CENTER_ID:
+                return typeof(ControlCenter);
             default: return typeof(Structure);
         }
     }
@@ -442,22 +444,62 @@ public class Structure : MonoBehaviour
                     return false;
                 }
                 else return true;
+                //SIMILAR:
             case HOUSING_MAST_6_ID:
-                if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                 {
-                    refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
-                    return false;
-                }
-                else {
-                    if (HousingMast.CheckForSpace(p)) return true;
-                    else
+                    if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                     {
-                        refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                        refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
                         return false;
                     }
+                    else
+                    {
+                        if (HousingMast.CheckForSpace(p)) return true;
+                        else
+                        {
+                            refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                            return false;
+                        }
+                    }
                 }
+            case CONTROL_CENTER_ID:
+                {
+                    if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+                    {
+                        refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
+                        return false;
+                    }
+                    else
+                    {
+                        if (ControlCenter.CheckForSpace(p)) return true;
+                        else
+                        {
+                            refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                            return false;
+                        }
+                    }
+                }
+            case ENGINE_ID:
+                {
+                    if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+                    {
+                        refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);
+                        return false;
+                    }
+                    else
+                    {
+                        if (Engine.CheckForSpace(p)) return true;
+                        else
+                        {
+                            refusalReason = Localization.GetRefusalReason(RefusalReason.SpaceAboveBlocked);
+                            return false;
+                        }
+                    }
+                }
+            //END
             case OBSERVATORY_ID:
                 return Observatory.CheckSpecialBuildingCondition(p, ref refusalReason);
+            
             default: return true;
         }
     }

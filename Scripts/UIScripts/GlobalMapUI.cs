@@ -13,6 +13,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     [SerializeField] private Text pointLabel, pointDescription;
     [SerializeField] private Texture sectorsTexture;
     [SerializeField] private Transform[] rings;
+    [SerializeField] private Transform enginePanel;
     [SerializeField] private GameObject exampleMarker, infoPanel, sendExpeditionButton;
     [SerializeField] private GameObject mapCanvas, mapCamera;
 #pragma warning restore 0649
@@ -378,6 +379,15 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     sectorsImages[i].color = inactiveSectorColor;
                 }
+            }
+
+            if (globalMap.engineThrust > 0f)
+            {
+                if (!enginePanel.gameObject.activeSelf) enginePanel.gameObject.SetActive(true);
+            }
+            else
+            {
+                if (enginePanel.gameObject.activeSelf) enginePanel.gameObject.SetActive(false);
             }
 
             lastDrawnStateHash = globalMap.actionsHash;

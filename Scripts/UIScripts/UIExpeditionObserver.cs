@@ -398,9 +398,11 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             {
                 var storage = colony.storage;
                 var res = storage.standartResources;
-                if (suppliesSlider.value <= res[ResourceType.SUPPLIES_ID] &&
+                bool TESTMODE = GameMaster.realMaster.weNeedNoResources;
+                if (TESTMODE || suppliesSlider.value <= res[ResourceType.SUPPLIES_ID] &&
                     crystalsSlider.value <= colony.energyCrystalsCount &&
-                    res[ResourceType.FUEL_ID] >= FUEL_BASE_COST)
+                    res[ResourceType.FUEL_ID] >= FUEL_BASE_COST                    
+                    )
                 {
                     int shID = Hangar.GetFreeShuttleID();
                     if (shID != Hangar.NO_SHUTTLE_VALUE)

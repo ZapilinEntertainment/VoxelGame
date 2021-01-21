@@ -2,18 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Engine : Building
+public class ControlCenter : Building
 {
-    public enum ThrustDirection : byte { Offline, Clockwise, CounterclockWise, Inside, Outward, StabilityManeuver}
-
-    private int engineID = -1;
     private bool subscribedToRestoreBlockersUpdate = false;
-    public const float THRUST = 1f; 
 
-    override protected void SwitchActivityState()
+
+    override public void SetBasement(Plane b, PixelPosByte pos)
     {
-        if (engineID == -1) engineID = GameMaster.realMaster.globalMap.AddEngine(this);
-        ChangeRenderersView(isActive & isEnergySupplied);        
+        base.SetBasement(b, pos);
+        GameMaster.realMaster.globalMap?.RegisterEngineControlCenter(this);
     }
 
     public static bool CheckForSpace(Plane p)
@@ -25,17 +22,12 @@ public class Engine : Building
             else
             {
                 var c = p.myChunk;
-                var pos = p.pos.OneBlockDown();
+                var pos = p.pos.OneBlockHigher();
                 var b = c.GetBlock(pos);
                 if (b == null )
                 {
-                    pos = pos.OneBlockDown();
-                    b = c.GetBlock(pos);
-                    if (b == null ) {
-                        b = c.GetBlock(pos.OneBlockDown());
-                        if (b == null ) return true;
-                        else return false;
-                    }
+                    b = c.GetBlock(pos.OneBlockHigher());
+                    if (b == null ) return true;
                     else return false;
                 }
                 else return false;
@@ -47,11 +39,9 @@ public class Engine : Building
         if (basement != null)
         {
             var c = basement.myChunk;
-            var bpos = basement.pos.OneBlockDown();
+            var bpos = basement.pos.OneBlockHigher();
             c.CreateBlocker(bpos, this, false, false);
-            bpos = bpos.OneBlockDown();
-            c.CreateBlocker(bpos, this, false, false);
-            c.CreateBlocker(bpos.OneBlockDown(), this,false, false);
+            c.CreateBlocker(bpos.OneBlockHigher(), this, false, false);
         }
         else Debug.LogError("engine cannot set blockers - no basement set");
     }
@@ -65,12 +55,9 @@ public class Engine : Building
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    public override void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {
-        if (engineID != -1)
-        {
-            GameMaster.realMaster.globalMap.RemoveEngine(engineID);
-        }
+        if (ID == CONTROL_CENTER_ID) GameMaster.realMaster.globalMap?.UnregisterEngineControlCenter(this);
         if (basement != null)
         {
             var bpos = basement.pos;

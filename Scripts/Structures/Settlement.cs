@@ -963,7 +963,9 @@ public sealed class Settlement : House
             {
                buildingObserver.StatusUpdate();
             }
-            GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
+            var rm = GameMaster.realMaster;
+            rm.colonyController.housingRecalculationNeeded = true;
+            rm.eventTracker?.BuildingUpgraded(this);
         }
         else
         {

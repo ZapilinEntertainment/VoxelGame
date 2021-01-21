@@ -140,20 +140,20 @@ public sealed class FollowingCamera : MonoBehaviour {
                         {
                             bool a = false, b = false; //rotation detectors
                             float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
-                            delta = t.deltaPosition.x / (float)Screen.width * 10;
-                            if (delta != 0)
+                            delta = t.deltaPosition.x / (float)Screen.width;
+                            if (Mathf.Abs(delta) > 0.01f)
                             {
                                 StopCameraMovement();
-                                transform.RotateAround(transform.position, Vector3.up, rspeed * delta);
+                                transform.RotateAround(transform.position, Vector3.up, rspeed * delta * 0.1f);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 a = true;
                             }
 
-                            delta = t.deltaPosition.y / (float)Screen.height * 10;
-                            if (delta != 0)
+                            delta = t.deltaPosition.y / (float)Screen.height;
+                            if (Mathf.Abs(delta) > 0.01f)
                             {
                                 StopCameraMovement();
-                                cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta);
+                                cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta * 0.1f);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 b = true;
                             }

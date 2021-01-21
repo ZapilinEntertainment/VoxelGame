@@ -106,6 +106,24 @@ public sealed partial class Chunk : MonoBehaviour
        return nature?.islandFlora?.Contains(pt) ?? false;
     }
 
+    public bool IsAnyStructureInABlockSpace(ChunkPos cpos)
+    {
+        Block b = GetBlock(cpos.OneBlockForward());
+        Plane p;
+        if (b != null && b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        b = GetBlock(cpos.OneBlockRight());
+        if (b != null && b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        b = GetBlock(cpos.OneBlockBack());
+        if (b != null && b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        b = GetBlock(cpos.OneBlockLeft());
+        if (b != null && b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        b = GetBlock(cpos.OneBlockHigher());
+        if (b != null && b.TryGetPlane(Block.DOWN_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        b = GetBlock(cpos.OneBlockDown());
+        if (b != null && b.TryGetPlane(Block.UP_FACE_INDEX, out p) && p.artificialStructuresCount > 0) return true;
+        return false;
+    }
+
     #region operating blocks data
 
     public void CreateNewChunk(int[,,] newData)
@@ -360,7 +378,11 @@ public sealed partial class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
+        if ((x >= chunkSize) || (y >= chunkSize) || (z >= chunkSize) || (x == 255) || (y == 255) || (z == 255))
+        {
+            Debug.LogException(new System.Exception("Chunk - cannot create chunk with such coordinates"));
+            return null;
+        }
         //
         Block b = GetBlock(f_pos);
         if (b != null)
@@ -391,7 +413,11 @@ public sealed partial class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural, bool planesCheck)
     {
         int x = i_pos.x, y = i_pos.y, z = i_pos.z;
-        if (x >= chunkSize | y >= chunkSize | z >= chunkSize) return null;
+        if ((x >= chunkSize) || (y >= chunkSize) || (z >= chunkSize) || (x == 255) || (y == 255) || (z == 255))
+        {
+            Debug.LogException(new System.Exception("Chunk - cannot create chunk with such coordinates"));
+            return null;
+        }
         var b = GetBlock(i_pos);
         if (b != null)
         {
@@ -821,8 +847,13 @@ public sealed partial class Chunk : MonoBehaviour
         //12.06 нет, я так не думаю
         // 24.04.2019 фига сколько времени прошло
         // 26.01.2020 ну привет
+        // 21.01.21 ...
         Block b = GetBlock(pos);
         if (b == null) return;
+        else
+        {
+            if (b.isInvincible) return;
+        }
         int x = pos.x, y = pos.y, z = pos.z;
         if (b.ContainSurface()) needSurfacesUpdate = true;
         var affectionMask = b.GetAffectionMask();
@@ -858,7 +889,7 @@ public sealed partial class Chunk : MonoBehaviour
         RenderDataFullRecalculation();
     }
 
-    //
+    #region blocking
     public void CreateBlocker(ChunkPos f_pos, Structure main_structure, bool forced, bool useMarker)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
@@ -909,6 +940,11 @@ public sealed partial class Chunk : MonoBehaviour
             dependentBlocks.Add(b);
         }
         return true;
+    }
+    public bool IsSpaceBlocked(ChunkPos cpos)
+    {
+        var b = GetBlock(cpos);
+        return b != null && b.IsBlocker();
     }
     /// <summary>
     /// uses min coordinates ( left down corner); start positions including!
@@ -1224,6 +1260,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         if (actions) chunkDataUpdateRequired = true;
     }
+    #endregion
     #endregion
 
     #region save-load system

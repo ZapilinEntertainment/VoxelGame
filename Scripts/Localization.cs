@@ -132,6 +132,7 @@ public static class Localization
                     case Structure.SCIENCE_LAB_ID: return "Исследовательская лаборатория";
                     case Structure.ENGINE_ID: return "Движитель";
                     case Structure.CAPACITOR_MAST_ID: return "Накопительная мачта";
+                    case Structure.CONTROL_CENTER_ID: return "Контроллер движителя";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -209,6 +210,7 @@ public static class Localization
                     case Structure.SCIENCE_LAB_ID: return "Research laboratory";
                     case Structure.ENGINE_ID: return "Engine Tower";
                     case Structure.CAPACITOR_MAST_ID: return "Capacitor Mast";
+                    case Structure.CONTROL_CENTER_ID: return "Engine Control";
                     default: return "Unknown building";
                 }
         }
@@ -299,6 +301,7 @@ public static class Localization
                     case Structure.SCIENCE_LAB_ID: return "Исследует найденные Закономерности или вырабатывает очки Знания.";
                     case Structure.COMPOSTER_ID: return "Превращает органику в плодородную почву.";
                     case Structure.ENGINE_ID: return "Перемещает остров внутри кольца.";
+                    case Structure.CONTROL_CENTER_ID: return "Расширяет возможности Движителя.";
                     default: return "Описание отсутствует";
                 }
             case Language.English:
@@ -356,7 +359,7 @@ public static class Localization
                         return "Supplies colony with healthcare. Can control the spawnrate.";
                     case Structure.MINERAL_POWERPLANT_2_ID: return "Generates energy from mineral F. Energy production depends on the number of workers.";
                     case Structure.ORE_ENRICHER_2_ID: return "Extracts ores from stone.";
-                    case Structure.WORKSHOP_ID: return "Improves or stabilizes colonist's gears.";
+                    case Structure.WORKSHOP_ID: return "Improves or stabilizes colonist's gears level.";
                     case Structure.MINI_GRPH_REACTOR_3_ID: return "Generates energy, consumes nothing. No need in workers.";
                     case Structure.FUEL_FACILITY_ID: return "Produces fuel for vessels.";
                     case Structure.REACTOR_BLOCK_5_ID:
@@ -385,6 +388,7 @@ public static class Localization
                     case Structure.SCIENCE_LAB_ID: return "Investigates Regularities found or generates Knowledge points.";
                     case Structure.COMPOSTER_ID: return "Converts organic materials to fertile soil";
                     case Structure.ENGINE_ID: return "Moves island within the ring";
+                    case Structure.CONTROL_CENTER_ID: return "Adds new engine abilities.";
                     default: return "No description.";
                 }
         }
@@ -3484,26 +3488,25 @@ public static class Localization
                                 {
                                     case Knowledge.FoundationRouteBoosters.HappinessBoost:
                                         q.name = "Foundation Route";
-                                        q.description = "";
-                                        q.steps[0] = "Satisfying level: " + string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
-                            + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
+                                        q.description = "Citizens happiness and unity is the only one that keeps us together. Make sure our bounds will not be ripped!";
+                                        q.steps[0] = "Satisfying level: ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.HotelBoost:
                                         {
                                             q.name = "Foundation Route";
-                                            q.description = "";
+                                            q.description = "For those who came from far lands our gates shall be open. Let the Hotel be built!";
                                             q.steps[0] = GetStructureName(Structure.HOTEL_BLOCK_6_ID) + " built ";
                                             break;
                                         }
                                     case Knowledge.FoundationRouteBoosters.HousingMastBoost:
                                         q.name = "Foundation Route";
-                                        q.description = "";
+                                        q.description = "We need more living space - higher, brighter, wider.";
                                         q.steps[0] = GetStructureName(Structure.HOUSING_MAST_6_ID) + " built ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
                                         q.name = "Foundation Route";
-                                        q.description = "";
-                                        q.steps[0] = "Incomers count: " + DockSystem.GetImmigrantsTotalCount().ToString() + " / " + Knowledge.R_F_IMMIGRANTS_CONDITION.ToString();
+                                        q.description = "A lot of people waiting to join our city far away. Lets accept them as fast, as we can.";
+                                        q.steps[0] = "Incomers count: ";
                                         break;
                                     case Knowledge.FoundationRouteBoosters.PointBoost:
                                         q.name = "Foundation Route";
@@ -3513,7 +3516,7 @@ public static class Localization
                                     case Knowledge.FoundationRouteBoosters.PopulationBoost:
                                         q.name = "Foundation Route";
                                         q.description = "";
-                                        q.steps[0] = "Current population: " + colony.citizenCount.ToString() + " / " + Knowledge.R_F_POPULATION_COND.ToString();
+                                        q.steps[0] = "Current population: " ;
                                         break;
                                     case Knowledge.FoundationRouteBoosters.QuestBoost:
                                         q.name = "Foundation Route";
@@ -3557,7 +3560,6 @@ public static class Localization
                                         q.description = "Build " + GetStructureName(Structure.STABILITY_ENFORCER_ID);
                                         q.steps[0] = "Stabilizer built ";
                                         break;
-                                        //case Knowledge.CloudWhaleRouteBoosters.PointBoost:
                                         //case Knowledge.CloudWhaleRouteBoosters.QuestBoost:
                                 }
                                 break;
@@ -3659,7 +3661,7 @@ public static class Localization
                                     case Knowledge.CrystalRouteBoosters.MoneyBoost:
                                         q.name = "Crystal Route";
                                         q.description = "Collect " + Knowledge.R_C_MONEY_COND.ToString() +" energy crystals.";
-                                        q.steps[0] = "Basic farms left: ";
+                                        q.steps[0] = "Crystals collected: ";
                                         break;
                                     case Knowledge.CrystalRouteBoosters.PinesBoost:
                                         q.name = "Crystal Route";

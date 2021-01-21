@@ -65,14 +65,14 @@ public class Recipe {
 
         float w2 = RECIPE_LVL2_WORKLOAD;
         oreRefiningRecipes = new Recipe[9];
-		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, w1);
+		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, w2);
 		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore, METAL_E_REFINING_ID, 8,1,w2); 
 		MetalN_refining = new Recipe(ResourceType.Stone, ResourceType.metal_N_ore, METAL_N_REFINING_ID, 16f,1f, w2 * 3f); 
-		MetalM_refining = new Recipe(ResourceType.Stone, ResourceType.metal_M_ore, METAL_M_REFINING_ID, 6,1, w1); 
-		MetalP_refining = new Recipe(ResourceType.Stone, ResourceType.metal_P_ore, METAL_P_REFINING_ID, 4,1, w1); 
+		MetalM_refining = new Recipe(ResourceType.Stone, ResourceType.metal_M_ore, METAL_M_REFINING_ID, 6,1, w2); 
+		MetalP_refining = new Recipe(ResourceType.Stone, ResourceType.metal_P_ore, METAL_P_REFINING_ID, 4,1, w2); 
 		MetalS_refining= new Recipe(ResourceType.Stone, ResourceType.metal_S_ore, METAL_S_REFINING_ID, 10,1, w2 * 1.5f); 
-		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, MINERAL_F_REFINING_ID, 3, 1, w1);
-		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L,  MINERAL_L_REFINING_ID, 3, 1, w1);
+		MineralF_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_F, MINERAL_F_REFINING_ID, 3, 1, w2);
+		MineralL_refining = new Recipe(ResourceType.Dirt, ResourceType.mineral_L,  MINERAL_L_REFINING_ID, 3, 1, w2);
 		oreRefiningRecipes[0] = NoRecipe;
 		oreRefiningRecipes[1] = MetalK_refining; oreRefiningRecipes[2] = MetalE_refining;
 		oreRefiningRecipes[3] = MetalN_refining; oreRefiningRecipes[4] = MetalM_refining;
@@ -94,7 +94,7 @@ public class Recipe {
 		plasticFactoryRecipes = new Recipe[3];
 		plasticFactoryRecipes[0] = NoRecipe;
 		plasticFactoryRecipes[1] = LumberToPlastics;
-		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, w1 * 0.8f);
+		MineralLToPlastics = new Recipe(ResourceType.mineral_L, ResourceType.Plastics, MINERAL_L_TO_PLASTICS_ID, 1, 2, w2);
 		plasticFactoryRecipes[2] = MineralLToPlastics;
 
         graphoniumEnricherRecipes = new Recipe[3];

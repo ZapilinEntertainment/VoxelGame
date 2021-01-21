@@ -90,7 +90,41 @@ public sealed class UISurfacePanelController : UIObserver {
 			isObserving = true;
 			ChangeMode (SurfacePanelMode.SelectAction);
             if (constructionPlane.activeSelf) PrepareConstructionPlane();
-		}
+            //
+            var chunk = observingSurface.myChunk;
+            var pos = sb.GetLookingPosition();
+            bool buildingAllowed = !chunk.IsAnyStructureInABlockSpace(pos);
+            var col = buildingAllowed ? (chunk.IsSpaceBlocked(pos) ? Color.yellow : Color.white) : Color.grey;
+            buildButton.transform.GetChild(0).GetComponent<Text>().color = col;
+            buildButton.interactable = buildingAllowed;
+
+            bool isTerminal = observingSurface.isTerminal;
+            if (!isTerminal)
+            {               
+                blockCreateButton.interactable = buildingAllowed;
+                blockCreateButton.transform.GetChild(0).GetComponent<Text>().color = col;
+                blockCreateButton.gameObject.SetActive(true);
+            }
+            else blockCreateButton.gameObject.SetActive(false);
+            if (IsColumnAvailable() && !isTerminal)
+            {
+                columnCreateButton.transform.GetChild(0).GetComponent<Text>().color = col;
+                columnCreateButton.interactable = buildingAllowed;
+                columnCreateButton.gameObject.SetActive(true);
+            }
+            else columnCreateButton.gameObject.SetActive(false);
+            if (!buildingAllowed)
+            {
+                if (costPanel.activeSelf) costPanel.SetActive(false);
+                if (surfaceBuildingPanel.activeSelf) SetBuildPanelStatus(false);
+            }
+            //
+            CheckGatherButton();
+            bool disableDig = observingSurface.GetBlock()?.isInvincible ?? observingSurface.isInvicible;
+            digButton.interactable = !disableDig;
+            digButton.transform.GetChild(0).GetComponent<Text>().color = disableDig ? Color.grey: Color.white;
+            changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());            
+        }
 	}
 
     override public void StatusUpdate()
@@ -312,11 +346,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
 
                 SetActionPanelStatus(true);                
-                mode = SurfacePanelMode.SelectAction;
-                CheckGatherButton();
-                changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
-                columnCreateButton.gameObject.SetActive(IsColumnAvailable() & observingSurface.pos.y < Chunk.chunkSize);
-                blockCreateButton.gameObject.SetActive(!observingSurface.isTerminal);                
+                mode = SurfacePanelMode.SelectAction;                              
                 break;
         }
     }

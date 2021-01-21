@@ -29,7 +29,7 @@ public sealed class HangingTMast : WorkBuilding
         if (basement != null)
         {
             var chunk = basement.myChunk;
-            var cpos = basement.GetBlockingPosition();
+            var cpos = basement.GetLookingPosition();
             if (cpos != basement.pos) chunk.CreateBlocker(cpos, this, false, false);
             chunk.CreateBlocker(cpos + basement.GetLookVector(), this, false, false);
         }
