@@ -249,7 +249,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
             infoPanel.gameObject.SetActive(false);
 
             RectTransform rt = holder.GetComponent<RectTransform>();
-            rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rt.rect.height);
+            //rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rt.rect.height);
             float xmin, ymin;
             var pps = knowledge.puzzlePins;
             int row, column, pincode;

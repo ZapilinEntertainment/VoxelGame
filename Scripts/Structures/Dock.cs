@@ -547,7 +547,7 @@ public sealed class Dock : WorkBuilding {
         if (maintainingShip & loadingShip != null)
         {
             data.Add(one);
-            data.AddRange(loadingShip.GetShipSerializer());
+            data.AddRange(loadingShip.Save());
         }
         else data.Add(zero);
         data.AddRange(System.BitConverter.GetBytes(loadingTimer));

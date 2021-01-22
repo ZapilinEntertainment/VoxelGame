@@ -82,7 +82,7 @@ sealed public class UIController : MonoBehaviour
     public static void SetActivity(bool x)
     {
         if (current != null) current.gameObject.SetActive(x);
-        FollowingCamera.main.gameObject.SetActive(x);
+        FollowingCamera.main?.gameObject.SetActive(x);
     }
 
     public void Awake()

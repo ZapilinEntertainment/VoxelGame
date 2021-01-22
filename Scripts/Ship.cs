@@ -23,7 +23,6 @@ public sealed class Ship : MonoBehaviour {
     private Vector3 exitDirection;
 
     private const float START_SPEED = 10, DISTANCE_TO_ISLAND = 80, AWAITING_TIME = 90;
-    public const int SERIALIZER_LENGTH = 37;
 
     void Awake() {
 		level = _level;
@@ -251,28 +250,27 @@ public sealed class Ship : MonoBehaviour {
     }
 
     #region save-load system
-    public List<byte> GetShipSerializer()
+    public List<byte> Save()
     {
         byte zero = 0, one = 1;
         var data = new List<byte>() {
-            level,              // 0
-            (byte)type,         // 1
-            docked ? one : zero //2
+            level,              
+            (byte)type,         
+            docked ? one : zero 
         };
         Transform t = transform;
-        data.AddRange(System.BitConverter.GetBytes(t.position.x)); // 3 - 6
-        data.AddRange(System.BitConverter.GetBytes(t.position.y)); // 7 - 10
-        data.AddRange(System.BitConverter.GetBytes(t.position.z)); // 11 - 14
+        data.AddRange(System.BitConverter.GetBytes(t.position.x)); // 0 -3
+        data.AddRange(System.BitConverter.GetBytes(t.position.y)); // 4 - 7
+        data.AddRange(System.BitConverter.GetBytes(t.position.z)); // 8- 11
 
-        data.AddRange(System.BitConverter.GetBytes(t.rotation.x)); // 15 - 18
-        data.AddRange(System.BitConverter.GetBytes(t.rotation.y)); // 19 - 22
-        data.AddRange(System.BitConverter.GetBytes(t.rotation.z)); // 23 - 26
-        data.AddRange(System.BitConverter.GetBytes(t.rotation.w)); // 27 - 30
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.x)); // 12 - 15
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.y)); // 16 - 19
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.z)); // 20- 23
+        data.AddRange(System.BitConverter.GetBytes(t.rotation.w)); // 24 - 27
 
-        data.AddRange(System.BitConverter.GetBytes(speed));        // 31 - 34
-        data.Add(unloaded ? one : zero);    // 35
-        data.Add(xAxisMoving ? one : zero); // 36
-        //SERIALIZER_LENGTH = 37
+        data.AddRange(System.BitConverter.GetBytes(speed));        // 28 - 31
+        data.Add(unloaded ? one : zero);    // 32
+        data.Add(xAxisMoving ? one : zero); // 33
         return data;
     }
 
@@ -284,7 +282,8 @@ public sealed class Ship : MonoBehaviour {
         s.level = slevel;
         s.type = stype;
         s.destination = d;
-        if (s.destination != null && !s.destination.IsDestroyed()) s.docked = fs.ReadByte() == 1;
+        bool isDocked = fs.ReadByte() == 1;
+        if (s.destination != null && !s.destination.IsDestroyed()) s.docked = isDocked;
         else s.docked = false;
         var data = new byte[34];
         fs.Read(data, 0, data.Length);

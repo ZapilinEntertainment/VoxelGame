@@ -290,7 +290,7 @@ public sealed class QuestUI : MonoBehaviour
             case Knowledge.ResearchRoute.Foundation: qt = QuestType.Foundation; break;
             case Knowledge.ResearchRoute.CloudWhale: qt = QuestType.CloudWhale; break;
             case Knowledge.ResearchRoute.Engine: qt = QuestType.Engine; break;
-            case Knowledge.ResearchRoute.Pipes: qt = QuestType.Pipe; break;
+            case Knowledge.ResearchRoute.Pipes: qt = QuestType.Pipes; break;
             case Knowledge.ResearchRoute.Crystal: qt = QuestType.Crystal; break;
             case Knowledge.ResearchRoute.Monument: qt = QuestType.Monument; break;
             case Knowledge.ResearchRoute.Blossom: qt = QuestType.Blossom; break;

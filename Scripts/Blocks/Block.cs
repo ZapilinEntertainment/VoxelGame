@@ -51,14 +51,21 @@ public sealed class Block {
         }
         else fs.WriteByte(0);
     }
-    public static Block Load(System.IO.FileStream fs, Chunk c)
+    public static bool TryToLoadBlock(System.IO.FileStream fs, Chunk c, ref Block b)
     {
-        var b = new Block(c, new ChunkPos(fs.ReadByte(), fs.ReadByte(), fs.ReadByte()));
+        b = new Block(c, new ChunkPos(fs.ReadByte(), fs.ReadByte(), fs.ReadByte()));
+        var csize = Chunk.chunkSize;
+        if (b.pos.x >= csize  | b.pos.y >= csize | b.pos.z >= csize)
+        {
+            Debug.Log("block load error - wrong position");
+            GameMaster.LoadingFail();
+            return false;
+        }
         if (fs.ReadByte() == 1)
         {
             b.extension = BlockExtension.Load(fs, b);
         }
-        return b;
+        return true;
     }
     #endregion
 

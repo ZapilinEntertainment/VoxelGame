@@ -1312,12 +1312,19 @@ public sealed partial class Chunk : MonoBehaviour
         else
         {
             blocks = new Dictionary<ChunkPos, Block>();
-            Block b;
+            Block b = null;            
             for (int i = 0; i < blocksCount; i++)
             {
-                b = Block.Load(fs, this);
-                if (b != null) {
+                //List<Structure> prevstrs = null;
+                if (Block.TryToLoadBlock(fs, this, ref b))
+                {
                     blocks.Add(b.pos, b);
+                    //b.TryGetStructuresList(ref prevstrs);
+                }
+                else
+                {
+                    Debug.Log("chunk load error - block data corrupted");
+                    //if (prevstrs != null) { foreach (var s in prevstrs) Debug.Log(s.name); }
                 }
             }
         }
@@ -1335,6 +1342,7 @@ public sealed partial class Chunk : MonoBehaviour
         
         RenderDataFullRecalculation();
         FollowingCamera.main.WeNeedUpdate();
+        Debug.Log("chunk load success");
     }
     #endregion
 

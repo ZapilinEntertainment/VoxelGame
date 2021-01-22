@@ -622,7 +622,7 @@ public sealed partial class Chunk : MonoBehaviour {
 
     private void ShadowsUpdate()
     {
-        var count = renderers.Count;
+        var count = renderers?.Count ?? 0;
         if (count > 0)
         {
             CombineInstance[] ci = new CombineInstance[count];

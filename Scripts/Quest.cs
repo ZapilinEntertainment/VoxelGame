@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Foundation, CloudWhale, Engine, Pipe, Crystal, Monument, Blossom, Pollen, Endgame, Total
+    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte
@@ -168,31 +168,14 @@ public class Quest
                 if (subID == NO_QUEST_SUBINDEX) name = "no quest";
                 else name = "awaiting quest";
                 break;
-        }
-        steps = new string[stepsCount];
-        stepsAddInfo = new string[stepsCount];
-        stepsFinished = new bool[stepsCount];
-        Localization.FillQuestData(this);
-    }
-    public Quest(Knowledge.ResearchRoute rr, byte subID)
-    {
-        subIndex = subID;
-        int stepsCount = 1, pointBoosterIndex = (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost;
-        var gmap = GameMaster.realMaster.globalMap;
-        switch (rr)
-        {
-            case Knowledge.ResearchRoute.Foundation:
-                type = QuestType.Foundation;
+            case QuestType.Foundation:
                 break;
-            case Knowledge.ResearchRoute.CloudWhale:
-                type = QuestType.CloudWhale;
-                if (subIndex == pointBoosterIndex) gmap.pointsExploringEvent += PointEventCheck;
+            case QuestType.CloudWhale:
+                if (subIndex == (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost) GameMaster.realMaster.globalMap.pointsExploringEvent += PointEventCheck;
                 break;
-            case Knowledge.ResearchRoute.Engine:
-                type = QuestType.Engine;
+            case QuestType.Engine:
                 break;
-            case Knowledge.ResearchRoute.Pipes:
-                type = QuestType.Pipe;
+            case QuestType.Pipes:
                 switch ((Knowledge.PipesRouteBoosters)subID)
                 {
                     case Knowledge.PipesRouteBoosters.FarmsBoost: stepsCount = 2; break;
@@ -200,27 +183,39 @@ public class Quest
                     case Knowledge.PipesRouteBoosters.SizeBoost: stepsCount = 3; break;
                 }
                 break;
-            case Knowledge.ResearchRoute.Crystal:
-                type = QuestType.Crystal;
+            case QuestType.Crystal:
                 break;
-            case Knowledge.ResearchRoute.Monument:
-                type = QuestType.Monument;
+            case QuestType.Monument:
                 switch ((Knowledge.MonumentRouteBoosters)subID)
                 {
                     case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost: stepsCount = 2; break;
                 }
                 break;
-            case Knowledge.ResearchRoute.Pollen:
-                type = QuestType.Pollen;
+            case QuestType.Blossom:
                 break;
-            case Knowledge.ResearchRoute.Blossom:
-                type = QuestType.Blossom;
+            case QuestType.Pollen:
                 break;
         }
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         Localization.FillQuestData(this);
+    }
+    public Quest(Knowledge.ResearchRoute rr, byte subID) : this(RouteToQuestType(rr), subID) { }
+    private static QuestType RouteToQuestType(Knowledge.ResearchRoute rr)
+    {
+        switch (rr)
+        {
+            case Knowledge.ResearchRoute.Foundation: return QuestType.Foundation;
+            case Knowledge.ResearchRoute.CloudWhale: return QuestType.CloudWhale;
+            case Knowledge.ResearchRoute.Engine: return QuestType.Engine;
+                case Knowledge.ResearchRoute.Pipes: return QuestType.Pipes;
+            case Knowledge.ResearchRoute.Crystal: return QuestType.Crystal;
+            case Knowledge.ResearchRoute.Monument: return QuestType.Monument;
+            case Knowledge.ResearchRoute.Blossom: return QuestType.Blossom;
+            case Knowledge.ResearchRoute.Pollen: return QuestType.Pollen;
+            default: return QuestType.System;
+        }
     }
 
     private void PointEventCheck(MapPoint mp)
@@ -241,7 +236,7 @@ public class Quest
                         if (type == QuestType.Engine && subIndex == (byte)Knowledge.EngineRouteBoosters.PointBoost) MakeQuestCompleted();
                         break;
                     case Knowledge.ResearchRoute.Pipes:
-                        if (type == QuestType.Pipe && subIndex == (byte)Knowledge.PipesRouteBoosters.PointBoost) MakeQuestCompleted();
+                        if (type == QuestType.Pipes && subIndex == (byte)Knowledge.PipesRouteBoosters.PointBoost) MakeQuestCompleted();
                         break;
                     case Knowledge.ResearchRoute.Crystal:
                         if (type == QuestType.Crystal && subIndex == (byte)Knowledge.CrystalRouteBoosters.PointBoost) MakeQuestCompleted();
@@ -391,7 +386,7 @@ public class Quest
                                 if (b == null) continue;
                                 else
                                 {
-                                    if (b.ID == Structure.GRPH_REACTOR_4_ID)
+                                    if (b.ID == Structure.GRPH_REACTOR_4_ID || b.ID == Structure.REACTOR_BLOCK_5_ID)
                                     {
                                         MakeQuestCompleted();
                                         break;
@@ -700,7 +695,7 @@ public class Quest
                                 var ic = DockSystem.GetImmigrantsTotalCount();
                                 var nic = Knowledge.R_F_IMMIGRANTS_CONDITION;
                                 stepsAddInfo[0] = ic.ToString() + " / " + nic.ToString();
-                                if (ic == nic) MakeQuestCompleted();
+                                if (ic >= nic) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.FoundationRouteBoosters.PopulationBoost:
@@ -839,7 +834,7 @@ public class Quest
                     }
                     break;
                 }
-            case QuestType.Pipe:
+            case QuestType.Pipes:
                 {
                     switch((Knowledge.PipesRouteBoosters)subIndex)
                     {
@@ -911,7 +906,9 @@ public class Quest
                             }
                         case Knowledge.PipesRouteBoosters.FuelBoost:
                             {
-                                if (GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID] >= Knowledge.R_P_FUEL_CONDITION) MakeQuestCompleted();
+                                int v = (int)GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID];
+                                stepsAddInfo[0] = v.ToString() + " / " + ((int)Knowledge.R_P_FUEL_CONDITION).ToString();
+                                if (v >= Knowledge.R_P_FUEL_CONDITION) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.PipesRouteBoosters.BiomesBoost:
@@ -1390,7 +1387,7 @@ public class Quest
                 icon = UIController.current.iconsTexture;
                 iconRect = UIController.GetIconUVRect(Icons.EngineRoute);
                 break;
-            case QuestType.Pipe:
+            case QuestType.Pipes:
                 icon = UIController.current.iconsTexture;
                 iconRect = UIController.GetIconUVRect(Icons.PipesRoute);
                 break;

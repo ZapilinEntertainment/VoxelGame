@@ -3257,7 +3257,7 @@ public static class Localization
                                 }
                                 break;
                             }
-                        case QuestType.Pipe:
+                        case QuestType.Pipes:
                             {
                                 switch ((Knowledge.PipesRouteBoosters)q.subIndex)
                                 {
@@ -3601,7 +3601,7 @@ public static class Localization
                                 }
                                 break;
                             }
-                        case QuestType.Pipe:
+                        case QuestType.Pipes:
                             {
                                 switch ((Knowledge.PipesRouteBoosters)q.subIndex)
                                 {
