@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UICrewObserver : MonoBehaviour
+public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
 {
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
@@ -18,29 +18,34 @@ public sealed class UICrewObserver : MonoBehaviour
     private bool subscribedToUpdate = false;
     private int lastDrawState = 0;
     private Crew observingCrew;
+    private static UICrewObserver _currentObserver;
 
-
-    public void SetPosition(Rect r, SpriteAlignment alignment)
+    public static UICrewObserver GetCrewObserver()
     {
-        var rt = GetComponent<RectTransform>();
-        rt.position = r.position;
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
-        Vector2 correctionVector = Vector2.zero;
-        switch (alignment)
+        if (_currentObserver == null)
         {
-            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
-            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
-            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height);break;
-            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height);break;
-            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
-            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f);break;
-            case SpriteAlignment.TopLeft:   correctionVector = Vector2.down * rt.rect.height;  break;
-            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
-        }        
-        rt.anchoredPosition += correctionVector;
+            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
+            _currentObserver.LocalizeTitles();
+        }
+        return _currentObserver;
+    }
+    public static void Show(RectTransform window, SpriteAlignment alignment, Crew c, bool useCloseButton)
+    {
+        Show(window, window.rect, alignment, c, useCloseButton);
+    }
+    public static void Show(RectTransform window, Rect r, SpriteAlignment alignment, Crew c, bool useCloseButton)
+    {
+        var co = GetCrewObserver();
+        if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
+        co.SetPosition(window, r, alignment);
+        co.ShowCrew(c, useCloseButton);
     }
 
+    private void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment)
+    {
+        var rt = GetCrewObserver().GetComponent<RectTransform>();
+        UIController.PositionElement(rt, parent, alignment, r);
+    }
     public void ShowCrew(Crew c, bool useCloseButton)
     {
         if (c == null)
@@ -53,6 +58,27 @@ public sealed class UICrewObserver : MonoBehaviour
             RedrawWindow();
             closeButton.SetActive(useCloseButton);
         }
+    }
+
+    public static void DisableObserver()
+    {
+        if (_currentObserver != null) _currentObserver.gameObject.SetActive(false);
+    }
+    public void ClearInfo(Crew c)
+    {
+        if (_currentObserver != null && _currentObserver.observingCrew == c)
+        {
+            _currentObserver.gameObject.SetActive(false);
+        }
+    }
+    public static void DestroyObserver()
+    {
+        if (_currentObserver != null) Destroy(_currentObserver.gameObject);
+    }
+
+    public static void Refresh()
+    {
+        if (_currentObserver != null) _currentObserver.RedrawWindow();
     }
     public void RedrawWindow()
     {
@@ -129,7 +155,6 @@ public sealed class UICrewObserver : MonoBehaviour
         }
         lastDrawState = observingCrew.changesMarkerValue ;
     }
-
     public void StatusUpdate()
     {
 

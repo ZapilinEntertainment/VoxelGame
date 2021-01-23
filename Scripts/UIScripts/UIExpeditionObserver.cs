@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIExpeditionObserver : MonoBehaviour
+public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Expedition>
 {
 #pragma warning disable 0649
     [SerializeField] private Dropdown crewDropdown;
@@ -35,17 +35,41 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private Crew selectedCrew;
     private List<int> crewsIDs;
 
+    private static UIExpeditionObserver _currentObserver;
     private readonly Color lightcyan = new Color(0.5f, 1f, 0.95f), halfred = new Color(1f,0f,0f,0.5f);
     private const int FUEL_BASE_COST = 5;
 
     private void Awake()
     {
-        colony = GameMaster.realMaster.colonyController;
+        colony = GameMaster.realMaster?.colonyController;
         suppliesSlider.minValue = Expedition.MIN_SUPPLIES_COUNT;
         suppliesSlider.maxValue = Expedition.MAX_SUPPLIES_COUNT;
         crystalsSlider.maxValue = Expedition.MAX_START_CRYSTALS;
     }
-    public void SetPosition(Rect r, SpriteAlignment alignment, bool drawOnMainCanvas)
+
+    public static UIExpeditionObserver GetObserver()
+    {
+        if (_currentObserver == null)
+        {
+            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"),
+                UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
+        }
+        return _currentObserver;
+    }
+    public static void Show(RectTransform window, SpriteAlignment alignment, Expedition e, bool useCloseButton)
+    {
+        Show(window, window.rect, alignment, c, useCloseButton);
+    }
+    public static void Show(RectTransform window, Rect r, SpriteAlignment alignment, Expedition e, bool useCloseButton)
+    {
+        var co = GetCrewObserver();
+        if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
+        co.SetPosition(window, r, alignment);
+        co.ShowCrew(c, useCloseButton);
+    }
+
+    public static void Show(Expedition e)
+    private void SetPosition(Rect r, RectTransform parent, SpriteAlignment alignment, bool drawOnMainCanvas)
     {
         var rt = GetComponent<RectTransform>();
         if (workOnMainCanvas != drawOnMainCanvas)
@@ -54,24 +78,8 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             workOnMainCanvas = drawOnMainCanvas;
             closeButton.SetActive(!workOnMainCanvas);
         }
-        rt.position = r.position;
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
-        Vector2 correctionVector = Vector2.zero;
-        switch (alignment)
-        {
-            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
-            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
-            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height); break;
-            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height); break;
-            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
-            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f); break;
-            case SpriteAlignment.TopLeft: correctionVector = Vector2.down * rt.rect.height; break;
-            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
-        }
-        rt.anchoredPosition += correctionVector;
+        UIController.PositionElement(rt, parent, alignment, r);
     }
-
     public void Show(Expedition e)
     {
         if (e == null) gameObject.SetActive(false);

@@ -674,7 +674,7 @@ public sealed class GlobalMap : MonoBehaviour
     public void MapInterfaceDisabled()
     {
         mapInterfaceActive = false;
-        GameMaster.realMaster.environmentMaster.EnableDecorations();
+       if (!Application.isPlaying) GameMaster.realMaster.environmentMaster.EnableDecorations();
     }
 
     public void FORCED_CreatePointOfInterest()

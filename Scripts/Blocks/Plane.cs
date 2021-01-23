@@ -653,7 +653,11 @@ public class Plane
                     GameMaster.realMaster.colonyController.RemoveWorksite(this);
                     haveWorksite = false;
                 }
-                if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX) host.GetBlock().myChunk.needSurfacesUpdate = true;
+                if (faceIndex == Block.UP_FACE_INDEX | faceIndex == Block.SURFACE_FACE_INDEX)
+                {
+                    var b = host?.GetBlock();
+                    if (b!= null) b.myChunk.needSurfacesUpdate = true;
+                }
             }
         }
     } 

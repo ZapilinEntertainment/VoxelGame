@@ -10,7 +10,6 @@ public sealed class Expedition
     public static byte listChangesMarker { get; private set; }
     public static uint expeditionsLaunched { get; private set; }
     public static uint expeditionsSucceed { get; private set; }
-    private static UIExpeditionObserver _observer;
     public static int nextID { get; private set; } // в сохранение
 
     public readonly int ID;
@@ -68,15 +67,6 @@ public sealed class Expedition
                 }
             }
         }
-    }
-    public static UIExpeditionObserver GetObserver()
-    {
-        if (_observer == null)
-        {
-            _observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"), 
-                UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
-        }
-        return _observer;
     }
 
     public override bool Equals(object obj)
@@ -268,14 +258,6 @@ public sealed class Expedition
     {
         if (GameMaster.realMaster.weNeedNoResources) return;
         if ( suppliesCount > 0) suppliesCount --;
-    }
-
-    public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool onMainCanvas)
-    {
-        var ob = GetObserver();
-        if (!ob.isActiveAndEnabled) ob.gameObject.SetActive(true);
-        ob.SetPosition(r, alignment, onMainCanvas);
-        ob.Show(this);
     }
 
     public void Dismiss() // экспедиция вернулась домой и распускается

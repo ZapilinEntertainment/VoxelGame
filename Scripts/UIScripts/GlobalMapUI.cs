@@ -212,7 +212,7 @@ public sealed class GlobalMapUI : MonoBehaviour
                         ph = Screen.height * 0.75f, sz = ph;
                         if (pw < ph) sz = pw;
                         if (!ob.gameObject.activeSelf) ob.gameObject.SetActive(true);
-                        ob.SetPosition(new Rect(pw, Screen.height / 2f, sz, sz), SpriteAlignment.RightCenter, false);
+                        ob.SetPosition(new Rect(pw / 2f, ph / 2f, sz, sz),mapCanvas.GetComponent<RectTransform>(), SpriteAlignment.Center, false);
                         ob.Show(poi);
                     }
                     else

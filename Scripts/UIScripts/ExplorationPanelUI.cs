@@ -7,10 +7,11 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 {
     private enum InfoMode { Inactive,Expeditions, Crews, Artifacts};
 #pragma warning disable 0649
-    [SerializeField] private GameObject emptyPanel, listHolder;
+    [SerializeField] private GameObject observerPanel, listHolder;
     [SerializeField] private GameObject[] items;
     [SerializeField] private Scrollbar scrollbar;
     [SerializeField] private Image expeditionButtonImage, crewButtonImage, artifactButtonImage;
+    [SerializeField] private Text emptyPanelText;
 #pragma warning restore 0649
 
     public static ExplorationPanelUI current { get; private set; }
@@ -23,6 +24,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     private Expedition showingExpedition;
     private InfoMode mode;
     private List<int> listIDs;
+    
 
     public static void Initialize()
     {
@@ -57,10 +59,10 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     else
                     {
                         var e = Expedition.expeditionsList[realIndex];
-                        var ert = emptyPanel.GetComponent<RectTransform>();
-                        e.ShowOnGUI(new Rect(ert.position, ert.rect.size), SpriteAlignment.TopLeft, true);
+                        var ert = observerPanel.GetComponent<RectTransform>();
+                        e.ShowOnGUI(ert.rect, ert, SpriteAlignment.BottomLeft, true);
                         activeObserver = Expedition.GetObserver().gameObject;
-                        if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
+                        if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     }
                     break;
                 }
@@ -69,12 +71,10 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     if (realIndex >= Crew.crewsList.Count) PrepareCrewsList();
                     else
                     {
-                        var e = Crew.crewsList[realIndex];
-                        var ert = emptyPanel.GetComponent<RectTransform>();
-                        var r = new Rect(ert.position, ert.rect.size);
-                        e.ShowOnGUI(r, SpriteAlignment.TopLeft, false);
-                        activeObserver = Crew.crewObserver.gameObject;
-                        if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
+                        var ert = observerPanel.GetComponent<RectTransform>();
+                        UICrewObserver.Show(ert, ert.rect,  SpriteAlignment.BottomLeft, Crew.crewsList[realIndex], false);
+                        activeObserver = UICrewObserver.GetCrewObserver().gameObject;
+                        if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     }
                     break;
                 }
@@ -83,11 +83,11 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 else
                 {
                     var e = Artifact.artifactsList[realIndex];
-                    var ert = emptyPanel.GetComponent<RectTransform>();
-                    var r = new Rect(ert.position, ert.rect.size);
-                    e.ShowOnGUI(r, SpriteAlignment.TopLeft, false);
+                    var ert = observerPanel.GetComponent<RectTransform>();
+                    var r = new Rect(ert.localPosition, ert.rect.size * ert.localScale.x);
+                    e.ShowOnGUI( ert, r, SpriteAlignment.BottomLeft, false);
                     activeObserver = Artifact.observer.gameObject;
-                    if (emptyPanel.activeSelf) emptyPanel.SetActive(false);
+                    if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                 }
                 break;
         }
@@ -412,7 +412,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
                         if (Crew.crewsList.Count != 0)
                         {
-                            var ert = emptyPanel.GetComponent<RectTransform>();
+                            var ert = observerPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
                             SelectItem(0);
                         }
@@ -423,8 +423,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                                 activeObserver.SetActive(false);
                                 activeObserver = null;
                             }
-                            emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoCrews);
-                            emptyPanel.SetActive(true);
+                            observerPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoCrews);
+                            if (!emptyPanelText.enabled) emptyPanelText.enabled = true;
                         }
                         lastDrawnActionHash = Crew.listChangesMarkerValue;
                         break;
@@ -436,7 +436,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
                         if (Artifact.artifactsList.Count != 0)
                         {
-                            var ert = emptyPanel.GetComponent<RectTransform>();
+                            var ert = observerPanel.GetComponent<RectTransform>();
                             var r = new Rect(ert.position, ert.rect.size);
                             SelectItem(0);
                         }
@@ -447,8 +447,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                                 activeObserver.SetActive(false);
                                 activeObserver = null;
                             }
-                            emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoArtifacts);
-                            emptyPanel.SetActive(true);
+                            observerPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoArtifacts);
+                            if (!emptyPanelText.enabled) emptyPanelText.enabled = true;
                         }
                         lastDrawnActionHash = Artifact.listChangesMarkerValue;
                         break;
@@ -460,7 +460,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
                         if (Expedition.expeditionsList.Count != 0)
                         {
-                            var ert = emptyPanel.GetComponent<RectTransform>();
+                            var ert = observerPanel.GetComponent<RectTransform>();
                             SelectItem(0);
                         }
                         else
@@ -470,8 +470,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                                 activeObserver.SetActive(false);
                                 activeObserver = null;
                             }
-                            emptyPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoExpeditions);
-                            emptyPanel.SetActive(true);
+                            observerPanel.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoExpeditions);
+                            if (!emptyPanelText.enabled) emptyPanelText.enabled = true;
                         }
                         lastDrawnActionHash = Expedition.listChangesMarker;
                         break;

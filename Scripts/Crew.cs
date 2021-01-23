@@ -14,7 +14,6 @@ public sealed class Crew : MonoBehaviour {
     public static byte listChangesMarkerValue { get; private set; }
     public static List<Crew> crewsList { get; private set; }
     private static GameObject crewsContainer;
-    public static UICrewObserver crewObserver { get; private set; }
 
     public bool atHome { get; private set; }
 	public byte membersCount {get;private set;}
@@ -107,22 +106,6 @@ public sealed class Crew : MonoBehaviour {
             }
             return null;
         }
-    }
-    public static void DisableObserver()
-    {
-        if (crewObserver != null && crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(false);
-    }
-
-    public void ShowOnGUI(Rect rect, SpriteAlignment alignment, bool useCloseButton) 
-    {
-        if (crewObserver == null)
-        {
-           crewObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
-            crewObserver.LocalizeTitles();
-        }
-        if (!crewObserver.gameObject.activeSelf) crewObserver.gameObject.SetActive(true);
-        crewObserver.SetPosition(rect, alignment);
-        crewObserver.ShowCrew(this, useCloseButton);
     }
 
     public void Rename(string s)
@@ -606,7 +589,7 @@ public sealed class Crew : MonoBehaviour {
     }
     private void OnDestroy()
     {
-        if (crewsList.Count == 0 & crewObserver != null) Destroy(crewObserver);
+        if (crewsList.Count == 0) UICrewObserver.DestroyObserver();
     }
 
     #region save-load system

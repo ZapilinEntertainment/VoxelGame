@@ -201,7 +201,9 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
         if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
         else
         {
-            myBlock.myChunk.DeleteBlock(myBlock.pos, compensateResources);
+            var b = myBlock;
+            myBlock = null;
+            b.myChunk.DeleteBlock(b.pos, compensateResources);
         }
     }
     #endregion

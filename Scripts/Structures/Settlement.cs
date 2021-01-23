@@ -1009,7 +1009,7 @@ public sealed class Settlement : House
             {
                 if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
-                    (s as SettlementStructure).SetActivationStatus(false);
+                    s.Annihilate(clearFromSurface, returnResources, leaveRuins);
                 }
             }
         }

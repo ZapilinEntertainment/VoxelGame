@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIArtifactPanel : MonoBehaviour {
+public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
     [SerializeField] private GameObject[] items;
     [SerializeField] private Image affectionIcon;
     [SerializeField] private RawImage mainIcon;
@@ -84,25 +84,10 @@ public class UIArtifactPanel : MonoBehaviour {
         }
     }
 
-    public void SetPosition(Rect r, SpriteAlignment alignment)
+    public void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment)
     {
         var rt = GetComponent<RectTransform>();
-        rt.position = r.position;
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
-        Vector2 correctionVector = Vector2.zero;
-        switch (alignment)
-        {
-            case SpriteAlignment.BottomRight: correctionVector = Vector2.left * rt.rect.width; break;
-            case SpriteAlignment.RightCenter: correctionVector = new Vector2(-1f * rt.rect.width, -0.5f * rt.rect.height); break;
-            case SpriteAlignment.TopRight: correctionVector = new Vector2(-1f * rt.rect.width, -1f * rt.rect.height); break;
-            case SpriteAlignment.Center: correctionVector = new Vector2(-0.5f * rt.rect.width, -0.5f * rt.rect.height); break;
-            case SpriteAlignment.TopCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, -1f * rt.rect.height); break;
-            case SpriteAlignment.BottomCenter: correctionVector = new Vector2(-0.5f * rt.rect.width, 0f); break;
-            case SpriteAlignment.TopLeft: correctionVector = Vector2.down * rt.rect.height; break;
-            case SpriteAlignment.LeftCenter: correctionVector = Vector2.down * rt.rect.height * 0.5f; break;
-        }
-        rt.anchoredPosition += correctionVector;
+        UIController.PositionElement(parent,rt, alignment, r);
     }
     public void ShowArtifact(Artifact a, bool useCloseButton)
     {

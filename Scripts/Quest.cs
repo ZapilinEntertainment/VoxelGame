@@ -435,12 +435,12 @@ public class Quest
                             {
                                 completeness++;
                                 stepsFinished[3] = true;
-                                stepsAddInfo[1] = count.ToString() + "/1";
+                                stepsAddInfo[3] = count.ToString() + "/1";
                             }
                             else
                             {
                                 stepsFinished[3] = false;
-                                stepsAddInfo[1] = "0/1";
+                                stepsAddInfo[3] = "0/1";
                             }
                             // expeditions
                             if (Expedition.expeditionsLaunched > 0)
@@ -724,6 +724,11 @@ public class Quest
                                         }
                                     }
                                 }
+                                break;
+                            }
+                        case Knowledge.FoundationRouteBoosters.HotelBoost:
+                            {
+                                if (colony.GetBuildingsCount(Structure.HOTEL_BLOCK_6_ID) > 0) MakeQuestCompleted();
                                 break;
                             }
                     }

@@ -413,26 +413,13 @@ public sealed partial class Chunk : MonoBehaviour {
         int pcount = processingIndexes.Count;
         if (pcount > 0)
         {
-            var ci = new CombineInstance[pcount];
-            Mesh m;
-            BlockpartVisualizeInfo cdata;
-            for (int j = 0; j < pcount; j++)
-            {
-                cdata = blockVisualizersList[processingIndexes[j]];
-                m = MeshMaster.GetMesh(cdata.meshType, cdata.materialID);
-                ci[j].mesh = m;
-                ci[j].transform = cdata.GetPositionMatrix();
-            }
-
+            Mesh visibleMesh = new Mesh(), colliderMesh = new Mesh();
+            INLINE_CombineMeshes(ref processingIndexes, ref visibleMesh, ref colliderMesh);
             GameObject g = new GameObject();
-            m = new Mesh();
-            m.CombineMeshes(ci, true); // все подмеши используют один материал
-
             //удаление копий вершин на стыках - отменено из-за uv
 
             var mf = g.AddComponent<MeshFilter>();
-            mf.sharedMesh = m;
-
+            mf.sharedMesh = visibleMesh;
             var mr = g.AddComponent<MeshRenderer>();
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.receiveShadows = PoolMaster.shadowCasting;
@@ -442,10 +429,35 @@ public sealed partial class Chunk : MonoBehaviour {
             else mr.sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
 
             g.transform.parent = renderersHolders[mvi.faceIndex].transform;
-            g.AddComponent<MeshCollider>().sharedMesh = m;
+            g.AddComponent<MeshCollider>().sharedMesh = colliderMesh;
             g.tag = BLOCK_COLLIDER_TAG;
 
             renderers.Add(mvi, g);
+        }
+    }
+    private void INLINE_CombineMeshes( ref List<int> indexes, ref Mesh visibleMesh, ref Mesh colliderMesh)
+    {
+        int count = indexes.Count;
+        if (count > 0)
+        {            
+            CombineInstance[] visibleCI = new CombineInstance[count], colliderCI = new CombineInstance[count];
+            Mesh m;
+            BlockpartVisualizeInfo bvi;
+            Matrix4x4 mtr;
+            for (int i = 0; i < count; i++)
+            {
+                bvi = blockVisualizersList[indexes[i]];
+                m = MeshMaster.GetMesh(bvi.meshType, bvi.materialID);
+                visibleCI[i].mesh = m;
+                visibleCI[i].transform = bvi.GetPositionMatrix();
+                mtr = bvi.GetPositionMatrix();
+                visibleCI[i].transform = mtr;
+                colliderCI[i].mesh = bvi.meshType == MeshType.Quad ? m : MeshMaster.GetMeshColliderLink(bvi.meshType);
+                colliderCI[i].transform = mtr;
+            }
+            
+            visibleMesh.CombineMeshes(visibleCI, true); // все подмеши используют один материал            
+            colliderMesh.CombineMeshes(colliderCI);
         }
     }
     private void RedrawRenderer(MeshVisualizeInfo mvi)
@@ -466,26 +478,10 @@ public sealed partial class Chunk : MonoBehaviour {
                 n = indexes.Count;
                 if (n > 0)
                 {
-                    CombineInstance[] cir = new CombineInstance[n], cic = new CombineInstance[n];
-                    BlockpartVisualizeInfo bvi;
-                    Mesh cm;
-                    Matrix4x4 mtr;
-                    for (int i = 0; i < n; i++)
-                    {
-                        bvi = blockVisualizersList[indexes[i]];
-                        cm = MeshMaster.GetMesh(bvi.meshType, bvi.materialID);
-                        cir[i].mesh = cm;
-                        mtr = bvi.GetPositionMatrix();
-                        cir[i].transform = mtr;
-                        cic[i].mesh = bvi.meshType == MeshType.Quad ? cm : MeshMaster.GetMeshColliderLink(bvi.meshType);
-                        cic[i].transform = mtr;
-                    }
-                    cm = new Mesh();
-                    cm.CombineMeshes(cir);
-                    g.GetComponent<MeshFilter>().sharedMesh = cm;
-                    cm = new Mesh();
-                    cm.CombineMeshes(cic);
-                    g.GetComponent<MeshCollider>().sharedMesh = cm;
+                    Mesh visibleMesh = new Mesh(), colliderMesh = new Mesh();
+                    INLINE_CombineMeshes(ref indexes, ref visibleMesh, ref colliderMesh);
+                    g.GetComponent<MeshFilter>().sharedMesh = visibleMesh;
+                    g.GetComponent<MeshCollider>().sharedMesh = colliderMesh;
                     if (PoolMaster.useIlluminationSystem) g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType, mvi.illumination);
                     else g.GetComponent<MeshRenderer>().sharedMaterial = PoolMaster.GetMaterial(mvi.materialType);
                 }

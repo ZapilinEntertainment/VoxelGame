@@ -66,7 +66,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             infoButton.SetActive(false);
             replenishButton.SetActive(false);
             membersText.enabled = false;
-            Crew.DisableObserver();
+            UICrewObserver.DisableObserver();
         }
         else
         {
@@ -83,7 +83,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             membersText.text = Localization.GetPhrase(LocalizedPhrase.MembersCount) + ": " + showingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
             membersText.enabled = true;
 
-            if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) Crew.crewObserver.RedrawWindow();
+            UICrewObserver.Refresh();
         }
     }
 
@@ -144,7 +144,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             showingCrew = Crew.GetCrewByID(crewsIDsList[i]);
             if (showingCrew != null)
             {
-                if (Crew.crewObserver != null && Crew.crewObserver.isActiveAndEnabled) InfoButton();
+                InfoButton();
                 if (!infoButton.activeSelf) infoButton.SetActive(true);
                 if (showingCrew.membersCount < Crew.MAX_MEMBER_COUNT & !replenishButton.activeSelf) replenishButton.SetActive(true);
             }
@@ -178,7 +178,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             if (f > screenrect.height * 0.7f) f = screenrect.height * 0.7f;
             
             var r = new Rect(new Vector2(xpos, 50f), new Vector2(f,f));
-            showingCrew.ShowOnGUI(r, SpriteAlignment.BottomRight, true );
+            UICrewObserver.Show((RectTransform)UIController.current.mainCanvas,r, SpriteAlignment.BottomRight, showingCrew, true );
         }
     }
     public void ReplenishButton()

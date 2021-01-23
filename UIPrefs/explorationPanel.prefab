@@ -1156,7 +1156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 428b1d6babfa7c84d9652c11cc779c2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emptyPanel: {fileID: 5671028106123426057}
+  observerPanel: {fileID: 5671028106123426057}
   listHolder: {fileID: 5671028107379120758}
   items:
   - {fileID: 5671028107132084246}
@@ -1173,6 +1173,7 @@ MonoBehaviour:
   expeditionButtonImage: {fileID: 5671028106909473485}
   crewButtonImage: {fileID: 5671028106344246934}
   artifactButtonImage: {fileID: 5671028106622583968}
+  emptyPanelText: {fileID: 5671028106706452138}
 --- !u!222 &5151586048616420044
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1695,7 +1696,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5671028106706452139
 RectTransform:
   m_ObjectHideFlags: 0

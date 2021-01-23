@@ -1233,17 +1233,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     {
         if (observingCrew != null)
         {
-            var c = Crew.crewObserver;
-            if (c != null && c.isActiveAndEnabled)
-            {
-                c.gameObject.SetActive(false);
-            }
-            else
-            {
-                var r = deckHolder.GetComponent<RectTransform>().rect;
-                observingCrew.ShowOnGUI(new Rect(deckHolder.transform.position.x, deckHolder.transform.position.y, r.width, r.height), SpriteAlignment.Center, true);
-                deckHolder.SetActive(false);
-            }
+            UICrewObserver.Show(deckHolder.GetComponent<RectTransform>(), SpriteAlignment.Center, observingCrew, true);
         }
     }
     public void EnableDeckHolder()

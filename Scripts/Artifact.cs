@@ -408,14 +408,14 @@ public sealed class Artifact {
 
     public void SetResearchStatus(bool x) { researched = x; }
 
-    public void ShowOnGUI(Rect r, SpriteAlignment alignment, bool useCloseButton)
+    public void ShowOnGUI(RectTransform parent, Rect r, SpriteAlignment alignment, bool useCloseButton)
     {
         if (observer == null)
         {
             observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
         }
         observer.gameObject.SetActive(true);
-        observer.SetPosition(r, alignment);
+        observer.SetPosition(parent,r, alignment);
         observer.ShowArtifact(this, useCloseButton);
     }
     public void Destroy()

@@ -197,8 +197,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
               break;
         }
-    }
-       
+    }       
 
     public void BuildButton() {
 		ChangeMode( SurfacePanelMode.Build );
