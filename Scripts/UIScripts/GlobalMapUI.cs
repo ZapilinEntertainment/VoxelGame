@@ -206,14 +206,12 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     if (poi.workingExpedition == null || poi.workingExpedition.stage != Expedition.ExpeditionStage.OnMission)
                     { // send expedition
-                        var ob = Expedition.GetObserver();
                         infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
                         float pw = (Screen.width - infoPanelWidth) * 0.95f,
                         ph = Screen.height * 0.75f, sz = ph;
                         if (pw < ph) sz = pw;
-                        if (!ob.gameObject.activeSelf) ob.gameObject.SetActive(true);
-                        ob.SetPosition(new Rect(pw / 2f, ph / 2f, sz, sz),mapCanvas.GetComponent<RectTransform>(), SpriteAlignment.Center, false);
-                        ob.Show(poi);
+                        UIExpeditionObserver.Show(mapCanvas.GetComponent<RectTransform>(), new Rect(Vector2.zero, sz * Vector2.one), 
+                            SpriteAlignment.Center, poi, true);
                     }
                     else
                     {
@@ -651,8 +649,7 @@ public sealed class GlobalMapUI : MonoBehaviour
     private void OnDisable()
     {
         if (globalMap != null) globalMap.MapInterfaceDisabled();
-        var g = Expedition.GetObserver().gameObject;
-        if (g.activeSelf) g.SetActive(false);
+        UIExpeditionObserver.DisableObserver();
     }
     // =====================  AUXILIARY METHODS
     public static Rect GetMarkerRect(MapMarkerType mtype)

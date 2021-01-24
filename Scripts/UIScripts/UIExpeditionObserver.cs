@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Expedition>
+public sealed class UIExpeditionObserver : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] private Dropdown crewDropdown;
@@ -30,7 +30,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
     private byte lastChangesMarkerValue = 0;
     private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
     private ColonyController colony;
-    private Expedition showingExpedition;
+    private Expedition observingExpedition;
     private PointOfInterest selectedDestination;
     private Crew selectedCrew;
     private List<int> crewsIDs;
@@ -47,6 +47,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         crystalsSlider.maxValue = Expedition.MAX_START_CRYSTALS;
     }
 
+    #region observer standart functions
     public static UIExpeditionObserver GetObserver()
     {
         if (_currentObserver == null)
@@ -56,65 +57,96 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         }
         return _currentObserver;
     }
-    public static void Show(RectTransform window, SpriteAlignment alignment, Expedition e, bool useCloseButton)
+    public static void Show(RectTransform parent, SpriteAlignment alignment, Expedition e, bool useCloseButton)
     {
-        Show(window, window.rect, alignment, c, useCloseButton);
+        Show(parent, new Rect(Vector2.zero, parent.rect.size), alignment, e, useCloseButton);
     }
-    public static void Show(RectTransform window, Rect r, SpriteAlignment alignment, Expedition e, bool useCloseButton)
+    public static void Show(RectTransform parent, SpriteAlignment alignment, PointOfInterest poi, bool useCloseButton)
     {
-        var co = GetCrewObserver();
+        Show(parent, parent.rect, alignment, poi, useCloseButton);
+    }
+    public static void Show(RectTransform parent, Rect r, SpriteAlignment alignment, Expedition e, bool useCloseButton)
+    {
+        var co = GetObserver();
         if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
-        co.SetPosition(window, r, alignment);
-        co.ShowCrew(c, useCloseButton);
+        co.SetPosition(parent, r, alignment, useCloseButton);
+        co.ShowExpedition(e, useCloseButton);
+    }
+    public static void Show(RectTransform parent, Rect r, SpriteAlignment alignment, PointOfInterest poi, bool useCloseButton)
+    {
+        var co = GetObserver();
+        if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
+        co.SetPosition(parent, r, alignment, useCloseButton);
+        co.ShowExpedition(poi, useCloseButton);
+    }
+    public static void DisableObserver()
+    {
+        if (_currentObserver != null) _currentObserver.gameObject.SetActive(false);
+    }
+    public static void DestroyObserver()
+    {
+        if (_currentObserver != null) Destroy(_currentObserver.gameObject);
+    }
+    public static void Refresh()
+    {
+        if (_currentObserver != null) _currentObserver.RedrawWindow();
     }
 
-    public static void Show(Expedition e)
-    private void SetPosition(Rect r, RectTransform parent, SpriteAlignment alignment, bool drawOnMainCanvas)
+    private void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment, bool useCloseButton)
     {
-        var rt = GetComponent<RectTransform>();
-        if (workOnMainCanvas != drawOnMainCanvas)
-        {
-            rt.transform.parent = drawOnMainCanvas ? UIController.current.mainCanvas : GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().GetMapCanvas();
-            workOnMainCanvas = drawOnMainCanvas;
-            closeButton.SetActive(!workOnMainCanvas);
-        }
+        closeButton.SetActive(useCloseButton);
+        var rt = GetObserver().GetComponent<RectTransform>();
         UIController.PositionElement(rt, parent, alignment, r);
     }
-    public void Show(Expedition e)
+    private void ShowExpedition(Expedition e, bool useCloseButton)
     {
-        if (e == null) gameObject.SetActive(false);
+        if (e == null)
+        {
+            gameObject.SetActive(false);
+        }
         else
         {
-            showingExpedition = e;
+            observingExpedition = e;
             RedrawWindow();
+            closeButton.SetActive(useCloseButton);
         }
     }
-    public void Show(PointOfInterest poi)
+    private void ShowExpedition(PointOfInterest poi, bool useCloseButton)
     {
         if (poi == null) gameObject.SetActive(false);
         else
         {
             if (poi.workingExpedition != null)
             {
-                Show(poi.workingExpedition);
+                ShowExpedition(poi.workingExpedition, useCloseButton);
                 return;
             }
             else
             {
-                showingExpedition = null;
+                observingExpedition = null;
                 selectedCrew = null;
                 selectedDestination = poi;
             }
             RedrawWindow();
         }
     }
+    public void ClearInfo(Expedition e)
+    {
+        if (_currentObserver != null && _currentObserver.observingExpedition == e)
+        {
+            _currentObserver.gameObject.SetActive(false);
+        }
+    }
+    #endregion
+
+    
 
     private void RedrawWindow()
     {
         int statedCrystalsCount = 0, statedSuppliesCount = Expedition.MIN_SUPPLIES_COUNT;
         Color redcolor = Color.red, whitecolor = Color.white;
         GameObject g;
-        if (showingExpedition == null)
+        if (observingExpedition == null)
         {
             //подготовка новой экспедиции
             expLabel.text = Localization.GetExpeditionName(selectedDestination);         
@@ -202,12 +234,12 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         else
         {
              // отрисовка существующей
-            expLabel.text = Localization.GetExpeditionName(showingExpedition);
-            statedCrystalsCount = showingExpedition.crystalsCollected;
-            statedSuppliesCount = showingExpedition.suppliesCount;
-            lastChangesMarkerValue = showingExpedition.changesMarkerValue;
+            expLabel.text = Localization.GetExpeditionName(observingExpedition);
+            statedCrystalsCount = observingExpedition.crystalsCollected;
+            statedSuppliesCount = observingExpedition.suppliesCount;
+            lastChangesMarkerValue = observingExpedition.changesMarkerValue;
 
-            crewStableName.text = showingExpedition.crew.name;
+            crewStableName.text = observingExpedition.crew.name;
             if (crewDropdown.gameObject.activeSelf)
             {
                 crewDropdown.gameObject.SetActive(false);
@@ -229,7 +261,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
                 crystalsStableValue.gameObject.SetActive(true);
             }
             //transmitter:
-            if (showingExpedition.hasConnection)
+            if (observingExpedition.hasConnection)
             {
                 transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.ConnectionOK);
@@ -247,7 +279,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
                 fuelLine.gameObject.SetActive(false);                
             }            
             //launchbutton
-            if (showingExpedition.stage == Expedition.ExpeditionStage.OnMission | showingExpedition.stage == Expedition.ExpeditionStage.WayIn)
+            if (observingExpedition.stage == Expedition.ExpeditionStage.OnMission | observingExpedition.stage == Expedition.ExpeditionStage.WayIn)
             {
                 launchButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.StopMission);
                 launchButton.GetComponent<Image>().color = halfred;
@@ -256,7 +288,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
             }
             else launchButton.gameObject.SetActive(false);
 
-            minigameButton.SetActive(showingExpedition.stage == Expedition.ExpeditionStage.OnMission);
+            minigameButton.SetActive(observingExpedition.stage == Expedition.ExpeditionStage.OnMission);
 
             preparingMode = false;
         }       
@@ -276,7 +308,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
     {
         const char quotes = '"';
         var opts = new List<Dropdown.OptionData>() { };
-        if (showingExpedition == null)
+        if (observingExpedition == null)
         {
             if (selectedCrew != null && !selectedCrew.atHome) selectedCrew = null;
             crewsIDs = new List<int>() { -1 };
@@ -319,7 +351,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         }
         else
         {
-            selectedCrew = showingExpedition.crew;
+            selectedCrew = observingExpedition.crew;
             opts.Add(new Dropdown.OptionData(quotes + selectedCrew.name + quotes));
             crewsIDs = new List<int>(selectedCrew.ID);
             crewDropdown.options = opts;
@@ -357,10 +389,10 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         if (redrawRequest) RedrawWindow();
         else
         {
-            if (showingExpedition != null)
+            if (observingExpedition != null)
             {
-                crystalsStableValue.text = showingExpedition.crystalsCollected.ToString();
-                suppliesStableValue.text = showingExpedition.suppliesCount.ToString();                
+                crystalsStableValue.text = observingExpedition.crystalsCollected.ToString();
+                suppliesStableValue.text = observingExpedition.suppliesCount.ToString();                
             }
         }
     }
@@ -400,7 +432,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
 
     public void LaunchButton()
     {
-        if (showingExpedition == null)
+        if (observingExpedition == null)
         {
             if (selectedCrew != null && selectedCrew.atHome)
             {
@@ -422,11 +454,11 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
                                 var e = new Expedition(selectedDestination, selectedCrew, shID, t, storage.GetResources(ResourceType.Supplies, suppliesSlider.value), colony.GetEnergyCrystals(crystalsSlider.value));
                                 if (workOnMainCanvas)
                                 {
-                                    showingExpedition = e;
+                                    observingExpedition = e;
                                 }
                                 else
                                 {
-                                    showingExpedition = null;
+                                    observingExpedition = null;
                                     selectedCrew = null;
                                     GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().PreparePointDescription();
                                     gameObject.SetActive(false);
@@ -444,17 +476,17 @@ public sealed class UIExpeditionObserver : MonoBehaviour, IObserverController<Ex
         }
         else
         {
-            showingExpedition.EndMission();
+            observingExpedition.EndMission();
         }
     }
     public void MinigameButton()
     {
-        if (showingExpedition == null || showingExpedition.stage != Expedition.ExpeditionStage.OnMission) RedrawWindow();
+        if (observingExpedition == null || observingExpedition.stage != Expedition.ExpeditionStage.OnMission) RedrawWindow();
         else
         {            
             ExplorationPanelUI.Deactivate();
             UIController.SetActivity(false);
-            ExploringMinigameUI.ShowExpedition(showingExpedition,false);
+            ExploringMinigameUI.ShowExpedition(observingExpedition,false);
             gameObject.SetActive(false);
         }
     }

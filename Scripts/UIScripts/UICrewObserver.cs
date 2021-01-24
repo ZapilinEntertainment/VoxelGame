@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
+public sealed class UICrewObserver : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
@@ -18,9 +18,11 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
     private bool subscribedToUpdate = false;
     private int lastDrawState = 0;
     private Crew observingCrew;
+    private event System.Action closingEvent;
     private static UICrewObserver _currentObserver;
 
-    public static UICrewObserver GetCrewObserver()
+    #region observer standart functions
+    public static UICrewObserver GetObserver()
     {
         if (_currentObserver == null)
         {
@@ -29,21 +31,20 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
         }
         return _currentObserver;
     }
-    public static void Show(RectTransform window, SpriteAlignment alignment, Crew c, bool useCloseButton)
+    public static void Show(RectTransform parent, SpriteAlignment alignment, Crew c, bool useCloseButton)
     {
-        Show(window, window.rect, alignment, c, useCloseButton);
+        Show(parent, new Rect(Vector2.zero, parent.rect.size), alignment, c, useCloseButton);
     }
-    public static void Show(RectTransform window, Rect r, SpriteAlignment alignment, Crew c, bool useCloseButton)
+    public static void Show(RectTransform parent, Rect r, SpriteAlignment alignment, Crew c, bool useCloseButton)
     {
-        var co = GetCrewObserver();
+        var co = GetObserver();
         if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
-        co.SetPosition(window, r, alignment);
+        co.SetPosition(parent, r, alignment);
         co.ShowCrew(c, useCloseButton);
     }
-
     private void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment)
     {
-        var rt = GetCrewObserver().GetComponent<RectTransform>();
+        var rt = GetObserver().GetComponent<RectTransform>();
         UIController.PositionElement(rt, parent, alignment, r);
     }
     public void ShowCrew(Crew c, bool useCloseButton)
@@ -59,7 +60,6 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
             closeButton.SetActive(useCloseButton);
         }
     }
-
     public static void DisableObserver()
     {
         if (_currentObserver != null) _currentObserver.gameObject.SetActive(false);
@@ -75,11 +75,11 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
     {
         if (_currentObserver != null) Destroy(_currentObserver.gameObject);
     }
-
     public static void Refresh()
     {
         if (_currentObserver != null) _currentObserver.RedrawWindow();
     }
+    #endregion
     public void RedrawWindow()
     {
         nameField.text = observingCrew.name;
@@ -197,8 +197,11 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
             gameObject.SetActive(false);
         }
     }
-
     //
+    public void AddToClosingEvent(System.Action a)
+    {
+        closingEvent += a;
+    }
 
     public void LocalizeTitles()
     {
@@ -229,17 +232,31 @@ public sealed class UICrewObserver : MonoBehaviour, IObserverController<Crew>
             }
             subscribedToUpdate = false;
         }
+        if (closingEvent != null)
+        {
+            closingEvent.Invoke();
+            closingEvent = null;
+        }
         ExploringMinigameUI.ActivateIfEnabled();
+
     }
     private void OnDestroy()
     {
-        if (!GameMaster.sceneClearing & subscribedToUpdate)
+        if (!GameMaster.sceneClearing )
         {
-            if (UIController.current != null)
+            if (subscribedToUpdate)
             {
-                UIController.current.statusUpdateEvent -= StatusUpdate;
+                if (UIController.current != null)
+                {
+                    UIController.current.statusUpdateEvent -= StatusUpdate;
+                }
+                subscribedToUpdate = false;
             }
-            subscribedToUpdate = false;
+            if (closingEvent != null)
+            {
+                closingEvent.Invoke();
+                closingEvent = null;
+            }
         }
     }
 }

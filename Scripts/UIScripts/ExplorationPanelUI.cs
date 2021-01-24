@@ -58,10 +58,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     if (realIndex >= Expedition.expeditionsList.Count) PrepareExpeditionsList();
                     else
                     {
-                        var e = Expedition.expeditionsList[realIndex];
-                        var ert = observerPanel.GetComponent<RectTransform>();
-                        e.ShowOnGUI(ert.rect, ert, SpriteAlignment.BottomLeft, true);
-                        activeObserver = Expedition.GetObserver().gameObject;
+                        UIExpeditionObserver.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Expedition.expeditionsList[realIndex], false);
+                        activeObserver = UIExpeditionObserver.GetObserver().gameObject;
                         if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     }
                     break;
@@ -71,9 +69,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     if (realIndex >= Crew.crewsList.Count) PrepareCrewsList();
                     else
                     {
-                        var ert = observerPanel.GetComponent<RectTransform>();
-                        UICrewObserver.Show(ert, ert.rect,  SpriteAlignment.BottomLeft, Crew.crewsList[realIndex], false);
-                        activeObserver = UICrewObserver.GetCrewObserver().gameObject;
+                        UICrewObserver.Show(observerPanel.GetComponent<RectTransform>(),  SpriteAlignment.TopLeft, Crew.crewsList[realIndex], false);
+                        activeObserver = UICrewObserver.GetObserver().gameObject;
                         if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     }
                     break;
@@ -82,11 +79,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 if (realIndex >= Artifact.artifactsList.Count) PrepareArtifactsList();
                 else
                 {
-                    var e = Artifact.artifactsList[realIndex];
-                    var ert = observerPanel.GetComponent<RectTransform>();
-                    var r = new Rect(ert.localPosition, ert.rect.size * ert.localScale.x);
-                    e.ShowOnGUI( ert, r, SpriteAlignment.BottomLeft, false);
-                    activeObserver = Artifact.observer.gameObject;
+                    UIArtifactPanel.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Artifact.artifactsList[realIndex], false);
+                    activeObserver = UIArtifactPanel.GetObserver().gameObject;
                     if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                 }
                 break;
@@ -132,6 +126,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 listHolder.SetActive(false);
                 listEnabled = false;
             }
+            emptyPanelText.enabled = true;
         }
         else
         {
@@ -219,6 +214,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 listHolder.SetActive(false);
                 listEnabled = false;
             }
+            emptyPanelText.enabled = true;
         }
         else
         {
@@ -304,6 +300,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                 listHolder.SetActive(false);
                 listEnabled = false;
             }
+            emptyPanelText.enabled = true;
         }
         else
         {

@@ -170,15 +170,12 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         }
         else
         {
-            var rt = infoButton.GetComponent<RectTransform>();
-            float xpos = rt.position.x - rt.rect.width / 2f;
-            float f = 400f;
-            var screenrect = UIController.current.mainCanvas.GetComponent<RectTransform>().rect;
-            if (f > xpos * 0.9f) f = xpos * 0.9f;
-            if (f > screenrect.height * 0.7f) f = screenrect.height * 0.7f;
-            
-            var r = new Rect(new Vector2(xpos, 50f), new Vector2(f,f));
-            UICrewObserver.Show((RectTransform)UIController.current.mainCanvas,r, SpriteAlignment.BottomRight, showingCrew, true );
+            var canvas = UIController.current.mainCanvas.GetComponent<RectTransform>();
+            float f = Screen.height / 2f;
+            infoButton.SetActive(false);
+            var r = new Rect(new Vector2(-GetComponent<RectTransform>().rect.width,0f), new Vector2(f,f));            
+            UICrewObserver.Show(canvas,r, SpriteAlignment.BottomRight, showingCrew, true );
+            UICrewObserver.GetObserver().AddToClosingEvent(() => { this.infoButton.SetActive(true); });
         }
     }
     public void ReplenishButton()

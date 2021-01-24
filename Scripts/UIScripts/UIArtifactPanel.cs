@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
+public class UIArtifactPanel : MonoBehaviour {
     [SerializeField] private GameObject[] items;
     [SerializeField] private Image affectionIcon;
     [SerializeField] private RawImage mainIcon;
@@ -12,11 +12,75 @@ public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
     [SerializeField] private GameObject passButton, closeButton;
     private bool noArtifacts = false, descriptionOff = false, subscribedToUpdate = false;
     private int lastDrawnActionHash = 0;
-    private Artifact chosenArtifact;
+    private Artifact observingArtifact;
+    private static UIArtifactPanel _currentObserver;
+
+
+    #region observer standart functions
+    public static UIArtifactPanel GetObserver()
+    {
+        if (_currentObserver == null)
+        {
+            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), 
+                UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
+        }
+        return _currentObserver;
+    }
+    public static void Show(RectTransform parent, SpriteAlignment alignment, Artifact a, bool useCloseButton)
+    {
+        Show(parent, new Rect(Vector2.zero, parent.rect.size), alignment, a, useCloseButton);
+    }
+    public static void Show(RectTransform parent, Rect r, SpriteAlignment alignment, Artifact a, bool useCloseButton)
+    {
+        var co = GetObserver();
+        if (!co.gameObject.activeSelf) co.gameObject.SetActive(true);
+        co.SetPosition(parent, r, alignment, useCloseButton);
+        co.ShowArtifact(a, useCloseButton);
+    }
+    public static void DisableObserver()
+    {
+        if (_currentObserver != null) _currentObserver.gameObject.SetActive(false);
+    }
+    public static void DestroyObserver()
+    {
+        if (_currentObserver != null) Destroy(_currentObserver.gameObject);
+    }
+    public static void Refresh()
+    {
+        if (_currentObserver != null) _currentObserver.RedrawWindow();
+    }
+
+    private void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment, bool useCloseButton)
+    {
+        closeButton.SetActive(useCloseButton);
+        var rt = GetObserver().GetComponent<RectTransform>();
+        UIController.PositionElement(rt, parent, alignment, r);
+    }
+    private void ShowArtifact(Artifact a, bool useCloseButton)
+    {
+        if (a == null)
+        {
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            observingArtifact = a;
+            RedrawWindow();
+            closeButton.SetActive(useCloseButton);
+        }
+    }
+    public void ClearInfo(Artifact a)
+    {
+        if (_currentObserver != null && _currentObserver.observingArtifact == a)
+        {
+            _currentObserver.gameObject.SetActive(false);
+        }
+    }
+    #endregion
 
     private void RedrawWindow()
     {
-        if (chosenArtifact == null)
+        if (observingArtifact == null)
         {
             if (!descriptionOff)
             {
@@ -30,11 +94,11 @@ public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
         }
         else
         {
-            nameField.text = chosenArtifact.name;
-            status.text = Localization.GetArtifactStatus(chosenArtifact.status);
-            if (chosenArtifact.researched)
+            nameField.text = observingArtifact.name;
+            status.text = Localization.GetArtifactStatus(observingArtifact.status);
+            if (observingArtifact.researched)
             {
-                affectionIcon.sprite = Artifact.GetAffectionSprite(chosenArtifact.affectionPath);                
+                affectionIcon.sprite = Artifact.GetAffectionSprite(observingArtifact.affectionPath);                
                 affectionIcon.enabled = true;
                 // localization - write artifact info 
             }
@@ -43,11 +107,11 @@ public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
                 description.text = Localization.GetPhrase(LocalizedPhrase.NotResearched);
                 affectionIcon.enabled = false;
             }
-            mainIcon.texture = chosenArtifact.GetTexture();
-            if (chosenArtifact.status != Artifact.ArtifactStatus.Uncontrollable)
+            mainIcon.texture = observingArtifact.GetTexture();
+            if (observingArtifact.status != Artifact.ArtifactStatus.Uncontrollable)
             {
                 var ri = passButton.transform.GetChild(0).GetComponent<RawImage>();
-                switch (chosenArtifact.status)
+                switch (observingArtifact.status)
                 {
                     case Artifact.ArtifactStatus.Researching:
                         // установка иконки иссл лаб
@@ -72,36 +136,23 @@ public class UIArtifactPanel : MonoBehaviour, IObserverController<Artifact> {
         }
         lastDrawnActionHash = Artifact.listChangesMarkerValue;
     }
-
     private void Update()
     {
-        if (chosenArtifact != null)
+        if (observingArtifact != null)
         {
-            if (chosenArtifact.status == Artifact.ArtifactStatus.UsingInMonument)
+            if (observingArtifact.status == Artifact.ArtifactStatus.UsingInMonument)
             {
-                affectionIcon.transform.Rotate(Vector3.forward, chosenArtifact.frequency * 10f * Time.deltaTime);
+                affectionIcon.transform.Rotate(Vector3.forward, observingArtifact.frequency * 10f * Time.deltaTime);
             }
         }
-    }
-
-    public void SetPosition(RectTransform parent, Rect r, SpriteAlignment alignment)
-    {
-        var rt = GetComponent<RectTransform>();
-        UIController.PositionElement(parent,rt, alignment, r);
-    }
-    public void ShowArtifact(Artifact a, bool useCloseButton)
-    {
-        chosenArtifact = a;
-        RedrawWindow();
-        closeButton.SetActive(useCloseButton);
     }
 
     // buttons
     public void NameChanged()
     {
-        if (chosenArtifact != null)
+        if (observingArtifact != null)
         {
-            chosenArtifact.ChangeName(nameField.text);
+            observingArtifact.ChangeName(nameField.text);
         }
         else RedrawWindow();
     }

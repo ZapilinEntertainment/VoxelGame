@@ -1572,6 +1572,7 @@ sealed public class UIController : MonoBehaviour
     public static void PositionElement(RectTransform rt, RectTransform parent, SpriteAlignment alignment, Rect r)
     {
         rt.parent = parent;
+        rt.SetAsLastSibling();
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
         Vector2 anchor;
@@ -1633,5 +1634,6 @@ sealed public class UIController : MonoBehaviour
                 rt.anchoredPosition = Vector2.down * r.height * 0.5f * x;
                 break;
         }
+        rt.anchoredPosition += r.position;
     }
 }

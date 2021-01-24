@@ -22,7 +22,6 @@ public sealed class Artifact {
     public static readonly Texture emptyArtifactFrame_tx;
     public static int listChangesMarkerValue = 0, nextID = 0;    
     public static List<Artifact> artifactsList { get; private set; }
-    public static UIArtifactPanel observer { get; private set; }
 
     public override bool Equals(object obj)
     {
@@ -407,17 +406,6 @@ public sealed class Artifact {
     }
 
     public void SetResearchStatus(bool x) { researched = x; }
-
-    public void ShowOnGUI(RectTransform parent, Rect r, SpriteAlignment alignment, bool useCloseButton)
-    {
-        if (observer == null)
-        {
-            observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
-        }
-        observer.gameObject.SetActive(true);
-        observer.SetPosition(parent,r, alignment);
-        observer.ShowArtifact(this, useCloseButton);
-    }
     public void Destroy()
     {
         destructed = true;
