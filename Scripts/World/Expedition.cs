@@ -135,6 +135,8 @@ public sealed class Expedition
         stage = ExpeditionStage.OnMission;
         changesMarkerValue++;
         GlobalMapUI.needExpeditionsRedraw = true;
+        UIExpeditionObserver.Refresh();
+        expeditionsLaunched++;
     }
     public void EndMission()
     {

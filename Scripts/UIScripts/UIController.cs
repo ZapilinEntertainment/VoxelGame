@@ -75,6 +75,10 @@ sealed public class UIController : MonoBehaviour
     Transform selectionFrame; Material selectionFrameMaterial;
 
     public static UIController current;
+    public static bool isMainCanvasActive
+    {
+        get { if (current != null && current.isActiveAndEnabled) return true; else return false; }
+    }
 
     private const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
     private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
@@ -1570,20 +1574,21 @@ sealed public class UIController : MonoBehaviour
         }
     }
     public static void PositionElement(RectTransform rt, RectTransform parent, SpriteAlignment alignment, Rect r)
-    {
+    {        
         rt.parent = parent;
+        rt.localScale = Vector3.one;
         rt.SetAsLastSibling();
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height);
+        float lx = 1f / parent.localScale.x, ly = 1f / parent.localScale.y;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, r.width * lx);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, r.height * ly);
         Vector2 anchor;
-        float x = rt.localScale.x;
         switch (alignment)
         {
             case SpriteAlignment.BottomRight:
                 anchor = Vector2.right;
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = Vector2.left * r.width * x;
+                rt.anchoredPosition = Vector2.left * r.width * lx;
                 break;
             case SpriteAlignment.BottomLeft:
                 anchor = Vector2.zero;
@@ -1595,43 +1600,43 @@ sealed public class UIController : MonoBehaviour
                 anchor = new Vector2(1f, 0.5f);
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = new Vector2(-1f * r.width * x, -0.5f * r.height * x);
+                rt.anchoredPosition = new Vector2(-1f * r.width * lx, -0.5f * r.height * ly);
                 break;
             case SpriteAlignment.TopRight:
                 anchor = Vector2.one;
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = new Vector2(-1f * r.width * x, -1f * r.height * x);
+                rt.anchoredPosition = new Vector2(-1f * r.width * lx, -1f * r.height * ly);
                 break;
             case SpriteAlignment.Center:
                 anchor = Vector2.one * 0.5f;
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = new Vector2(-0.5f * r.width * x, -0.5f * r.height * x);
+                rt.anchoredPosition = new Vector2(-0.5f * r.width * lx, -0.5f * r.height * ly);
                 break;
             case SpriteAlignment.TopCenter:
                 anchor = new Vector2(0.5f, 1f);
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = new Vector2(-0.5f * r.width * x, -1f * r.height * x);
+                rt.anchoredPosition = new Vector2(-0.5f * r.width * lx, -1f * r.height * ly);
                 break;
             case SpriteAlignment.BottomCenter:
                 anchor = new Vector2(0.5f, 0f);
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = new Vector2(-0.5f * r.width * x, 0f);
+                rt.anchoredPosition = new Vector2(-0.5f * r.width * lx, 0f);
                 break;
             case SpriteAlignment.TopLeft:
                 anchor = new Vector2(0f, 1f);
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = Vector2.down * r.height * x;
+                rt.anchoredPosition = Vector2.down * r.height * ly;
                 break;
             case SpriteAlignment.LeftCenter:
                 anchor = new Vector2(0f, 0.5f);
                 rt.anchorMax = anchor;
                 rt.anchorMin = anchor;
-                rt.anchoredPosition = Vector2.down * r.height * 0.5f * x;
+                rt.anchoredPosition = Vector2.down * r.height * 0.5f * ly;
                 break;
         }
         rt.anchoredPosition += r.position;

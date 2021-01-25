@@ -43,7 +43,7 @@ public sealed class Crew : MonoBehaviour {
     public ushort missionsParticipated { get; private set; }
     public ushort missionsSuccessed{get;private set;}
 
-    private const float SOFT_TEST_MAX_VALUE = 25f;
+    private const float SOFT_TEST_MAX_VALUE = 25f, STAMINA_RESTORE_SPEED = 0.05f;
 
     static Crew()
     {
@@ -58,7 +58,7 @@ public sealed class Crew : MonoBehaviour {
             {
                 if (c.atHome)
                 {
-                    c.Restore();
+                    c.RestAtHome();
                 }
             }
         }
@@ -289,12 +289,12 @@ public sealed class Crew : MonoBehaviour {
         if (adaptability < 0f) adaptability = 0f;
     }
 
-    public void Rest(float f)
+    public void RestOnMission(float conditions)
     {        
-        stamina += f;
+        stamina += STAMINA_RESTORE_SPEED * level * conditions;
         if (stamina > 1f) stamina = 1f;
     }
-    public void Restore()
+    public void RestAtHome()
     {
         stamina = 1f;
         adaptability -= ADAPTABILITY_LOSSES;

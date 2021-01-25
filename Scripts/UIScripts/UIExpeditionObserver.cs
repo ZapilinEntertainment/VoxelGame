@@ -26,6 +26,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private GameObject expDestinationButton { get { return expNameField.GetChild(1).gameObject; } }
 
     private bool subscribedToUpdate = false, workOnMainCanvas = true;
+    private static bool waitForWorkRestoring = false;
     private bool? preparingMode = null;
     private byte lastChangesMarkerValue = 0;
     private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
@@ -232,14 +233,14 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             preparingMode = true;
         }
         else
-        {
+        { 
              // отрисовка существующей
             expLabel.text = Localization.GetExpeditionName(observingExpedition);
             statedCrystalsCount = observingExpedition.crystalsCollected;
             statedSuppliesCount = observingExpedition.suppliesCount;
             lastChangesMarkerValue = observingExpedition.changesMarkerValue;
 
-            crewStableName.text = observingExpedition.crew.name;
+            crewStableName.text = observingExpedition.crew?.name ?? Localization.GetPhrase(LocalizedPhrase.NoCrew);
             if (crewDropdown.gameObject.activeSelf)
             {
                 crewDropdown.gameObject.SetActive(false);
@@ -483,12 +484,37 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         if (observingExpedition == null || observingExpedition.stage != Expedition.ExpeditionStage.OnMission) RedrawWindow();
         else
-        {            
-            ExplorationPanelUI.Deactivate();
-            UIController.SetActivity(false);
-            ExploringMinigameUI.ShowExpedition(observingExpedition,false);
+        {
+            if (UIController.isMainCanvasActive)
+            { // main canvas
+                ExplorationPanelUI.Deactivate();
+                UIController.SetActivity(false);
+                ExploringMinigameUI.ShowExpedition(observingExpedition, false);
+            }
+            else
+            { // global map canvas
+                GlobalMapUI.GetObserver()?.CloseInfopanel();
+                ExploringMinigameUI.ShowExpedition(observingExpedition, true);
+            }
+            
             gameObject.SetActive(false);
         }
+    }
+    public void CrewButton()
+    {
+        if (selectedCrew != null)
+        {
+            var rt = transform.parent.GetComponent<RectTransform>();
+            var myRect = GetComponent<RectTransform>().rect;
+            UICrewObserver.Show(rt, new Rect(myRect.x, myRect.y, myRect.width * rt.localScale.x, myRect.height * rt.localScale.y), SpriteAlignment.Center, selectedCrew, true);
+            UICrewObserver.GetObserver().AddToClosingEvent(() => { RestoreActivity(); });
+            gameObject.SetActive(false);
+            waitForWorkRestoring = true;
+        }
+    }
+    public static void RestoreActivity() {
+        if (waitForWorkRestoring) { _currentObserver?.gameObject.SetActive(true); }
+        waitForWorkRestoring = false;
     }
 
     private void OnEnable()
@@ -509,6 +535,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             }
             subscribedToUpdate = false;
         }
+        waitForWorkRestoring = false;
     }
     private void OnDestroy()
     {
@@ -520,5 +547,6 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             }
             subscribedToUpdate = false;
         }
+        waitForWorkRestoring = false;
     }
 }

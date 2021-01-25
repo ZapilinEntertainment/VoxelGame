@@ -17,11 +17,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
 {   
 
     [SerializeField] private GameObject deckHolder;
-    [SerializeField] private Text challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText, suppliesLabel, crystalsLabel, staminaPercentage;
+    [SerializeField] private Text challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText, suppliesLabel, crystalsLabel, staminaPercentage, membersCountText;
     [SerializeField] private Transform infoPanel;
     [SerializeField] private RectTransform crewMarker;
     [SerializeField] private Image innerRollRing, outerRollRing, staminaBar;
-    [SerializeField] private GameObject exampleButton, challengePanel, passButton;
+    [SerializeField] private GameObject exampleButton, challengePanel, passButton, restButton;
     [SerializeField] private GameObject rollButton;
     private Text passText { get { return passButton.transform.GetChild(0).GetComponent<Text>(); } }
     private Transform crewPanel { get { return infoPanel.GetChild(0); } }
@@ -403,36 +403,14 @@ public sealed class ExploringMinigameUI : MonoBehaviour
        else
         {
             var cpanel = crewPanel;
-            cpanel.gameObject.SetActive(false);
-            /*
-            var m = membersPanel;           
-            int c = m.childCount;
-            if (observingCrew.membersCount == Crew.MAX_MEMBER_COUNT)
-            {
-                for (int i = 0; i < c; i++)
-                {
-                    m.GetChild(i).gameObject.SetActive(true);
-                }
-            }
-            else
-            {
-                if (observingCrew.membersCount == 0) return;
-                int i = 0;
-                for (; i < observingCrew.membersCount; i++)
-                {
-                    m.GetChild(i).gameObject.SetActive(true);
-                }
-                for (; i< c; i++)
-                {
-                    m.GetChild(i).gameObject.SetActive(false);
-                }
-            }
-            */
+            cpanel.gameObject.SetActive(false);            
 
             staminaBar.fillAmount = observingCrew.stamina;
             staminaPercentage.text = ((int)(observingCrew.stamina * 100f)).ToString() + '%';
             suppliesLabel.text = observingExpedition.suppliesCount.ToString();
             crystalsLabel.text = observingExpedition.crystalsCollected.ToString();
+            membersCountText.text = observingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
+            restButton.SetActive(observingCrew.stamina <= 0.1f & observingExpedition.suppliesCount > 0);
 
             cpanel.gameObject.SetActive(true);
         }
@@ -455,7 +433,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                 switch (cf.challengeType)
                 {
                     case ChallengeType.NoChallenge:
-                        MoveCrewToField(selectedField);
+                        if (INLINE_TryToAction(false)) MoveCrewToField(selectedField); else return;                                          
                         break;
                     case ChallengeType.PuzzlePart:
                     case ChallengeType.FoundationPts:
@@ -509,45 +487,77 @@ public sealed class ExploringMinigameUI : MonoBehaviour
                         break;
 
                     case ChallengeType.PersistenceTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.PersistenceTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.PersistenceTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;                        
                     case ChallengeType.SurvivalSkillsTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SurvivalSkillsTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SurvivalSkillsTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.PerceptionTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.PerceptionTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.PerceptionTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.SecretKnowledgeTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SecretKnowledgeTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.SecretKnowledgeTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.IntelligenceTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.IntelligenceTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.IntelligenceTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.TechSkillsTest:
-                        useChallengePanel = true;
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.TechSkillsTest);
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.TechSkillsTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.QuestTest:
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.QuestTest);
-                        useChallengePanel = true;
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.QuestTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.ExitTest:
-                        challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.ExitTest);
-                        useChallengePanel = true;
-                        useRollSystem = true;
-                        break;
+                        if (INLINE_TryToAction(true))
+                        {
+                            useChallengePanel = true;
+                            challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.ExitTest);
+                            useRollSystem = true;
+                            break;
+                        }
+                        else return;
                     case ChallengeType.CrystalFee:
                         useChallengePanel = true;
                         challengeLabel.text = Localization.GetChallengeLabel(ChallengeType.CrystalFee);
@@ -626,6 +636,32 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         }
 
     }
+    private bool INLINE_TryToAction(bool challenge)
+    {
+        if (observingCrew.stamina <= 0f)
+        {
+            GameLogUI.EnableDecisionWindow(null,
+            Localization.GetPhrase(challenge ? LocalizedPhrase.CannotAcceptChallenge : LocalizedPhrase.CannotMove ) 
+            + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughStamina) + '!');
+            return false;
+        }
+        else
+        {
+            if (challenge) return true;
+            else
+            {
+                if (observingExpedition.suppliesCount == 0)
+                {
+                    GameLogUI.EnableDecisionWindow(null,
+                    Localization.GetPhrase(LocalizedPhrase.CannotMove)
+                    + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughSupplies) + '!');
+                    return false;
+                }
+                else return true;
+            }
+        }
+    }
+
     public void Roll()
     {
         if (rollEffect) return;
@@ -790,6 +826,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / (0.5f + 0.5f *result) * 4f);
             passButton.SetActive(true);
             needInfoRefreshing = true;
+
+            if (!INLINE_TryToAction(true)) challengePanel.SetActive(false);
         }
     }
     private void MoveCrewToField(int newIndex)
@@ -1260,6 +1298,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             observingPoint = null;
         }
         gameObject.SetActive(false);        
+    }
+    public void RestButton()
+    {
+        observingExpedition.SpendSupplyCrate();
+        observingCrew.RestOnMission(observingPoint.difficulty);
     }
 
     private void OnEnable()

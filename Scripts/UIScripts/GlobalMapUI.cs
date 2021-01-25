@@ -19,7 +19,7 @@ public sealed class GlobalMapUI : MonoBehaviour
 #pragma warning restore 0649
     private Text sendButtonLabel { get { return sendExpeditionButton.transform.GetChild(0).GetComponent<Text>(); } }
 
-    public static bool needExpeditionsRedraw = false;
+    public static bool needExpeditionsRedraw = false; 
     private bool prepared = false, showExpeditionInfo = false;
     private float infoPanelWidth = 0f;
     private float[] ringsRotation;
@@ -30,11 +30,17 @@ public sealed class GlobalMapUI : MonoBehaviour
     private List<MapPoint> mapPoints;
     private RawImage[] sectorsImages;
 
+    private static GlobalMapUI _currentObserver;
     private readonly Color notInteractableColor = new Color(0, 1, 1, 0), interactableColor = new Color(0, 1, 1, 0.3f), chosenColor = Color.yellow, inactiveSectorColor = new Color(1,1,1,0.3f);
     private const float ZOOM_BORDER = 9, DIST_BORDER = 1;
     private const int SECTORS_TEXTURE_RESOLUTION = 8000, MAX_EXPEDITIONS_FBUTTONS_COUNT = 20;
 
     //========================== PUBLIC METHODS
+    public static GlobalMapUI GetObserver()
+    {
+        //является подчиненным классом GlobalMap, не может строиться сам, вписывается в Awake
+        return _currentObserver;
+    }
     public Transform GetMapCanvas() { return mapCanvas.transform; }
 
     public void SetGlobalMap(GlobalMap gm)
@@ -206,7 +212,8 @@ public sealed class GlobalMapUI : MonoBehaviour
                 {
                     if (poi.workingExpedition == null || poi.workingExpedition.stage != Expedition.ExpeditionStage.OnMission)
                     { // send expedition
-                        infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
+                        var rt = infoPanel.GetComponent<RectTransform>();
+                        infoPanelWidth = infoPanel.activeSelf ? rt.rect.width * rt.localScale.x : 0f;
                         float pw = (Screen.width - infoPanelWidth) * 0.95f,
                         ph = Screen.height * 0.75f, sz = ph;
                         if (pw < ph) sz = pw;
@@ -249,8 +256,13 @@ public sealed class GlobalMapUI : MonoBehaviour
         ExploringMinigameUI.Disable();
         gameObject.SetActive(false);
         UIController.SetActivity(true);
-    }   
+    }
     // ======================== PRIVATE METHODS
+    private void Awake()
+    {
+        if (_currentObserver != null) Destroy(this);
+        _currentObserver = this;
+    }
     private void Start()
     {
         if (!prepared & gameObject.activeSelf) Prepare();
@@ -499,11 +511,6 @@ public sealed class GlobalMapUI : MonoBehaviour
                 }
             }
         }
-
-        if (chosenPoint != null)
-        {
-
-        }
         //
 
         float deltaX = 0, deltaY = 0, deltaZoom = 0;
@@ -624,7 +631,11 @@ public sealed class GlobalMapUI : MonoBehaviour
 
         mapRect.position = new Vector3(xpos, ypos, 0);
 
-        if (needExpeditionsRedraw) ExpeditionsButtonsRedraw();
+        if (needExpeditionsRedraw)
+        {
+            ExpeditionsButtonsRedraw();
+            PreparePointDescription();
+        }
     }
    
     private void OnEnable()

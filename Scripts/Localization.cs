@@ -15,7 +15,8 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PathBlocked, PointsSec, PerSecond, BirthrateMode,
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -818,7 +819,7 @@ public static class Localization
                     case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" покинули нас.";
                     case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" завершили миссию";
                     case LocalizedCrewAction.CannotReachDestination: return "Команда \"" + c.name + "\" не может достичь цели и возвращается.";
-                    case LocalizedCrewAction.Returned: return "Команда \"" + c.name + "\" вернулась с задания!";
+                    case LocalizedCrewAction.Returned: return "Команда \"" + c.name + "\" вернулась с задания!";                    
                     default: return '"' + c.name + "\" просто топчег.";
                 }
             default:
@@ -830,7 +831,7 @@ public static class Localization
                         case LocalizedCrewAction.LeaveUs: return '"' + c.name + "\" leave us.";
                         case LocalizedCrewAction.CrewTaskCompleted: return '"' + c.name + "\" completed their task";
                         case LocalizedCrewAction.CannotReachDestination: return "Crew " + '"' + c.name + "\" cannot reach destination and therefore returning.";
-                        case LocalizedCrewAction.Returned: return "Crew \"" + c.name + "\" has returned!";
+                        case LocalizedCrewAction.Returned: return "Crew \"" + c.name + "\" has returned!";                        
                         default: return '"' + c.name + "\" is da best.";
                     }
                 }
@@ -2570,6 +2571,11 @@ public static class Localization
                         case LocalizedPhrase.AddPlatform: return "Прикрепить платформу";
                         case LocalizedPhrase.OpenMap: return "Открыть карту";
                         case LocalizedPhrase.OpenResearchTab: return "К исследованиям";
+
+                        case LocalizedPhrase.CannotAcceptChallenge: return "Невозможно приступить к испытанию";
+                        case LocalizedPhrase.CannotMove: return "Движение невозможно";
+                        case LocalizedPhrase.NotEnoughStamina: return "недостаточно выносливости";
+                        case LocalizedPhrase.NotEnoughSupplies: return "недостаточно припасов";
                         default: return "<...>";
                     }
                 }
@@ -2664,6 +2670,11 @@ public static class Localization
                         case LocalizedPhrase.AddPlatform: return "Add platform";
                         case LocalizedPhrase.OpenMap: return "Open map";
                         case LocalizedPhrase.OpenResearchTab: return "Open research tab";
+                        
+                        case LocalizedPhrase.CannotAcceptChallenge: return "Cannot accept this challenge";
+                        case LocalizedPhrase.CannotMove: return "Cannot move";
+                        case LocalizedPhrase.NotEnoughStamina: return "not enough stamina";
+                        case LocalizedPhrase.NotEnoughSupplies: return "not enough supplies";
                         default: return "<...>";
                     }
                 }

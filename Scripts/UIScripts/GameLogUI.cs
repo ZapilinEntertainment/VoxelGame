@@ -10,7 +10,7 @@ public sealed class GameLogUI : MonoBehaviour {
     [SerializeField] private Text lastMessageText, decisionWindowText;
     [SerializeField] private Text[] messages;
 #pragma warning restore 0649
-    private static GameLogUI current;
+    private static GameLogUI _currentLog;
 
     public delegate void DecisionAction();
     private bool activeAnnouncement = false, importantAnnouncementEnabled = false;
@@ -26,12 +26,11 @@ public sealed class GameLogUI : MonoBehaviour {
     }
     public static void MakeAnnouncement(string s, Color col)
     {
-        if (current == null) InitializeCurrent();
-        current.AddAnnouncement(s, col);
+        GetCurrent().AddAnnouncement(s, col);
     }
     public static void MakeImportantAnnounce(string s)
     {
-        if (current == null) InitializeCurrent();
+        var current = GetCurrent();
         current.importantAnnouncePanel.transform.GetChild(0).GetComponent<Text>().text = s;
         current.importantAnnouncePanel.GetComponent<Image>().color = PoolMaster.gameOrangeColor;
         current.importantAnnouncePanel.SetActive(true);
@@ -51,32 +50,27 @@ public sealed class GameLogUI : MonoBehaviour {
 
     public static void EnableDecisionWindow(DecisionAction monoaction, string text)
     {
-        if (current == null) InitializeCurrent();
-        current.PrepareDecisionWindow(monoaction,text);
+        GetCurrent().PrepareDecisionWindow(monoaction,text);
     }
     public static void EnableDecisionWindow(string question, DecisionAction leftDecision, string leftChoice, DecisionAction rightDecision, string rightChoice )
     {
-        if (current == null) InitializeCurrent();
-        current.PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
+        GetCurrent().PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
     }
 
-    private static void InitializeCurrent()
+    private static GameLogUI GetCurrent()
     {
-        current = Instantiate(Resources.Load<GameObject>("UIPrefs/logCanvas")).GetComponent<GameLogUI>();
+        if (_currentLog == null) _currentLog = Instantiate(Resources.Load<GameObject>("UIPrefs/logCanvas")).GetComponent<GameLogUI>();
+        return _currentLog;
     }
     public static void DeactivateLogWindow()
     {
-        if (current == null) return;
-        else
-        {
-            if (current.logWindow.activeSelf) current.LogButton();
-        }
+            if (_currentLog != null && _currentLog.logWindow.activeSelf) _currentLog.LogButton();
     }
     public static void DisableDecisionPanel()
     {
-        current?.CloseDecisionPanel();
+        _currentLog?.CloseDecisionPanel();
     }
-    public static void ChangeVisibility(bool x) { if (current != null) current.gameObject.SetActive(x); }
+    public static void ChangeVisibility(bool x) { _currentLog.gameObject.SetActive(x); }
     // =====================
     private void Update()
     {
@@ -189,14 +183,14 @@ public sealed class GameLogUI : MonoBehaviour {
     {
         if (logWindow.activeSelf)
         {
-            current.logWindow.SetActive(false);
-            if (current.activeAnnouncement) current.lastMessagePanel.SetActive(true);
+            logWindow.SetActive(false);
+            if (activeAnnouncement) lastMessagePanel.SetActive(true);
             if (UIController.current.currentActiveWindowMode == ActiveWindowMode.LogWindow) UIController.current.DropActiveWindow(ActiveWindowMode.LogWindow);
         }
         else
         {
-            if (current.activeAnnouncement) current.lastMessagePanel.SetActive(false);
-            current.logWindow.SetActive(true);
+            if (activeAnnouncement) lastMessagePanel.SetActive(false);
+            logWindow.SetActive(true);
             UIController.current.ChangeActiveWindow(ActiveWindowMode.LogWindow);
         }
     } 
@@ -205,17 +199,17 @@ public sealed class GameLogUI : MonoBehaviour {
     //==== DECISION  PANEL
     public void DecisionLeft()
     {
-        leftDecision();
+        leftDecision?.Invoke();
         CloseDecisionPanel();
     }
     public void DecisionRight()
     {
-        rightDecision();
+        rightDecision?.Invoke();
         CloseDecisionPanel();
     }
     public void MonoDecision()
     {
-        monoDecision();
+        monoDecision?.Invoke();
         CloseDecisionPanel();
     }
     private void CloseDecisionPanel()
