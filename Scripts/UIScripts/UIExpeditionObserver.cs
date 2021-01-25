@@ -54,7 +54,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         if (_currentObserver == null)
         {
             _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"),
-                UIController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
+                MainCanvasController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
         }
         return _currentObserver;
     }
@@ -97,7 +97,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         closeButton.SetActive(useCloseButton);
         var rt = GetObserver().GetComponent<RectTransform>();
-        UIController.PositionElement(rt, parent, alignment, r);
+        MainCanvasController.PositionElement(rt, parent, alignment, r);
     }
     private void ShowExpedition(Expedition e, bool useCloseButton)
     {
@@ -189,13 +189,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             int c = QuantumTransmitter.GetFreeTransmittersCount();
             if (c > 0)
             {
-                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeTransmitters) + c.ToString();
                 transmitterLabel.color = whitecolor;
             }
             else
             {
-                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.NoTransmitters);
                 transmitterLabel.color = redcolor;
                 readyToStart = false;
@@ -204,13 +204,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             c = Hangar.GetFreeShuttlesCount();
             if (c > 0)
             {
-                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+                shuttleMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeShuttles) + c.ToString();
                 shuttleLabel.color = whitecolor;
             }
             else
             {
-                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                shuttleMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
                 shuttleLabel.color = redcolor;
                 readyToStart = false;
@@ -264,13 +264,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             //transmitter:
             if (observingExpedition.hasConnection)
             {
-                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.ConnectionOK);
                 transmitterLabel.color = whitecolor;
             }
             else
             {
-                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
                 transmitterLabel.color = redcolor;
             }
@@ -297,7 +297,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         var edb = expDestinationButton;
         if (selectedDestination != null)
         {
-            edb.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapUI.GetMarkerRect(selectedDestination.type);
+            edb.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapCanvasController.GetMarkerRect(selectedDestination.type);
             edb.SetActive(workOnMainCanvas);
         }
         else
@@ -368,13 +368,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         int c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
         if (c > fuelNeeded)
         {
-            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
+            fuelMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
             fuelLabel.color = Color.white;
             return true;
         }
         else
         {
-            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
+            fuelMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
             fuelLabel.color = Color.red;
             return false;
         }
@@ -461,13 +461,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                                 {
                                     observingExpedition = null;
                                     selectedCrew = null;
-                                    GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapUI>().PreparePointDescription();
+                                    GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapCanvasController>().PreparePointDescription();
                                     gameObject.SetActive(false);
                                 }
                             }
                             else
                             {
-                                GameLogUI.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.NotEnoughFuel));
+                                AnnouncementCanvasController.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.NotEnoughFuel));
                             }
                             RedrawWindow();
                         }
@@ -485,15 +485,15 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         if (observingExpedition == null || observingExpedition.stage != Expedition.ExpeditionStage.OnMission) RedrawWindow();
         else
         {
-            if (UIController.isMainCanvasActive)
+            if (MainCanvasController.isMainCanvasActive)
             { // main canvas
                 ExplorationPanelUI.Deactivate();
-                UIController.SetActivity(false);
+                MainCanvasController.SetActivity(false);
                 ExploringMinigameUI.ShowExpedition(observingExpedition, false);
             }
             else
             { // global map canvas
-                GlobalMapUI.GetObserver()?.CloseInfopanel();
+                GlobalMapCanvasController.GetObserver()?.CloseInfopanel();
                 ExploringMinigameUI.ShowExpedition(observingExpedition, true);
             }
             
@@ -521,7 +521,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += StatusUpdate;
+            MainCanvasController.current.statusUpdateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
     }
@@ -529,9 +529,9 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         if (subscribedToUpdate)
         {
-            if (UIController.current != null)
+            if (MainCanvasController.current != null)
             {
-                UIController.current.statusUpdateEvent -= StatusUpdate;
+                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }
@@ -541,9 +541,9 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         if (!GameMaster.sceneClearing & subscribedToUpdate)
         {
-            if (UIController.current != null)
+            if (MainCanvasController.current != null)
             {
-                UIController.current.statusUpdateEvent -= StatusUpdate;
+                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }

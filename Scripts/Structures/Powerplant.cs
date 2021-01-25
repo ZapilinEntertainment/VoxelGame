@@ -134,7 +134,7 @@ public class Powerplant : WorkBuilding
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
-        UIController.current.ActivateProgressPanel(ProgressPanelMode.Powerplant);
+        colony.observer.ActivateProgressPanel(ProgressPanelMode.Powerplant);
         showOnGUI = true;
         return workbuildingObserver;
     }

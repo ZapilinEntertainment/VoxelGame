@@ -376,7 +376,7 @@ public sealed class Hangar : WorkBuilding
         {
             hangarObserver.PrepareHangarWindow();
         }
-        GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
+        AnnouncementCanvasController.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ShuttleConstructed));
     }
 
     public override UIObserver ShowOnGUI()

@@ -80,6 +80,7 @@ public sealed class GameMaster : MonoBehaviour
     public EventChecker eventTracker { get; private set; }
     public GameMode gameMode { get; private set; }
     public GlobalMap globalMap { get; private set; }
+    private UIController uicontroller;
 
     public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate, afterloadRecalculationEvent;
     public GameStart startGameWith = GameStart.Zeppelin;
@@ -102,7 +103,7 @@ public sealed class GameMaster : MonoBehaviour
     public const byte DAYS_IN_MONTH = 30, MONTHS_IN_YEAR = 12, PLAY_SCENE_INDEX = 1, EDITOR_SCENE_INDEX = 2, MENU_SCENE_INDEX = 0;
     public const float DAY_LONG = 60;
     // updating
-    public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.25f; // cannot be zero
+    public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.5f; // cannot be zero
     private float labourTimer = 0;
     private bool gameStarted = false;
     // FOR TESTING
@@ -169,7 +170,6 @@ public sealed class GameMaster : MonoBehaviour
         if (gameMode != GameMode.Editor) return;
         gameMode = GameMode.Play;
         _gameMode = gameMode;
-        Instantiate(Resources.Load<GameObject>("UIPrefs/UIController")).GetComponent<UIController>();
         gameStarted = false;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
         startGameWith = GameStart.Zeppelin;
@@ -192,6 +192,7 @@ public sealed class GameMaster : MonoBehaviour
         gameMode = _gameMode;
         realMaster = this;
         sceneClearing = false;
+        uicontroller = UIController.GetCurrent();
         if (PoolMaster.current == null)
         {
             PoolMaster pm = gameObject.AddComponent(typeof(PoolMaster)) as PoolMaster;
@@ -254,11 +255,11 @@ public sealed class GameMaster : MonoBehaviour
                         Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
                         if (needTutorial)
                         {
-                            GameLogUI.EnableDecisionWindow(null, Localization.GetTutorialHint(LocalizedTutorialHint.Landing));
+                            AnnouncementCanvasController.EnableDecisionWindow(null, Localization.GetTutorialHint(LocalizedTutorialHint.Landing));
                         }
                         else
                         {
-                            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
+                            AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
                         }
                         break;
 
@@ -308,7 +309,7 @@ public sealed class GameMaster : MonoBehaviour
                                                     sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos - 1);
                                                     if (sb == null)
                                                     {
-                                                        print("bad generation, do something!");
+                                                        Debug.Log("bad generation, do something!");
                                                     }
                                                 }
                                             }
@@ -344,7 +345,7 @@ public sealed class GameMaster : MonoBehaviour
             FollowingCamera.camBasisTransform.position = sceneCenter;
         }
         gameStarted = true;
-        if (testMode) GameLogUI.MakeAnnouncement("game master loaded");
+        if (testMode) AnnouncementCanvasController.MakeAnnouncement("game master loaded");
     }
 
     private void SetDefaultValues()
@@ -416,6 +417,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         colonyController = c;
         environmentMaster.LinkColonyController(c);
+        uicontroller.GetMainCanvasController()?.LinkColonyController();
     }  
 
     #region updates
@@ -444,24 +446,24 @@ public sealed class GameMaster : MonoBehaviour
                     k.AddResearchPoints(Knowledge.ResearchRoute.Foundation, 1000);
                 }
             }
-            
-        }
-        if (Input.GetKeyDown("x")) {
-            //
-            //mainChunk.RenderDataFullRecalculation();
-            //
-            //var n = mainChunk.GetNature();
-            //n.FirstSet(10000f);
-            /*
-            var plist = mainChunk.surfaces;
-            int count = 0;
-            foreach (var fp in plist)
+            if (Input.GetKeyDown("x"))
             {
-                if (fp.extension != null) count++;
+                //
+                //mainChunk.RenderDataFullRecalculation();
+                //
+                //var n = mainChunk.GetNature();
+                //n.FirstSet(10000f);
+                /*
+                var plist = mainChunk.surfaces;
+                int count = 0;
+                foreach (var fp in plist)
+                {
+                    if (fp.extension != null) count++;
+                }
+                Debug.Log(count);
+                */
             }
-            Debug.Log(count);
-            */
-        }
+        }        
         //if (Input.GetKeyDown("z")) Debug.Log(mainChunk.DEBUG_GetStructuresCount());
         gameSpeed = _gameSpeed;
     }
@@ -588,54 +590,22 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (gameMode == GameMode.Ended) return;
         SetPause(true);
-        UIController.current.FullDeactivation();
-
-        ulong score =(ulong) ScoreCalculator.GetScore(this);
+        ulong score = (ulong)ScoreCalculator.GetScore(this);
         Highscore.AddHighscore(new Highscore(colonyController.cityName, score, endType));
-
-        string reason = Localization.GetEndingTitle(endType);
-        switch (endType)
-        {
-            case GameEndingType.FoundationRoute:
-                {
-                    Transform endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), UIController.current.mainCanvas).transform;
-                    endpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
-                    endpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    var b = endpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(ReturnToMenuAfterGameOver);
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-                    b = endpanel.GetChild(4).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(() => { ContinueGameAfterEnd(endpanel.gameObject); });
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Continue);                    
-                    break;
-                }
-            case GameEndingType.ColonyLost:
-            case GameEndingType.Default:
-            case GameEndingType.ConsumedByReal:
-            case GameEndingType.ConsumedByLastSector:
-            default:
-                {
-                    Transform failpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), UIController.current.mainCanvas).transform;
-                    failpanel.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
-                    failpanel.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    var b = failpanel.GetChild(3).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(ReturnToMenuAfterGameOver);
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-                    break;
-                }
-        }
+        uicontroller?.GameOver(endType, score);      
         gameMode = GameMode.Ended;
     }
     public void ReturnToMenuAfterGameOver()
     {
+        if (gameMode != GameMode.Ended) return;
         sceneClearing = true;
         ChangeScene(MENU_SCENE_INDEX);
         sceneClearing = false;
     }
-    public void ContinueGameAfterEnd(GameObject panel)
+    public void ContinueGameAfterEnd()
     {
-        Destroy(panel);
-        UIController.current.FullReactivation();
+        if (gameMode != GameMode.Ended) return;
+        uicontroller.GetMainCanvasController().FullReactivation();
         SetPause(false);
         gameMode = GameMode.Play;
     }
@@ -867,14 +837,14 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
-            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
+            AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
             if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
             SetPause(true);
             fs.Close();
             return false;
         }
         FAIL:
-        GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
+        AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
         if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
         print(errorReason);
         SetPause(true);
@@ -1046,14 +1016,14 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
-            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
+            AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : hashsum incorrect");
             if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
             SetPause(true);
             fs.Close();
             return false;
         }
         FAIL:
-        GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
+        AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
         if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
         print(errorReason);
         SetPause(true);

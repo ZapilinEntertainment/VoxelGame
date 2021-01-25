@@ -16,7 +16,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
 
     public static UIHangarObserver InitializeHangarObserverScript()
     {
-        UIHangarObserver uho = Instantiate(Resources.Load<GameObject>("UIPrefs/hangarObserver"), UIController.current.rightPanel.transform).GetComponent<UIHangarObserver>();
+        UIHangarObserver uho = Instantiate(Resources.Load<GameObject>("UIPrefs/hangarObserver"), mycanvas.rightPanel.transform).GetComponent<UIHangarObserver>();
         uho.LocalizeTitles();
         return uho;
     }
@@ -43,7 +43,6 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
 
     public void PrepareHangarWindow()
     {
-        var uc = UIController.current;
         var rcc = resourceCostContainer.gameObject;
         showingStatus = observingHangar.status;
         switch (showingStatus)
@@ -51,7 +50,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             case Hangar.HangarStatus.ShuttleOnMission:
                 {
                     if (rcc.activeSelf) rcc.SetActive(false);
-                    if (uc.progressPanelMode == ProgressPanelMode.Hangar) uc.DeactivateProgressPanel(ProgressPanelMode.Hangar);
+                    if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     shuttleLabel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
                     shuttleLabel.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttleOnMission);
                     if (!shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(true);
@@ -60,7 +59,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             case Hangar.HangarStatus.ShuttleInside:
                 {
                     if (rcc.activeSelf) rcc.SetActive(false);
-                    if (uc.progressPanelMode == ProgressPanelMode.Hangar) uc.DeactivateProgressPanel(ProgressPanelMode.Hangar);
+                    if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     shuttleLabel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.ShuttleGoodIcon);
                     shuttleLabel.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttleReady);
                     if (!shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(true);
@@ -69,7 +68,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             case Hangar.HangarStatus.ConstructingShuttle:
                 {
                     if (rcc.activeSelf) rcc.SetActive(false);
-                    UIController.current.ActivateProgressPanel(ProgressPanelMode.Hangar);
+                    mycanvas.ActivateProgressPanel(ProgressPanelMode.Hangar);
                     if (shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(false);
                     break;
                 }
@@ -77,7 +76,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             default:
                 {
                     if (!rcc.activeSelf) rcc.SetActive(true);
-                    if (uc.progressPanelMode == ProgressPanelMode.Hangar) uc.DeactivateProgressPanel(ProgressPanelMode.Hangar);
+                    if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     if (shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(false);
 
                     ResourceContainer[] rc = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
@@ -136,7 +135,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             }
             else
             {
-                GameLogUI.NotEnoughResourcesAnnounce();
+                AnnouncementCanvasController.NotEnoughResourcesAnnounce();
             }
         }
     }
@@ -146,7 +145,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
-        if (UIController.current.progressPanelMode == ProgressPanelMode.Hangar) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Hangar);
+        if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
         gameObject.SetActive(false);
     }
 
@@ -155,7 +154,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
         isObserving = false;
         observingHangar = null;
         WorkBuilding.workbuildingObserver.ShutOff();
-        if (UIController.current.progressPanelMode == ProgressPanelMode.Hangar) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Hangar);
+        if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
         gameObject.SetActive(false);
     }
 

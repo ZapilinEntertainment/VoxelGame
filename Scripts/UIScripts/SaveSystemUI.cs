@@ -266,7 +266,7 @@ public sealed class SaveSystemUI : MonoBehaviour
                     if (GameMaster.realMaster.LoadGame(fullPath))
                     {
                         gameObject.SetActive(false);
-                        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameLoaded));
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameLoaded));
                     }
                 }
                 else
@@ -328,10 +328,10 @@ public sealed class SaveSystemUI : MonoBehaviour
                 {
                     string s = saveNames[lastSelectedIndex];
                     if (GameMaster.realMaster.SaveGame(s))
-                        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameSaved));
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameSaved));
                     else
                     {
-                        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SavingFailed));
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SavingFailed));
                         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
                     }
                 }

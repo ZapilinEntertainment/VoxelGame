@@ -26,7 +26,7 @@ public class UIBuildingObserver : UIObserver {
 
     public static UIBuildingObserver InitializeBuildingObserverScript()
     {
-        UIBuildingObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIBuildingObserver>();
+        UIBuildingObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/buildingObserver"), mycanvas.rightPanel.transform).GetComponent<UIBuildingObserver>();
         Building.buildingObserver = ub;
         ub.LocalizeTitles();
         return ub;
@@ -533,7 +533,7 @@ public class UIBuildingObserver : UIObserver {
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.BatteryCharged);
             }
         }
-        else GameLogUI.NotEnoughMoneyAnnounce();
+        else AnnouncementCanvasController.NotEnoughMoneyAnnounce();
     }
 
 	override public void SelfShutOff() {

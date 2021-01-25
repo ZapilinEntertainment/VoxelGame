@@ -20,7 +20,7 @@ public sealed class UIMonumentObserver : UIObserver
 
     public static UIMonumentObserver InitializeMonumentObserverScript()
     {
-        UIMonumentObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/monumentObserver"), UIController.current.rightPanel.transform).GetComponent<UIMonumentObserver>();
+        UIMonumentObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/monumentObserver"), mycanvas.rightPanel.transform).GetComponent<UIMonumentObserver>();
         Monument.SetObserver(ub);
         ub.LocalizeTitles();
         return ub;
@@ -210,7 +210,7 @@ public sealed class UIMonumentObserver : UIObserver
             }
             if (Artifact.artifactsList.Count == 0)
             {
-                GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NoArtifacts));
+                AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NoArtifacts));
                 return;
             }
             var arts = new List<Artifact>();
@@ -335,7 +335,7 @@ public sealed class UIMonumentObserver : UIObserver
                     if (ids != null) ids.Clear();
                     listHolder.SetActive(false);
                 }
-                GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NoSuitableArtifacts));
+                AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NoSuitableArtifacts));
                 return;
             }
         }

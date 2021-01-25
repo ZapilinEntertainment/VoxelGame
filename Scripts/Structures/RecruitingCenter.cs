@@ -29,7 +29,7 @@ public sealed class RecruitingCenter : WorkBuilding {
             var rc = recruitingCentersList[Random.Range(0, n)];
             if (rc != null)
             {
-                UIController.current.Select(rc);
+                UIController.GetCurrent()?.GetMainCanvasController()?.Select(rc);
                 return true;
             }
         }
@@ -77,7 +77,7 @@ public sealed class RecruitingCenter : WorkBuilding {
                         workersCount -= memCount;
                         workflow = 0;
                         finding = false;
-                        GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Ready, c));
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Ready, c));
                         hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
                         hireCost = ((int)(hireCost * 100)) / 100f;
                         if (showOnGUI) rcenterObserver.SelectCrew(c);
@@ -117,13 +117,13 @@ public sealed class RecruitingCenter : WorkBuilding {
                 }
                 else
                 {
-                    GameLogUI.NotEnoughMoneyAnnounce();
+                    AnnouncementCanvasController.NotEnoughMoneyAnnounce();
                     return false;
                 }
             }
             else
             {
-                GameLogUI.MakeImportantAnnounce(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
+                AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetRefusalReason(RefusalReason.NotEnoughSlots));
                 if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.NotEnoughSlots);
                 return false;
             }

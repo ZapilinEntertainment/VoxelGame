@@ -82,7 +82,7 @@ override protected void LabourResult() {
                 {
                     if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
                     {
-                        GameLogUI.NotEnoughResourcesAnnounce();
+                        AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                         return;
                     }
                 }

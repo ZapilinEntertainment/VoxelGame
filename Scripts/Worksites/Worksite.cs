@@ -123,7 +123,7 @@ public abstract class Worksite
             if (observer.observingWorksite == this)
             {
                 observer.SelfShutOff();
-                UIController.current.ChangeChosenObject(ChosenObjectType.Plane);
+                UIController.GetCurrent().GetMainCanvasController().ChangeChosenObject(ChosenObjectType.Plane);
             }
             showOnGUI = false;
         }

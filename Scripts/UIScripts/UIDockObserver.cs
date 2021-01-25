@@ -20,7 +20,7 @@ public sealed class UIDockObserver : UIObserver
 
     public static UIDockObserver InitializeDockObserverScript()
     {
-        UIDockObserver udo = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), UIController.current.rightPanel.transform).GetComponent<UIDockObserver>();
+        UIDockObserver udo = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), mycanvas.rightPanel.transform).GetComponent<UIDockObserver>();
         Dock.dockObserver = udo;
         udo.LocalizeTitles();
         return udo;
@@ -60,7 +60,7 @@ public sealed class UIDockObserver : UIObserver
         tradingButtonText.transform.parent.GetComponent<Image>().overrideSprite = overridingSprite;
         immigrationButtonText.transform.parent.GetComponent<Image>().overrideSprite = null;
         RefreshTradeOperationsList();
-        UIController.current.ActivateTradePanel();
+        mycanvas.ActivateTradePanel();
     }
     public void PrepareImmigrationPanel()
     {
@@ -228,7 +228,7 @@ public sealed class UIDockObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
-        UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
+        mycanvas.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         gameObject.SetActive(false);
     }
 
@@ -237,7 +237,7 @@ public sealed class UIDockObserver : UIObserver
         isObserving = false;
         observingDock = null;
         WorkBuilding.workbuildingObserver.ShutOff();
-        UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
+        mycanvas.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         gameObject.SetActive(false);
     }
 

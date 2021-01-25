@@ -75,7 +75,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }       
         islandStability = DEFAULT_ISLAND_STABILITY;
         gmap?.LinkEnvironmentMaster(this);
-        if (GameMaster.realMaster.testMode) GameLogUI.MakeAnnouncement("environment master loaded");
+        if (GameMaster.realMaster.testMode) AnnouncementCanvasController.MakeAnnouncement("environment master loaded");
     }
     public void LinkColonyController(ColonyController cc)
     {

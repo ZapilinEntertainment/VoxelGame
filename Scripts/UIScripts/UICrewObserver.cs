@@ -26,7 +26,7 @@ public sealed class UICrewObserver : MonoBehaviour
     {
         if (_currentObserver == null)
         {
-            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.current.mainCanvas).GetComponent<UICrewObserver>();
+            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), MainCanvasController.current.mainCanvas).GetComponent<UICrewObserver>();
             _currentObserver.LocalizeTitles();
         }
         return _currentObserver;
@@ -218,7 +218,7 @@ public sealed class UICrewObserver : MonoBehaviour
     {
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += StatusUpdate;
+            MainCanvasController.current.statusUpdateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
     }
@@ -226,9 +226,9 @@ public sealed class UICrewObserver : MonoBehaviour
     {
         if (subscribedToUpdate)
         {
-            if (UIController.current != null)
+            if (MainCanvasController.current != null)
             {
-                UIController.current.statusUpdateEvent -= StatusUpdate;
+                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }
@@ -237,8 +237,6 @@ public sealed class UICrewObserver : MonoBehaviour
             closingEvent.Invoke();
             closingEvent = null;
         }
-        ExploringMinigameUI.ActivateIfEnabled();
-
     }
     private void OnDestroy()
     {
@@ -246,9 +244,9 @@ public sealed class UICrewObserver : MonoBehaviour
         {
             if (subscribedToUpdate)
             {
-                if (UIController.current != null)
+                if (MainCanvasController.current != null)
                 {
-                    UIController.current.statusUpdateEvent -= StatusUpdate;
+                    MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
                 }
                 subscribedToUpdate = false;
             }

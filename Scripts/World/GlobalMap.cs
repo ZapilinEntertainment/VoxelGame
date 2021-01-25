@@ -538,7 +538,7 @@ public sealed class GlobalMap : MonoBehaviour
                     }
                     else
                     {
-                        GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotReachDestination, fe.expedition.crew));
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.CannotReachDestination, fe.expedition.crew));
                         fe.expedition.EndMission();
                     }
                 }
@@ -661,7 +661,7 @@ public sealed class GlobalMap : MonoBehaviour
         if (observer == null)
         {
             observer = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
-            observer.GetComponent<GlobalMapUI>().SetGlobalMap(this);
+            observer.GetComponent<GlobalMapCanvasController>().SetGlobalMap(this);
         }
         mapInterfaceActive = true;
         GameMaster.realMaster.environmentMaster.DisableDecorations();

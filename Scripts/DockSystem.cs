@@ -239,7 +239,7 @@ public sealed class DockSystem
         {
             if (newPeople > 0)
             {
-                GameLogUI.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
+                AnnouncementCanvasController.MakeAnnouncement(Localization.GetPhrase(LocalizedPhrase.ColonistsArrived) + " (" + newPeople.ToString() + ')');
                 immigrantsArrived += (uint)newPeople;
                 Knowledge.GetCurrent()?.ImmigrantsCheck(immigrantsArrived);
             }

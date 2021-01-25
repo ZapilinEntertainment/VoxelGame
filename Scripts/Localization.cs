@@ -113,7 +113,6 @@ public static class Localization
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Квантовый передатчик энергии";
                     case Structure.RESOURCE_STICK_ID: return "Идет сборка блока...";
                     case Structure.COLUMN_ID: return "Опора";
-                    case Structure.SWITCH_TOWER_ID: return "Башня переключения";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Ангар";
                     case Structure.RECRUITING_CENTER_4_ID: return "Центр подготовки";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Экспедиционный корпус";
@@ -191,7 +190,6 @@ public static class Localization
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Quantum energy transmitter";
                     case Structure.RESOURCE_STICK_ID: return "Constructing block...";
                     case Structure.COLUMN_ID: return "Column";
-                    case Structure.SWITCH_TOWER_ID: return "Switch tower";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Shuttle hangar";
                     case Structure.RECRUITING_CENTER_4_ID: return "Recruiting Center";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Expedition Corpus";
@@ -283,7 +281,6 @@ public static class Localization
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Производит снаряжение для экспедиций и нужд колонии.";
                     case Structure.GRPH_ENRICHER_3_ID: return "Обогащает N-метал до Графония.";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Конденсирует лишнюю энергию в кристаллы. Может быть построен только одно такое здание!";
-                    case Structure.SWITCH_TOWER_ID: return "При выделении включает срез слоя, на котором находится.";
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Вмещает и обслуживает один челнок. Для корректной работы должен иметь свободный коридор до конца карты шириной в 1 блок.";
                     case Structure.RECRUITING_CENTER_4_ID: return "Набирает и подготавливает команды исследователей из добровольцев.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Центр управления миссиями. Может быть построено только одно такое здание.";
@@ -370,7 +367,7 @@ public static class Localization
                     case Structure.SUPPLIES_FACTORY_5_ID: return "Produces supplies for expeditions and colony needs.";
                     case Structure.GRPH_ENRICHER_3_ID: return "Transforms N-metal into Graphonium.";
                     case Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID: return "Transforms energy excess in energy crystals. It can be only one building of this type!";
-                    case Structure.SWITCH_TOWER_ID: return "Activates layer cut on its own height when selected.";
+                    
                     case Structure.SHUTTLE_HANGAR_4_ID: return "Holds and maintains one shuttle. Hangar needs one-block wide flight corridor to the edge of the map to work properly";
                     case Structure.RECRUITING_CENTER_4_ID: return "Recruits and trains exploring teams.";
                     case Structure.EXPEDITION_CORPUS_4_ID: return "Controls missions activities.";

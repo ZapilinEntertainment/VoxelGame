@@ -47,7 +47,7 @@ public sealed class UISurfacePanelController : UIObserver {
         if (current != null) return current;
         else
         {
-            current = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), UIController.current.mainCanvas).GetComponent<UISurfacePanelController>();            
+            current = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), mycanvas.GetMainCanvasTransform()).GetComponent<UISurfacePanelController>();            
             current.LocalizeTitles();
             return current;
         }
@@ -221,7 +221,7 @@ public sealed class UISurfacePanelController : UIObserver {
             if (newGatherSite)
             {
                 var gs = new GatherSite(observingSurface);
-                UIController.current.ShowWorksite(gs);
+                mycanvas.ShowWorksite(gs);
             }
 			StatusUpdate();
 		}
@@ -261,12 +261,12 @@ public sealed class UISurfacePanelController : UIObserver {
                 if (newCleanSite)
                 {
                     var cs = new CleanSite(observingSurface, true);
-                    UIController.current.ShowWorksite(cs);
+                    mycanvas.ShowWorksite(cs);
                 }
                 else
                 {
                     var ds = new DigSite(observingSurface, true);
-                    UIController.current.ShowWorksite(ds);
+                    mycanvas.ShowWorksite(ds);
                 }
                 StatusUpdate();
             }            
@@ -357,7 +357,7 @@ public sealed class UISurfacePanelController : UIObserver {
         if (m != CostPanelMode.Disabled)
         {
             costPanel.gameObject.SetActive(true);
-            UIController.current.ChangeActiveWindow(ActiveWindowMode.SpecificBuildPanel);
+            mycanvas.ChangeActiveWindow(ActiveWindowMode.SpecificBuildPanel);
         }
         else
         {
@@ -369,7 +369,7 @@ public sealed class UISurfacePanelController : UIObserver {
             blockCreateButton.GetComponent<Image>().overrideSprite = null;
             costPanel.SetActive(false);
             costPanelMode = CostPanelMode.Disabled;
-            UIController.current.DropActiveWindow(ActiveWindowMode.SpecificBuildPanel);
+            mycanvas.DropActiveWindow(ActiveWindowMode.SpecificBuildPanel);
             return;
         }
         Transform t;        
@@ -397,7 +397,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         t = buttonsKeeper.GetChild(lastUsedIndex);
                         t.gameObject.SetActive(true);
                         RawImage ri = t.GetChild(0).GetComponent<RawImage>();
-                        ri.texture = UIController.current.resourcesIcons;
+                        ri.texture = mycanvas.resourcesIcons;
                         ri.uvRect = ResourceType.GetResourceIconRect(rt.ID);
                         t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(rt.ID);
                         Button b = t.GetComponent<Button>();
@@ -529,7 +529,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     observingSurface.ChangeMaterial(rt.ID, true);
                     costPanel.transform.GetChild(0).GetChild(costPanel_selectedButton.x).GetComponent<Image>().overrideSprite = null;
                 }
-                else GameLogUI.NotEnoughResourcesAnnounce();
+                else AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 break;
                 case CostPanelMode.ColumnBuilding:
                 {
@@ -546,7 +546,7 @@ public sealed class UISurfacePanelController : UIObserver {
                         Plane p;
                         if ((s as IPlanable).TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminal)
                         {
-                            UIController.current.Select(p);
+                            mycanvas.Select(p);
                         }
                         else ReturnButton();
                         // }
@@ -555,13 +555,13 @@ public sealed class UISurfacePanelController : UIObserver {
                         //    observingSurface.myChunk.ReplaceBlock(observingSurface.pos, BlockType.Cave, observingSurface.material_id, ResourceType.CONCRETE_ID, false);
                         // }
                     }
-                    else GameLogUI.NotEnoughResourcesAnnounce();
+                    else AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 }
                 break;
             case CostPanelMode.BlockBuilding:
                 BlockBuildingSite bbs = new BlockBuildingSite (observingSurface, ResourceType.GetResourceTypeById(costPanel_selectedButton.y));
                 SetCostPanelMode(CostPanelMode.Disabled);
-                UIController.current.ShowWorksite(bbs);
+                mycanvas.ShowWorksite(bbs);
                 break;
         }
     }
@@ -577,12 +577,12 @@ public sealed class UISurfacePanelController : UIObserver {
 				selectedBuildingButton = -1;
                 selectedStructureID = Structure.EMPTY_ID;
 			}
-            UIController.current.DropActiveWindow(ActiveWindowMode.BuildPanel);
+            mycanvas.DropActiveWindow(ActiveWindowMode.BuildPanel);
 		}
         else
         {
             if (costPanelMode != CostPanelMode.Disabled) SetCostPanelMode(CostPanelMode.Disabled);
-            UIController.current.ChangeActiveWindow(ActiveWindowMode.BuildPanel);
+            mycanvas.ChangeActiveWindow(ActiveWindowMode.BuildPanel);
         }
 	}
 	void SetActionPanelStatus ( bool working ) {
@@ -613,13 +613,13 @@ public sealed class UISurfacePanelController : UIObserver {
 			blockCreateButton.gameObject.SetActive(IsBlockCreatingAvailable());
 			columnCreateButton.gameObject.SetActive(IsColumnAvailable() && !observingSurface.isTerminal);
             changeMaterialButton.gameObject.SetActive(IsChangeSurfaceMaterialAvalable());
-			UIController.current.closePanelButton.gameObject.SetActive(true);
+            mycanvas.closePanelButton.gameObject.SetActive(true);
 		}
 		else {
 			if (changeMaterialButton.gameObject.activeSelf) changeMaterialButton.gameObject.SetActive( false ) ;
 			if (blockCreateButton.gameObject.activeSelf) blockCreateButton.gameObject.SetActive( false  );
 			if (columnCreateButton.gameObject.activeSelf) columnCreateButton.gameObject.SetActive( false  );
-			UIController.current.closePanelButton.gameObject.SetActive(false);
+            mycanvas.closePanelButton.gameObject.SetActive(false);
             if (costPanelMode != CostPanelMode.Disabled) SetCostPanelMode(CostPanelMode.Disabled);
         }
 	}
@@ -655,7 +655,7 @@ public sealed class UISurfacePanelController : UIObserver {
         {
             constructionPlaneSwitchButton.image.overrideSprite = null;
             constructionPlane.SetActive(false);
-            UIController.current.interceptingConstructPlaneID = -1;
+            mycanvas.interceptingConstructPlaneID = -1;
             if (mode == SurfacePanelMode.Build)
             {
                 surfaceBuildingPanel.SetActive(true);
@@ -672,7 +672,7 @@ public sealed class UISurfacePanelController : UIObserver {
         t.rotation = Quaternion.Euler(observingSurface.GetEulerRotationForQuad());
         t.position += observingSurface.GetLookVector() * 0.01f;
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.FORCED_GetExtension().GetMapTexture());
-        UIController.current.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
+        mycanvas.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
         if (selectedStructureID != Structure.EMPTY_ID) FollowingCamera.main.CameraRotationBlock(false);
     }
@@ -860,7 +860,7 @@ public sealed class UISurfacePanelController : UIObserver {
                             if (ip.TryGetPlane(observingSurface.faceIndex, out p) && !p.isTerminal)
                             {
                                 var sbb = selectedBuildingButton;
-                                UIController.current.Select(p);                                
+                                mycanvas.Select(p);                                
                             }
                         }                     
                     }
@@ -871,7 +871,7 @@ public sealed class UISurfacePanelController : UIObserver {
         }
         else
         {
-            GameLogUI.NotEnoughResourcesAnnounce();
+            AnnouncementCanvasController.NotEnoughResourcesAnnounce();
         }
     }
 
@@ -952,7 +952,7 @@ public sealed class UISurfacePanelController : UIObserver {
         isObserving = false;
         if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
         gameObject.SetActive(false);
-        UIController.current.SelectedObjectLost();
+        mycanvas.SelectedObjectLost();
     }
 
     void LocalizeButtonTitles()
@@ -976,10 +976,9 @@ public sealed class UISurfacePanelController : UIObserver {
     new private void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
-        if (subscribedToUpdate)
+        if (subscribedToUpdate && mycanvas != null)
         {
-            UIController uc = UIController.current;
-            if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
+            mycanvas.statusUpdateEvent -= StatusUpdate;
         }
         if (current == this) current = null;
     }

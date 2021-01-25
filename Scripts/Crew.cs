@@ -75,7 +75,7 @@ public sealed class Crew : MonoBehaviour {
         if (crewsList.Count >= RecruitingCenter.GetCrewsSlotsCount()) return null;
         if (crewsList.Count > MAX_CREWS_COUNT)
         {
-            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.CrewsLimitReached));
+            AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.CrewsLimitReached));
             GameMaster.LoadingFail();
             return null;
         }
@@ -132,7 +132,7 @@ public sealed class Crew : MonoBehaviour {
     }
     public void DrawCrewIcon(UnityEngine.UI.RawImage ri)
     {
-        ri.texture = UIController.current.iconsTexture;
+        ri.texture = UIController.iconsTexture;
         ri.uvRect = UIController.GetIconUVRect(stamina > 0.8f ? Icons.CrewGoodIcon : (stamina < 0.25f ? Icons.CrewBadIcon : Icons.CrewNormalIcon));
     }
 

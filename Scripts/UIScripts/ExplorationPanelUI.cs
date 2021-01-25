@@ -24,22 +24,22 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     private Expedition showingExpedition;
     private InfoMode mode;
     private List<int> listIDs;
+    private MainCanvasController mainObserver;
     
 
     public static void Initialize()
     {
-        if (current == null) current = Instantiate(Resources.Load<GameObject>("UIPrefs/explorationPanel"), UIController.current.mainCanvas).GetComponent<ExplorationPanelUI>();
+        var obs = UIController.GetCurrent().GetMainCanvasController();
+        if (current == null)
+        {
+            current = Instantiate(Resources.Load<GameObject>("UIPrefs/explorationPanel"), obs.GetMainCanvasTransform()).GetComponent<ExplorationPanelUI>();
+            current.mainObserver = obs;
+        }
         current.gameObject.SetActive(true);
     }
     public static void Deactivate()
     {
         if (current != null) current.gameObject.SetActive(false);
-    }
-    public static void RestoreSession(Expedition e)
-    {
-        if (current == null) Initialize();
-        else if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
-        current.Show(e);
     }
 
     public void SelectItem(int i)
@@ -527,7 +527,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     {
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += StatusUpdate;
+            mainObserver.statusUpdateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
         if (mode == InfoMode.Inactive) ChangeMode(InfoMode.Expeditions);
@@ -541,17 +541,17 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         }
         if (subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent -= StatusUpdate;
+            mainObserver.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
         }
         ChangeMode(InfoMode.Inactive);
-        if (UIController.current != null) UIController.current.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);
+        mainObserver.DropActiveWindow(ActiveWindowMode.ExpeditionPanel);
     }
     private void OnDestroy()
     {
         if (!GameMaster.sceneClearing & subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent -= StatusUpdate;
+            mainObserver.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
         }
     }

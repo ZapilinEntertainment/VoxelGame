@@ -44,11 +44,12 @@ public class Structure : MonoBehaviour
     COMPOSTER_ID = 40, HOUSE_BLOCK_ID = 42, ENERGY_CAPACITOR_2_ID = 43, HOSPITAL_2_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, COVERED_FARM = 47, FARM_BLOCK_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, COVERED_LUMBERMILL = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, ENGINE_ID = 58, CAPACITOR_MAST_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
-    COLUMN_ID = 61, SWITCH_TOWER_ID = 62, SHUTTLE_HANGAR_4_ID = 63,
+    COLUMN_ID = 61, SHUTTLE_HANGAR_4_ID = 63,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78, CRYSTALLISER_ID = 79, CRYSTAL_MAST_ID = 80, ANCHOR_MAST_ID = 81, HANGING_TMAST_ID = 82,
         RESOURCE_FILTER_ID = 83, PROTECTION_CORE_ID = 84;
+    //free ids: 62
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
@@ -169,8 +170,6 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Quantum energy transmitter"); break;
             case QUANTUM_TRANSMITTER_4_ID:
                 s = new GameObject("Quantum transmitter"); break;
-            case SWITCH_TOWER_ID:
-                s = new GameObject("Switch tower"); break;
             case SHUTTLE_HANGAR_4_ID:
                 s = new GameObject("Shuttle hangar"); break;
             case RECRUITING_CENTER_4_ID:
@@ -282,7 +281,6 @@ public class Structure : MonoBehaviour
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: return new Rect(2 * p, 4 * p, p, p);
             case RESOURCE_STICK_ID: return new Rect(4 * p, 4 * p, p, p);
             case COLUMN_ID: return new Rect(5 * p, 4 * p, p, p);
-            case SWITCH_TOWER_ID: return new Rect(6 * p, 4 * p, p, p);
             case SHUTTLE_HANGAR_4_ID: return new Rect(7 * p, 4 * p, p, p);
             case RECRUITING_CENTER_4_ID: return new Rect(0, 3 * p, p, p);
             case EXPEDITION_CORPUS_4_ID: return new Rect(p, 3 * p, p, p);
@@ -381,8 +379,6 @@ public class Structure : MonoBehaviour
                 return typeof(QuantumEnergyTransmitter);
             case QUANTUM_TRANSMITTER_4_ID:
                 return typeof(QuantumTransmitter);
-            case SWITCH_TOWER_ID:
-                return typeof(SwitchTower);
             case SHUTTLE_HANGAR_4_ID:
                 return typeof(Hangar);
             case RECRUITING_CENTER_4_ID:
@@ -563,7 +559,7 @@ public class Structure : MonoBehaviour
             case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
             case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
             case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
-            case SWITCH_TOWER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/switchTower")); break;
+         
             case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
             case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
             case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
@@ -986,13 +982,6 @@ public class Structure : MonoBehaviour
                     isArtificial = true;                    
                 }
                 break;
-            case SWITCH_TOWER_ID:
-                {
-                    maxHp = 250;
-                    rotate90only = true;
-                    isArtificial = true;                    
-                }
-                break;
             case SHUTTLE_HANGAR_4_ID:
                 {
                     maxHp = 1200;
@@ -1164,8 +1153,6 @@ public class Structure : MonoBehaviour
             case MINE_ELEVATOR_ID:
             case FARM_1_ID:
             case MINE_ID:
-            case SWITCH_TOWER_ID:
-                return 4;
             case FARM_2_ID:
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
@@ -1196,7 +1183,6 @@ public class Structure : MonoBehaviour
             case RESOURCE_STICK_ID:     
             case CONTAINER_ID:
             case TENT_ID:
-            case SWITCH_TOWER_ID: 
             case SETTLEMENT_STRUCTURE_ID:
                 return false;
             default: return true;

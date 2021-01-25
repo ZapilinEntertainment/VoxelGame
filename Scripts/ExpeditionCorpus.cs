@@ -16,7 +16,8 @@
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        if (!UIController.current.activeFastButtons.Contains(ID)) UIController.current.AddFastButton(this);
+        var observer = colony.observer;
+        if (observer != null && !observer.activeFastButtons.Contains(ID)) observer.AddFastButton(this);
         current = this;
     }
 
@@ -26,7 +27,7 @@
         else workbuildingObserver.gameObject.SetActive(true);
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
-        UIController.current.ChangeActiveWindow(ActiveWindowMode.ExpeditionPanel);
+        colony.observer?.ChangeActiveWindow(ActiveWindowMode.ExpeditionPanel);
         return workbuildingObserver;
     }
 
@@ -43,9 +44,10 @@
         if (current == this)
         {
             current = null;
-            if (UIController.current.activeFastButtons.Contains(ID))
+            var observer = colony.observer;
+            if (observer != null && observer.activeFastButtons.Contains(ID))
             {
-                UIController.current.RemoveFastButton(this);
+                observer.RemoveFastButton(this);
             }
         }
         Destroy(gameObject);

@@ -42,7 +42,6 @@
         structuresCost[Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID] = 100 * val;
         structuresCost[Structure.STORAGE_0_ID] = 10 * val;
         structuresCost[Structure.COLUMN_ID] = val;
-        structuresCost[Structure.SWITCH_TOWER_ID] = 0;
         structuresCost[Structure.FOUNDATION_BLOCK_5_ID] = 2 * val;
         structuresCost[Structure.CONNECT_TOWER_6_ID] = 10 * val;
 

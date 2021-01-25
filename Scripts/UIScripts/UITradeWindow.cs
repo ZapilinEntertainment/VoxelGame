@@ -267,19 +267,19 @@ public sealed class UITradeWindow : UIObserver {
         if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
         transform.SetAsLastSibling();
         UpdateResourceButtons();
-        UIController.current.ChangeActiveWindow(ActiveWindowMode.TradePanel);
+        mycanvas.ChangeActiveWindow(ActiveWindowMode.TradePanel);
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += StatusUpdate;
+            mycanvas.statusUpdateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
     }
     new private void OnDisable()
     {
-        if (UIController.current.currentActiveWindowMode == ActiveWindowMode.TradePanel) UIController.current.ChangeActiveWindow(ActiveWindowMode.NoWindow);
+        if (mycanvas.currentActiveWindowMode == ActiveWindowMode.TradePanel) mycanvas.ChangeActiveWindow(ActiveWindowMode.NoWindow);
         if (subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent -= StatusUpdate;
+            mycanvas.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
         }
     }
@@ -293,7 +293,7 @@ public sealed class UITradeWindow : UIObserver {
         chosenResourceID = -1;
         resourceInfoPanel.SetActive(false);
         isObserving = false;
-        UIController.current.DropActiveWindow(ActiveWindowMode.TradePanel);
+        mycanvas.DropActiveWindow(ActiveWindowMode.TradePanel);
         gameObject.SetActive(false);
     }
 }

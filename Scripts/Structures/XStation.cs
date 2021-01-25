@@ -85,7 +85,7 @@ public sealed class XStation : WorkBuilding {
         workbuildingObserver.SetObservingWorkBuilding(this);
         showOnGUI = true;
 
-        UIController.current.EnableTextfield(ID);
+        colony.observer.EnableTextfield(ID);
 
         return workbuildingObserver;
     }
@@ -101,12 +101,12 @@ public sealed class XStation : WorkBuilding {
                 markerEnabled = false;
             }
         }
-        UIController.current.DisableTextfield(ID);
+        colony.observer.DisableTextfield(ID);
     }
 
     private void PrepareIndicator()
     {
-        var g = Instantiate(Resources.Load<GameObject>("UIPrefs/stabilityIndicator"), UIController.current.mainCanvas);
+        var g = Instantiate(Resources.Load<GameObject>("UIPrefs/stabilityIndicator"), colony.observer.GetMainCanvasTransform());
         var t = g.transform;
         //t.parent = UIController.current.mainCanvas;
         //(t as RectTransform).position = Vector2.down * 60f;

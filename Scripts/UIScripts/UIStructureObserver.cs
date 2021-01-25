@@ -14,7 +14,7 @@ public class UIStructureObserver : UIObserver {
 
     public static UIStructureObserver InitializeStructureObserverScript()
     {
-        UIStructureObserver us = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), UIController.current.rightPanel.transform).GetComponent<UIStructureObserver>();
+        UIStructureObserver us = Instantiate(Resources.Load<GameObject>("UIPrefs/structureObserver"), mycanvas.rightPanel.transform).GetComponent<UIStructureObserver>();
         Structure.structureObserver = us;
         return us;
     }
@@ -60,7 +60,7 @@ public class UIStructureObserver : UIObserver {
         {
             if (observingStructure is IPlanable && !(observingStructure is Hotel))
             {
-                observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+                observingStructure.SetModelRotation(mycanvas.GetSelectedFaceIndex() + 11);
             }
             else
             {
@@ -78,7 +78,7 @@ public class UIStructureObserver : UIObserver {
         {
             if (observingStructure is IPlanable && !(observingStructure is Hotel))
             {
-                observingStructure.SetModelRotation(UIController.current.GetSelectedFaceIndex() + 11);
+                observingStructure.SetModelRotation(mycanvas.GetSelectedFaceIndex() + 11);
             }
             else
             {
@@ -107,7 +107,7 @@ public class UIStructureObserver : UIObserver {
     override public void SelfShutOff() { // публичный, потому что на кнопках
         if (observingStructure != null) observingStructure.DisableGUI();
         isObserving = false;
-		UIController.current.SelectedObjectLost();
+		mycanvas.SelectedObjectLost();
 		gameObject.SetActive(false);
 	}
 

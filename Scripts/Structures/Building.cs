@@ -628,11 +628,6 @@ public class Building : Structure
                     level = 5;
                 }
                 break;
-            case SWITCH_TOWER_ID:
-                {
-                    level = 6;
-                }
-                break;
             case SHUTTLE_HANGAR_4_ID:
                 {
                     canBePowerSwitched = true;
@@ -825,7 +820,7 @@ public class Building : Structure
             ResourceContainer[] cost = GetUpgradeCost();
             if (!GameMaster.realMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                GameLogUI.NotEnoughResourcesAnnounce();
+                AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 return;
             }
         }

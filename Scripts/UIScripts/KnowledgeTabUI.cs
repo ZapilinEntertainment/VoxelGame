@@ -12,6 +12,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     [SerializeField] private RectTransform[] routeBackgrounds;
     private Knowledge knowledge;
     private GameObject[] buttons;
+    private UIController uicontroller;
    
     private int lastChMarkerValue;
     private bool unsufficientMarkering = false, prepared = false;
@@ -242,6 +243,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     public void Prepare(Knowledge kn)
     {
         knowledge = kn;
+        uicontroller = UIController.GetCurrent();
         if (buttons == null) {
             buttons = new GameObject[64];
             buttons[0] = zeroButton;
@@ -305,7 +307,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     rt.offsetMin = Vector2.zero;
                     rt.offsetMax = Vector2.zero;
                     ri = blockTechMarker.AddComponent<RawImage>();
-                    ri.texture = UIController.current.iconsTexture;
+                    ri.texture = UIController.iconsTexture;
                     ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
                 }
                 index = Knowledge.routeButtonsIndexes[i, Knowledge.STEPS_COUNT - 4];
@@ -320,7 +322,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                     rt.offsetMin = Vector2.zero;
                     rt.offsetMax = Vector2.zero;
                     ri = blockTechMarker.AddComponent<RawImage>();
-                    ri.texture = UIController.current.iconsTexture;
+                    ri.texture = UIController.iconsTexture;
                     ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
                     ri.raycastTarget = false;
                 }
@@ -416,14 +418,14 @@ public sealed class KnowledgeTabUI : MonoBehaviour
                 eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, s);
                 eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, s);
                 var ri = g.AddComponent<RawImage>();
-                ri.texture = UIController.current.iconsTexture;
+                ri.texture = UIController.iconsTexture;
                 ri.uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
                 var btn = g.AddComponent<Button>();
                 byte index = (byte)i;
-                btn.onClick.AddListener(() => GameLogUI.EnableDecisionWindow(
+                btn.onClick.AddListener(() => AnnouncementCanvasController.EnableDecisionWindow(
                     Localization.GetPhrase(LocalizedPhrase.Ask_StartFinalQuest),
                     () => QuestUI.current.StartEndQuest(index), Localization.GetWord(LocalizedWord.Yes),
-                    GameLogUI.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
+                    AnnouncementCanvasController.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
                     ));
                 endQuestButtons[i] = g;
             }
@@ -528,10 +530,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         unblockAnnouncePanel.SetAsLastSibling();
         unblockAnnouncePanel.gameObject.SetActive(true);
     }
-    public void UnblockAnnouncement(Rect txRect, string text)
-    {
-
-    }
 
     private void OnEnable()
     {
@@ -542,7 +540,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         }
         else
         {
-            UIController.SetActivity(false);
             if (!prepared) Prepare(knowledge);
             else
             {
@@ -552,7 +549,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour
     }
     private void OnDisable()
     {
-        GameMaster.realMaster.environmentMaster.EnableDecorations();
-        UIController.SetActivity(true);
+        uicontroller.ChangeUIMode(UIMode.Standart, false);
     }
 }

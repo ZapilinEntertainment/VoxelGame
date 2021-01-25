@@ -18,7 +18,7 @@ public sealed class UIFactoryObserver : UIObserver
 
     public static UIFactoryObserver InitializeFactoryObserverScript()
     {
-        UIFactoryObserver ufo = Instantiate(Resources.Load<GameObject>("UIPrefs/factoryObserver"), UIController.current.rightPanel.transform).GetComponent<UIFactoryObserver>();
+        UIFactoryObserver ufo = Instantiate(Resources.Load<GameObject>("UIPrefs/factoryObserver"), MainCanvasController.current.rightPanel.transform).GetComponent<UIFactoryObserver>();
         Factory.factoryObserver = ufo;
         ufo.LocalizeTitles();
         return ufo;

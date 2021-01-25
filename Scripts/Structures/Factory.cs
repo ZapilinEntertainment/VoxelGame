@@ -222,7 +222,7 @@ public class Factory : WorkBuilding
             ResourceContainer[] cost = GetUpgradeCost();
             if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                GameLogUI.NotEnoughResourcesAnnounce();
+                AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 return;
             }
         }

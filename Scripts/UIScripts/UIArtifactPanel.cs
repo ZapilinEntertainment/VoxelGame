@@ -13,6 +13,7 @@ public class UIArtifactPanel : MonoBehaviour {
     private bool noArtifacts = false, descriptionOff = false, subscribedToUpdate = false;
     private int lastDrawnActionHash = 0;
     private Artifact observingArtifact;
+    private MainCanvasController myCanvas;
     private static UIArtifactPanel _currentObserver;
 
 
@@ -21,8 +22,10 @@ public class UIArtifactPanel : MonoBehaviour {
     {
         if (_currentObserver == null)
         {
+            var mc = UIController.GetCurrent().GetMainCanvasController();
             _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/artifactPanel"), 
-                UIController.current.mainCanvas).GetComponent<UIArtifactPanel>();
+                mc.GetMainCanvasTransform()).GetComponent<UIArtifactPanel>();
+            _currentObserver.myCanvas = mc;
         }
         return _currentObserver;
     }
@@ -117,7 +120,7 @@ public class UIArtifactPanel : MonoBehaviour {
                         // установка иконки иссл лаб
                         break;
                     case Artifact.ArtifactStatus.UsingInMonument:
-                        ri.texture = UIController.current.buildingsIcons;
+                        ri.texture = myCanvas.buildingsIcons;
                         ri.uvRect = Structure.GetTextureRect(Structure.MONUMENT_ID);
                         //иконка монумента
                         break;
@@ -162,7 +165,7 @@ public class UIArtifactPanel : MonoBehaviour {
     {
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += RedrawWindow;
+            myCanvas.statusUpdateEvent += RedrawWindow;
             subscribedToUpdate = true;
         }
     }
@@ -170,7 +173,7 @@ public class UIArtifactPanel : MonoBehaviour {
     {
         if (subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent -= RedrawWindow;
+            myCanvas.statusUpdateEvent -= RedrawWindow;
             subscribedToUpdate = false;
         }
     }
@@ -180,8 +183,7 @@ public class UIArtifactPanel : MonoBehaviour {
         {
             if (subscribedToUpdate)
             {
-                UIController uc = UIController.current;
-                if (uc != null) uc.statusUpdateEvent -= RedrawWindow;
+                if (myCanvas != null) myCanvas.statusUpdateEvent -= RedrawWindow;
                 subscribedToUpdate = false;
             }
         }

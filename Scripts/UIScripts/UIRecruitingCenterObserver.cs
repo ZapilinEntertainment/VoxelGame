@@ -19,7 +19,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
 
     public static UIRecruitingCenterObserver InitializeRCenterObserverScript()
     {
-        UIRecruitingCenterObserver urco = Instantiate(Resources.Load<GameObject>("UIPrefs/recruitingCenterObserver"), UIController.current.rightPanel.transform).GetComponent<UIRecruitingCenterObserver>();
+        UIRecruitingCenterObserver urco = Instantiate(Resources.Load<GameObject>("UIPrefs/recruitingCenterObserver"), mycanvas.rightPanel.transform).GetComponent<UIRecruitingCenterObserver>();
         RecruitingCenter.rcenterObserver = urco;
         return urco;
     }
@@ -54,13 +54,13 @@ public sealed class UIRecruitingCenterObserver : UIObserver
             if (observingRCenter.finding)
             {
                 hireButton.gameObject.SetActive(false);
-                UIController.current.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+                mycanvas.ActivateProgressPanel(ProgressPanelMode.RecruitingCenter);
                 crewsDropdown.gameObject.SetActive(false);
             }
             else
             {
                 hireButton.gameObject.SetActive(true);
-                UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+                mycanvas.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
                 crewsDropdown.gameObject.SetActive(true);
             }            
             infoButton.SetActive(false);
@@ -72,7 +72,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         {
             crewsDropdown.gameObject.SetActive(true);
             hiremode = false;
-            UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+            mycanvas.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
             hireButton.gameObject.SetActive(false);
             infoButton.SetActive(true);
 
@@ -170,7 +170,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         }
         else
         {
-            var canvas = UIController.current.mainCanvas.GetComponent<RectTransform>();
+            RectTransform canvas = mycanvas.GetMainCanvasTransform() as RectTransform;
             float f = Screen.height / 2f;
             infoButton.SetActive(false);
             var r = new Rect(new Vector2(-GetComponent<RectTransform>().rect.width,0f), new Vector2(f,f));            
@@ -196,7 +196,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
                 }
                 else
                 {
-                    GameLogUI.NotEnoughMoneyAnnounce();
+                    AnnouncementCanvasController.NotEnoughMoneyAnnounce();
                 }
             }
         }
@@ -207,7 +207,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
     {
         isObserving = false;
         WorkBuilding.workbuildingObserver.SelfShutOff();
-        if (hiremode) UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+        if (hiremode) mycanvas.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
         gameObject.SetActive(false);
     }
 
@@ -216,7 +216,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         isObserving = false;
         observingRCenter = null;
         WorkBuilding.workbuildingObserver.ShutOff();
-        if (hiremode) UIController.current.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
+        if (hiremode) mycanvas.DeactivateProgressPanel(ProgressPanelMode.RecruitingCenter);
         gameObject.SetActive(false);
     }
 }

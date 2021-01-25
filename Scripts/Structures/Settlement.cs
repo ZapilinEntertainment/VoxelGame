@@ -205,7 +205,7 @@ public sealed class Settlement : House
         var colony = GameMaster.realMaster.colonyController;
         if (colony.energySurplus <= 0)
         {
-            if (forced) GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NotEnoughEnergySupply));
+            if (forced) AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.NotEnoughEnergySupply));
             return;
         }
 
@@ -949,7 +949,7 @@ public sealed class Settlement : House
             ResourceContainer[] cost = GetUpgradeCost();
             if (!GameMaster.realMaster.colonyController.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                GameLogUI.NotEnoughResourcesAnnounce();
+                AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 return;
             }
         }

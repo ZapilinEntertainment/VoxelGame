@@ -41,7 +41,7 @@ public sealed class Zeppelin : MonoBehaviour {
         if (current != null) Destroy(current);
         current = this;
         if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(gameObject);
-        UIController.current.BindLandButton(this);
+        MainCanvasController.current.BindLandButton(this);
     }
 
 	void Update() {
@@ -206,7 +206,7 @@ public sealed class Zeppelin : MonoBehaviour {
                     lineDrawer.enabled = true;
                     landingMarkObject.transform.position = lpos + Vector3.down * Block.QUAD_SIZE * 0.45f;
                     landingMarkObject.SetActive(true);
-                    UIController.current.ActivateLandButton();
+                    MainCanvasController.current.ActivateLandButton();
                 }
             }
         }
@@ -214,7 +214,7 @@ public sealed class Zeppelin : MonoBehaviour {
     public void DropSelectedSurface()
     {
         lineDrawer.enabled = false;
-        UIController.current.DeactivateLandButton();
+        MainCanvasController.current.DeactivateLandButton();
         landingMarkObject.SetActive(false);
     }
 
@@ -224,7 +224,7 @@ public sealed class Zeppelin : MonoBehaviour {
         {
             if (landingSurface != null)
             {
-                if (UIController.current != null && UIController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
+                if (MainCanvasController.current != null && MainCanvasController.current.currentActiveWindowMode == ActiveWindowMode.GameMenu) return;
                 landPointSet = true;
                 Vector3 newPos = landingSurface.pos.ToWorldSpace();
                 PoolMaster.current.BuildSplash(newPos);
@@ -234,8 +234,8 @@ public sealed class Zeppelin : MonoBehaviour {
                 lineDrawer.enabled = false;
                 Destroy(landingMarkObject);
                 destructionTimer = 3;
-                UIController.current.DeactivateLandButton();
-                UIController.current.UnbindLandButton(this);
+                MainCanvasController.current.DeactivateLandButton();
+                MainCanvasController.current.UnbindLandButton(this);
             }
         }
     }
@@ -244,10 +244,10 @@ public sealed class Zeppelin : MonoBehaviour {
         if (GameMaster.sceneClearing) return;
         else
         {
-            if (UIController.current != null)
+            if (MainCanvasController.current != null)
             {
-                UIController.current.UnbindLandButton(this);
-                UIController.current.DeactivateLandButton();
+                MainCanvasController.current.UnbindLandButton(this);
+                MainCanvasController.current.DeactivateLandButton();
             }
         }
     }

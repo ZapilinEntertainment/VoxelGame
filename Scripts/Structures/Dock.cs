@@ -402,7 +402,7 @@ public sealed class Dock : WorkBuilding {
         {
             loadingTimer = LOADING_TIME;
             loadingShip = s;
-            if (announceNewShips) GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
+            if (announceNewShips) AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
             return;
         }
         availableVolume = workersCount * WORK_PER_WORKER;
@@ -423,7 +423,7 @@ public sealed class Dock : WorkBuilding {
         colony.AddEnergyCrystals(money);
         colony.gears_coefficient -= gearsDamage * vol;
         availableVolume -= vol;
-        GameLogUI.MakeAnnouncement(Localization.GetSellMsg(rt, vol, money));
+        AnnouncementCanvasController.MakeAnnouncement(Localization.GetSellMsg(rt, vol, money));
     }
     public float BuyResource(ResourceType rt, float volume)
     {
@@ -436,7 +436,7 @@ public sealed class Dock : WorkBuilding {
             money = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]);
             volume = money / ResourceType.prices[rt.ID];            
             if (volume == 0) return 0f;
-            else GameLogUI.MakeAnnouncement(Localization.GetBuyMsg(rt, volume, money));
+            else AnnouncementCanvasController.MakeAnnouncement(Localization.GetBuyMsg(rt, volume, money));
         }
         colony.storage.AddResource(rt, volume);
         colony.gears_coefficient -= gearsDamage * volume;
@@ -507,7 +507,7 @@ public sealed class Dock : WorkBuilding {
         {
             showOnGUI = false;
             PoolMaster.current.DisableFlightZone();
-            UIController.current.CloseTradePanel();
+            colony.observer?.CloseTradePanel();
         }
     }
 

@@ -66,14 +66,14 @@ public sealed class Monument : Building
             if (!a.researched)
             {
                 GameMaster.audiomaster.Notify(NotificationSound.Disagree);
-                GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.ArtifactNotResearched));
+                AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.ArtifactNotResearched));
                 return;
             }
             else {
                 if (affectionPath != Path.TechPath)
                 {
                     GameMaster.audiomaster.Notify(NotificationSound.Disagree);
-                    GameLogUI.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.AffectionTypeNotMatch));
+                    AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetPhrase(LocalizedPhrase.AffectionTypeNotMatch));
                     return;
                 }
                 else

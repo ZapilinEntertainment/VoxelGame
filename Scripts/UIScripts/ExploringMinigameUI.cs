@@ -27,15 +27,12 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     private Transform crewPanel { get { return infoPanel.GetChild(0); } }
     private Transform membersPanel { get { return crewPanel.GetChild(2); } }
 
-    private static ExploringMinigameUI current;
-    public static bool minigameActive { get; private set; }
-
     private Expedition observingExpedition;
     private Crew observingCrew;
     private PointOfInterest observingPoint;
     //
     private byte size = 8;
-    private bool moveMarker = false, rollEffect = false, canPassThrough = true, needInfoRefreshing = false, launchedFromMap = false;
+    private bool moveMarker = false, rollEffect = false, canPassThrough = true, needInfoRefreshing = false;
     private int selectedField = -1;
     private float fieldSize = 100f, pingpongVal = 0f;
     private string testLabel = string.Empty;
@@ -47,36 +44,6 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     private const float MARKER_MOVE_SPEED = 5f, CHALLENGE_PANEL_CLOSING_TIME = 3f, ROLL_RINGS_OUTER_SPEED = 6f, ROLL_RINGS_INNER_SPEED = 2f, ROLL_RINGS_DISAPPEAR_SPEED = 5f,
         STAMINA_PER_STEP = 0.01f;
     private const byte MAX_DIFFICULTY = 25;
-
-    public static void ShowExpedition(Expedition e, bool isLaunchedFromMap)
-    {        
-        if (e == null) return;
-        else
-        {
-            if (e.stage == Expedition.ExpeditionStage.OnMission)
-            {
-                if (current == null)
-                {
-                    current = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface")).GetComponent<ExploringMinigameUI>();
-                }
-                if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
-                current.launchedFromMap = isLaunchedFromMap;
-                current.Show(e);
-            }
-            else return;
-        }
-    }
-    public static void ActivateIfEnabled()
-    {
-        if (minigameActive)
-        {
-            current.EnableDeckHolder();
-        }
-    }
-    public static void Disable()
-    {
-        if (current != null) current.gameObject.SetActive(false);
-    }
 
     private void Awake()
     {
@@ -117,7 +84,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         t.GetChild(2).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.EnergyCrystal);
         infoPanel.gameObject.SetActive(true);
     }
-    private void Show(Expedition e)
+    public void Show(Expedition e)
     {
         observingExpedition = e;
         observingCrew = e.crew;
@@ -640,7 +607,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
     {
         if (observingCrew.stamina <= 0f)
         {
-            GameLogUI.EnableDecisionWindow(null,
+            AnnouncementCanvasController.EnableDecisionWindow(null,
             Localization.GetPhrase(challenge ? LocalizedPhrase.CannotAcceptChallenge : LocalizedPhrase.CannotMove ) 
             + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughStamina) + '!');
             return false;
@@ -652,7 +619,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour
             {
                 if (observingExpedition.suppliesCount == 0)
                 {
-                    GameLogUI.EnableDecisionWindow(null,
+                    AnnouncementCanvasController.EnableDecisionWindow(null,
                     Localization.GetPhrase(LocalizedPhrase.CannotMove)
                     + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughSupplies) + '!');
                     return false;
@@ -1305,19 +1272,9 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         observingCrew.RestOnMission(observingPoint.difficulty);
     }
 
-    private void OnEnable()
-    {
-        minigameActive = true;
-    }
     private void OnDisable()
     {
-        minigameActive = false;
-        if (launchedFromMap) { GameMaster.realMaster.globalMap.ShowOnGUI(); }
-        else
-        {
-            UIController.SetActivity(true);
-            ExplorationPanelUI.RestoreSession(observingExpedition);
-        }
+        UIController.GetCurrent().ReturnToPreviousCanvas(false);
     }
 }
 

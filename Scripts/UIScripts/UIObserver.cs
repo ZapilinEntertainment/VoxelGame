@@ -5,10 +5,17 @@ using UnityEngine;
 public abstract class UIObserver : MonoBehaviour {
 	public bool isObserving { get; protected set; }
     protected bool subscribedToUpdate = false;
-	/// <summary>
-	/// Call from outside
-	/// </summary>
-	virtual public void ShutOff() {
+    protected static MainCanvasController mycanvas;
+
+    public static void LinkToMainCanvasController(MainCanvasController mcc)
+    {
+        mycanvas = mcc;
+    }
+
+    /// <summary>
+    /// Call from outside
+    /// </summary>
+    virtual public void ShutOff() {
 		isObserving = false;
 		gameObject.SetActive(false);
 	}
@@ -28,7 +35,7 @@ public abstract class UIObserver : MonoBehaviour {
 		transform.SetAsLastSibling();
         if (!subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent += StatusUpdate;
+            mycanvas.statusUpdateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
 	}
@@ -36,18 +43,14 @@ public abstract class UIObserver : MonoBehaviour {
     {
         if (subscribedToUpdate)
         {
-            UIController.current.statusUpdateEvent -= StatusUpdate;
+            mycanvas.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
         }
     } 
     protected void OnDestroy()
     {
         if (GameMaster.sceneClearing) return;
-        if (subscribedToUpdate)
-        {
-            UIController uc = UIController.current;
-            if (uc != null) uc.statusUpdateEvent -= StatusUpdate;
-        }
+        if (mycanvas != null && subscribedToUpdate) mycanvas.statusUpdateEvent -= StatusUpdate;
         //dependency - UISurfacePanelController
     }
 }

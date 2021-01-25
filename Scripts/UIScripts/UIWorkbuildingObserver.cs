@@ -20,7 +20,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 
     public static UIWorkbuildingObserver InitializeWorkbuildingObserverScript()
     {
-        UIWorkbuildingObserver uwb = Instantiate(Resources.Load<GameObject>("UIPrefs/workBuildingObserver"), UIController.current.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
+        UIWorkbuildingObserver uwb = Instantiate(Resources.Load<GameObject>("UIPrefs/workBuildingObserver"), mycanvas.rightPanel.transform).GetComponent<UIWorkbuildingObserver>();
         WorkBuilding.workbuildingObserver = uwb;
         Worksite.observer = uwb;
         return uwb;
@@ -168,7 +168,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         if (workbuildingMode)
         {
             Building.buildingObserver.SelfShutOff();
-            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
+            if (mycanvas.progressPanelMode != ProgressPanelMode.Offline) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
         }
         gameObject.SetActive(false);
     }
@@ -185,7 +185,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         {
             Building.buildingObserver.ShutOff();
             observingWorkbuilding = null;
-            if (UIController.current.progressPanelMode != ProgressPanelMode.Offline) UIController.current.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
+            if (mycanvas.progressPanelMode != ProgressPanelMode.Offline) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
         }
         else observingWorksite = null;
         gameObject.SetActive(false);

@@ -12,7 +12,7 @@ public sealed class ScienceLab : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        UIController.current.AddFastButton(this);
+        colony?.observer?.AddFastButton(this);
     }
     override public void LabourUpdate()
     {

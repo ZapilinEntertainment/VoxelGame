@@ -23,6 +23,7 @@ public sealed class QuestUI : MonoBehaviour
     private RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     private bool transformingRectInProgress = false;   
     private float questUpdateTimer = 0;
+    private MainCanvasController myCanvas;
 
     private const float QUEST_REFRESH_TIME = 30, QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;
 
@@ -31,6 +32,7 @@ public sealed class QuestUI : MonoBehaviour
     private void Awake()
     {
         current = this;
+        myCanvas = UIController.GetCurrent().GetMainCanvasController();
         openedQuest = -1;
         int totalCount = (int)QuestSection.TotalCount;
         activeQuests = new Quest[totalCount];
@@ -98,7 +100,7 @@ public sealed class QuestUI : MonoBehaviour
         closeButton.SetActive(true);
         newQuestMarker.enabled = false;
         PrepareBasicQuestWindow();
-        UIController.current.ChangeActiveWindow(ActiveWindowMode.QuestPanel);
+        myCanvas.ChangeActiveWindow(ActiveWindowMode.QuestPanel);
     }
     public void Deactivate()
     {
@@ -106,9 +108,8 @@ public sealed class QuestUI : MonoBehaviour
         closeButton.SetActive(false);
         questButtons[0].transform.parent.gameObject.SetActive(false);
         questInfoPanel.SetActive(false);
-        UIController controller = UIController.current;
-        controller.ActivateLeftPanel();
-        controller.DropActiveWindow(ActiveWindowMode.QuestPanel);
+        myCanvas.ActivateLeftPanel();
+        myCanvas.DropActiveWindow(ActiveWindowMode.QuestPanel);
     }
     public void CloseQuestWindow()
     {
@@ -141,7 +142,7 @@ public sealed class QuestUI : MonoBehaviour
                 {
                     btn.GetComponent<Button>().interactable = false;
                     RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
-                    ri.texture = UIController.current.iconsTexture;
+                    ri.texture = UIController.iconsTexture;
                     ri.uvRect = UIController.GetIconUVRect(Icons.QuestAwaitingIcon);
                     t.text = "...";
                     t.color = Color.grey;
@@ -152,7 +153,7 @@ public sealed class QuestUI : MonoBehaviour
                 btn.GetComponent<Button>().interactable = false;
                 RawImage ri = btn.GetChild(0).GetComponent<RawImage>();
                 t.text = string.Empty;
-                ri.texture = UIController.current.iconsTexture;
+                ri.texture = UIController.iconsTexture;
                 ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
             }
         }
@@ -353,7 +354,7 @@ public sealed class QuestUI : MonoBehaviour
         }
 
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
-        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
+        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NewQuestAvailable));
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.newQuestAvailable);
     }
     public void StartEndQuest(byte routeIndex)
@@ -378,7 +379,7 @@ public sealed class QuestUI : MonoBehaviour
         }
         else
         {
-            GameLogUI.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.AlreadyHaveEndquest));
+            AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.AlreadyHaveEndquest));
         }
     }
     private void ReturnToQuestList()

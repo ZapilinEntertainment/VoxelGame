@@ -96,7 +96,7 @@ public sealed class Expedition
         if (Hangar.OccupyShuttle(i_shuttleID)) shuttleID = i_shuttleID;
         else
         {
-            GameLogUI.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.ShuttleUnavailable));
+            AnnouncementCanvasController.MakeAnnouncement(Localization.GetExpeditionErrorText(ExpeditionComposingErrors.ShuttleUnavailable));
             Dismiss();
         }
 
@@ -134,7 +134,7 @@ public sealed class Expedition
     {
         stage = ExpeditionStage.OnMission;
         changesMarkerValue++;
-        GlobalMapUI.needExpeditionsRedraw = true;
+        GlobalMapCanvasController.needExpeditionsRedraw = true;
         UIExpeditionObserver.Refresh();
         expeditionsLaunched++;
     }
@@ -156,12 +156,12 @@ public sealed class Expedition
                 changesMarkerValue++;
                 break;
         }
-        GlobalMapUI.needExpeditionsRedraw = true;
+        GlobalMapCanvasController.needExpeditionsRedraw = true;
     }
     public void DropMapMarker()
     {
         mapMarker = null;
-        GlobalMapUI.needExpeditionsRedraw = true;
+        GlobalMapCanvasController.needExpeditionsRedraw = true;
     }
     public MapMarkerType GetDestinationIcon()
     {
@@ -238,7 +238,7 @@ public sealed class Expedition
                 }
             }
         }
-        GlobalMapUI.needExpeditionsRedraw = true;
+        GlobalMapCanvasController.needExpeditionsRedraw = true;
     }
     public void PayFee(byte cost)
     {
@@ -268,7 +268,7 @@ public sealed class Expedition
         if (stage == ExpeditionStage.Disappeared | stage == ExpeditionStage.Dismissed) return;
         else
         {
-            GameLogUI.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Returned, crew));
+            AnnouncementCanvasController.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Returned, crew));
             if (crew != null)
             {
                 crew.CountMission(missionCompleted);
@@ -322,7 +322,7 @@ public sealed class Expedition
             changesMarkerValue++;
         }
         changesMarkerValue++;
-        GlobalMapUI.needExpeditionsRedraw = true;
+        GlobalMapCanvasController.needExpeditionsRedraw = true;
     }
 
     #region save-load system

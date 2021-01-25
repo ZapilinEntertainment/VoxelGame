@@ -144,7 +144,7 @@ public sealed class Observatory : WorkBuilding
                 subscribedToRestoreBlockersUpdate = true;
             }
         }
-        UIController.current.AddFastButton(this);
+        colony?.observer?.AddFastButton(this);
         alreadyBuilt = true;
     }
     public void RestoreBlockers()
@@ -214,7 +214,7 @@ public sealed class Observatory : WorkBuilding
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
-        UIController.current.RemoveFastButton(this);
+        colony?.observer?.RemoveFastButton(this);
         alreadyBuilt = false;
         Destroy(gameObject);
     }

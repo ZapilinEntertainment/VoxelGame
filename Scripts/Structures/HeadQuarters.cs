@@ -203,7 +203,7 @@ public sealed class HeadQuarters : Building
             ResourceContainer[] cost = GetUpgradeCost();
             if (!colony.storage.CheckBuildPossibilityAndCollectIfPossible(cost))
             {
-                GameLogUI.NotEnoughResourcesAnnounce();
+                AnnouncementCanvasController.NotEnoughResourcesAnnounce();
                 return;
             }
         }
@@ -213,7 +213,7 @@ public sealed class HeadQuarters : Building
         SetModel();
         buildingObserver.CheckUpgradeAvailability();
         Quest.ResetHousingQuest();
-        GameLogUI.MakeAnnouncement(Localization.LevelReachedString(level));
+        AnnouncementCanvasController.MakeAnnouncement(Localization.LevelReachedString(level));
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.HQ_Upgraded);
         GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
     }

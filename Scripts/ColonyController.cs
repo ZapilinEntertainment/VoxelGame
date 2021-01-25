@@ -12,6 +12,7 @@ public sealed class ColonyController : MonoBehaviour
     public string cityName { get; private set; }
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
+    public MainCanvasController observer { get; private set; }
     public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
@@ -60,7 +61,7 @@ public sealed class ColonyController : MonoBehaviour
 
     private Dictionary<int, float> happinessModifiers; private int nextHModifierID;
     private List<(float volume, float timer)> happinessAffects;
-    private List<Hospital> hospitals;
+    private List<Hospital> hospitals;    
     private bool starvation = false;
     private sbyte recalculationTick = 0;
     private float birthSpeed,peopleSurplus = 0f, 
@@ -114,8 +115,8 @@ public sealed class ColonyController : MonoBehaviour
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         var gm = GameMaster.realMaster;
         gm.SetColonyController(this);
-        UIController.current.Prepare();
         gm.everydayUpdate += EverydayUpdate;
+        observer = UIController.GetCurrent()?.GetMainCanvasController();
     }
 
     #region updating
@@ -160,7 +161,7 @@ public sealed class ColonyController : MonoBehaviour
                     energyStored += energySurplus * TICK_TIME;
                     if (energyStored < 0)
                     { // отключение потребителей энергии до выравнивания
-                        UIController.current.StartPowerFailureTimer();
+                        observer?.StartPowerFailureTimer();
                         energyStored = 0;
                         int i = powerGrid.Count - 1;
                         while (i >= 0 & energySurplus < 0)
@@ -320,7 +321,7 @@ public sealed class ColonyController : MonoBehaviour
                     if (!starvation)
                     {
                         starvation = true;
-                        GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
+                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
                     }
                 }
                 else starvation = false;
@@ -893,7 +894,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (v <= 0) return;
         energyCrystalsCount += v;
-        if (v > 1) UIController.current.MoneyChanging(v);
+        if (v > 1 && observer != null) observer.MoneyChanging(v);
     }
 
     /// <summary>
@@ -905,7 +906,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (v > energyCrystalsCount) { v = energyCrystalsCount; energyCrystalsCount = 0; }
         else energyCrystalsCount -= v;
-        if (v >= 1) UIController.current.MoneyChanging(-v);
+        if (v >= 1 && observer != null) observer.MoneyChanging(-v);
         return v;
     }
 

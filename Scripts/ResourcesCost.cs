@@ -270,9 +270,6 @@
             case Structure.COLUMN_ID:
                 cost = new ResourceContainer[] { new ResourceContainer(ResourceType.Concrete, 500), new ResourceContainer(ResourceType.metal_K, 120) };
                 break;
-            case Structure.SWITCH_TOWER_ID:
-                cost = new ResourceContainer[] { new ResourceContainer(ResourceType.Concrete, 10), new ResourceContainer(ResourceType.metal_K, 2), new ResourceContainer(ResourceType.Plastics, 10) };
-                break;
             case Structure.SHUTTLE_HANGAR_4_ID:
                 cost = new ResourceContainer[]{new ResourceContainer(ResourceType.Concrete, 300), new ResourceContainer(ResourceType.metal_K, 40), new ResourceContainer(ResourceType.Plastics, 250),
                 new ResourceContainer(ResourceType.metal_M, 30)
