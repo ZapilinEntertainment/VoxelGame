@@ -130,7 +130,7 @@ public class Farm : WorkBuilding
         }
     }
 
-    new public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
+    public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
         if (!Nature.MaterialIsLifeSupporting(p.materialID))
         {

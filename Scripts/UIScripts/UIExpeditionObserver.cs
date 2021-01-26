@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIExpeditionObserver : MonoBehaviour
+public sealed class UIExpeditionObserver : UIObserver
 {
 #pragma warning disable 0649
     [SerializeField] private Dropdown crewDropdown;
@@ -25,11 +25,11 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     private Text expLabel { get { return expNameField.GetChild(0).GetComponent<Text>(); } }
     private GameObject expDestinationButton { get { return expNameField.GetChild(1).gameObject; } }
 
-    private bool subscribedToUpdate = false, workOnMainCanvas = true;
     private static bool waitForWorkRestoring = false;
     private bool? preparingMode = null;
     private byte lastChangesMarkerValue = 0;
     private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
+    private Expedition.ExpeditionStage lastDrawnStage;
     private ColonyController colony;
     private Expedition observingExpedition;
     private PointOfInterest selectedDestination;
@@ -54,7 +54,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         if (_currentObserver == null)
         {
             _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/expeditionPanel"),
-                MainCanvasController.current.mainCanvas).GetComponent<UIExpeditionObserver>();
+                UIController.GetCurrent().GetCurrentCanvasTransform()).GetComponent<UIExpeditionObserver>();
         }
         return _currentObserver;
     }
@@ -97,7 +97,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     {
         closeButton.SetActive(useCloseButton);
         var rt = GetObserver().GetComponent<RectTransform>();
-        MainCanvasController.PositionElement(rt, parent, alignment, r);
+        UIController.PositionElement(rt, parent, alignment, r);
     }
     private void ShowExpedition(Expedition e, bool useCloseButton)
     {
@@ -189,13 +189,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             int c = QuantumTransmitter.GetFreeTransmittersCount();
             if (c > 0)
             {
-                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeTransmitters) + c.ToString();
                 transmitterLabel.color = whitecolor;
             }
             else
             {
-                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.NoTransmitters);
                 transmitterLabel.color = redcolor;
                 readyToStart = false;
@@ -204,13 +204,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             c = Hangar.GetFreeShuttlesCount();
             if (c > 0)
             {
-                shuttleMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
+                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.FreeShuttles) + c.ToString();
                 shuttleLabel.color = whitecolor;
             }
             else
             {
-                shuttleMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
+                shuttleMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
                 shuttleLabel.text = Localization.GetPhrase(LocalizedPhrase.NoShuttles);
                 shuttleLabel.color = redcolor;
                 readyToStart = false;
@@ -264,13 +264,13 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             //transmitter:
             if (observingExpedition.hasConnection)
             {
-                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.ConnectionOK);
                 transmitterLabel.color = whitecolor;
             }
             else
             {
-                transmitterMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
+                transmitterMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
                 transmitterLabel.text = Localization.GetPhrase(LocalizedPhrase.ConnectionLost);
                 transmitterLabel.color = redcolor;
             }
@@ -290,7 +290,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
             else launchButton.gameObject.SetActive(false);
 
             minigameButton.SetActive(observingExpedition.stage == Expedition.ExpeditionStage.OnMission);
-
+            lastDrawnStage = observingExpedition.stage;
             preparingMode = false;
         }       
 
@@ -298,7 +298,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         if (selectedDestination != null)
         {
             edb.transform.GetChild(0).GetComponent<RawImage>().uvRect = GlobalMapCanvasController.GetMarkerRect(selectedDestination.type);
-            edb.SetActive(workOnMainCanvas);
+            //edb.SetActive(workOnMainCanvas);
         }
         else
         {
@@ -368,25 +368,22 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         int c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
         if (c > fuelNeeded)
         {
-            fuelMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskCompleted);
+            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
             fuelLabel.color = Color.white;
             return true;
         }
         else
         {
-            fuelMarker.uvRect = MainCanvasController.GetIconUVRect(Icons.TaskFailed);
+            fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
             fuelLabel.color = Color.red;
             return false;
         }
     }
 
-    public void StatusUpdate()
+    override public void StatusUpdate()
     {
-        bool redrawRequest = false;
-        if (lastCrewListMarker != Crew.listChangesMarkerValue) redrawRequest = true;
-        else {
-            if (lastShuttlesListMarker != Hangar.listChangesMarkerValue) redrawRequest = true;
-        }
+        bool redrawRequest = (observingExpedition != null && lastDrawnStage != observingExpedition.stage) |
+            (lastCrewListMarker != Crew.listChangesMarkerValue) | (lastShuttlesListMarker != Hangar.listChangesMarkerValue);
         if (redrawRequest) RedrawWindow();
         else
         {
@@ -453,16 +450,16 @@ public sealed class UIExpeditionObserver : MonoBehaviour
                         {
                             if (storage.TryGetResources(ResourceType.Fuel, FUEL_BASE_COST)) {
                                 var e = new Expedition(selectedDestination, selectedCrew, shID, t, storage.GetResources(ResourceType.Supplies, suppliesSlider.value), colony.GetEnergyCrystals(crystalsSlider.value));
-                                if (workOnMainCanvas)
+                                var mc = mycanvas.uicontroller;
+                                if (mc.currentMode == UIMode.Standart)
                                 {
                                     observingExpedition = e;
                                 }
                                 else
                                 {
-                                    observingExpedition = null;
-                                    selectedCrew = null;
-                                    GameMaster.realMaster.globalMap.observer.GetComponent<GlobalMapCanvasController>().PreparePointDescription();
-                                    gameObject.SetActive(false);
+                                    observingExpedition = e;
+                                    RedrawWindow();
+                                    mc.ShowExpedition(e);
                                 }
                             }
                             else
@@ -483,22 +480,7 @@ public sealed class UIExpeditionObserver : MonoBehaviour
     public void MinigameButton()
     {
         if (observingExpedition == null || observingExpedition.stage != Expedition.ExpeditionStage.OnMission) RedrawWindow();
-        else
-        {
-            if (MainCanvasController.isMainCanvasActive)
-            { // main canvas
-                ExplorationPanelUI.Deactivate();
-                MainCanvasController.SetActivity(false);
-                ExploringMinigameUI.ShowExpedition(observingExpedition, false);
-            }
-            else
-            { // global map canvas
-                GlobalMapCanvasController.GetObserver()?.CloseInfopanel();
-                ExploringMinigameUI.ShowExpedition(observingExpedition, true);
-            }
-            
-            gameObject.SetActive(false);
-        }
+        else mycanvas.uicontroller.ShowExpedition(observingExpedition);
     }
     public void CrewButton()
     {
@@ -517,33 +499,35 @@ public sealed class UIExpeditionObserver : MonoBehaviour
         waitForWorkRestoring = false;
     }
 
-    private void OnEnable()
+    override protected void OnEnable()
     {
         if (!subscribedToUpdate)
         {
-            MainCanvasController.current.statusUpdateEvent += StatusUpdate;
+            mycanvas.uicontroller.updateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
     }
-    private void OnDisable()
+    override protected void OnDisable()
     {
         if (subscribedToUpdate)
         {
-            if (MainCanvasController.current != null)
+            var mc = mycanvas.uicontroller;
+            if (mc != null)
             {
-                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
+               mc.updateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }
         waitForWorkRestoring = false;
     }
-    private void OnDestroy()
+    override protected void OnDestroy()
     {
         if (!GameMaster.sceneClearing & subscribedToUpdate)
         {
-            if (MainCanvasController.current != null)
+            var mc = mycanvas.uicontroller;
+            if (mc != null)
             {
-                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
+                mc.updateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }

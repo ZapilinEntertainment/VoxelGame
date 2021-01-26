@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class KnowledgeTabUI : MonoBehaviour
+public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
 {
     [SerializeField] private GameObject zeroButton;
     [SerializeField] private Image unsufficientLabel, unsufficientLight;
-    [SerializeField] private Transform holder, infoPanel;
+    [SerializeField] private Transform holder, infoPanel, maincanvas;
     [SerializeField] private RectTransform unblockAnnouncePanel;
     [SerializeField] private RectTransform[] routeBackgrounds;
     private Knowledge knowledge;
@@ -240,10 +240,15 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         return new Rect(y * 0.1f, x * 0.1f, 0.1f, 0.1f);
     }
 
-    public void Prepare(Knowledge kn)
+    public Transform GetMainCanvasTransform()
+    {
+        return maincanvas;
+    }
+
+    public void Prepare(Knowledge kn, UIController uic)
     {
         knowledge = kn;
-        uicontroller = UIController.GetCurrent();
+        uicontroller = uic;
         if (buttons == null) {
             buttons = new GameObject[64];
             buttons[0] = zeroButton;
@@ -531,22 +536,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour
         unblockAnnouncePanel.gameObject.SetActive(true);
     }
 
-    private void OnEnable()
-    {
-        if (knowledge == null)
-        {            
-            gameObject.SetActive(false);            
-            return;
-        }
-        else
-        {
-            if (!prepared) Prepare(knowledge);
-            else
-            {
-                if (lastChMarkerValue != knowledge.changesMarker) Redraw();
-            }
-        }
-    }
     private void OnDisable()
     {
         uicontroller.ChangeUIMode(UIMode.Standart, false);

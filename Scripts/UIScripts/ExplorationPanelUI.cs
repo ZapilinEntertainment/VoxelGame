@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class ExplorationPanelUI : MonoBehaviour
-{
+{ 
     private enum InfoMode { Inactive,Expeditions, Crews, Artifacts};
 #pragma warning disable 0649
     [SerializeField] private GameObject observerPanel, listHolder;
@@ -17,14 +17,42 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     public static ExplorationPanelUI current { get; private set; }
 
     private bool listEnabled = true, subscribedToUpdate = false;
-    private int selectedItem = -1, lastDrawnActionHash = 0;
-    private Artifact showingArtifact;
-    private Crew showingCrew;
+    private int selectedItem
+    {
+        get
+        {
+            return _sltditm;
+        }
+        set
+        {
+            if (value < 0 | value > items.Length)
+            {
+                if (_sltditm != -1) items[_sltditm].GetComponent<Image>().overrideSprite = null;
+                _sltditm = -1;                
+            }
+            else
+            {
+                if (_sltditm != value)
+                {
+                    if (_sltditm != -1) items[_sltditm].GetComponent<Image>().overrideSprite = null;
+                    _sltditm = value;
+                    items[_sltditm].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                }
+            }
+        }
+    }
+    private int _sltditm;
+    private int lastDrawnActionHash = 0;
+    private Artifact selectedArtifact;
+    private Crew selectedCrew;
     private GameObject activeObserver;
-    private Expedition showingExpedition;
+    private Expedition selectedExpedition;
     private InfoMode mode;
-    private List<int> listIDs;
+    private int[] listIDs;
     private MainCanvasController mainObserver;
+    private CrewsRepresentator crewsData;
+    private ExpeditionsRepresentator expeditionsData;
+    private ArtifactsRepresentator artifactsData;
     
 
     public static void Initialize()
@@ -34,8 +62,22 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         {
             current = Instantiate(Resources.Load<GameObject>("UIPrefs/explorationPanel"), obs.GetMainCanvasTransform()).GetComponent<ExplorationPanelUI>();
             current.mainObserver = obs;
+            current.crewsData = new CrewsRepresentator(current);
+            current.expeditionsData = new ExpeditionsRepresentator(current);
+            current.artifactsData = new ArtifactsRepresentator(current);
         }
         current.gameObject.SetActive(true);
+        current.OnEnable_Custom();
+    }
+
+    private void OnEnable_Custom()
+    {
+        if (mode == InfoMode.Inactive) ChangeMode(InfoMode.Expeditions);
+        if (!subscribedToUpdate)
+        {
+            mainObserver.statusUpdateEvent += StatusUpdate;
+            subscribedToUpdate = true;
+        }
     }
     public static void Deactivate()
     {
@@ -44,45 +86,27 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
     public void SelectItem(int i)
     {
-        if (selectedItem != i)
-        {
-            if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-            selectedItem = i;
-            items[selectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-        }
-        var realIndex = i + GetListStartIndex();
+        selectedItem = i;
         switch (mode)
         {
             case InfoMode.Expeditions:
                 {
-                    if (realIndex >= Expedition.expeditionsList.Count) PrepareExpeditionsList();
-                    else
-                    {
-                        UIExpeditionObserver.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Expedition.expeditionsList[realIndex], false);
-                        activeObserver = UIExpeditionObserver.GetObserver().gameObject;
-                        if (emptyPanelText.enabled) emptyPanelText.enabled = false;
-                    }
+                    UIExpeditionObserver.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Expedition.GetExpeditionByID(listIDs[selectedItem]), false);
+                    activeObserver = UIExpeditionObserver.GetObserver().gameObject;
+                    if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     break;
                 }
             case InfoMode.Crews:
                 {
-                    if (realIndex >= Crew.crewsList.Count) PrepareCrewsList();
-                    else
-                    {
-                        UICrewObserver.Show(observerPanel.GetComponent<RectTransform>(),  SpriteAlignment.TopLeft, Crew.crewsList[realIndex], false);
-                        activeObserver = UICrewObserver.GetObserver().gameObject;
-                        if (emptyPanelText.enabled) emptyPanelText.enabled = false;
-                    }
+                    UICrewObserver.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Crew.GetCrewByID(listIDs[selectedItem]), false);
+                    activeObserver = UICrewObserver.GetObserver().gameObject;
+                    if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                     break;
                 }
             case InfoMode.Artifacts:
-                if (realIndex >= Artifact.artifactsList.Count) PrepareArtifactsList();
-                else
-                {
-                    UIArtifactPanel.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Artifact.artifactsList[realIndex], false);
-                    activeObserver = UIArtifactPanel.GetObserver().gameObject;
-                    if (emptyPanelText.enabled) emptyPanelText.enabled = false;
-                }
+                UIArtifactPanel.Show(observerPanel.GetComponent<RectTransform>(), SpriteAlignment.TopLeft, Artifact.GetArtifactByID(listIDs[selectedItem]), false);
+                activeObserver = UIArtifactPanel.GetObserver().gameObject;
+                if (emptyPanelText.enabled) emptyPanelText.enabled = false;
                 break;
         }
         if (activeObserver != null) activeObserver.transform.SetAsLastSibling();
@@ -92,16 +116,19 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     {
         if (c != null)
         {
-            showingCrew = c;
             if (mode != InfoMode.Crews) ChangeMode(InfoMode.Crews);
-            else StatusUpdate();        
+                 
         }
+    }
+    public void ShowIfSelected(Crew c)
+    {
+        
     }
     public void Show(Artifact a)
     {
         if (a != null && !a.destructed)
         {
-            showingArtifact = a;
+            selectedArtifact = a;
             if (mode != InfoMode.Artifacts) ChangeMode(InfoMode.Artifacts);
             else StatusUpdate();
         }
@@ -110,16 +137,17 @@ public sealed class ExplorationPanelUI : MonoBehaviour
     {
         if (e != null)
         {
-            showingExpedition = e;
+            selectedExpedition = e;
             if (mode != InfoMode.Expeditions) ChangeMode(InfoMode.Expeditions);
             else StatusUpdate();
         }
     }
 
-    private void PrepareCrewsList()
+    private void PrepareList(IListable datahoster)
     {
-        var crews = Crew.crewsList;
-        if (crews.Count == 0)
+        selectedItem = -1;
+        int objectsCount = datahoster.GetListLength();
+        if (objectsCount == 0)
         {
             if (listEnabled)
             {
@@ -130,24 +158,27 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         }
         else
         {
-            listIDs = new List<int>();
+            int COUNT = items.Length;
+            listIDs = new int[COUNT];
             int currentSelectedItem = -1;
-            if (crews.Count > items.Length)
+            if (objectsCount > COUNT)
             {
-                int sindex = GetListStartIndex();
-                for (int i = 0; i < items.Length; i++)
+                if (!datahoster.HaveSelectedObject())
                 {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + crews[i + sindex].name + '"';
-                    listIDs.Add(crews[i + sindex].ID);
-                    items[i].SetActive(true);
+                    int sindex = GetListStartIndex();
+                    for (int i = 0; i < COUNT; i++)
+                    {
+                        items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + datahoster.GetName(i+sindex) + '"';
+                        listIDs[i] = datahoster.GetID(i + sindex);
+                        items[i].SetActive(true);
+                    }
                 }
 
-
-                if (showingCrew != null)
+                if (datahoster.HaveSelectedObject())
                 {
                     for (int i = 0; i < items.Length; i++)
                     {
-                        if (listIDs[i] == showingCrew.ID)
+                        if (listIDs[i] == datahoster.GetSelectedID())
                         {
                             currentSelectedItem = i;
                             break;
@@ -157,11 +188,11 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             else
             {
-                int i = 0;
-                for (; i < crews.Count; i++)
+                int i = 0, crewsCount = datahoster.GetListLength();
+                for (; i < crewsCount; i++)
                 {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + crews[i].name + '"';
-                    listIDs.Add(crews[i].ID);
+                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + datahoster.GetName(i) + '"';
+                    listIDs[i] = datahoster.GetID(i);
                     items[i].SetActive(true);
                 }
                 if (i < items.Length)
@@ -169,30 +200,27 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     for (; i < items.Length; i++)
                     {
                         items[i].SetActive(false);
+                        listIDs[i] = -1;
                     }
                 }
 
-                if (showingCrew != null)
+                if (datahoster.HaveSelectedObject())
                 {
-                    for (i = 0; i < listIDs.Count; i++)
+                    for (i = 0; i < crewsCount; i++)
                     {
-                        if (listIDs[i] == showingCrew.ID)
+                        if (listIDs[i] == datahoster.GetSelectedID())
                         {
                             currentSelectedItem = i;
+                            //Debug.Log("selected " + currentSelectedItem.ToString() + " with id " + showingCrew.ID.ToString());
                         }
                     }
                 }
             }
 
-            if (currentSelectedItem != selectedItem)
+            if (currentSelectedItem != -1)
             {
-                print(currentSelectedItem);
-                if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                if (currentSelectedItem != -1)
-                {
-                    items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                    selectedItem = currentSelectedItem;
-                }
+                items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                selectedItem = currentSelectedItem;
             }
 
             if (!listEnabled)
@@ -204,179 +232,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         }
         lastDrawnActionHash = Crew.listChangesMarkerValue;
     }
-    private void PrepareArtifactsList()
-    {
-        var arts = Artifact.artifactsList;
-        if (arts.Count == 0)
-        {
-            if (listEnabled)
-            {
-                listHolder.SetActive(false);
-                listEnabled = false;
-            }
-            emptyPanelText.enabled = true;
-        }
-        else
-        {
-            listIDs = new List<int>();
-            int currentSelectedItem = -1;
-            if (arts.Count > items.Length)
-            {
-                int sindex = GetListStartIndex();
-                for (int i = 0; i < items.Length; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i + sindex].name + '"';
-                    listIDs.Add(arts[i + sindex].ID);
-                    items[i].SetActive(true);
-                }
-
-
-                if (showingArtifact != null)
-                {
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        if (listIDs[i] == showingArtifact.ID)
-                        {
-                            currentSelectedItem = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                int i = 0;
-                for (; i < arts.Count; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + arts[i].name + '"';
-                    listIDs.Add(arts[i].ID);
-                    items[i].SetActive(true);
-                }
-                if (i < items.Length)
-                {
-                    for (; i < items.Length; i++)
-                    {
-                        items[i].SetActive(false);
-                    }
-                }
-                if (showingArtifact != null)
-                {
-                    for (i = 0; i < listIDs.Count; i++)
-                    {
-                        if (listIDs[i] == showingArtifact.ID)
-                        {
-                            currentSelectedItem = i;
-                        }
-                    }
-                }
-            }
-
-            if (currentSelectedItem != selectedItem)
-            {
-                if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                if (currentSelectedItem != -1)
-                {
-                    items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                    selectedItem = currentSelectedItem;
-                }
-            }
-
-            if (!listEnabled)
-            {
-                listHolder.SetActive(true);
-                listEnabled = true;
-            }
-            //настройка scrollbar ?
-        }
-        lastDrawnActionHash = Artifact.listChangesMarkerValue;
-    }
-    private void PrepareExpeditionsList()
-    {
-        var exps = Expedition.expeditionsList;
-        if (exps.Count == 0)
-        {
-            if (listEnabled)
-            {
-                listHolder.SetActive(false);
-                listEnabled = false;
-            }
-            emptyPanelText.enabled = true;
-        }
-        else
-        {
-            listIDs = new List<int>();
-            int currentSelectedItem = -1;
-            if (exps.Count > items.Length)
-            {
-                int sindex = GetListStartIndex();
-                for (int i = 0; i < items.Length; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i + sindex].crew.name + '"';
-                    listIDs.Add(exps[i + sindex].ID);
-                    items[i].SetActive(true);
-                }
-
-
-                if (showingExpedition != null)
-                {
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        if (listIDs[i] == showingExpedition.ID)
-                        {
-                            currentSelectedItem = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                int i = 0;
-                for (; i < exps.Count; i++)
-                {
-                    items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + exps[i].crew.name + '"';
-                    listIDs.Add(exps[i].ID);
-                    items[i].SetActive(true);
-                }
-                if (i < items.Length)
-                {
-                    for (; i < items.Length; i++)
-                    {
-                        items[i].SetActive(false);
-                    }
-                }
-                if (showingExpedition != null)
-                {
-                    for (i = 0; i < listIDs.Count; i++)
-                    {
-                        if (listIDs[i] == showingExpedition.ID)
-                        {
-                            currentSelectedItem = i;
-                        }
-                    }
-                }
-            }
-
-            if (currentSelectedItem != selectedItem)
-            {
-                if (selectedItem != -1) items[selectedItem].GetComponent<Image>().overrideSprite = null;
-                if (currentSelectedItem != -1)
-                {
-                    items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                    selectedItem = currentSelectedItem;
-                }
-            }
-
-            if (!listEnabled)
-            {
-                listHolder.SetActive(true);
-                listEnabled = true;
-            }
-            //настройка scrollbar ?
-        }
-        lastDrawnActionHash = Expedition.listChangesMarker;
-    }
-
     private void ChangeMode(InfoMode nmode)
     {
         if (mode != nmode)
@@ -385,33 +240,31 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             switch (mode)
             {
                 case InfoMode.Expeditions:
-                    showingExpedition = null;
+                    selectedExpedition = null;
                     expeditionButtonImage.overrideSprite = null;
                     break;
                 case InfoMode.Crews:
-                    showingCrew = null;
+                    selectedCrew = null;
                     crewButtonImage.overrideSprite = null;
                     break;
                 case InfoMode.Artifacts:
-                    showingArtifact = null;
+                    selectedArtifact = null;
                     artifactButtonImage.overrideSprite = null;
                     break;
             }
             mode = nmode;
             if (activeObserver != null) activeObserver.SetActive(false);
-            selectedItem = -1;
+            
             switch (mode)
             {
                 case InfoMode.Crews:
                     {
-                        PrepareCrewsList();
+                        PrepareList(crewsData);
                         crewButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
                         if (Crew.crewsList.Count != 0)
                         {
-                            var ert = observerPanel.GetComponent<RectTransform>();
-                            var r = new Rect(ert.position, ert.rect.size);
-                            SelectItem(0);
+                            if (selectedCrew == null) SelectItem(0);
                         }
                         else
                         {
@@ -428,7 +281,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                 case InfoMode.Artifacts:
                     {
-                        PrepareArtifactsList();
+                        PrepareList(artifactsData);
                         artifactButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
                         if (Artifact.artifactsList.Count != 0)
@@ -452,7 +305,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                     }
                 case InfoMode.Expeditions:
                     {
-                        PrepareExpeditionsList();
+                        PrepareList(expeditionsData);
                         expeditionButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
                         if (Expedition.expeditionsList.Count != 0)
@@ -474,6 +327,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         break;
                     }
                 case InfoMode.Inactive:
+                    selectedItem = -1;
                     lastDrawnActionHash = -1;
                     break;
             }
@@ -490,13 +344,13 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         switch (mode)
         {
             case InfoMode.Crews:
-                if (lastDrawnActionHash != Crew.listChangesMarkerValue) PrepareCrewsList();
+                if (lastDrawnActionHash != Crew.listChangesMarkerValue) PrepareList(crewsData);
                 break;
             case InfoMode.Artifacts:
-                if (lastDrawnActionHash != Artifact.listChangesMarkerValue) PrepareArtifactsList();
+                if (lastDrawnActionHash != Artifact.listChangesMarkerValue) PrepareList(artifactsData);
                 break;
             case InfoMode.Expeditions:
-                if (lastDrawnActionHash != Expedition.listChangesMarker) PrepareExpeditionsList();
+                if (lastDrawnActionHash != Expedition.listChangesMarker) PrepareList(expeditionsData);
                 break;
         }
     }    
@@ -522,16 +376,6 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             else return 0;
         }
     }
-
-    private void OnEnable()
-    {
-        if (!subscribedToUpdate)
-        {
-            mainObserver.statusUpdateEvent += StatusUpdate;
-            subscribedToUpdate = true;
-        }
-        if (mode == InfoMode.Inactive) ChangeMode(InfoMode.Expeditions);
-    }
     private void OnDisable()
     {
         if (activeObserver != null)
@@ -553,6 +397,69 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         {
             mainObserver.statusUpdateEvent -= StatusUpdate;
             subscribedToUpdate = false;
+        }
+    }
+
+    //------------------
+
+    private interface IListable
+    {
+        string GetSelectedName();
+        int GetSelectedID();
+        int GetListLength();
+        bool HaveSelectedObject();
+        string GetName(int index);
+        int GetID(int index);
+    }
+    private class CrewsRepresentator : IListable
+    {
+        private ExplorationPanelUI dataSource;
+        private List<Crew> crewsList;
+        public string GetSelectedName() { return dataSource.selectedCrew?.name ?? string.Empty; }
+        public int GetSelectedID() { return dataSource.selectedCrew?.ID ?? -1; }
+        public int GetListLength() { return crewsList?.Count ?? 0; }
+        public bool HaveSelectedObject() { return dataSource.selectedCrew != null; }
+        public string GetName(int index) { if (crewsList != null && crewsList.Count > index) return crewsList[index].name; else return string.Empty; }
+        public int GetID(int index) { if (crewsList != null && crewsList.Count > index) return crewsList[index].ID; else return -1; }
+
+        public CrewsRepresentator(ExplorationPanelUI master)
+        {
+            dataSource = master;
+            crewsList = Crew.crewsList;
+        }
+    }
+    private class ExpeditionsRepresentator : IListable
+    {
+        private ExplorationPanelUI dataSource;
+        private List<Expedition> expeditionsList;
+        public string GetSelectedName() { return dataSource.selectedExpedition?.crew.name ?? string.Empty; }
+        public int GetSelectedID() { return dataSource.selectedExpedition?.ID ?? -1; }
+        public int GetListLength() { return expeditionsList?.Count ?? 0; }
+        public bool HaveSelectedObject() { return dataSource.selectedExpedition != null; }
+        public string GetName(int index) { if (expeditionsList != null && expeditionsList.Count > index) return expeditionsList[index]?.crew.name; else return string.Empty; }
+        public int GetID(int index) { if (expeditionsList != null && expeditionsList.Count > index) return expeditionsList[index].ID; else return -1; }
+
+        public ExpeditionsRepresentator(ExplorationPanelUI master)
+        {
+            dataSource = master;
+            expeditionsList = Expedition.expeditionsList;
+        }
+    }
+    private class ArtifactsRepresentator : IListable
+    {
+        private ExplorationPanelUI dataSource;
+        private List<Artifact> artifactsList;
+        public string GetSelectedName() { return dataSource.selectedArtifact?.name ?? string.Empty; }
+        public int GetSelectedID() { return dataSource.selectedArtifact?.ID ?? -1; }
+        public int GetListLength() { return artifactsList?.Count ?? 0; }
+        public bool HaveSelectedObject() { return dataSource.selectedArtifact != null; }
+        public string GetName(int index) { if (artifactsList != null && artifactsList.Count > index) return artifactsList[index]?.name; else return string.Empty; }
+        public int GetID(int index) { if (artifactsList != null && artifactsList.Count > index) return artifactsList[index].ID; else return -1; }
+
+        public ArtifactsRepresentator(ExplorationPanelUI master)
+        {
+            dataSource = master;
+            artifactsList = Artifact.artifactsList;
         }
     }
 }

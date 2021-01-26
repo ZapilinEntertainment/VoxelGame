@@ -18,7 +18,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public event WindChangeHandler WindUpdateEvent;
     public event System.Action<Environment> environmentChangingEvent;
 
-    private bool prepared = false, showCelestialBodies = true;
+    private bool prepared = false, showCelestialBodies = true, lightning = false;
     private int vegetationShaderWindPropertyID, lastDrawnMapActionHash;
     private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10,
         targetStability = DEFAULT_ISLAND_STABILITY;
@@ -315,9 +315,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 }
             }
 
-            //test lightnings
-            if (false)
-            {
+            #region  test lightnings
+            if (lightning){
                 effectsTimer -= t;
                 if (effectsTimer < 0)
                 {
@@ -352,9 +351,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                         Lightning.Strike(pos, end);
                     }
                     effectsTimer = 1f;
-                }
+                }                
             }
-
+            #endregion
             //sunlight changing
             var clv = gmap.cityLookVector * -1f;
             clv.y = -0.3f;

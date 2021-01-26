@@ -192,7 +192,10 @@ public sealed class GameMaster : MonoBehaviour
         gameMode = _gameMode;
         realMaster = this;
         sceneClearing = false;
+        //
         uicontroller = UIController.GetCurrent();
+        uicontroller.ChangeUIMode(UIMode.Standart, true);
+        //
         if (PoolMaster.current == null)
         {
             PoolMaster pm = gameObject.AddComponent(typeof(PoolMaster)) as PoolMaster;
@@ -215,14 +218,15 @@ public sealed class GameMaster : MonoBehaviour
         if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
     }
     void Start()
-    {
+    {        
         if (gameStarted) return;
         
         if (gameMode != GameMode.Editor)
         {            
             difficulty = gameStartSettings.difficulty;
             SetDefaultValues();
-            //byte chunksize = gss.chunkSize;
+            //byte chunksize = gss.chunkSize;           
+
             byte chunksize;
             chunksize = gameStartSettings.chunkSize;
             if (testMode && savenameToLoad != string.Empty)

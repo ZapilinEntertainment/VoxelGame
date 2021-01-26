@@ -26,9 +26,8 @@ public sealed class GlobalMap : MonoBehaviour
     public List<MapPoint> mapPoints { get; private set; }
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
 
-    private bool prepared = false, mapInterfaceActive = false;
+    private bool prepared = false;
     private EnvironmentMaster envMaster;
-    public GameObject observer { get; private set; }
     public System.Action<MapPoint> pointsExploringEvent;
 
     //Island Engine
@@ -655,26 +654,9 @@ public sealed class GlobalMap : MonoBehaviour
         }
         else return UpdateSector(x); 
     }
-    public void ShowOnGUI()
-    {
-        if (!prepared) return;
-        if (observer == null)
-        {
-            observer = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"));
-            observer.GetComponent<GlobalMapCanvasController>().SetGlobalMap(this);
-        }
-        mapInterfaceActive = true;
-        GameMaster.realMaster.environmentMaster.DisableDecorations();
-        if (!observer.activeSelf) observer.SetActive(true);
-    }
     public void MarkToUpdate()
     {
         actionsHash++;
-    }
-    public void MapInterfaceDisabled()
-    {
-        mapInterfaceActive = false;
-       if (!Application.isPlaying) GameMaster.realMaster.environmentMaster.EnableDecorations();
     }
 
     public void FORCED_CreatePointOfInterest()

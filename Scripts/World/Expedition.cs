@@ -49,7 +49,7 @@ public sealed class Expedition
         {
             foreach (Expedition e in expeditionsList)
             {
-                if (e != null && e.ID == s_id) return e;
+                if (e != null && e.stage != ExpeditionStage.Dismissed && e.ID == s_id) return e;
             }
             return null;
         }

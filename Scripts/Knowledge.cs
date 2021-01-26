@@ -26,7 +26,6 @@ public sealed class Knowledge
     public int changesMarker { get; private set; }
 
     private byte[] routeBonusesMask = new byte[ROUTES_COUNT]; // учет полученных бонусов
-    private KnowledgeTabUI observer;
 
     public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7, PUZZLECOLORS_COUNT = 6,
        WHITECOLOR_CODE = 0, REDCOLOR_CODE = 1, GREENCOLOR_CODE = 2, BLUECOLOR_CODE = 3, CYANCOLOR_CODE = 4, BLACKCOLOR_CODE = 5, NOCOLOR_CODE = 6;
@@ -239,7 +238,7 @@ public sealed class Knowledge
         switch (s.ID)
         {
             case Structure.HOTEL_BLOCK_6_ID:
-                if (CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.HotelBoost)) ;
+                CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.HotelBoost) ;
                 break;
             case Structure.HOUSING_MAST_6_ID:
                 CountRouteBonus(ResearchRoute.Foundation, (byte)FoundationRouteBoosters.HousingMastBoost);
@@ -803,10 +802,11 @@ public sealed class Knowledge
                 else index = 1;
                 if (index != -1)
                 {
-                    if (observer.isActiveAndEnabled)
+                    var ui = UIController.GetCurrent();                    
+                    if (ui.currentMode == UIMode.KnowledgeTab)
                     {
                         int x = GetBonusStructure((ResearchRoute)a, index);
-                        if (x != -1) observer.UnblockAnnouncement(x);
+                        if (x != -1) ui.GetKnowledgeTabUI().UnblockAnnouncement(x);
                     }
                 }                
             }
@@ -1143,18 +1143,6 @@ public sealed class Knowledge
         }
         return Quest.NoQuest;
     }
-    public void OpenResearchTab()
-    {
-        GameMaster.realMaster.environmentMaster.DisableDecorations();
-        if (observer == null)
-        {
-            observer = GameObject.Instantiate(Resources.Load<GameObject>("UIPrefs/knowledgeTab")).GetComponent<KnowledgeTabUI>();
-            observer.Prepare(this);            
-        }
-        if (!observer.gameObject.activeSelf) observer.gameObject.SetActive(true);
-        observer.Redraw();
-    }
-
     public (byte,byte) CellIndexToRouteAndStep(int buttonIndex)
     {
         for (byte ri = 0; ri < ROUTES_COUNT; ri++)

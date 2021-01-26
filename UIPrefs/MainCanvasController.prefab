@@ -189,7 +189,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0.48400003}
-  m_AnchoredPosition: {x: 112.5, y: 7.410034}
+  m_AnchoredPosition: {x: 112.5, y: 7.410095}
   m_SizeDelta: {x: 225, y: -6.97}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1006450993368010
@@ -8368,7 +8368,7 @@ GameObject:
   - component: {fileID: 4985793606192816}
   - component: {fileID: 114261262755020748}
   m_Layer: 0
-  m_Name: UIController
+  m_Name: MainCanvasController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8437,6 +8437,8 @@ MonoBehaviour:
   progressPanelFullfill: {fileID: 114320449283986104}
   foodIconFullfill: {fileID: 114002795816176162}
   storagePanelContent: {fileID: 224237024275379534}
+  gameCanvas: {fileID: 224834807321643008}
+  touchzone: {fileID: 114898253476980400}
   progressPanelIcon: {fileID: 114606456316762718}
   _questUI: {fileID: 114266813134256290}
   colonyNameField: {fileID: 114248252243510572}

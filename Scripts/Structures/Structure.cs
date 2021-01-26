@@ -216,7 +216,6 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Capacitor mast");break;
             default:
                 throw new System.Exception("structure with ID " + i_id.ToString() + "not found");
-                return null;
         }
         Structure st = (Structure)s.AddComponent(GetTypeByID(i_id));
         st.ID = i_id;

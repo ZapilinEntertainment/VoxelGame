@@ -13,12 +13,12 @@ public enum ChallengeType : byte
 //ExploringMinigameUI : FieldAction(), Pass()
 
 
-public sealed class ExploringMinigameUI : MonoBehaviour
+public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
 {   
 
     [SerializeField] private GameObject deckHolder;
     [SerializeField] private Text challengeDifficultyLabel, playerResultLabel, challengeLabel, rollText, suppliesLabel, crystalsLabel, staminaPercentage, membersCountText;
-    [SerializeField] private Transform infoPanel;
+    [SerializeField] private Transform infoPanel, mainCanvas;
     [SerializeField] private RectTransform crewMarker;
     [SerializeField] private Image innerRollRing, outerRollRing, staminaBar;
     [SerializeField] private GameObject exampleButton, challengePanel, passButton, restButton;
@@ -323,6 +323,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour
         cf.MarkAsPassed();
         RedrawButtonIcon(cindex);
     }
+
+    public Transform GetMainCanvasTransform() { return mainCanvas; }
 
     private void Update()
     {

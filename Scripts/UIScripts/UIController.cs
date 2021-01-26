@@ -19,14 +19,18 @@ public class UIController : MonoBehaviour
     private static UIController _currentController;
     public static Texture iconsTexture { get; private set; }
 
+    public System.Action updateEvent;
+    private float updateTimer;
     private MainCanvasController mainCanvasController;
     private ExploringMinigameUI exploringMinigameController;
     private GameObject endpanel;
    // private AnnouncementCanvasController announcementCanvasController;
-    private GlobalMapCanvasController globalMapCanvasController;    
+    private GlobalMapCanvasController globalMapCanvasController;
+    private KnowledgeTabUI knowledgeTabUI;
 
     public UIMode currentMode { get; private set; }
-    private UIMode previousMode;
+    private UIMode previousMode = UIMode.Standart;
+    private const float UPDATE_TIME = 1f;
 
     //--------------------------------
     static UIController()
@@ -44,23 +48,47 @@ public class UIController : MonoBehaviour
 
     public MainCanvasController GetMainCanvasController()
     {
-        if (mainCanvasController == null)
+        if (mainCanvasController == null )
         {
-            mainCanvasController = Instantiate(Resources.Load<GameObject>("UIPrefs/MainCanvasController")).GetComponent<MainCanvasController>();
-            UIObserver.LinkToMainCanvasController(mainCanvasController);
+            mainCanvasController = Instantiate(Resources.Load<GameObject>("UIPrefs/MainCanvasController"), transform).GetComponent<MainCanvasController>();
+            mainCanvasController.Initialize(this);
         }
         return mainCanvasController;
     }
     public ExploringMinigameUI GetExploringMinigameController()
-    {
-        if (exploringMinigameController == null) exploringMinigameController = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface")).GetComponent<ExploringMinigameUI>();
+    {      
+        if (exploringMinigameController == null) exploringMinigameController = Instantiate(Resources.Load<GameObject>("UIPrefs/ExploringMinigameInterface"), transform).GetComponent<ExploringMinigameUI>();
         return exploringMinigameController;
     }
-
-    private void Awake()
+    public GlobalMapCanvasController GetGlobalMapCanvasController()
     {
-        if (_currentController != null) Destroy(_currentController.gameObject);
-        _currentController = this;
+        if (globalMapCanvasController == null)
+        {
+            globalMapCanvasController = Instantiate(Resources.Load<GameObject>("UIPrefs/globalMapUI"), transform).GetComponent<GlobalMapCanvasController>();
+            globalMapCanvasController.SetGlobalMap(GameMaster.realMaster.globalMap);
+        }
+        return globalMapCanvasController;
+    }
+    public KnowledgeTabUI GetKnowledgeTabUI()
+    {
+        if (knowledgeTabUI == null)
+        {
+            knowledgeTabUI = Instantiate(Resources.Load<GameObject>("UIPrefs/knowledgeTab"), transform).GetComponent<KnowledgeTabUI>();
+            knowledgeTabUI.Prepare(Knowledge.GetCurrent(), this);
+        }
+        return knowledgeTabUI;
+    }
+
+    private void Update()
+    {
+        if (GameMaster.gameSpeed != 0f) {
+            updateTimer -= Time.deltaTime;
+            if (updateTimer <= 0f)
+            {
+                updateEvent?.Invoke();
+                updateTimer = UPDATE_TIME;
+            }
+        }
     }
 
     public void ChangeUIMode(UIMode newUIMode, bool disableCanvas)
@@ -70,18 +98,41 @@ public class UIController : MonoBehaviour
             switch (currentMode)
             {
                 case UIMode.Standart:
-                    if (disableCanvas) mainCanvasController?.gameObject.SetActive(false);
-                    GameMaster.realMaster.environmentMaster.DisableDecorations();
+                    if (disableCanvas) mainCanvasController?.gameObject.SetActive(false);                    
+                    GameMaster.realMaster.environmentMaster?.DisableDecorations();
                     break;
                 case UIMode.Endgame: if (endpanel != null) Destroy(endpanel); break;
                 case UIMode.ExploringMinigame: if (disableCanvas) exploringMinigameController?.gameObject.SetActive(false); break;
                 case UIMode.GlobalMap: if (disableCanvas) globalMapCanvasController.gameObject.SetActive(false); break;
             }
+            bool haveOwnCamera = false;
             switch (newUIMode)
             {
+                case UIMode.ExploringMinigame:
+                    haveOwnCamera = true;
+                    var mo = GetExploringMinigameController();
+                    if (mo.gameObject.activeSelf) mo.gameObject.SetActive(true);
+                    break;
+                case UIMode.GlobalMap:
+                    haveOwnCamera = true;
+                    var go = GetGlobalMapCanvasController();
+                    go.RedrawMap();
+                    if (!go.gameObject.activeSelf) go.gameObject.SetActive(true);
+                    break;
+                case UIMode.KnowledgeTab:
+                    haveOwnCamera = true;
+                    var kt = GetKnowledgeTabUI();
+                    if (!kt.gameObject.activeSelf) kt.gameObject.SetActive(true);
+                    kt.Redraw();
+                    break;
                 case UIMode.Endgame: break;
-                case UIMode.Standart: GameMaster.realMaster.environmentMaster.EnableDecorations(); break;
+                case UIMode.Standart:
+                    var mcc = GetMainCanvasController();
+                    if (!mcc.gameObject.activeSelf) mcc.gameObject.SetActive(true);
+                    GameMaster.realMaster.environmentMaster?.EnableDecorations();
+                    break;
             }
+            FollowingCamera.main.gameObject.SetActive(!haveOwnCamera);
             previousMode = currentMode;
             currentMode = newUIMode;
         }
@@ -92,19 +143,32 @@ public class UIController : MonoBehaviour
     {
         switch (currentMode)
         {
-            case UIMode.ExploringMinigame: return exploringMinigameController.transform;
-            default: return mainCanvasController.transform;
+            case UIMode.ExploringMinigame: return exploringMinigameController.GetMainCanvasTransform();
+            case UIMode.GlobalMap: return globalMapCanvasController.GetMainCanvasTransform();
+            case UIMode.KnowledgeTab:return knowledgeTabUI.GetMainCanvasTransform();
+            default: return mainCanvasController.GetMainCanvasTransform();
         }
     }
-
     public void ReturnToPreviousCanvas(bool disableCanvas)
     {
         ChangeUIMode(previousMode, disableCanvas);
     }
     public void ShowExpedition(Expedition e)
     {
-        ChangeUIMode(UIMode.ExploringMinigame, true);
-        GetExploringMinigameController().Show(e);
+        switch (e.stage)
+        {
+            case Expedition.ExpeditionStage.OnMission:
+                ChangeUIMode(UIMode.ExploringMinigame, true);
+                GetExploringMinigameController().Show(e);
+                break;
+            case Expedition.ExpeditionStage.WayIn:
+            case Expedition.ExpeditionStage.WayOut:
+            case Expedition.ExpeditionStage.LeavingMission:
+                if (currentMode != UIMode.GlobalMap) ChangeUIMode(UIMode.GlobalMap, true); else GetGlobalMapCanvasController().RedrawMap();
+                GetGlobalMapCanvasController().SelectExpedition(e.ID);
+                break;
+        }
+        
     }
     
     public void GameOver( GameEndingType endType, ulong score )
@@ -206,7 +270,7 @@ public class UIController : MonoBehaviour
     }
     public static void PositionElement(RectTransform rt, RectTransform parent, SpriteAlignment alignment, Rect r)
     {
-        rt.parent = parent;
+        rt.SetParent(parent);
         rt.localScale = Vector3.one;
         rt.SetAsLastSibling();
         float lx = 1f / parent.localScale.x, ly = 1f / parent.localScale.y;

@@ -31,9 +31,9 @@ public sealed class QuestUI : MonoBehaviour
 
     private void Awake()
     {
-        current = this;
-        myCanvas = UIController.GetCurrent().GetMainCanvasController();
+        current = this;        
         openedQuest = -1;
+        // если присваивать myCanvas здесь, то все ломается
         int totalCount = (int)QuestSection.TotalCount;
         activeQuests = new Quest[totalCount];
         for (int i = 0; i < activeQuests.Length; i++)
@@ -54,7 +54,11 @@ public sealed class QuestUI : MonoBehaviour
             });
         }
         LocalizeTitles();
-    }   
+    }
+    private void Start()
+    {
+        myCanvas = UIController.GetCurrent().GetMainCanvasController();
+    }
 
     void Update()
     {

@@ -21,7 +21,7 @@ public sealed class Observatory : WorkBuilding
     {
         return 1f;
     }
-    new public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
     {
         if (alreadyBuilt)
         {

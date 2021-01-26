@@ -9,7 +9,7 @@ public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCe
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
 
 
-sealed public class MainCanvasController : MonoBehaviour, IObserverController
+sealed public class MainCanvasController : MonoBehaviour,IObserverController
 {
     //prev UIController
     public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
@@ -36,6 +36,7 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
     public Texture buildingsIcons { get; private set; }
     public Plane selectedPlane { get; private set; }
     public QuestUI questUI { get; private set; }
+    public UIController uicontroller { get; private set; }
 
     private Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
@@ -69,8 +70,10 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
     private const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
     private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
 
-    public void Awake()
+    public void Initialize( UIController uic)
     {
+        uicontroller = uic;
+        UIObserver.LinkToMainCanvasController(this);
         leftPanel.SetActive(false);
         upPanel.SetActive(false);
         selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
@@ -97,7 +100,9 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
     public void LinkColonyController()
     {
         colony = GameMaster.realMaster.colonyController;
+        colony.LinkObserver(this);
         storage = colony.storage;
+        
         linksReady = true;
         leftPanel.SetActive(true);
         upPanel.SetActive(true);
@@ -434,7 +439,7 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
             }
         }
     }
-
+    
     public void Raycasting()
     {
         if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null) return;
@@ -976,139 +981,6 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
         if (selectedObjectType == ChosenObjectType.None) return;
         ChangeChosenObject(ChosenObjectType.None);
     }
-
-    public void DigCube()
-    {
-        /*
-        if (chosenCube == null) return;
-        else
-        {
-            if (faceIndex == 4)
-            {
-                Plane sb = chosenCube.myChunk.GetBlock(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z) as Plane;
-                if (sb == null)
-                {
-                    DigSite ds = new DigSite();
-                    ds.Set(chosenCube, true);
-                    ShowWorksite(ds);
-                }
-                else
-                {
-                    CleanSite cs = new CleanSite();
-                    cs.Set(sb, true);
-                    ShowWorksite(cs);
-                }
-            }
-            else
-            {
-                if (faceIndex < 4)
-                {
-                    TunnelBuildingSite tbs = new TunnelBuildingSite();
-                    tbs.Set(chosenCube);
-                    tbs.CreateSign(faceIndex);
-                    ShowWorksite(tbs);
-                }
-            }
-        }
-        */
-    }
-    public void PourInCube()
-    {
-        /*
-        if (chosenCube == null || chosenCube.excavatingStatus == 0) return;
-        else
-        {
-            DigSite ds = new DigSite();
-            ds.Set(chosenCube, false);
-            ds.ShowOnGUI();
-        }
-        */
-    }
-    public void MakeSurfaceOnCube()
-    {
-        /*
-        Block b = chosenCube.myChunk.AddBlock(new ChunkPos(chosenCube.pos.x, chosenCube.pos.y + 1, chosenCube.pos.z), BlockType.Surface, chosenCube.material_id, false);
-        if (b != null)
-        {
-            chosenSurface = b as Plane;
-            ChangeChosenObject(ChosenObjectType.Surface);
-        }
-        else
-        {
-            GameLogUI.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ActionError));
-            if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
-        }
-        */
-    }
-    public void CreateHangPlatform()
-    {
-        /*
-        if (chosenCube != null | faceIndex > 3)
-        {
-            int x = chosenCube.pos.x, y = chosenCube.pos.y, z = chosenCube.pos.z;
-            switch (faceIndex)
-            {
-                case 0:
-                    if (z + 1 < Chunk.CHUNK_SIZE) z++;
-                    else goto END;
-                    break;
-                case 1:
-                    if (x + 1 < Chunk.CHUNK_SIZE) x++;
-                    else goto END;
-                    break;
-                case 2:
-                    if (z - 1 >= 0) z--;
-                    else goto END;
-                    break;
-                case 3:
-                    if (x - 1 >= 0) x--;
-                    else goto END;
-                    break;
-            }
-            Chunk chunk = chosenCube.myChunk;
-            Block b = chunk.GetBlock(x, y, z);
-            if (b == null)
-            {
-                chunk.AddBlock(new ChunkPos(x, y, z), BlockType.Surface, ResourceType.METAL_S_ID, false);
-            }
-            else
-            {
-                if (b.type == BlockType.Shapeless)
-                {
-                    chunk.ReplaceBlock(new ChunkPos(x, y, z), BlockType.Surface, ResourceType.METAL_S_ID, false);
-                }
-                else
-                {
-                    CaveBlock cb = b as CaveBlock;
-                    if (cb != null && !cb.haveSurface)
-                    {
-                        cb.RestoreSurface(ResourceType.METAL_S_ID);
-                    }
-                    else goto END;
-                }
-            }
-            if (y > 0)
-            {
-                y--;
-                b = chunk.GetBlock(x, y, z);
-                if (b == null)
-                {
-                    chunk.AddBlock(new ChunkPos(x, y, z), BlockType.Cave, -1, ResourceType.METAL_S_ID, false);
-                }
-                else
-                {
-                    if (b.type == BlockType.Surface | b.type == BlockType.Shapeless)
-                    {
-                        chunk.ReplaceBlock(new ChunkPos(x, y, z), BlockType.Cave, b.material_id, ResourceType.METAL_S_ID, false);
-                    }
-                }
-            }
-        }
-        END:
-        ChangeChosenObject(ChosenObjectType.Cube);
-        */
-    }
-
     public void EnableTextfield(int id)
     {
         rpanel_textfield_userStructureID = id;
@@ -1147,10 +1019,10 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
         switch (s.ID)
         {
             case Structure.SCIENCE_LAB_ID:
-                b.onClick.AddListener(() => { Knowledge.GetCurrent().OpenResearchTab(); });
+                b.onClick.AddListener(() => { uicontroller.ChangeUIMode(UIMode.KnowledgeTab, true); });
                 break;
             case Structure.OBSERVATORY_ID:
-                b.onClick.AddListener(() => { GameMaster.realMaster.globalMap.ShowOnGUI(); });
+                b.onClick.AddListener(() => { uicontroller.ChangeUIMode(UIMode.GlobalMap,true); });
                 break;
             case Structure.EXPEDITION_CORPUS_4_ID:
                 b.onClick.AddListener( () => { ExplorationPanelUI.Initialize(); } );
@@ -1498,4 +1370,5 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController
 
         landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
     }  
+
 }

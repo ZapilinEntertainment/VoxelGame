@@ -116,8 +116,8 @@ public sealed class ColonyController : MonoBehaviour
         var gm = GameMaster.realMaster;
         gm.SetColonyController(this);
         gm.everydayUpdate += EverydayUpdate;
-        observer = UIController.GetCurrent()?.GetMainCanvasController();
     }
+    public void LinkObserver(MainCanvasController mcc) { observer = mcc; }
 
     #region updating
     void Update()

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UICrewObserver : MonoBehaviour
+public sealed class UICrewObserver : UIObserver
 {
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
@@ -15,7 +15,6 @@ public sealed class UICrewObserver : MonoBehaviour
     [SerializeField] private RawImage icon;
 #pragma warning restore 0649
 
-    private bool subscribedToUpdate = false;
     private int lastDrawState = 0;
     private Crew observingCrew;
     private event System.Action closingEvent;
@@ -26,7 +25,7 @@ public sealed class UICrewObserver : MonoBehaviour
     {
         if (_currentObserver == null)
         {
-            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), MainCanvasController.current.mainCanvas).GetComponent<UICrewObserver>();
+            _currentObserver = Instantiate(Resources.Load<GameObject>("UIPrefs/crewPanel"), UIController.GetCurrent().GetCurrentCanvasTransform()).GetComponent<UICrewObserver>();
             _currentObserver.LocalizeTitles();
         }
         return _currentObserver;
@@ -155,7 +154,7 @@ public sealed class UICrewObserver : MonoBehaviour
         }
         lastDrawState = observingCrew.changesMarkerValue ;
     }
-    public void StatusUpdate()
+    override public void StatusUpdate()
     {
 
         if (observingCrew == null) gameObject.SetActive(false);
@@ -178,6 +177,8 @@ public sealed class UICrewObserver : MonoBehaviour
             observingCrew.Rename(nameField.text);
             if (RecruitingCenter.rcenterObserver != null && RecruitingCenter.rcenterObserver.isActiveAndEnabled)
                 RecruitingCenter.rcenterObserver.PrepareWindow();
+            var exc = ExplorationPanelUI.current;
+            if (exc != null && exc.isActiveAndEnabled) exc.Show(observingCrew);
         }
     }
     public void MembersButton()
@@ -203,7 +204,7 @@ public sealed class UICrewObserver : MonoBehaviour
         closingEvent += a;
     }
 
-    public void LocalizeTitles()
+    override public void LocalizeTitles()
     {
         statsPanel.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Persistence);
         statsPanel.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.SurvivalSkills);
@@ -214,21 +215,22 @@ public sealed class UICrewObserver : MonoBehaviour
         dismissButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);        
     }
 
-    private void OnEnable()
+    override protected void OnEnable()
     {
         if (!subscribedToUpdate)
         {
-            MainCanvasController.current.statusUpdateEvent += StatusUpdate;
+            mycanvas.uicontroller.updateEvent += StatusUpdate;
             subscribedToUpdate = true;
         }
     }
-    private void OnDisable()
+    override  protected void OnDisable()
     {
         if (subscribedToUpdate)
         {
-            if (MainCanvasController.current != null)
+            var mc = mycanvas.uicontroller;
+            if (mc != null )
             {
-                MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
+                mc.updateEvent -= StatusUpdate;
             }
             subscribedToUpdate = false;
         }
@@ -238,15 +240,16 @@ public sealed class UICrewObserver : MonoBehaviour
             closingEvent = null;
         }
     }
-    private void OnDestroy()
+    override protected void OnDestroy()
     {
         if (!GameMaster.sceneClearing )
         {
             if (subscribedToUpdate)
             {
-                if (MainCanvasController.current != null)
+                var mc = mycanvas.uicontroller;
+                if (mc != null)
                 {
-                    MainCanvasController.current.statusUpdateEvent -= StatusUpdate;
+                    mc.updateEvent -= StatusUpdate;
                 }
                 subscribedToUpdate = false;
             }

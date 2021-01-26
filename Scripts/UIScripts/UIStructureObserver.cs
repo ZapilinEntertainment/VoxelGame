@@ -97,8 +97,8 @@ public class UIStructureObserver : UIObserver {
         {
             switch (observingStructure.ID)
             {
-                case Structure.OBSERVATORY_ID: GameMaster.realMaster.globalMap.ShowOnGUI(); break;
-                case Structure.SCIENCE_LAB_ID: Knowledge.GetCurrent().OpenResearchTab();break;
+                case Structure.OBSERVATORY_ID: mycanvas.uicontroller.ChangeUIMode(UIMode.GlobalMap, true); break;
+                case Structure.SCIENCE_LAB_ID: mycanvas.uicontroller.ChangeUIMode(UIMode.KnowledgeTab, true); break; 
                 default: specialButton.SetActive(false);break;
             }
         }

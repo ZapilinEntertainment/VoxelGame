@@ -111,7 +111,7 @@ public sealed class Hotel : Building, IPlanable
         }
     }
 
-    new public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
+    public static bool CheckSpecialBuildingCondition(Plane p, ref string reason)
     {
         if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
         {

@@ -3078,6 +3078,7 @@ MonoBehaviour:
   staminaPercentage: {fileID: 5613261574889852952}
   membersCountText: {fileID: 508754476769915059}
   infoPanel: {fileID: 8497923606325165315}
+  mainCanvas: {fileID: 8497923605163265586}
   crewMarker: {fileID: 8190940363505421343}
   innerRollRing: {fileID: 7189693179395250302}
   outerRollRing: {fileID: 8461592305940586340}

@@ -10,12 +10,17 @@ public class TestBehaviour : MonoBehaviour
     [SerializeField] private SpriteAlignment alignment;
     [SerializeField] private Rect rect;
 
+    private UIController uic;
+    private MainCanvasController mcc;
+
     void Start()
     {
-        testWindow = Instantiate(Resources.Load<RectTransform>("UIPrefs/ExpeditionPanel"), holder);
-        Destroy(testWindow.GetComponent<UIExpeditionObserver>());
+        uic = UIController.GetCurrent();
+        mcc = uic.GetMainCanvasController();
 
-        SetPosition();
+        //testWindow = Instantiate(Resources.Load<RectTransform>("UIPrefs/ExpeditionPanel"), holder);
+       // Destroy(testWindow.GetComponent<UIExpeditionObserver>());
+        //SetPosition();
     }
 
     internal void SetPosition() {
@@ -116,6 +121,6 @@ public class TestBehaviourEditor : Editor
     {
         base.OnInspectorGUI();
         TestBehaviour script = (TestBehaviour)target;
-        if (GUILayout.Button("Reposition")) script.SetPosition();
+       // if (GUILayout.Button("Reposition")) script.SetPosition();
     }
 }

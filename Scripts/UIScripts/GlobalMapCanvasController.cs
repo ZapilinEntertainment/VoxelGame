@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Threading;
 
-public sealed class GlobalMapCanvasController : MonoBehaviour
+public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverController
 {// prev GlobalMapUI
 #pragma warning disable 0649
     [SerializeField] private RectTransform mapRect, expeditionFastButtonsPanel;
@@ -36,7 +36,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
     private const int SECTORS_TEXTURE_RESOLUTION = 8000, MAX_EXPEDITIONS_FBUTTONS_COUNT = 20;
 
     //========================== PUBLIC METHODS
-    public Transform GetMapCanvas() { return mapCanvas.transform; }
+    public Transform GetMainCanvasTransform() { return mapCanvas.transform; }
 
     public void SetGlobalMap(GlobalMap gm)
     {
@@ -75,7 +75,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
                 mapMarkers[i].GetComponent<Image>().color = chosenColor;
                 break;
             }
-        }        
+        }
         PreparePointDescription();
         infoPanelWidth = infoPanel.activeSelf ? infoPanel.GetComponent<RectTransform>().rect.width : 0f;
     }
@@ -122,9 +122,13 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
     }
 
     public void PreparePointDescription()
-    {        
-        pointIcon.uvRect = GetMarkerRect(chosenPoint.type);
-
+    {
+        if (chosenPoint == null)
+        {
+            if (infoPanel.activeSelf) infoPanel.SetActive(false);
+            return;
+        }
+        pointIcon.uvRect = GetMarkerRect(chosenPoint.type);        
         if (chosenPoint != null)
         {
             switch (chosenPoint.type)
@@ -142,15 +146,24 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
                         var e = (chosenPoint as FlyingExpedition).expedition;
                         pointLabel.text = Localization.GetExpeditionName(e);
                         pointDescription.text = Localization.GetExpeditionDescription(e);
-                        if (e.stage == Expedition.ExpeditionStage.WayIn)
+                        switch (e.stage)
                         {
-                            sendButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
-                            if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
-                        }
-                        else
-                        {
-                            if (sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(false);
-                        }
+                            case Expedition.ExpeditionStage.WayIn:
+                                sendButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.RecallExpedition);
+                                if (!sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(true);
+                                break;
+                            case Expedition.ExpeditionStage.WayOut:
+                                if (sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(false);
+                                break;
+                            case Expedition.ExpeditionStage.OnMission:
+                            case Expedition.ExpeditionStage.LeavingMission:                                
+                                SelectPoint(e.destination);
+                                return;
+                            case Expedition.ExpeditionStage.Dismissed:
+                            case Expedition.ExpeditionStage.Disappeared:
+                                CloseInfopanel();
+                                return;
+                        }                    
                         break;
                     }
                 default:
@@ -293,7 +306,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
         infoPanel.SetActive(false); infoPanelWidth = 0f;
         LocalizeTitles();
     }
-    private void RedrawMap()
+    public void RedrawMap()
     {
         if (!prepared) return;
         else
@@ -471,6 +484,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
         }
         else expeditionFastButtonsPanel.gameObject.SetActive(false);
         needExpeditionsRedraw = false;
+        PreparePointDescription();
     }
 
     private void Update()
@@ -488,7 +502,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
             RedrawMap();
         }
         else
-        {
+        {           
             if (mapMarkers.Count > 0)
             {
                 Vector3 up = Vector3.up * mapRect.rect.height / 2f;
@@ -497,6 +511,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
                     MapPoint mp = mapPoints[i];
                     mapMarkers[i].localPosition = Quaternion.AngleAxis(mp.angle, dir) * (up * mp.height);
                 }
+                if (needExpeditionsRedraw)   ExpeditionsButtonsRedraw();
             }
         }
         //
@@ -617,13 +632,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
             }
         }
 
-        mapRect.position = new Vector3(xpos, ypos, 0);
-
-        if (needExpeditionsRedraw)
-        {
-            ExpeditionsButtonsRedraw();
-            PreparePointDescription();
-        }
+        mapRect.position = new Vector3(xpos, ypos, 0);        
     }
    
     private void OnEnable()
@@ -643,11 +652,6 @@ public sealed class GlobalMapCanvasController : MonoBehaviour
                 else infoPanelWidth = 0f;
             }
         }
-    }
-    private void OnDisable()
-    {
-        if (globalMap != null) globalMap.MapInterfaceDisabled();
-        UIExpeditionObserver.DisableObserver();
     }
     // =====================  AUXILIARY METHODS
     public static Rect GetMarkerRect(MapMarkerType mtype)
