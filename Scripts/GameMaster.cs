@@ -169,6 +169,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (gameMode != GameMode.Editor) return;
         gameMode = GameMode.Play;
+        uicontroller.ChangeUIMode(UIMode.Standart,true);
         _gameMode = gameMode;
         gameStarted = false;
         gameStartSettings.generationMode = ChunkGenerationMode.DontGenerate;
@@ -193,8 +194,7 @@ public sealed class GameMaster : MonoBehaviour
         realMaster = this;
         sceneClearing = false;
         //
-        uicontroller = UIController.GetCurrent();
-        uicontroller.ChangeUIMode(UIMode.Standart, true);
+        uicontroller = UIController.GetCurrent();        
         //
         if (PoolMaster.current == null)
         {
@@ -203,6 +203,7 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (gameMode == GameMode.Play)
         {
+            uicontroller.ChangeUIMode(UIMode.Standart, true);
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
             globalMap.Prepare();
             eventTracker = new EventChecker();
@@ -336,6 +337,7 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
+            uicontroller.ChangeUIMode(UIMode.Editor, true);
             gameObject.AddComponent<PoolMaster>().Load();
             mainChunk = new GameObject("chunk").AddComponent<Chunk>();
             int size = Chunk.chunkSize;

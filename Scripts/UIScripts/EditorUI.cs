@@ -292,7 +292,6 @@ public sealed class EditorUI : MonoBehaviour
     public void PlayWithThisTerrain()
     {
         if (visualBorderDrawn) GameMaster.realMaster.mainChunk.HideBorderLine();
-        Destroy(transform.root.gameObject);
         GameMaster.realMaster.SaveTerrain("lastCreatedTerrain");
         GameMaster.realMaster.ChangeModeToPlay();
     }

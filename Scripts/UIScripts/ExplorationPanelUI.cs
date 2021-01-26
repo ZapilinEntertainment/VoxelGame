@@ -112,34 +112,12 @@ public sealed class ExplorationPanelUI : MonoBehaviour
         if (activeObserver != null) activeObserver.transform.SetAsLastSibling();
     }
 
-    public void Show(Crew c)
+    public void ShowInList(Crew c)
     {
         if (c != null)
         {
-            if (mode != InfoMode.Crews) ChangeMode(InfoMode.Crews);
-                 
-        }
-    }
-    public void ShowIfSelected(Crew c)
-    {
-        
-    }
-    public void Show(Artifact a)
-    {
-        if (a != null && !a.destructed)
-        {
-            selectedArtifact = a;
-            if (mode != InfoMode.Artifacts) ChangeMode(InfoMode.Artifacts);
-            else StatusUpdate();
-        }
-    }
-    public void Show(Expedition e)
-    {
-        if (e != null)
-        {
-            selectedExpedition = e;
-            if (mode != InfoMode.Expeditions) ChangeMode(InfoMode.Expeditions);
-            else StatusUpdate();
+            selectedCrew = c;
+            PrepareList(crewsData);
         }
     }
 
@@ -163,6 +141,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             int currentSelectedItem = -1;
             if (objectsCount > COUNT)
             {
+                // РАСШИРЕННЫЙ СПИСОК
                 if (!datahoster.HaveSelectedObject())
                 {
                     int sindex = GetListStartIndex();
@@ -188,8 +167,9 @@ public sealed class ExplorationPanelUI : MonoBehaviour
             }
             else
             {
-                int i = 0, crewsCount = datahoster.GetListLength();
-                for (; i < crewsCount; i++)
+                // КОМПАКТНЫЙ СПИСОК
+                int i = 0;
+                for (; i < objectsCount; i++)
                 {
                     items[i].transform.GetChild(0).GetComponent<Text>().text = '"' + datahoster.GetName(i) + '"';
                     listIDs[i] = datahoster.GetID(i);
@@ -206,21 +186,12 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
                 if (datahoster.HaveSelectedObject())
                 {
-                    for (i = 0; i < crewsCount; i++)
+                    int sid = datahoster.GetSelectedID();
+                    for (i = 0; i< COUNT; i++)
                     {
-                        if (listIDs[i] == datahoster.GetSelectedID())
-                        {
-                            currentSelectedItem = i;
-                            //Debug.Log("selected " + currentSelectedItem.ToString() + " with id " + showingCrew.ID.ToString());
-                        }
+                        if (listIDs[i] == sid) SelectItem(i);
                     }
                 }
-            }
-
-            if (currentSelectedItem != -1)
-            {
-                items[currentSelectedItem].GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                selectedItem = currentSelectedItem;
             }
 
             if (!listEnabled)
@@ -286,9 +257,7 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
                         if (Artifact.artifactsList.Count != 0)
                         {
-                            var ert = observerPanel.GetComponent<RectTransform>();
-                            var r = new Rect(ert.position, ert.rect.size);
-                            SelectItem(0);
+                            if (selectedArtifact == null) SelectItem(0);
                         }
                         else
                         {
@@ -309,9 +278,8 @@ public sealed class ExplorationPanelUI : MonoBehaviour
                         expeditionButtonImage.overrideSprite = PoolMaster.gui_overridingSprite;
 
                         if (Expedition.expeditionsList.Count != 0)
-                        {
-                            var ert = observerPanel.GetComponent<RectTransform>();
-                            SelectItem(0);
+                        {                           
+                            if (selectedExpedition == null) SelectItem(0);
                         }
                         else
                         {

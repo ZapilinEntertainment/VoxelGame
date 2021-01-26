@@ -178,7 +178,7 @@ public sealed class UICrewObserver : UIObserver
             if (RecruitingCenter.rcenterObserver != null && RecruitingCenter.rcenterObserver.isActiveAndEnabled)
                 RecruitingCenter.rcenterObserver.PrepareWindow();
             var exc = ExplorationPanelUI.current;
-            if (exc != null && exc.isActiveAndEnabled) exc.Show(observingCrew);
+            if (exc != null && exc.isActiveAndEnabled) exc.ShowInList(observingCrew);
         }
     }
     public void MembersButton()

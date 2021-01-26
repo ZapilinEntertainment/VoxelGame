@@ -24,9 +24,9 @@ public class UIController : MonoBehaviour
     private MainCanvasController mainCanvasController;
     private ExploringMinigameUI exploringMinigameController;
     private GameObject endpanel;
-   // private AnnouncementCanvasController announcementCanvasController;
     private GlobalMapCanvasController globalMapCanvasController;
     private KnowledgeTabUI knowledgeTabUI;
+    private EditorUI editorCanvasController;
 
     public UIMode currentMode { get; private set; }
     private UIMode previousMode = UIMode.Standart;
@@ -78,6 +78,14 @@ public class UIController : MonoBehaviour
         }
         return knowledgeTabUI;
     }
+    public EditorUI GetEditorCanvasController()
+    {
+        if (editorCanvasController == null)
+        {
+            editorCanvasController = Instantiate(Resources.Load<GameObject>("UIPrefs/editorCanvas"), transform).GetComponent<EditorUI>();
+        }
+        return editorCanvasController;
+    }
 
     private void Update()
     {
@@ -103,7 +111,18 @@ public class UIController : MonoBehaviour
                     break;
                 case UIMode.Endgame: if (endpanel != null) Destroy(endpanel); break;
                 case UIMode.ExploringMinigame: if (disableCanvas) exploringMinigameController?.gameObject.SetActive(false); break;
-                case UIMode.GlobalMap: if (disableCanvas) globalMapCanvasController.gameObject.SetActive(false); break;
+                case UIMode.GlobalMap:
+                    if (disableCanvas) globalMapCanvasController.gameObject.SetActive(false);
+                    break;
+                case UIMode.Editor:
+                    {
+                        if (disableCanvas)
+                        {
+                            Destroy(editorCanvasController.gameObject);
+                            editorCanvasController = null;
+                        }
+                        break;
+                    }
             }
             bool haveOwnCamera = false;
             switch (newUIMode)
@@ -130,6 +149,9 @@ public class UIController : MonoBehaviour
                     var mcc = GetMainCanvasController();
                     if (!mcc.gameObject.activeSelf) mcc.gameObject.SetActive(true);
                     GameMaster.realMaster.environmentMaster?.EnableDecorations();
+                    break;
+                case UIMode.Editor:
+                    var eui = GetEditorCanvasController();
                     break;
             }
             FollowingCamera.main.gameObject.SetActive(!haveOwnCamera);
