@@ -41,7 +41,7 @@ public class Farm : WorkBuilding
             subscribedToUpdate = true;
         }
         var gl = basement.GetGrassland();
-        if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
+        if (gl == null) basement.TryCreateGrassland(out gl);
         gl?.SetCultivatingStatus(true);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
     }
@@ -125,7 +125,7 @@ public class Farm : WorkBuilding
         else workflow -= actionsPoints * (-1) * workflowToProcess;
         if (totalCost > 0) {
             var gl = basement.GetGrassland();
-            if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
+            if (gl == null) basement.TryCreateGrassland(out gl);
             gl.TakeLifepower(totalCost);
         }
     }
@@ -175,7 +175,7 @@ public class Farm : WorkBuilding
         fs.Read(data, 0, data.Length);
         lastPlantIndex = System.BitConverter.ToInt32(data, 0);
         var gl = basement.GetGrassland();
-        if (gl == null) gl = basement.FORCED_GetExtension().InitializeGrassland();
+        if (gl == null) basement.TryCreateGrassland(out gl);
         gl?.SetCultivatingStatus(true);
     }
     #endregion

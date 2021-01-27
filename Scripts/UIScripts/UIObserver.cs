@@ -5,7 +5,7 @@ using UnityEngine;
 public abstract class UIObserver : MonoBehaviour {
 	public bool isObserving { get; protected set; }
     protected bool subscribedToUpdate = false;
-    protected static MainCanvasController mycanvas;
+    public static MainCanvasController mycanvas { get; private set; }
 
     public static void LinkToMainCanvasController(MainCanvasController mcc)
     {

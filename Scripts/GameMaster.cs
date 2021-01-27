@@ -431,10 +431,11 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading) return;
 
+        if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
         //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
         if (testMode)
         {
-            if (Input.GetKeyDown("o")) TestMethod();
+            
             if (Input.GetKeyDown("m"))
             {
                 if (colonyController != null)

@@ -16,7 +16,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2573,6 +2573,9 @@ public static class Localization
                         case LocalizedPhrase.CannotMove: return "Движение невозможно";
                         case LocalizedPhrase.NotEnoughStamina: return "недостаточно выносливости";
                         case LocalizedPhrase.NotEnoughSupplies: return "недостаточно припасов";
+
+                        case LocalizedPhrase.LodgersCount: return "Постояльцы";
+                        case LocalizedPhrase.TotalRent: return "Общий доход";
                         default: return "<...>";
                     }
                 }
@@ -2672,6 +2675,9 @@ public static class Localization
                         case LocalizedPhrase.CannotMove: return "Cannot move";
                         case LocalizedPhrase.NotEnoughStamina: return "not enough stamina";
                         case LocalizedPhrase.NotEnoughSupplies: return "not enough supplies";
+
+                        case LocalizedPhrase.LodgersCount: return "Lodgers count";
+                        case LocalizedPhrase.TotalRent: return "Total rent";
                         default: return "<...>";
                     }
                 }

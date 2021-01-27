@@ -124,6 +124,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                 {
                     rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = XStation.GetInfo();            
                 }
+                else
+                {
+                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = Hotel.GetInfo();
+                }
             }
         }
         updateTimer -= tm;

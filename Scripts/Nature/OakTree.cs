@@ -582,7 +582,8 @@ public sealed class OakTree : Plant
         }
         if (PoolMaster.qualityLevel > 0) PoolMaster.current.LifepowerSplash(transform.position, stage);
         SetVisibility(isVisible);
-        if (!GameMaster.loading) basement.GetGrassland().needRecalculation = true;
+        Grassland g = basement.GetGrassland();
+        if (!GameMaster.loading && g != null) g.needRecalculation = true; 
     }
     override public bool IsFullGrown()
     {

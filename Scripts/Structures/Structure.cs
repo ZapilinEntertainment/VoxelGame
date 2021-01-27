@@ -1149,6 +1149,7 @@ public class Structure : MonoBehaviour
             case COLUMN_ID:
                 return 2;
             case SETTLEMENT_CENTER_ID:
+                return 4;
             case MINE_ELEVATOR_ID:
             case FARM_1_ID:
             case MINE_ID:

@@ -16,13 +16,14 @@ public class GeologyModule : MonoBehaviour {
 
 	public void SpreadMinerals(Plane[] planes) {
         int res = PlaneExtension.INNER_RESOLUTION;
-        int maxObjectsCount = res * res / 2, positionsLeft;
+        int MAX_OBJECTS_PER_PLANE = res * res / 2;
+        int maxObjectsCount,positionsLeft;
         PlaneExtension pe;
         foreach (var p in planes)
         {
             pe = p.FORCED_GetExtension();
-            List<PixelPosByte> positions = pe.GetRandomCells(maxObjectsCount);
-            if (positions.Count == 0) return;
+            List<PixelPosByte> positions = pe.GetRandomCells(MAX_OBJECTS_PER_PLANE);
+            if (positions.Count == 0) continue;
             maxObjectsCount = positions.Count;
             positionsLeft = maxObjectsCount;
             List<HarvestableResource> allBoulders = new List<HarvestableResource>();

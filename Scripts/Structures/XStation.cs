@@ -80,14 +80,9 @@ public sealed class XStation : WorkBuilding {
 
     public override UIObserver ShowOnGUI()
     {
-        if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
-        else workbuildingObserver.gameObject.SetActive(true);
-        workbuildingObserver.SetObservingWorkBuilding(this);
-        showOnGUI = true;
-
+        var wo = base.ShowOnGUI();
         colony.observer.EnableTextfield(ID);
-
-        return workbuildingObserver;
+        return wo;
     }
     override public void DisableGUI()
     {

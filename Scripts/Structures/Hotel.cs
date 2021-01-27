@@ -4,7 +4,7 @@ using UnityEngine;
 
 public sealed class Hotel : Building, IPlanable
 {
-    public byte lodgersCount { get; private set; }
+    private byte lodgersCount;
     private Block myBlock;
     private Plane upperPlane, bottomPlane;
     private const float RENT = 1f, NEGATIVE_EFFECT_TIMER = 25f;
@@ -39,6 +39,18 @@ public sealed class Hotel : Building, IPlanable
                 }
             }
         }
+    }
+    public static string GetInfo()
+    {
+        int lodgersCount = 0;
+        if (hotels != null && hotels.Count > 0)
+        {
+            foreach (var h in hotels) lodgersCount += h.lodgersCount;
+        }
+        if (lodgersCount != 0) return Localization.GetPhrase(LocalizedPhrase.LodgersCount) + ": " + lodgersCount.ToString() +
+            "\n" + Localization.GetPhrase(LocalizedPhrase.TotalRent) + ": +" + ((int)(lodgersCount * RENT));
+        else return Localization.GetPhrase(LocalizedPhrase.LodgersCount) + ": 0" +
+            "\n" + Localization.GetPhrase(LocalizedPhrase.TotalRent) + ": 0";
     }
 
     override public void Prepare() {
@@ -436,4 +448,16 @@ public sealed class Hotel : Building, IPlanable
         }
     }
     #endregion
+
+    public override UIObserver ShowOnGUI()
+    {
+        var bo = base.ShowOnGUI();
+        UIObserver.mycanvas.EnableTextfield(ID);
+        return bo;
+    }
+    override public void DisableGUI()
+    {
+        showOnGUI = false;
+        UIObserver.mycanvas.DisableTextfield(ID);
+    }
 }

@@ -20,7 +20,7 @@ public sealed class Environment
     public float conditions { get; private set; }
     public readonly float richness, lifepowerSupport, stability, lightIntensityMultiplier;
     public readonly Color bottomColor, skyColor, horizonColor;
-    private const float DEFAULT_CONDITIONS = 0.75f, DEFAULT_RICHNESS = 0.2f, DEFAULT_LP_SUPPORT = 0.5f, DEFAULT_STABILITY = 0.5f;
+    private const float DEFAULT_CONDITIONS = 0.75f, DEFAULT_RICHNESS = 0.2f, DEFAULT_LP_SUPPORT = 0.8f, DEFAULT_STABILITY = 0.5f;
     private static Dictionary<EnvironmentPreset, Environment> elist;
 
     static Environment()

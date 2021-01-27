@@ -826,7 +826,7 @@ public class Building : Structure
         }
         Building upgraded = GetStructureByID(upgradedIndex) as Building;
         PixelPosByte setPos = new PixelPosByte(surfaceRect.x, surfaceRect.z);
-        if (upgraded.surfaceRect.size == 16) setPos = new PixelPosByte(0, 0);
+        if (upgraded.surfaceRect.size == PlaneExtension.INNER_RESOLUTION) setPos = new PixelPosByte(0, 0);
         if (upgraded.rotate90only & (modelRotation % 2 != 0))
         {
             upgraded.modelRotation = (byte)(modelRotation - 1);

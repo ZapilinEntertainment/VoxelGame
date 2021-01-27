@@ -152,7 +152,7 @@ public sealed partial class Chunk : MonoBehaviour
         PreparePlanes();
         RenderDataFullRecalculation();
         RecalculateSurfacesList();
-        if (surfaces != null & GameMaster.realMaster.gameMode != GameMode.Editor)
+        if (surfaces != null && GameMaster.realMaster.gameMode != GameMode.Editor)
         {
            GameMaster.geologyModule.SpreadMinerals(surfaces);
         }

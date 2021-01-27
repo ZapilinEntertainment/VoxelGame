@@ -437,31 +437,24 @@ public sealed class PlaneExtension
             if (plist.Count > 0) return plist.ToArray(); else return null;
         }
     }
+
     public bool HaveGrassland()
     {
         return grassland != null;
     }
-
-    public Grassland InitializeGrassland()
+    public bool TryCreateGrassland(out Grassland g)
     {
-        if (grassland == null)
+        if (grassland != null)
         {
-            grassland = myPlane.myChunk.GetNature().CreateGrassland(myPlane);
+            g = null;
+            return false;
         }
-        return grassland;
-    }
-    /// <summary>
-    /// returns true if set successful
-    /// </summary>
-    /// 
-    public bool SetGrassland(Grassland g)
-    {
-        if (grassland == null)
+        else
         {
+            g = new Grassland(myPlane);
             grassland = g;
             return true;
         }
-        else return false;
     }
     public void RemoveGrassland(Grassland g, bool sendAnnihilationRequest)
     {
@@ -555,16 +548,20 @@ public sealed class PlaneExtension
     }
     public List<PixelPosByte> GetRandomCells(int count)
     {
+        //возвращает перемешанный в случайном порядке список доступных позиций размером 1
         List<PixelPosByte> positions = new List<PixelPosByte>();
-        if (fullfillStatus != FullfillStatus.Full)
+        if (count > 0 && fullfillStatus != FullfillStatus.Full)
         {
             List<PixelPosByte> acceptableVariants = GetAcceptableCellPositions(INNER_RESOLUTION * INNER_RESOLUTION);
-            while (positions.Count < count && acceptableVariants.Count > 0)
+            int ac = acceptableVariants.Count, index;
+            if (count > ac) count = ac;
+            for (int i = count-1; i > 0; i--)
             {
-                int ppos = Random.Range(0, acceptableVariants.Count);
-                positions.Add(acceptableVariants[ppos]);
-                acceptableVariants.RemoveAt(ppos);
+                index = Random.Range(0, i+1);
+                positions.Add(acceptableVariants[index]);
+                if (index != i) acceptableVariants[index] = acceptableVariants[i];
             }
+            positions.Add(acceptableVariants[0]);
         }
         return positions;
     }
@@ -669,15 +666,24 @@ public sealed class PlaneExtension
         if (acceptableVariants.Count == 0)
         {
             fullfillStatus = FullfillStatus.Full;
-            return new List<PixelPosByte>();
+            return acceptableVariants;
         }
         else
         {
-            while (acceptableVariants.Count > count)
+            int variantsCount = acceptableVariants.Count;
+            bool moreVariantsThanNeeded = variantsCount > count;
+            int totalCount = moreVariantsThanNeeded ? count : variantsCount, index ;
+            PixelPosByte x;            
+            for (int i = 0; i < totalCount - 1; i++)
             {
-                int i = Random.Range(0, acceptableVariants.Count);
-                acceptableVariants.RemoveAt(i);
-            }            
+                index = Random.Range(i, variantsCount);
+                if (index != i) {
+                    x = acceptableVariants[i];
+                    acceptableVariants[i] = acceptableVariants[index];
+                    acceptableVariants[index] = x;
+                }
+            }
+            if (moreVariantsThanNeeded) acceptableVariants.RemoveRange(totalCount, variantsCount - totalCount);
             return acceptableVariants;
         }
     }

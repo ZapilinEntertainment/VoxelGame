@@ -354,6 +354,27 @@ public class Plane
     {
         return host?.GetBlock();
     }
+    public bool TryCreateGrassland(out Grassland g)
+    {
+        if (mainStructure != null && mainStructure.surfaceRect == SurfaceRect.full)
+        {
+            g = null;
+            return false;
+        }
+        else
+        {
+            if (Nature.IsPlaneSuitableForGrassland(this))
+            {
+                if (extension == null) FORCED_GetExtension();
+                return extension.TryCreateGrassland(out g);
+            }
+            else
+            {
+                g = null;
+                return false;
+            }
+        }
+    }
     public Grassland GetGrassland()
     {
         return extension?.grassland;

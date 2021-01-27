@@ -47,6 +47,7 @@ public sealed class Nature : MonoBehaviour
                     g.Save(fs);
                 }
             }
+            fs.Write(System.BitConverter.GetBytes(Grassland.SYSTEM_GetNextID()),0,4);
         }
         else fs.Write(System.BitConverter.GetBytes(count), 0, 4);
         //
@@ -135,10 +136,12 @@ public sealed class Nature : MonoBehaviour
             Grassland g;
             for(i = 0; i< count; i++)
             {
-                g = Grassland.Load(fs, this, myChunk);
-                if (g != null) grasslands.Add(g);
-            }
-            if (grasslands.Count == 0) grasslands = null;
+                g = Grassland.Load(fs, myChunk);
+                grasslands.Add(g);
+            }            
+            var iddata = new byte[4];
+            fs.Read(iddata, 0, 4);
+            Grassland.SYSTEM_SetNextID(System.BitConverter.ToInt32(iddata, 0));       
         }
         //
         count = fs.ReadByte();
@@ -196,7 +199,7 @@ public sealed class Nature : MonoBehaviour
         }
     }
     #endregion
-
+   
 
     public static bool MaterialIsLifeSupporting(int materialID)
     {
@@ -212,6 +215,11 @@ public sealed class Nature : MonoBehaviour
                 return true;
             default: return false;
         }
+    }
+    public static bool IsPlaneSuitableForGrassland(Plane p)
+    {
+        if (p.isQuad && MaterialIsLifeSupporting(p.materialID)) return true;
+        else return false;
     }
 
     public void Prepare(Chunk c)
@@ -230,10 +238,15 @@ public sealed class Nature : MonoBehaviour
     {
         lifepowerSupport = e.lifepowerSupport;
     }
-    public void FirstSet(float lpower)
+    public void FirstLifeformGeneration(float lpower)
     {
         if (!prepared) Prepare(GameMaster.realMaster.mainChunk);
-        var slist = new List<Plane>(myChunk.surfaces);
+        if (lifepowerSupport == 0f)
+        {
+            lifepower = lpower;
+            return;
+        }
+        var slist = new List<Plane>(myChunk.surfaces);        
         if (slist != null)
         {
             int count = slist.Count;
@@ -243,6 +256,20 @@ public sealed class Nature : MonoBehaviour
                 ls.SetBasement(s);
             }
             slist.Remove(s); count--;
+
+            if (lifepowerSupport < 1f)
+            {
+                int cutted = (int)(count * (1f - lifepowerSupport));
+                if (cutted > 1)
+                {
+                    while (count > 0 && cutted > 0)
+                    {
+                        slist.RemoveAt(Random.Range(0, count));
+                        count--;
+                        cutted--;
+                    }
+                }
+            }
 
             float lifepiece = 50f;
             if (count > 0)
@@ -256,19 +283,16 @@ public sealed class Nature : MonoBehaviour
                     p = slist[i];
                     if (p.haveGrassland)
                     {
-                        p.GetGrassland().AddLifepower(lifepiece);
-                        lpower -= lifepiece;
+                        g = p.GetGrassland();
+                        g.AddLifepower(lifepiece);
+                        lpower -= lifepiece;                       
                     }
                     else
                     {
-                        if (Random.value < lifepowerSupport)
+                        if (p.TryCreateGrassland(out g) && g != null)
                         {
-                            g = p.FORCED_GetExtension().InitializeGrassland();
-                            if (g != null)
-                            {
-                                g.AddLifepower(lifepiece);
-                                lpower -= lifepiece;
-                            }
+                            g.AddLifepower(lifepiece);
+                            lpower -= lifepiece;
                         }
                         else
                         {
@@ -277,7 +301,7 @@ public sealed class Nature : MonoBehaviour
                         }
                     }
                 }
-                if (lpower > 0f) lifepower += lpower;
+                if (lpower > 0f) lifepower += lpower;                
             }
             needRecalculation = true;
         }
@@ -324,152 +348,7 @@ public sealed class Nature : MonoBehaviour
                 {
                     bool expansion = grasslands != null;
                     Grassland g = null;
-                    if (expansion)
-                    {
-                        g = grasslands[Random.Range(0, grasslands.Count)];
-                        var fi = g.faceIndex;
-                        List<Plane> candidates = new List<Plane>();
-                        Block b, myBlock = g.plane.GetBlock(); Plane p; ChunkPos cpos = g.pos;
-                        switch (fi)
-                        {
-                            case Block.UP_FACE_INDEX:
-                                {
-                                    // fwd
-                                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y + 1, cpos.z + 1), out b))
-                                    {
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(cpos.OneBlockForward(), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);                                            
-                                        }                                        
-                                    }
-                                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    //right
-                                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x + 1, cpos.y + 1, cpos.z), out b))
-                                    {
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(cpos.OneBlockRight(), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);                                           
-                                        }
-                                    }
-                                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    //back
-                                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y + 1, cpos.z - 1), out b))
-                                    {
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(cpos.OneBlockBack(), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);                                            
-                                        }
-                                    }
-                                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    //left
-                                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x - 1, cpos.y + 1, cpos.z), out b))
-                                    {
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(cpos.OneBlockLeft(), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);                                            
-                                        }
-                                    }
-                                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    //up
-                                    if (ceilGrasslandsSupport && myChunk.blocks.TryGetValue(cpos.OneBlockHigher(), out b))
-                                    {
-                                        if (b.TryGetPlane(Block.CEILING_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    break;
-                                }
-                            case Block.SURFACE_FACE_INDEX:
-                                {
-                                    // fwd
-                                    if (myChunk.blocks.TryGetValue(cpos.OneBlockForward(), out b))
-                                    {
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1), out b))
-                                        {                                            
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        }                                        
-                                    }                                    
-                                    //right
-                                    if (myChunk.blocks.TryGetValue(cpos.OneBlockRight(), out b)) {
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x + 1, cpos.y - 1, cpos.z), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        }
-                                    }
-                                    //back
-                                    if (myChunk.blocks.TryGetValue(cpos.OneBlockBack(), out b))
-                                    {
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y - 1, cpos.z - 1), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        }
-                                    }
-                                    //left
-                                    if (myChunk.blocks.TryGetValue(cpos.OneBlockLeft(), out b))
-                                    {
-                                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (sideGrasslandsSupport && b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    else
-                                    {
-                                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x - 1, cpos.y - 1, cpos.z), out b))
-                                        {
-                                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        }
-                                    }
-                                    // down
-                                    if (sideGrasslandsSupport && myChunk.blocks.TryGetValue(cpos.OneBlockDown(), out b))
-                                    {
-                                        if (b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                        if (b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    }
-                                    // up
-                                    if (ceilGrasslandsSupport && myBlock.TryGetPlane(Block.CEILING_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
-                                    break;
-                                }
-                        }
-                        if (candidates.Count > 0)
-                        {
-                            p = candidates[Random.Range(0, candidates.Count)];
-                            g = CreateGrassland(p);
-                            if (g != null) SupportCreatedGrassland(g, cost);
-                        }                        
-                    }
+                    if (expansion) CreateGrassland(cost);
                     else
                     {
                         var slist = myChunk.surfaces;
@@ -477,16 +356,15 @@ public sealed class Nature : MonoBehaviour
                         {
                             var ilist = new List<int>();
                             Plane p;
-                            for (int i= 0; i<slist.Length; i++)
+                            for (int i = 0; i < slist.Length; i++)
                             {
                                 p = slist[i];
-                                if (MaterialIsLifeSupporting(p.materialID) && !p.haveGrassland) ilist.Add(i);
+                                if (IsPlaneSuitableForGrassland(p)) ilist.Add(i);
                             }
                             if (ilist.Count != 0)
                             {
                                 p = slist[ilist[Random.Range(0, ilist.Count)]];
-                                g = CreateGrassland(p);
-                                if (g != null) SupportCreatedGrassland(g, cost);
+                                if (p.TryCreateGrassland(out g) && g != null) SupportCreatedGrassland(g, cost);
                             }
                         }
                     }                    
@@ -583,10 +461,151 @@ public sealed class Nature : MonoBehaviour
         }
     }
 
-    public Grassland CreateGrassland(Plane p)
+    public void CreateGrassland(float cost)
     {
-        if (p.fulfillStatus != FullfillStatus.Full) return new Grassland(p, this);
-        else return null; 
+        var g = grasslands[Random.Range(0, grasslands.Count)];
+        var fi = g.faceIndex;
+        List<Plane> candidates = new List<Plane>();
+        Block b, myBlock = g.plane.GetBlock(); Plane p; ChunkPos cpos = g.pos;
+        switch (fi)
+        {
+            case Block.UP_FACE_INDEX:
+                {
+                    // fwd
+                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y + 1, cpos.z + 1), out b))
+                    {
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(cpos.OneBlockForward(), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    //right
+                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x + 1, cpos.y + 1, cpos.z), out b))
+                    {
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(cpos.OneBlockRight(), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    //back
+                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y + 1, cpos.z - 1), out b))
+                    {
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(cpos.OneBlockBack(), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    //left
+                    if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x - 1, cpos.y + 1, cpos.z), out b))
+                    {
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(cpos.OneBlockLeft(), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    if (sideGrasslandsSupport && myBlock.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    //up
+                    if (ceilGrasslandsSupport && myChunk.blocks.TryGetValue(cpos.OneBlockHigher(), out b))
+                    {
+                        if (b.TryGetPlane(Block.CEILING_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    break;
+                }
+            case Block.SURFACE_FACE_INDEX:
+                {
+                    // fwd
+                    if (myChunk.blocks.TryGetValue(cpos.OneBlockForward(), out b))
+                    {
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    //right
+                    if (myChunk.blocks.TryGetValue(cpos.OneBlockRight(), out b))
+                    {
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x + 1, cpos.y - 1, cpos.z), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    //back
+                    if (myChunk.blocks.TryGetValue(cpos.OneBlockBack(), out b))
+                    {
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x, cpos.y - 1, cpos.z - 1), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    //left
+                    if (myChunk.blocks.TryGetValue(cpos.OneBlockLeft(), out b))
+                    {
+                        if (b.TryGetPlane(Block.SURFACE_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (sideGrasslandsSupport && b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    else
+                    {
+                        if (myChunk.blocks.TryGetValue(new ChunkPos(cpos.x - 1, cpos.y - 1, cpos.z), out b))
+                        {
+                            if (b.TryGetPlane(Block.UP_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        }
+                    }
+                    // down
+                    if (sideGrasslandsSupport && myChunk.blocks.TryGetValue(cpos.OneBlockDown(), out b))
+                    {
+                        if (b.TryGetPlane(Block.FWD_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.RIGHT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.BACK_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                        if (b.TryGetPlane(Block.LEFT_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    }
+                    // up
+                    if (ceilGrasslandsSupport && myBlock.TryGetPlane(Block.CEILING_FACE_INDEX, out p) && !p.haveGrassland) candidates.Add(p);
+                    break;
+                }
+        }
+        if (candidates.Count > 0)
+        {
+            p = candidates[Random.Range(0, candidates.Count)];
+            if (p.TryCreateGrassland(out g) && g!= null) SupportCreatedGrassland(g, cost);
+        }
     }
     public void AddGrassland(Grassland g)
     {
@@ -654,5 +673,40 @@ public sealed class Nature : MonoBehaviour
             }
             return x;
         }
+    }
+    public void DEBUG_HaveGrasslandDublicates()
+    {
+        var alreadyChecked = new List<Plane>();
+        if (grasslands != null && grasslands.Count > 0)
+        {
+            int i = 0, count = 0;
+            Grassland g; Plane p, p2;
+            for (; i < grasslands.Count - 1; i++)
+            {
+                g = grasslands[i];
+                if (alreadyChecked.Contains(g.plane)) continue;
+                else
+                {
+                    p = g.plane;
+                    alreadyChecked.Add(p);
+                    for (int j = i + 1; j < grasslands.Count; j++)
+                    {
+                        p2 = grasslands[j].plane;
+                        if (p2 == p)
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+            if (count > 0)
+            {
+                Debug.Log("nature - grassland duplicates found: " + count.ToString());
+                Debug.Log("total grasslands count: " + grasslands.Count.ToString());
+                return;
+            }
+
+        }
+        Debug.Log("nature - no grassland duplicates");
     }
 }
