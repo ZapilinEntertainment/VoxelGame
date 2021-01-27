@@ -19,6 +19,7 @@ public sealed class QuestUI : MonoBehaviour
     public sbyte openedQuest { get; private set; }
     public Quest[] activeQuests { get; private set; }
 
+    private bool prepared = false;
     private float rectTransformingSpeed = 0.8f, transformingProgress;
     private RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     private bool transformingRectInProgress = false;   
@@ -31,9 +32,18 @@ public sealed class QuestUI : MonoBehaviour
 
     private void Awake()
     {
-        current = this;        
+        if (!prepared) Prepare(true);
+    }
+    private void Start()
+    {
+        // если присваивать myCanvas в Awake, то все ломается
+        myCanvas = UIController.GetCurrent().GetMainCanvasController();
+    }
+    private void Prepare(bool prepareQuestIfNone)
+    {
+        current = this;
         openedQuest = -1;
-        // если присваивать myCanvas здесь, то все ломается
+        
         int totalCount = (int)QuestSection.TotalCount;
         activeQuests = new Quest[totalCount];
         for (int i = 0; i < activeQuests.Length; i++)
@@ -41,9 +51,9 @@ public sealed class QuestUI : MonoBehaviour
             activeQuests[i] = Quest.NoQuest;
         }
         questAccessMap = new bool[totalCount];
-        CheckQuestsAccessibility();
-        questUpdateTimer = QUEST_UPDATE_TIME;
-        
+        CheckQuestsAccessibility(prepareQuestIfNone);
+        questUpdateTimer = QUEST_REFRESH_TIME;
+
         for (int i = 0; i < questButtons.Length; i++)
         {
             Button b = questButtons[i].GetComponent<Button>();
@@ -54,10 +64,7 @@ public sealed class QuestUI : MonoBehaviour
             });
         }
         LocalizeTitles();
-    }
-    private void Start()
-    {
-        myCanvas = UIController.GetCurrent().GetMainCanvasController();
+        prepared = true;
     }
 
     void Update()
@@ -201,13 +208,13 @@ public sealed class QuestUI : MonoBehaviour
         if (activeQuests[i] == Quest.AwaitingQuest & questAccessMap[i] == true) SetNewQuest(i);
     }
 
-    public void UnblockQuestPosition(QuestSection qs)
+    public void UnblockQuestPosition(QuestSection qs, bool prepareQuestIfNone)
     {
         if (qs == QuestSection.TotalCount) return;
         int index = (int)qs;
         questAccessMap[index] = true;
         if (GetComponent<Image>().enabled & openedQuest == -1) PrepareBasicQuestWindow(); 
-        if (activeQuests[index] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(index));
+        if (activeQuests[index] == Quest.NoQuest && prepareQuestIfNone ) StartCoroutine(WaitForNewQuest(index));
     }
     public void DropQuest()
     {
@@ -233,49 +240,52 @@ public sealed class QuestUI : MonoBehaviour
     }
     
 
-    public void CheckQuestsAccessibility()
+    public void CheckQuestsAccessibility(bool prepareQuestIfNone)
     {
-        questAccessMap[0] = true;
+        questAccessMap[0] = true; 
+        if (prepareQuestIfNone && activeQuests[0] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(0));
         questAccessMap[1] = true;
-        questAccessMap[2] = true;  
+        if (prepareQuestIfNone && activeQuests[1] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(1));
+        questAccessMap[2] = true;
+        if (prepareQuestIfNone && activeQuests[2] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(2));
         HeadQuarters hq = GameMaster.realMaster.colonyController?.hq;
         if (hq != null)
         {
             var lvl = hq.level;
             if (lvl >= 2)
             {
-                if (questAccessMap[3] == false) UnblockQuestPosition(QuestSection.Three);
+                if (questAccessMap[3] == false) UnblockQuestPosition(QuestSection.Three, prepareQuestIfNone);
                 else
                 {
-                    if (activeQuests[3] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(3));
+                    if (prepareQuestIfNone && activeQuests[3] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(3));
                 }
                 if (lvl >= 3)
                 {
-                    if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Five);
+                    if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Five, prepareQuestIfNone);
                     else
                     {
-                        if (activeQuests[4] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(4));
+                        if (prepareQuestIfNone && activeQuests[4] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(4));
                     }
                     if (lvl >= 4)
                     {
-                        if (questAccessMap[6] == false) UnblockQuestPosition(QuestSection.Six);
+                        if (questAccessMap[6] == false) UnblockQuestPosition(QuestSection.Six, prepareQuestIfNone);
                         else
                         {
-                            if (activeQuests[6] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(6));
+                            if (prepareQuestIfNone && activeQuests[6] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(6));
                         }
                         if (lvl >= 5)
                         {
-                            if (questAccessMap[7] == false) UnblockQuestPosition(QuestSection.Seven);
+                            if (questAccessMap[7] == false) UnblockQuestPosition(QuestSection.Seven, prepareQuestIfNone);
                             else
                             {
-                                if (activeQuests[7] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(7));
+                                if (prepareQuestIfNone && activeQuests[7] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(7));
                             }
                             if (lvl >= 6)
                             {
-                                if (questAccessMap[8] == false) UnblockQuestPosition(QuestSection.Eight);
+                                if (questAccessMap[8] == false) UnblockQuestPosition(QuestSection.Eight, prepareQuestIfNone);
                                 else
                                 {
-                                    if (activeQuests[8] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(8));
+                                    if (prepareQuestIfNone && activeQuests[8] == Quest.NoQuest) StartCoroutine(WaitForNewQuest(8));
                                 }
                             }
                         }
@@ -466,7 +476,7 @@ public sealed class QuestUI : MonoBehaviour
     public void Save(System.IO.FileStream fs)
     {
         // access map
-        CheckQuestsAccessibility();
+        CheckQuestsAccessibility(false);
         int questsCount = (int)QuestSection.TotalCount;
         byte one = 1, zero = 0;
         for (int i = 0; i < questsCount; i++)
@@ -499,6 +509,7 @@ public sealed class QuestUI : MonoBehaviour
     }
     public void Load(System.IO.FileStream fs)
     {
+        if (!prepared) Prepare(false);
         int questsCount = (int)QuestSection.TotalCount;
         //access mask
         questAccessMap = new bool[questsCount];
@@ -522,7 +533,6 @@ public sealed class QuestUI : MonoBehaviour
         Quest.SetCompletenessMask(mask);
 
         //active quests
-        activeQuests = new Quest[questsCount];
         for (int i = 0; i < questsCount; i++)
         {
             activeQuests[i] = Quest.NoQuest;

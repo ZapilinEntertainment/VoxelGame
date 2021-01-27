@@ -431,7 +431,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading) return;
 
-        if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
+        //if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
         //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
         if (testMode)
         {
@@ -717,7 +717,6 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController = gameObject.AddComponent<ColonyController>();
                 colonyController.Prepare();
             }
-            //UI.current.Reset();
 
 
             // НАЧАЛО ЗАГРУЗКИ   

@@ -24,7 +24,8 @@ public abstract class GameConstants {
 
         RUINS_COEFFICIENT = 0.25f,
         GRAPHONIUM_CRITICAL_MASS = 10000f,
-        ARTIFACT_FOUND_CHANCE = 0.05f
+        ARTIFACT_FOUND_CHANCE = 0.05f,
+        PER_DOCKED_SHIP_BASIC_REWARD = 5f
         ;
 
     public static float WORLD_CONSUMING_TIMER {

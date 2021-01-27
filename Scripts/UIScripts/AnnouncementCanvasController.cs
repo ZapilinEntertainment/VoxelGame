@@ -72,7 +72,7 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
     {
         _currentLog?.CloseDecisionPanel();
     }
-    public static void ChangeVisibility(bool x) { _currentLog.gameObject.SetActive(x); }
+    public static void ChangeVisibility(bool x) {GetCurrent().gameObject.SetActive(x); }
     // =====================
     private void Update()
     {

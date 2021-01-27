@@ -127,11 +127,12 @@ public sealed class DockSystem
 		int peopleBefore = immigrationPlan;
         float efficientcy = (float)d.workersCount / (float)d.maxWorkers; 
         float tradeVolume = s.volume * (0.05f + 0.95f * efficientcy);
+        float rewardValue = 1f;
         switch (s.type) {
 		case ShipType.Passenger:
                 {
                     float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
-                    if (immigrationPlan > 0)
+                    if (immigrationPlan > 0 | (immigrationEnabled && Random.value < colony.happiness_coefficient))
                     {                        
                         if (vol > immigrationPlan) {
                             colony.AddCitizens(immigrationPlan);
@@ -148,12 +149,14 @@ public sealed class DockSystem
                     {
                         vol *= colony.happiness_coefficient;
                         if (vol > 1f) Hotel.DistributeLodgers((int)vol);
+                        rewardValue += 0.5f;
                     }
 
                     if (isForSale[ResourceType.FOOD_ID] != null)
                     {
                         if (isForSale[ResourceType.FOOD_ID] == true) d.SellResource(ResourceType.Food, s.volume * 0.1f);
                         else d.BuyResource(ResourceType.Food, s.volume * 0.1f);
+                        rewardValue += 0.3f * Random.value;
                     }
                     break;
                 }
@@ -194,6 +197,7 @@ public sealed class DockSystem
                             if (v != 0)  boughtVolume += d.BuyResource(ResourceType.GetResourceTypeById(id), v);
                         }
                         tradeVolume += boughtVolume;
+                        if (tradeVolume == 0) rewardValue += 0.25f; else rewardValue += 0.5f;
                     }
                     
                     if (sellPositions.Count > 0)
@@ -203,13 +207,28 @@ public sealed class DockSystem
                             double v = demands[id] / buyPrioritiesPool * tradeVolume;
                             if (storage[id] - v < minValueForTrading[id]) v = storage[id] - minValueForTrading[id];
                             float v2 = (float)(demands[id] / sellPrioritiesPool * tradeVolume);
-                            if (v2 != 0)  d.SellResource(ResourceType.GetResourceTypeById(id), v2);
+                            if (v2 != 0)
+                            {
+                                d.SellResource(ResourceType.GetResourceTypeById(id), v2);
+                                rewardValue += 0.5f;
+                            }
+                            else rewardValue += 0.25f;
+                        }
+                    }
+
+                    if (d.ID != Structure.DOCK_ID)
+                    {
+                        if (d.ID == Structure.DOCK_2_ID) rewardValue *= 2f;
+                        else
+                        {
+                            if (d.ID == Structure.DOCK_3_ID) rewardValue *= 3f;
                         }
                     }
                     break;
                 }
 		case ShipType.Military:
                 {
+                    rewardValue += 1f;
                     if (GameMaster.realMaster.warProximity < 0.5f && Random.value < 0.1f && immigrationPlan > 0)
                     {
                         int veterans = (int)(s.volume * 0.02f);
@@ -229,6 +248,7 @@ public sealed class DockSystem
                     break;
                 }
 		case ShipType.Private:
+                rewardValue += 0.1f;
 			if ( isForSale[ResourceType.FUEL_ID] == true) d.SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.8f));
 			if ( isForSale[ResourceType.FOOD_ID] == true) d.SellResource(ResourceType.Fuel, (float)(tradeVolume * 0.15f));
 			break;
@@ -248,6 +268,8 @@ public sealed class DockSystem
                 emigrantsGone += (uint)(newPeople * (-1));
             }
         }
+
+        colony.AddEnergyCrystals(rewardValue * GameConstants.PER_DOCKED_SHIP_BASIC_REWARD * GameMaster.realMaster.GetDifficultyCoefficient());
 	}
 
     public void SetImmigrationStatus(bool x, int count)

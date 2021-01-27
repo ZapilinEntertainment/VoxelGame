@@ -887,7 +887,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             hq = new_hq;
         }
-        QuestUI.current.CheckQuestsAccessibility();
+        QuestUI.current.CheckQuestsAccessibility(!GameMaster.loading);
     }
 
     public void AddEnergyCrystals(float v)
