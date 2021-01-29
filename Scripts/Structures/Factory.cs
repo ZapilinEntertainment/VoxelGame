@@ -308,6 +308,11 @@ public class Factory : WorkBuilding
         showOnGUI = true;
         return factoryObserver;
     }
+    override public string UI_GetProductionSpeedInfo()
+    {
+        return string.Format("{0:0.##}", GetLabourCoefficient() * recipe.outputValue / GameMaster.LABOUR_TICK )+ ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+    }
+
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

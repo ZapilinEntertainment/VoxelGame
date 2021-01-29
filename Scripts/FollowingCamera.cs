@@ -24,7 +24,6 @@ public sealed class FollowingCamera : MonoBehaviour {
 	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
-    [SerializeField] UnityEngine.UI.Slider xSlider; // fiti
     [SerializeField] Transform celestialCamera;
     [SerializeField] RectTransform controllerBack, controllerStick;
     [SerializeField] GameObject camUpButton, camLowButton;
@@ -254,22 +253,21 @@ public sealed class FollowingCamera : MonoBehaviour {
         camPosChanged = true;
 
         if ( camRotateTrace > 0) camRotateTrace -= Time.deltaTime;
-    }
-    
+    }    
 
     void LateUpdate()
    {
         if (camPosChanged)
         {
             cameraChangedEvent?.Invoke();
+            OakTree.CameraUpdate();
             camPosChanged = false;
         }
    }
    public void WeNeedUpdate()
    {
         camPosChanged = true;
-   }
-    
+   }    
 
 	public void SetLookPoint( Vector3 point ) {
 		Vector3 camPrevPos = cam.transform.position;

@@ -172,7 +172,6 @@ public sealed class OakTree : Plant
             blankTrees_stage6.Add(fullModel);
             //
             modelsContainerReady = true;
-            FollowingCamera.main.cameraChangedEvent += CameraUpdate;
         }
         if (stage > TRANSIT_STAGE)
         {

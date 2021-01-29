@@ -6,7 +6,7 @@ public enum LocalizedWord : ushort
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return,
-    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills
+    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness
 };
 
 public enum LocalizedPhrase : ushort
@@ -2379,6 +2379,7 @@ public static class Localization
                         case LocalizedWord.Goals: return "Цели:";
                         case LocalizedWord.Refuse: return "Отказаться";
                         case LocalizedWord.Return: return "Вернуться";
+                        case LocalizedWord.Effectiveness: return "Эффективность";
                         default: return "...";
                     }
                 }
@@ -2467,6 +2468,7 @@ public static class Localization
                         case LocalizedWord.Goals: return "Goals:";
                         case LocalizedWord.Refuse: return "Refuse";
                         case LocalizedWord.Return: return "Return"; // lol
+                        case LocalizedWord.Effectiveness: return "Effectiveness";
                         default: return "...";
                     }
                 }

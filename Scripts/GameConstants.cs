@@ -60,15 +60,15 @@ public abstract class GameConstants {
             case WorkType.Recruiting: return 150f;
             case WorkType.HydroponicsLumbering: return 11f;
             case WorkType.HydroponicsFarming: return 10f;
-            case WorkType.Digging: return 10f;
-            case WorkType.Clearing: return 10f;
+            case WorkType.Digging: return 5f;
+            case WorkType.Clearing: return 5f;
             case WorkType.Mining: return 9f;
             case WorkType.BlockBuilding: 
             case WorkType.Pouring: return 8f;            
-            case WorkType.GearsUpgrading: return 3f;            
-            case WorkType.Factory: return 3f;
-            case WorkType.OpenLumbering: return 1.5f;
-            case WorkType.OpenFarming: return 1f;            
+            case WorkType.GearsUpgrading: return 2f;            
+            case WorkType.Factory: return 1f;
+            case WorkType.OpenLumbering: return 1f;
+            case WorkType.OpenFarming: return 0.7f;
             default: return 1f;
         }
     }

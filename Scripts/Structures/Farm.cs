@@ -6,9 +6,9 @@ using UnityEngine;
 public class Farm : WorkBuilding
 {
     private int lastPlantIndex;
-    private float _cropComplexity, _plantLPCost = 0f, _updateLPCost = 1f;
+    private float _cropComplexity, _plantLPCost = 0f, _updateLPCost = 1f, lifepowerSupport;
     private int _cropPlantCost = 1, _cropUpdateCost = 1, _cropHarvestCost = 1; // MUST NOT BE ZERO!
-    public PlantType cropType;
+    public PlantType cropType;    
 
     override public void Prepare()
     {
@@ -45,7 +45,7 @@ public class Farm : WorkBuilding
     }
     override public float GetLabourCoefficient()
     {
-        return base.GetLabourCoefficient() * _cropComplexity;
+        return base.GetLabourCoefficient() * lifepowerSupport / _cropComplexity;
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -60,6 +60,14 @@ public class Farm : WorkBuilding
         var gl = basement.GetGrassland();
         if (gl == null) basement.TryCreateGrassland(out gl);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
+
+        var emaster = GameMaster.realMaster.environmentMaster;
+        lifepowerSupport = emaster.lifepowerSupport;
+        emaster.environmentChangingEvent += this.EnvironmentChange;
+    }
+    private void EnvironmentChange(Environment e)
+    {
+        lifepowerSupport = e.lifepowerSupport;
     }
 
     override protected void LabourResult(int iterations)
@@ -70,13 +78,16 @@ public class Farm : WorkBuilding
         var field = basement.FORCED_GetExtension();               
         Plant p;
         float totalCost = 0f;
+        int MAX_TRIES_COUNT = (int)(16f * GameMaster.gameSpeed);
+        int i = MAX_TRIES_COUNT;
 
         if (field.fulfillStatus != FullfillStatus.Full)
         { // setting saplings    
             List<PixelPosByte> freePositions = field.GetRandomCells(iterations / _cropPlantCost);
             int positionsCount = freePositions.Count, index;
-            while (iterations > _cropPlantCost && positionsCount > 0)
+            while (i > 0 && iterations > _cropPlantCost && positionsCount > 0)
             {
+                i--;
                 p = Plant.GetNewPlant(cropType);
                 index = Random.Range(0, positionsCount);
                 p.SetBasement(basement, freePositions[index]);
@@ -90,7 +101,7 @@ public class Farm : WorkBuilding
         {
             var plants = field.GetPlants();
             if (plants != null && plants.Length != 0) {
-                int i = (int)(256f * GameMaster.gameSpeed);
+                i = MAX_TRIES_COUNT;
                 while (iterations > 0 && i > 0)
                 {
                     i--;
@@ -142,7 +153,6 @@ public class Farm : WorkBuilding
                         }
                     }
                 }
-                if (i == 0) Debug.Log("Farm - Attention, too much tries per tick");
             }
         }
         workflow += iterations;
@@ -155,6 +165,7 @@ public class Farm : WorkBuilding
             if (gl == null) basement.TryCreateGrassland(out gl);
             gl.TakeLifepower(totalCost);
         }
+
     }
 
     public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
@@ -185,6 +196,10 @@ public class Farm : WorkBuilding
     public override bool ShowWorkspeed()
     {
         return true;
+    }
+    public override string UI_GetProductionSpeedInfo()
+    {
+        return Localization.GetWord(LocalizedWord.Effectiveness) + ": " + ((int)(GetLabourCoefficient() * GameConstants.GetWorkComplexityCf(WorkType.OpenFarming) * 100f)).ToString() + '%';
     }
 
     #region save-load
