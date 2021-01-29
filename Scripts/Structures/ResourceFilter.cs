@@ -19,9 +19,10 @@ public class ResourceFilter : WorkBuilding
         em.environmentChangingEvent += EnvironmentUpdate;
     }    
 
-    override protected void LabourResult()
+    override protected void LabourResult(int iterations)
     {
-        workflow = 0f;
+        if (iterations < 1) return;
+        workflow -= iterations;
         float v = Random.value;
         if (v > CATCH_CHANCE)
         {
@@ -31,27 +32,27 @@ public class ResourceFilter : WorkBuilding
                 v = (v - METAL_DROP_CHANCE) / (1f - METAL_DROP_CHANCE);
                 if (v > 0.5f)
                 {
-                    if (v > 0.9f) storage.AddResource(ResourceType.metal_N, RES_VOLUME / 2f);
+                    if (v > 0.9f) storage.AddResource(ResourceType.metal_N, RES_VOLUME / 2f * iterations);
                     else
                     {
-                        if (v > 0.7f) storage.AddResource(ResourceType.metal_S, RES_VOLUME / 2f);
-                        else storage.AddResource(ResourceType.metal_E, RES_VOLUME / 2f);
+                        if (v > 0.7f) storage.AddResource(ResourceType.metal_S, RES_VOLUME / 2f * iterations);
+                        else storage.AddResource(ResourceType.metal_E, RES_VOLUME / 2f * iterations);
                     }
                 }
                 else
                 {
-                    if (v > 0.35f) storage.AddResource(ResourceType.metal_P, RES_VOLUME / 2f);
+                    if (v > 0.35f) storage.AddResource(ResourceType.metal_P, RES_VOLUME / 2f * iterations);
                     else
                     {
-                        if (v > 0.25f) storage.AddResource(ResourceType.metal_M, RES_VOLUME / 2f);
-                        else storage.AddResource(ResourceType.metal_K, RES_VOLUME / 2f);
+                        if (v > 0.25f) storage.AddResource(ResourceType.metal_M, RES_VOLUME / 2f * iterations);
+                        else storage.AddResource(ResourceType.metal_K, RES_VOLUME / 2f * iterations);
                     }
                 }
             }
             else
             {
-               if ( (v * 100f) % 2 == 0) storage.AddResource(ResourceType.Stone, RES_VOLUME);
-               else storage.AddResource(ResourceType.Dirt, RES_VOLUME);
+               if ( (v * 100f) % 2 == 0) storage.AddResource(ResourceType.Stone, RES_VOLUME * iterations);
+               else storage.AddResource(ResourceType.Dirt, RES_VOLUME * iterations);
             }
         }
     }

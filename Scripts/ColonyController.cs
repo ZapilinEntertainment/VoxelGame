@@ -17,7 +17,7 @@ public sealed class ColonyController : MonoBehaviour
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
     public float happiness_coefficient { get; private set; }
-    public float workspeed { get; private set; }
+    public float workers_coefficient { get; private set; }
     public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
 
     public float energyStored { get; private set; }
@@ -68,7 +68,7 @@ public sealed class ColonyController : MonoBehaviour
         tickTimer, birthrateCoefficient = 0f,
         targetHappiness,
         happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, showingHappiness;
-    private bool thisIsFirstSet = true, ignoreHousingRequest = false;    
+    private bool thisIsFirstSet = true, ignoreHousingRecalculationRequest = false;    
 
     public const byte MAX_HOUSING_LEVEL = 5;
     public const float LOWERED_BIRTHRATE_COEFFICIENT = 0.5f, IMPROVED_BIRTHRATE_COEFFICIENT = 1.5f;
@@ -127,8 +127,7 @@ public sealed class ColonyController : MonoBehaviour
         {
             showingHappiness = Mathf.Lerp(showingHappiness, happiness_coefficient, Time.deltaTime);
             RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
-        }
-        workspeed = (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
+        }        
         if (GameMaster.gameSpeed == 0f | hq == null | GameMaster.loading) return;
         tickTimer -= Time.deltaTime * GameMaster.gameSpeed;
         if (tickTimer <= 0f )
@@ -143,7 +142,7 @@ public sealed class ColonyController : MonoBehaviour
             {
                 gears_coefficient -= gm.gearsDegradeSpeed * (2 - gm.environmentMaster.environmentalConditions) * TICK_TIME;
             }
-            gears_coefficient = Mathf.Clamp(gears_coefficient, GameConstants.GEARS_LOWER_LIMIT, GameConstants.GEARS_UP_LIMIT);
+            gears_coefficient = Mathf.Clamp(gears_coefficient, GameConstants.GEARS_LOWER_LIMIT, GameConstants.GetMaxGearsCf(this));
             
             //energy:
             {
@@ -303,6 +302,9 @@ public sealed class ColonyController : MonoBehaviour
                 }
                 peopleSurplus += realBirthrate;
             }
+
+            // WORKSPEED
+            workers_coefficient = starvation ? 0.3f : (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
         }
 
         
@@ -411,7 +413,7 @@ public sealed class ColonyController : MonoBehaviour
 
     public void AddHousing(House h)
     {
-        if (ignoreHousingRequest) return;
+        if (ignoreHousingRecalculationRequest) return;
         if (houses.Count > 0)
         {
             foreach (House eh in houses)
@@ -424,7 +426,7 @@ public sealed class ColonyController : MonoBehaviour
     }
     public void DeleteHousing(House h)
     {
-        if (ignoreHousingRequest) return;
+        if (ignoreHousingRecalculationRequest) return;
         if (houses.Contains(h))
         {
             houses.Remove(h);

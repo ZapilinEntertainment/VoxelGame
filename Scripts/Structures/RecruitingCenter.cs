@@ -10,8 +10,6 @@ public sealed class RecruitingCenter : WorkBuilding {
     public bool finding = false;
     const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
     public const int REPLENISH_COST = 50;	
-    const float FIND_SPEED = 5;
-    public const float FIND_WORKFLOW = 10;
 
     static RecruitingCenter() {
         recruitingCentersList = new List<RecruitingCenter>();
@@ -65,33 +63,33 @@ public sealed class RecruitingCenter : WorkBuilding {
 	override public void LabourUpdate() {
         if (!isActive || !isEnergySupplied || GameMaster.loading) return;
 		if (workersCount > 0) {
-			if (finding) {
-                workSpeed = (FIND_SPEED * 0.8f * colony.workspeed + 0.2f * Random.value) * GameMaster.LABOUR_TICK / workflowToProcess;
-                workflow += workSpeed;
-				if (workflow >= workflowToProcess) {
-                    int memCount = (int)((workersCount / (float)maxWorkers) * Crew.MAX_MEMBER_COUNT);
-                    if (workersCount < memCount) memCount = workersCount;
-                    if (memCount > 0)
-                    {
-                        Crew c = Crew.CreateNewCrew(colony, memCount);
-                        workersCount -= memCount;
-                        workflow = 0;
-                        finding = false;
-                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Ready, c));
-                        hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
-                        hireCost = ((int)(hireCost * 100)) / 100f;
-                        if (showOnGUI) rcenterObserver.SelectCrew(c);
-                    }
-                }
-			}
-		}
+			if (finding) INLINE_WorkCalculation();
+        }
 		else {
 			if (workflow > 0) {
                 workflow -= backupSpeed * GameMaster.LABOUR_TICK;
-				if (workflow < 0) workflow = 0;
+				if (workflow < 0f) workflow = 0f;
 			}
 		}
 	}
+    protected override void LabourResult(int iterations)
+    {
+        if (iterations < 1) return;
+        workflow -= iterations;
+        int memCount = (int)((workersCount / (float)maxWorkers) * Crew.MAX_MEMBER_COUNT);
+        if (workersCount < memCount) memCount = workersCount;
+        if (memCount > 0)
+        {
+            Crew c = Crew.CreateNewCrew(colony, memCount);
+            workersCount -= memCount;
+            workflow = 0;
+            finding = false;
+            AnnouncementCanvasController.MakeAnnouncement(Localization.GetCrewAction(LocalizedCrewAction.Ready, c));
+            hireCost = hireCost * (1 + GameConstants.HIRE_COST_INCREASE);
+            hireCost = ((int)(hireCost * 100)) / 100f;
+            if (showOnGUI) rcenterObserver.SelectCrew(c);
+        }
+    }
 
     public override UIObserver ShowOnGUI()
     {
@@ -133,7 +131,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     {
         if (finding)
         {
-            colony.AddEnergyCrystals(hireCost * (1f - workflow / workflowToProcess));
+            colony.AddEnergyCrystals(hireCost * (1f - workflow / workComplexityCoefficient));
             finding = false;
             workflow = 0f;
         }

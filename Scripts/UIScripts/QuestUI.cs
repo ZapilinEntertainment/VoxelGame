@@ -52,7 +52,7 @@ public sealed class QuestUI : MonoBehaviour
         }
         questAccessMap = new bool[totalCount];
         CheckQuestsAccessibility(prepareQuestIfNone);
-        questUpdateTimer = QUEST_REFRESH_TIME;
+        questUpdateTimer = QUEST_UPDATE_TIME;
 
         for (int i = 0; i < questButtons.Length; i++)
         {
@@ -89,20 +89,24 @@ public sealed class QuestUI : MonoBehaviour
                 }
             }
         }
+        //
         float t = Time.deltaTime * GameMaster.gameSpeed;
         questUpdateTimer -= t;
         bool checkConditions = questUpdateTimer <= 0;
-        if (checkConditions) questUpdateTimer = QUEST_UPDATE_TIME;
-        for (sbyte i = 0; i < activeQuests.Length; i++)
+        if (checkConditions)
         {
-            Quest q = activeQuests[i];
-            if (q == Quest.NoQuest | q == Quest.AwaitingQuest) continue;
-            if (checkConditions) q.CheckQuestConditions();
-            if (openedQuest == i)
+            questUpdateTimer = QUEST_UPDATE_TIME;
+            for (sbyte i = 0; i < activeQuests.Length; i++)
             {
-                PrepareStepsList(q);
+                Quest q = activeQuests[i];
+                if (q == Quest.NoQuest | q == Quest.AwaitingQuest) continue;
+                q.CheckQuestConditions();
+                if (openedQuest == i)
+                {
+                    PrepareStepsList(q);
+                }
             }
-        }     
+        }
     }
 
     public void Activate()
@@ -187,14 +191,32 @@ public sealed class QuestUI : MonoBehaviour
                 questButtons[i].gameObject.SetActive(false);
             }
         }
-        
+        RefreshObservingQuestData(openedQuest);
+    }
+    private void RefreshObservingQuestData(int index)
+    {
+        var q = activeQuests[index];
         questName.text = q.name;
         questDescription.text = q.description;
         (questDescription.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, questDescription.rectTransform.rect.height);
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
         PrepareStepsList(q);
-        // цена и кнопка запуска
-
+    }
+    private void PrepareStepsList(Quest q)
+    {
+        int x = q.steps.Length;
+        int stepLabelsCount = stepsContainer.childCount;
+        for (int i = 0; i < stepLabelsCount; i++)
+        {
+            GameObject so = stepsContainer.GetChild(i).gameObject;
+            if (i < x)
+            {
+                so.SetActive(true);
+                so.GetComponent<Text>().text = q.steps[i] + q.stepsAddInfo[i];
+                so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
+            }
+            else so.SetActive(false);
+        }
     }
 
     public IEnumerator WaitForNewQuest(int i)
@@ -446,22 +468,6 @@ public sealed class QuestUI : MonoBehaviour
                 resultingAnchorMin = new Vector2(0.66f, 0);
                 resultingAnchorMax = new Vector2(1, 0.33f);
                 break;
-        }
-    }
-    private void PrepareStepsList(Quest q)
-    {
-        int x = q.steps.Length;
-        int stepLabelsCount = stepsContainer.childCount;
-        for (int i = 0; i < stepLabelsCount; i++)
-        {
-            GameObject so = stepsContainer.GetChild(i).gameObject;
-            if (i < x)
-            {
-                so.SetActive(true);
-                so.GetComponent<Text>().text = q.steps[i] + q.stepsAddInfo[i];
-                so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
-            }
-            else so.SetActive(false);
         }
     }
 

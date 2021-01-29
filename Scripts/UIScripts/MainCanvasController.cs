@@ -228,7 +228,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                                 }
                                 else
                                 {
-                                    float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
+                                    float x = uho.observingHangar.workflow;
                                     progressPanelFullfill.fillAmount = x;
                                     progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                                 }
@@ -245,7 +245,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                                 {
                                     if (urc.observingRCenter.finding)
                                     {
-                                        float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                                        float x = urc.observingRCenter.workflow;
                                         progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                                         progressPanelFullfill.fillAmount = x;
                                     }
@@ -1192,7 +1192,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                         progressPanelIcon.texture = UIController.iconsTexture;
 
                         progressPanelIcon.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
-                        float x = uho.observingHangar.workflow / uho.observingHangar.workflowToProcess;
+                        float x = uho.observingHangar.workflow;
                         progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                         progressPanelFullfill.fillAmount = x;
                         progressPanelFullfill.color = PoolMaster.gameOrangeColor;
@@ -1209,7 +1209,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
                         progressPanelIcon.texture = UIController.iconsTexture;
                         progressPanelIcon.uvRect = UIController.GetIconUVRect(Icons.TaskFailed);
-                        float x = urc.observingRCenter.workflow / urc.observingRCenter.workflowToProcess;
+                        float x = urc.observingRCenter.workflow;
                         progressPanelText.text = ((int)(x * 100)).ToString() + '%';
                         progressPanelFullfill.fillAmount = x;
                         progressPanelFullfill.color = PoolMaster.gameOrangeColor;

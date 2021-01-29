@@ -15,7 +15,6 @@ public sealed class Hangar : WorkBuilding
     private int shuttleID = NO_SHUTTLE_VALUE;
     private List<Block> dependentBlocksList;
 
-    public const float BUILD_SHUTTLE_WORKFLOW = 12000;
     public const int NO_SHUTTLE_VALUE = -1;
 
     static Hangar()
@@ -190,7 +189,7 @@ public sealed class Hangar : WorkBuilding
         {
             status = HangarStatus.NoShuttle;
             var cost = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
-            float pc = workflow / workflowToProcess;
+            float pc = workflow / workComplexityCoefficient;
             for (int i= 0; i< cost.Length; i++)
             {
                 cost[i] = cost[i].ChangeVolumeToPercent(1f - pc);
@@ -354,19 +353,19 @@ public sealed class Hangar : WorkBuilding
         {
             if (status == HangarStatus.ConstructingShuttle)
             {
-                workSpeed = colony.workspeed * workersCount * GameConstants.MACHINE_CONSTRUCTING_SPEED;
-                workflow += workSpeed;
-                colony.gears_coefficient -= gearsDamage * workSpeed;
-                if (workflow >= workflowToProcess)
+                float work = GetLabourCoefficient();
+                workflow += work;
+                colony.gears_coefficient -= gearsDamage * work;
+                if (workflow >= 1f)
                 {
-                    LabourResult();
+                    LabourResult((int)workflow);
                 }
             }
-            else workSpeed = 0f;
         }
     }
-    override protected void LabourResult()
+    override protected void LabourResult(int iterations)
     {
+        if (iterations < 1) return;
         shuttleID = nextShuttleID++;
         status = HangarStatus.ShuttleInside;
         if (workersCount > 0) FreeWorkers();
@@ -464,7 +463,7 @@ public sealed class Hangar : WorkBuilding
 
     public void FORCED_MakeShuttle()
     {
-        if (status == HangarStatus.NoShuttle) LabourResult();
+        if (status == HangarStatus.NoShuttle) LabourResult(1);
     }
 
     #region save-load system

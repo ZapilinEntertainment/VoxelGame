@@ -200,11 +200,7 @@ public sealed class UIFactoryObserver : UIObserver
                 if (observingFactory.isActive & observingFactory.isEnergySupplied)
                 {
                     if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
-                    else
-                    {
-                        float x = observingFactory.GetWorkSpeed() / observingFactory.workflowToProcess / GameMaster.LABOUR_TICK * r.outputValue;
-                        workflowString.text = string.Format("{0:0.##}", x) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
-                    }
+                    else workflowString.text = observingFactory.UI_GetProductionSpeedInfo();
                 }
                 else
                 {

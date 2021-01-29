@@ -28,51 +28,12 @@ public sealed class AdvancedFactory : Factory
     override public void LabourUpdate()
     {
         if (recipe == AdvancedRecipe.NoRecipe) return;
-        Storage storage = colony.storage;
-        if (outputResourcesBuffer > 0)
-        {
-            outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
-        }
-        if (outputResourcesBuffer <= BUFFER_LIMIT)
-        {
-            if (isActive)
-            {
-                if (isEnergySupplied)
-                {
-                    workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED * level * level;
-                    if (productionMode == FactoryProductionMode.Limit)
-                    {
-                        if (!workPaused)
-                        {
-                            workflow += workSpeed;
-                            colony.gears_coefficient -= gearsDamage * workSpeed;
-                            if (workflow >= workflowToProcess) LabourResult();
-                        }
-                        else
-                        {
-                            if (storage.standartResources[recipe.output.ID] < productionModeValue)
-                            {
-                                workPaused = false;
-                                workflow += workSpeed;
-                                colony.gears_coefficient -= gearsDamage * workSpeed;
-                                if (workflow >= workflowToProcess) LabourResult();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        workflow += workSpeed;
-                        colony.gears_coefficient -= gearsDamage * workSpeed;
-                        if (workflow >= workflowToProcess) LabourResult();
-                    }
-                }
-            }
-        }
+        INLINE_LabourUpdate();
     }
-    override protected void LabourResult()
+    override protected void LabourResult(int iterations)
     {
-        int iterations = (int)(workflow / workflowToProcess);
-        workflow = 0;
+        if (iterations < 1) return;
+        workflow -= iterations;
         Storage storage = colony.storage;
         float i1 = storage.standartResources[recipe.input.ID] + inputResourcesBuffer,
             i2 = storage.standartResources[recipe.input2.ID] + inputResourcesBuffer2;
@@ -164,7 +125,7 @@ public sealed class AdvancedFactory : Factory
         workflow = 0;
         recipe = ar;
         productionModeValue = 0;
-        workflowToProcess = ar.workflowToResult;
+        workComplexityCoefficient = ar.workComplexity;
         workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[ar.output.ID] >= productionModeValue;
     }
 

@@ -18,67 +18,62 @@ public class GatherSite : Worksite
         gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.33f;
     }
 
-    override public void WorkUpdate()
+    override public void LabourUpdate()
     {
         if (workplace == null)
         {
             StopWork(true);
         }
-        if (workersCount > 0)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.GATHERING_SPEED;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= 1f)
-            {
-                int i = 0;
-                bool resourcesFound = false;
-                List<Structure> strs = workplace.GetStructuresList();
-                if (strs != null)
-                {
-                    while (i < strs.Count & workflow > 0)
-                    {
-                        switch (strs[i].ID)
-                        {
-                            case Structure.PLANT_ID:
-                                Plant p = strs[i] as Plant;
-                                if (p != null)
-                                {
-                                    p.Harvest(false);
-                                    resourcesFound = true;
-                                    workflow--;
-                                }
-                                break;
-                            case Structure.CONTAINER_ID:
-                                HarvestableResource hr = strs[i] as HarvestableResource;
-                                if (hr != null)
-                                {
-                                    hr.Harvest();
-                                    resourcesFound = true;
-                                    workflow--;
-                                }
-                                break;
-                            case Structure.RESOURCE_STICK_ID:
-                                ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
-                                if (shr != null)
-                                {
-                                    shr.Harvest();
-                                    resourcesFound = true;
-                                    workflow--;
-                                }
-                                break;
-                        }
-                        i++;
-                    }
-                    if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
-                }
-            }
-        }
-        else workSpeed = 0f;
+        INLINE_WorkCalculation();
         destructionTimer -= GameMaster.LABOUR_TICK;
         if (destructionTimer <= 0) StopWork(true);
     }
-    
+
+    protected override void LabourResult(int iterations)
+    {
+        if (iterations < 1) return;
+        workflow -= iterations;
+        int i = 0;
+        bool resourcesFound = false;
+        List<Structure> strs = workplace.GetStructuresList();
+        if (strs != null)
+        {
+            while (i < strs.Count & iterations > 0)
+            {
+                iterations--;
+                switch (strs[i].ID)
+                {
+                    case Structure.PLANT_ID:
+                        Plant p = strs[i] as Plant;
+                        if (p != null)
+                        {
+                            p.Harvest(false);
+                            resourcesFound = true;
+                        }
+                        break;
+                    case Structure.CONTAINER_ID:
+                        HarvestableResource hr = strs[i] as HarvestableResource;
+                        if (hr != null)
+                        {
+                            hr.Harvest();
+                            resourcesFound = true;
+                        }
+                        break;
+                    case Structure.RESOURCE_STICK_ID:
+                        ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
+                        if (shr != null)
+                        {
+                            shr.Harvest();
+                            resourcesFound = true;
+                        }
+                        break;
+                }
+                i++;
+            }
+            if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
+        }
+    }
+
 
     #region save-load system
     override public void Save(System.IO.FileStream fs)

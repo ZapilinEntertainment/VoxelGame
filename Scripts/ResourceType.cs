@@ -110,14 +110,14 @@ public class ResourceType
         };
     }
 
-    public static ResourceType GetResourceTypeById(int f_id)
+    public static ResourceType GetResourceTypeById(int material_id)
     {
-        if (f_id > resourceTypesArray.Length) return Nothing;
+        if (material_id > resourceTypesArray.Length) return Nothing;
         else
         {
-            if (f_id > 0) return resourceTypesArray[f_id];
+            if (material_id > 0) return resourceTypesArray[material_id];
             else {
-                switch (f_id)
+                switch (material_id)
                 {
                     case PoolMaster.MATERIAL_ADVANCED_COVERING_ID: return metal_K;
                     case PoolMaster.MATERIAL_GRASS_100_ID:

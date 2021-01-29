@@ -5,7 +5,7 @@ using UnityEngine;
 public sealed class Observatory : WorkBuilding
 {
     public static bool alreadyBuilt = false;
-    public const float SEARCH_WORKFLOW = 250, CHANCE_TO_FIND = 0.3f;
+    public const float CHANCE_TO_FIND = 0.3f;
     private bool mapOpened = false, subscribedToRestoreBlockersUpdate = false;
     private List<Block> blockedBlocks;
 
@@ -163,31 +163,30 @@ public sealed class Observatory : WorkBuilding
         subscribedToRestoreBlockersUpdate = false;
     }
 
-    override public void LabourUpdate()
+    protected override void LabourResult(int iterations)
     {
-        if (!isActive | !isEnergySupplied) return;
-        if (workersCount > 0)
+        if (iterations < 1) return;
+        workflow -= iterations;
+        // new object searched
+        if (iterations == 1)
         {
-            workSpeed = GameConstants.OBSERVATORY_FIND_SPEED_CF * (workersCount / (float)maxWorkers);
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= workflowToProcess)
+            if (Random.value <= CHANCE_TO_FIND)
             {
-                LabourResult();
+                if (GameMaster.realMaster.globalMap.Search())
+                {
+                    // visual effect
+                }
             }
         }
-        else workSpeed = 0f;
-    }
-    protected override void LabourResult()
-    {
-        workflow = 0;
-        // new object searched
-        float f = Random.value;
-        if (Random.value <= CHANCE_TO_FIND)
+        else
         {
-            if (GameMaster.realMaster.globalMap.Search())
+            for (int i = 0; i < iterations; i++)
             {
-                // visual effect
+
+                if (Random.value <= CHANCE_TO_FIND)
+                {
+                    GameMaster.realMaster.globalMap.Search();
+                }
             }
         }
     }    

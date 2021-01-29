@@ -75,10 +75,6 @@ public sealed class HangingTMast : WorkBuilding
             }
         }
     }
-    public override float GetWorkSpeed()
-    {
-        return lifepowerSurplus;
-    }
 
     override public int AddWorkers(int x)
     {

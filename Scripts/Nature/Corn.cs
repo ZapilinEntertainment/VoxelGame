@@ -12,6 +12,7 @@ sealed public class Corn : Plant {
     private const byte MAX_STAGE = 3;
     private const float GATHER = 3.2f;
     private const float LIFEPOWER_SURPLUS = 0.1f;
+    public const float COMPLEXITY = 1f;
 
     override public void Prepare()
     {
@@ -62,9 +63,9 @@ sealed public class Corn : Plant {
     {
         return stage == MAX_STAGE;
     }
-    public override int GetPlantComplexity()
+    public override float GetPlantComplexity()
     {
-        return stage;
+        return COMPLEXITY;
     }
     override public float GetLifepowerSurplus()
     {

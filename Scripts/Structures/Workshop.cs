@@ -2,26 +2,23 @@
 
 public sealed class Workshop : WorkBuilding {	
 
-    private const float GEARS_UPGRADE_SPEED = 0.0001f;
+    private const float GEARS_UPGRADE_PER_TICK = 0.01f;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
 	}
 
-    override public void LabourUpdate()
-    {
-        if (isActive & isEnergySupplied)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED;
-            if (colony.gears_coefficient < GameConstants.GEARS_UP_LIMIT)
-            {
-                colony.gears_coefficient += workSpeed * GEARS_UPGRADE_SPEED;
-            }
-        }
-    }
 
-    override protected void LabourResult() {
-	}
+    override protected void LabourResult(int iterations) {
+        if (iterations < 1) return;
+        workflow -= iterations;
+        float val = iterations * GEARS_UPGRADE_PER_TICK, maxVal = GameConstants.GetMaxGearsCf(colony);
+        if (colony.gears_coefficient + val < maxVal)
+        {
+            colony.gears_coefficient += val;
+        }
+        else colony.gears_coefficient = maxVal;
+    }
 
     public override bool ShowWorkspeed()
     {

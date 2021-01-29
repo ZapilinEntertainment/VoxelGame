@@ -10,6 +10,7 @@ public sealed class Settlement : House
     private static float gardensCf = 0f, shopsCf = 0f;
     private static List<Settlement> settlements;
 
+    private bool ignoreRecalculationRequests = false;
     public bool needRecalculation = false; // hot
     public byte pointsFilled { get; private set; }
     public byte maxPoints { get; private set; }
@@ -862,7 +863,7 @@ public sealed class Settlement : House
     }
     private void Recalculate()
     {
-        if (GameMaster.loading) return; // wait for total recalculation
+        if (GameMaster.loading || ignoreRecalculationRequests) return; // wait for total recalculation
         // dependency : create new building()
         // dependecy : total recalculation()
         int prevHousing = housing;
@@ -1004,14 +1005,21 @@ public sealed class Settlement : House
         else destroyed = true;
         if (basement != null)
         {
+            ignoreRecalculationRequests = true;
             var slist = basement.GetStructuresList();
+            bool atLeastOneWasDestroyed = false;
             foreach (var s in slist)
             {
                 if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
-                    s.Annihilate(clearFromSurface, returnResources, leaveRuins);
+                    s.Annihilate(false, returnResources, leaveRuins);
+                    atLeastOneWasDestroyed = true;
                 }
             }
+            if (atLeastOneWasDestroyed) basement.extension?.RecalculateSurface();
+            var colony = GameMaster.realMaster.colonyController;
+            colony.housingRecalculationNeeded = true;
+            colony.powerGridRecalculationNeeded = true;
         }
         PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         GameMaster.realMaster.colonyController.DeleteHousing(this);

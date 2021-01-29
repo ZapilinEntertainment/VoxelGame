@@ -218,8 +218,9 @@ public class Plane
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)
-        {
+        {            
             FORCED_GetExtension().AddStructure(s);
+            if (s.placeInCenter) mainStructure = s;
             return;
         }
         else
@@ -253,11 +254,8 @@ public class Plane
     }
     public void RemoveStructure(Structure s)
     {
-        if (extension == null)
-        {
-            if (mainStructure != null && s == mainStructure) mainStructure = null;
-        }
-        else extension.RemoveStructure(s);
+        if (mainStructure != null && s == mainStructure) mainStructure = null;
+        extension?.RemoveStructure(s);
     }
     public List<Structure> GetStructuresList()
     {

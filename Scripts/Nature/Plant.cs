@@ -95,9 +95,9 @@ public abstract class Plant : Structure {
     {
         return PlantType.Abstract;
     }
-    virtual public int GetPlantComplexity()
+    virtual public float GetPlantComplexity()
     {
-        return 1;
+        return 1f;
     }
     //
 

@@ -3378,7 +3378,7 @@ public static class Localization
                                     break;
                                 case ProgressQuestID.Progress_OreRefiner:
                                     q.name = "Ore refining";
-                                    q.description = "Digging left a lot of stone, still contains ores inside. Build an Ore Enricher, to extract maximum resources.";
+                                    q.description = "Digging left a lot of stone, still contained ores inside. Build an Ore Enricher to extract maximum resources amount.";
                                     q.steps[0] = "Build " + GetStructureName(Structure.ORE_ENRICHER_2_ID);
                                     break;
                                 case ProgressQuestID.Progress_HospitalCoverage:

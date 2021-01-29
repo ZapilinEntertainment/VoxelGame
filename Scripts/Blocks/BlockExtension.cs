@@ -494,16 +494,24 @@ public sealed class BlockExtension : IPlanable
         }
         return d_volume;
     }
-    public float PourIn(int d_volume, byte faceIndex)
+
+    /// <summary>
+    /// returns true if fullfilled
+    /// </summary>
+    public bool PourIn(int d_volume, byte faceIndex)
     {
-        if (volume + d_volume > MAX_VOLUME) d_volume = Mathf.CeilToInt(MAX_VOLUME - volume);
-        if (d_volume > 0)
+        if (volume + d_volume >= MAX_VOLUME)
+        {
+            volume = MAX_VOLUME;
+            planes[faceIndex].VolumeChanges(1f);
+            return true;
+        }
+        else
         {
             volume += d_volume;
             planes[faceIndex].VolumeChanges(volume / MAX_VOLUME);
-            return d_volume;
+            return false;
         }
-        else return 0f;
     }
     public float GetFossilsVolume() { return fossilsVolume; }
     public void TakeFossilsVolume(float f) { fossilsVolume -= f; if (fossilsVolume < 0f) fossilsVolume = 0f; }

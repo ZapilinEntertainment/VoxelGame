@@ -59,10 +59,6 @@ public class Powerplant : WorkBuilding
         ChangeRenderersView(energySurplus > 0f);
     }
 
-    public override float GetWorkSpeed()
-    {
-        return energySurplus;
-    }
     public override void LabourUpdate()
     {
         if (tickTimer == 0)

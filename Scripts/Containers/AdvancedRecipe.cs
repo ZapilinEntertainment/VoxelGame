@@ -38,7 +38,7 @@
             ResourceType.Food, ResourceType.metal_P, ResourceType.Supplies,
             FOOD_AND_METALP_TO_SUPPLIES_ID,
             10f, 1f, 5f,
-            RECIPE_LVL2_WORKLOAD
+            GetRecipeComplexity(2)
             );
 
         supplyFactoryRecipes = new Recipe[2] { NoRecipe, Food_and_MetalP_to_Supplies };

@@ -101,10 +101,6 @@ public sealed class Dock : WorkBuilding {
         }
     }
 
-    public override float GetWorkSpeed()
-    {
-        return shipArrivingTimer;
-    }
     override public void LabourUpdate () {
         if ( !isEnergySupplied ) return;
 		if ( maintainingShip ) {           

@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class WorkBuilding : Building
+public abstract class WorkBuilding : Building, ILabourable
 {
     public static UIWorkbuildingObserver workbuildingObserver;
 
     public float workflow { get; protected set; }
-    public float workflowToProcess { get; protected set; }
     public int maxWorkers { get; protected set; }
-    public int workersCount { get; protected set; }
-    protected float workSpeed, gearsDamage;
+    public int workersCount { get; protected set; }   
+    protected float factoryCoefficient = 1f, workComplexityCoefficient = 1f,  gearsDamage = 0f;
     protected ColonyController colony;
 
     public const int WORKBUILDING_SERIALIZER_LENGTH = 8;
@@ -29,263 +28,263 @@ public abstract class WorkBuilding : Building
         {
             case DOCK_ID:
                 {
-                    workflowToProcess = 1;
                     maxWorkers = 40;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.2f;
+                    gearsDamage *= 0.2f;
                 }
                 break;
             case DOCK_2_ID:
                 {
-                    workflowToProcess = 1;
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.15f;
+                    gearsDamage *= 0.15f;
                 }
                 break;
             case DOCK_3_ID:
                 {
-                    workflowToProcess = 1;
                     maxWorkers = 120;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
+                    gearsDamage *= 0.1f;
                 }
                 break;
             case FARM_1_ID:
                 {
-                    workflowToProcess = 10f;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
                     maxWorkers = 100;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.8f;
+                    gearsDamage *= 0.8f;
                 }
                 break;
             case FARM_2_ID:
                 {
-                    workflowToProcess = 8f;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
+                    factoryCoefficient = 1.2f;
                     maxWorkers = 100;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
+                    gearsDamage *= 0.7f;
                 }
                 break;
             case FARM_3_ID:
                 {
-                    workflowToProcess = 5f;
+                    factoryCoefficient = 1.5f;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
                     maxWorkers = 100;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
+                    gearsDamage *= 0.6f;
                 }
                 break;
             case COVERED_FARM:
                 {
-                    workflowToProcess = 50f;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsFarming);
+                    factoryCoefficient = 2f;
                     maxWorkers = 100;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
+                    gearsDamage *= 0.5f;
                 }
                 break;
             case FARM_BLOCK_ID:
                 {
-                    workflowToProcess = 25;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsFarming);
+                    factoryCoefficient = 2.2f;
                     maxWorkers = 300;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
+                    gearsDamage *= 0.5f;
                 }
                 break;
             case LUMBERMILL_1_ID:
                 {
-                    workflowToProcess = 70;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenLumbering);
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
+                    gearsDamage *= 0.6f;
                 }
                 break;
             case LUMBERMILL_2_ID:
                 {
-                    workflowToProcess = 60;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenLumbering);
+                    factoryCoefficient = 1.3f;
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.5f;
+                    gearsDamage *= 0.6f;
                 }
                 break;
             case LUMBERMILL_3_ID:
                 {
-                    workflowToProcess = 50;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenLumbering);
+                    factoryCoefficient = 1.8f;
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
+                    gearsDamage *= 0.45f;
                 }
                 break;
             case COVERED_LUMBERMILL:
                 {
-                    workflowToProcess = 100;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsLumbering);
+                    factoryCoefficient = 3f;
                     maxWorkers = 140;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.1f;
+                    gearsDamage *= 1.1f;
                 }
                 break;
             case LUMBERMILL_BLOCK_ID:
                 {
-                    workflowToProcess = 70;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsLumbering);
+                    factoryCoefficient = 3.2f;
                     maxWorkers = 280;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.2f;
+                    gearsDamage *= 1.2f;
                 }
                 break;
             case MINE_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.Mining);
                     maxWorkers = 60;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.75f;
+                    gearsDamage *= 1.5f;
                 }
                 break;
             case SMELTERY_1_ID:
-                {
-                    workflowToProcess = 1; // зависит от рецепта
+                {                    
                     maxWorkers = 40;
                 }
                 break;
             case SMELTERY_2_ID:
                 {
-                    workflowToProcess = 1;
+                    factoryCoefficient = 1.2f;
                     maxWorkers = 60;
                 }
                 break;
             case SMELTERY_3_ID:
                 {
-                    workflowToProcess = 1;
+                    factoryCoefficient = 1.5f;
                     maxWorkers = 100;
                 }
                 break;
             case SMELTERY_BLOCK_ID:
                 {
-                    workflowToProcess = 1;
+                    factoryCoefficient = 2f;
                     maxWorkers = 400;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.95f;
+                    gearsDamage *= 0.95f;
                 }
                 break;
             case BIOGENERATOR_2_ID:
                 {
-                    workflowToProcess = 40;
                     maxWorkers = 20;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.2f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case HOSPITAL_ID:
                 {
-                    workflowToProcess = 1f;
                     maxWorkers = 50;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.45f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case HOSPITAL_2_ID:
                 {
-                    workflowToProcess = 1f;
                     maxWorkers = 200;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.4f;
+                    gearsDamage *= 0.01f;
                     break;
                 }
             case MINERAL_POWERPLANT_2_ID:
                 {
-                    workflowToProcess = 1;
                     maxWorkers = 60;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.3f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case ORE_ENRICHER_2_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 2f;
+                    gearsDamage *= 2f;
                 }
                 break;
             case WORKSHOP_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.GearsUpgrading);
                     maxWorkers = 80;
                     gearsDamage = 0f;
                 }
                 break;
             case FUEL_FACILITY_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 100;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.68f;
+                    gearsDamage *= 0.68f;
                 }
                 break;
             case GRPH_REACTOR_4_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 80;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.6f;
+                    gearsDamage *= 0.03f;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 120;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.4f;
+                    gearsDamage *= 0.04f;
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 150;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.8f;
+                    gearsDamage *= 0.8f;
                 }
                 break;
             case SUPPLIES_FACTORY_4_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 140;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
+                    gearsDamage *= 0.7f;
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 250;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.7f;
+                    gearsDamage *= 0.7f;
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 60;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 1.4f;
+                    gearsDamage *= 1.4f;
                 }
                 break;
             case XSTATION_3_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 40;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case SHUTTLE_HANGAR_4_ID:
                 {
-                    workflowToProcess = Hangar.BUILD_SHUTTLE_WORKFLOW;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.ShuttleConstructing);
                     maxWorkers = 45;
                 }
                 break;
             case RECRUITING_CENTER_4_ID:
                 {
-                    workflowToProcess = RecruitingCenter.FIND_WORKFLOW;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.Recruiting);
                     maxWorkers = 40;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case EXPEDITION_CORPUS_4_ID:
                 {
-                    workflowToProcess = 1;
+                    workComplexityCoefficient = 1;
                     maxWorkers = 60;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.1f;
+                    gearsDamage *= 0.01f;
                 }
                 break;
             case OBSERVATORY_ID:
                 {
-                    workflowToProcess = Observatory.SEARCH_WORKFLOW;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.ObservatoryFindCycle);
                     maxWorkers = 50;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.12f;
+                    gearsDamage *= 0.02f;
                 }
                 break;
             case PSYCHOKINECTIC_GEN_ID:
             case SCIENCE_LAB_ID:
                 {
                     maxWorkers = 40;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.14f;
+                    gearsDamage *= 0.03f;
                     break;
                 }
             case COMPOSTER_ID:
                 {
                     maxWorkers = 60;
-                    gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.3f;
+                    gearsDamage *= 0.3f;
                     break;
                 }
         }
@@ -313,37 +312,20 @@ public abstract class WorkBuilding : Building
     {
         SetBuildingData(sb, pos);
         // copy to PsychokineticGenerator.SetBasement()
-    }  
+    }
 
+
+    #region ILabourable
+    virtual public float GetLabourCoefficient()
+    {
+        return colony.workers_coefficient * factoryCoefficient * workersCount /  (workComplexityCoefficient * maxWorkers);
+    }
     virtual public void LabourUpdate()
     {        
         if (!isActive | !isEnergySupplied) return;
-        if (workersCount > 0)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED;
-            gearsDamage = workSpeed * GameConstants.GEARS_DAMAGE_COEFFICIENT;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= workflowToProcess)
-            {
-                LabourResult();
-            }
-        }
-        else workSpeed = 0f;
-        // changecopy to coveredfarm.cs
-    }
-
-    protected virtual void LabourResult()
-    {
-        workflow = 0;
-    }
-
-    /// <summary>
-    /// returns excess workers
-    /// </summary>
-    /// <param name="x"></param>
-    /// <returns></returns>
-	virtual public int AddWorkers(int x)
+        INLINE_WorkCalculation();
+    }   
+    virtual public int AddWorkers(int x)
     {
         if (workersCount == maxWorkers) return 0;
         else
@@ -372,12 +354,22 @@ public abstract class WorkBuilding : Building
         workersCount -= x;
         colony.AddWorkers(x);
     }
-
-    virtual public float GetWorkSpeed()
-    {
-        return workSpeed;
-    }
     virtual public bool ShowWorkspeed() { return false; }
+    virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
+    #endregion
+
+    virtual protected void LabourResult(int iterations)
+    {
+        workflow -= iterations;
+    }
+    protected void INLINE_WorkCalculation()
+    {
+        float work = GetLabourCoefficient();
+        workflow += work;
+        colony.gears_coefficient -= gearsDamage * work;
+        if (workflow >= 1f) LabourResult((int)workflow);
+    }
+
 
     public override UIObserver ShowOnGUI()
     {

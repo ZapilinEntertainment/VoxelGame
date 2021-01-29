@@ -1,6 +1,9 @@
 ﻿public enum FullfillStatus : byte { Unknown, Full, Empty};
+public enum WorkType : byte { Default, Digging, Pouring, Factory, Clearing, Gathering, BlockBuilding,
+OpenFarming, HydroponicsFarming, OpenLumbering, HydroponicsLumbering, Mining, GearsUpgrading, Recruiting,
+    ShuttleConstructing, ObservatoryFindCycle }
 public abstract class GameConstants {
-    public const float GEARS_LEVEL_TO_CREATE_BLOCK = 4, GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL = 2.5f, GEARS_UP_LIMIT = 5, GEARS_LOWER_LIMIT = 0.8f,
+    public const float GEARS_LEVEL_TO_CREATE_BLOCK = 4, GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL = 2.5f, GEARS_LOWER_LIMIT = 0.8f,
         GEARS_DAMAGE_COEFFICIENT = 0.000003f;
 
     public const byte HQ_LEVEL_TO_CREATE_BLOCK = 4, HQ_MAX_LEVEL = 6;
@@ -18,9 +21,7 @@ public abstract class GameConstants {
         RSPACE_CONSUMING_VAL = 0.1f,
         LSECTOR_CONSUMING_VAL = 0.9f,
 
-        OBSERVATORY_FIND_SPEED_CF = 10, DIGGING_SPEED = 0.5f, MINING_SPEED = 1f, POURING_SPEED = 0.5f, FACTORY_SPEED = 0.3f,
-        CLEARING_SPEED = 5f, GATHERING_SPEED = 0.1f, MACHINE_CONSTRUCTING_SPEED = 1f, BLOCK_BUILDING_SPEED = 0.5f,
-        HYDROPONICS_SPEED = 1f, OPEN_FARM_SPEED = 1f, EXPLORE_SPEED = 0.1f, RESEARCH_SPEED = 1f,
+        OBSERVATORY_FIND_SPEED_CF = 10,
 
         RUINS_COEFFICIENT = 0.25f,
         GRAPHONIUM_CRITICAL_MASS = 10000f,
@@ -49,4 +50,36 @@ public abstract class GameConstants {
 
     public static float GetUpperBorder() { return Chunk.chunkSize * 2; }
     public static float GetBottomBorder() { return Chunk.chunkSize * (-1); }
+
+    public static float GetWorkComplexityCf(WorkType wt) // time in seconds when work_cf = 1 and factory_cf = 1
+    {
+        switch (wt)
+        {
+            case WorkType.ObservatoryFindCycle: return 300f;
+            case WorkType.ShuttleConstructing: return 180f;
+            case WorkType.Recruiting: return 150f;
+            case WorkType.HydroponicsLumbering: return 11f;
+            case WorkType.HydroponicsFarming: return 10f;
+            case WorkType.Digging: return 10f;
+            case WorkType.Clearing: return 10f;
+            case WorkType.Mining: return 9f;
+            case WorkType.BlockBuilding: 
+            case WorkType.Pouring: return 8f;            
+            case WorkType.GearsUpgrading: return 3f;            
+            case WorkType.Factory: return 3f;
+            case WorkType.OpenLumbering: return 1.5f;
+            case WorkType.OpenFarming: return 1f;            
+            default: return 1f;
+        }
+    }
+    public static float GetMaxGearsCf(ColonyController c)
+    {
+        byte lvl = c.hq?.level ?? 0;
+        if (lvl == 0) return GEARS_LOWER_LIMIT;
+        else
+        {
+            if (lvl < 6) return lvl;
+            else return 5;
+        }
+    }
 }

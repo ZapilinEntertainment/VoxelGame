@@ -74,6 +74,10 @@ public class Factory : WorkBuilding
     override public void LabourUpdate()
     {
         if (recipe == Recipe.NoRecipe) return;
+        INLINE_LabourUpdate();
+    }
+    protected void INLINE_LabourUpdate()
+    {
         Storage storage = colony.storage;
         if (outputResourcesBuffer > 0)
         {
@@ -81,45 +85,42 @@ public class Factory : WorkBuilding
         }
         if (outputResourcesBuffer <= BUFFER_LIMIT)
         {
-            if (isActive)
+            if (isActive && isEnergySupplied)
             {
-                if (isEnergySupplied)
+                float work = GetLabourCoefficient();
+                if (productionMode == FactoryProductionMode.Limit)
                 {
-                    workSpeed = colony.workspeed * workersCount * GameConstants.FACTORY_SPEED * level * level;
-                    if (productionMode == FactoryProductionMode.Limit)
+                    if (!workPaused)
                     {
-                        if (!workPaused)
-                        {
-                            workflow += workSpeed;
-                            colony.gears_coefficient -= gearsDamage * workSpeed;
-                            if (workflow >= workflowToProcess) LabourResult();
-                        }
-                        else
-                        {
-                            if (storage.standartResources[recipe.output.ID] < productionModeValue)
-                            {
-                                workPaused = false;
-                                workflow += workSpeed;
-                                colony.gears_coefficient -= gearsDamage * workSpeed;
-                                if (workflow >= workflowToProcess) LabourResult();
-                            }
-                        }
+                        workflow += work;
+                        colony.gears_coefficient -= gearsDamage * work;
+                        if (workflow >= 1f) LabourResult((int)workflow);
                     }
                     else
                     {
-                        workflow += workSpeed;
-                        colony.gears_coefficient -= gearsDamage * workSpeed;
-                        if (workflow >= workflowToProcess) LabourResult();
+                        if (storage.standartResources[recipe.output.ID] < productionModeValue)
+                        {
+                            workPaused = false;
+                            workflow += work;
+                            colony.gears_coefficient -= gearsDamage * work;
+                            if (workflow >= 1f) LabourResult((int)workflow);
+                        }
                     }
+                }
+                else
+                {
+                    workflow += work;
+                    colony.gears_coefficient -= gearsDamage * work;
+                    if (workflow >= 1f) LabourResult((int)workflow);
                 }
             }
         }
-        //changed copy to AdvancedFactory
     }
-    override protected void LabourResult()
+
+    override protected void LabourResult(int iterations)
     {
-        int iterations = (int)(workflow / workflowToProcess);
-        workflow = 0;
+        if (iterations < 1) return;
+        workflow -= iterations;
         Storage storage = colony.storage;
         if (storage.standartResources[recipe.input.ID] + inputResourcesBuffer >= recipe.inputValue)
         {
@@ -189,7 +190,7 @@ public class Factory : WorkBuilding
         workflow = 0;
         recipe = r;
         productionModeValue = 0;
-        workflowToProcess = r.workflowToResult;
+        workComplexityCoefficient = r.workComplexity;
         workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[r.output.ID] >= productionModeValue;
     }
     public void SetRecipe(int x)

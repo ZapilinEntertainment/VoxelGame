@@ -20,24 +20,10 @@ public class CoveredFarm : WorkBuilding {
         }		
 		s = colony.storage;
 	}
-    override public void LabourUpdate()
-    {
-        if (!isActive | !isEnergySupplied) return;
-        if (workersCount > 0)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.HYDROPONICS_SPEED;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= workflowToProcess)
-            {
-                LabourResult();
-            }
-        }
-        else workSpeed = 0f;
-    }
-    override protected void LabourResult() {
-        int iterations = (int)(workflow / workflowToProcess);
+
+    override protected void LabourResult(int iterations) {
+        if (iterations < 1) return;
+        workflow -= iterations;
 		s.AddResource( new ResourceContainer (outputResource, output_value * iterations) );
-		workflow -= iterations * workflowToProcess;
 	}
 }

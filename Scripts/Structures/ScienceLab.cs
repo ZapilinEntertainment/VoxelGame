@@ -14,21 +14,6 @@ public sealed class ScienceLab : WorkBuilding
         }
         colony?.observer?.AddFastButton(this);
     }
-    override public void LabourUpdate()
-    {
-        if (!isActive | !isEnergySupplied) return;
-        if (workersCount > 0)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.RESEARCH_SPEED;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= workflowToProcess)
-            {
-                LabourResult();
-            }
-        }
-        else workSpeed = 0f;
-    }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
     {

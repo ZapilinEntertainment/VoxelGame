@@ -22,13 +22,7 @@ public class Mine : WorkBuilding {
 		//workObject = bb as CubeBlock;
 		
 	}
-	override public void LabourUpdate() {
-        workSpeed = colony.workspeed * workersCount * GameConstants.MINING_SPEED;
-    }
 
-override protected void LabourResult() {
-
-	}
     public override bool ShowWorkspeed()
     {
         return true;

@@ -32,6 +32,7 @@ public sealed class OakTree : Plant
 
     public const byte MAX_STAGE = 6;
     public const int LUMBER = 100, SPRITER_CHILDNUMBER = 0, MODEL_CHILDNUMBER = 1;
+    public const float COMPLEXITY = 10;
     private const float TREE_SPRITE_MAX_VISIBILITY = 8;
 
     static OakTree()
@@ -593,9 +594,9 @@ public sealed class OakTree : Plant
     {
         return PER_LEVEL_LIFEPOWER_SURPLUS * stage;
     }
-    public override int GetPlantComplexity()
+    public override float GetPlantComplexity()
     {
-        return stage * stage * 10;
+        return COMPLEXITY;
     }
 
     override public void Harvest(bool replenish)

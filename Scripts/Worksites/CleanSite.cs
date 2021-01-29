@@ -4,6 +4,8 @@ using System.Collections.Generic;
 public class CleanSite : Worksite {
 	public bool diggingMission {get;protected set;}
 	const int START_WORKERS_COUNT = 10;
+    private const float DAMAGE_PER_TICK = 10f;
+    List<Structure> strlist;
     // public const int MAX_WORKERS = 32
 
     public CleanSite(Plane p, bool f_diggingMission) : base (p)
@@ -16,15 +18,17 @@ public class CleanSite : Worksite {
         diggingMission = f_diggingMission;
         if (workersCount < START_WORKERS_COUNT) colony.SendWorkers(START_WORKERS_COUNT, this);
         gearsDamage = GameConstants.GEARS_DAMAGE_COEFFICIENT * 0.25f;
+        workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.Clearing);
     }
 
-    override public void WorkUpdate () {
+    override public void LabourUpdate () {
 		if (workplace == null) {
             StopWork(true);
 			return;
 		}
-        var strlist = workplace.GetStructuresList();
-		if (strlist == null) {
+        strlist = workplace.GetStructuresList();
+        if (strlist == null)
+        {
             if (diggingMission)
             {
                 colony.RemoveWorksite(this);
@@ -35,37 +39,36 @@ public class CleanSite : Worksite {
             }
             else StopWork(true);
             return;
-		}		
-        else
+        }
+        else INLINE_WorkCalculation();		
+	}
+    protected override void LabourResult(int iterations)
+    {
+        if (iterations < 1) return;
+        workflow -= iterations;
+        while (iterations > 0)
         {
-            workSpeed = colony.workspeed * workersCount * GameConstants.CLEARING_SPEED;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
+            iterations--;
             Structure s = strlist[0];
-            float workGained = 0;
             if (s.ID == Structure.PLANT_ID)
             {
-                workGained = s.hp;
-                (s as Plant).Harvest(false);                
+                (s as Plant).Harvest(false);
             }
             else
             {
                 HarvestableResource hr = s as HarvestableResource;
                 if (hr != null)
                 {
-                    workGained = hr.resourceCount;
                     hr.Harvest();
                 }
                 else
                 {
-                    s.ApplyDamage(workflow);
-                    workGained = workflow;
+                    s.ApplyDamage(DAMAGE_PER_TICK);
                 }
             }
-            workflow -= workGained;
-            actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" +Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) +" :" + strlist.Count.ToString()  +  ")";
-        }		
-	}
+        }
+        actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) + " :" + strlist.Count.ToString() + ")";
+    }
 
     #region save-load mission
     override public void Save(System.IO.FileStream fs) {

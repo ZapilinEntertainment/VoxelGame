@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public sealed class UIWorkbuildingObserver : UIObserver { // работает и на workbuilding, и на worksite
 	 
 	int showingWorkersCount, showingWorkersMaxCount;
-	float showingWorkspeed;
     private bool workbuildingMode = true, workspeedStringEnabled = true, ignoreWorkersSlider = false;
 
 	public WorkBuilding observingWorkbuilding { get; private set; }
@@ -40,7 +39,6 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
 
 		showingWorkersCount = wb.workersCount;
 		showingWorkersMaxCount = wb.maxWorkers;
-		showingWorkspeed = wb.GetWorkSpeed();
 
         ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.minValue = 0; 
@@ -49,9 +47,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         ignoreWorkersSlider = false;
 
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-		workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
+        workSpeedField.text = observingWorkbuilding.UI_GetProductionSpeedInfo();
 
-		workspeedStringEnabled = (showingWorkspeed > 0 & observingWorkbuilding.ShowWorkspeed());
+		workspeedStringEnabled = observingWorkbuilding.ShowWorkspeed();
         workSpeedField.enabled = workspeedStringEnabled;
         actionLabel.enabled = false;        
         stopButton.SetActive(false);
@@ -68,8 +66,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         observingWorksite = ws; isObserving = true;
 
         showingWorkersCount = ws.workersCount;
-        showingWorkersMaxCount = ws.GetMaxWorkers();
-        showingWorkspeed = ws.GetWorkSpeed();
+        showingWorkersMaxCount = ws.maxWorkersCount;
 
         ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.value = showingWorkersCount; 
@@ -78,8 +75,8 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         ignoreWorkersSlider = false;
 
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-        workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
-        workSpeedField.enabled = (showingWorkspeed > 0 );
+        workSpeedField.text = ws.UI_GetProductionSpeedInfo();
+        workSpeedField.enabled = true;
         actionLabel.enabled = true;
         actionLabel.text = ws.actionLabel;        
         stopButton.SetActive(true);
@@ -113,13 +110,8 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 }
                 if (workspeedStringEnabled)
                 {
-                        showingWorkspeed = observingWorkbuilding.GetWorkSpeed();
-                        if (showingWorkspeed == 0) workSpeedField.enabled = false;
-                        else
-                        {
-                            workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
-                            workSpeedField.enabled = true;
-                        }
+                    workSpeedField.text = observingWorkbuilding.UI_GetProductionSpeedInfo();
+                    if (!workSpeedField.enabled) workSpeedField.enabled = true;
                 }
             }
         }
@@ -139,7 +131,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                     slider.value = showingWorkersCount;
                     ignoreWorkersSlider = false;
                 }
-                int maxWorkers = observingWorksite.GetMaxWorkers();
+                int maxWorkers = observingWorksite.maxWorkersCount;
                 if (showingWorkersMaxCount != maxWorkers)
                 {
                     showingWorkersMaxCount = maxWorkers;
@@ -149,13 +141,8 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
                 }
                 if (workspeedStringEnabled )
                 {
-                    showingWorkspeed = observingWorksite.GetWorkSpeed();
-                    if (showingWorkspeed == 0) workSpeedField.enabled = false;
-                    else
-                    {
-                        workSpeedField.text = string.Format("{0:0.00}", showingWorkspeed) + ' ' + Localization.GetPhrase(LocalizedPhrase.PointsSec);
-                        workSpeedField.enabled = true;
-                    }
+                        workSpeedField.text = observingWorksite.UI_GetProductionSpeedInfo();
+                        if (!workSpeedField.enabled) workSpeedField.enabled = true;
                 }
                 actionLabel.text = observingWorksite.actionLabel;
             }
@@ -215,7 +202,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             }
             else
             {
-                if (observingWorksite.workersCount < observingWorksite.GetMaxWorkers())
+                if (observingWorksite.workersCount < observingWorksite.maxWorkersCount)
                 {
                     GameMaster.realMaster.colonyController.SendWorkers(1, observingWorksite);
                 }
@@ -257,7 +244,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             else
             {
                 int wcount = observingWorksite.workersCount;
-                int max = observingWorksite.GetMaxWorkers();
+                int max = observingWorksite.maxWorkersCount;
                 if (wcount == max) return;
                 else
                 {
@@ -371,7 +358,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             if (observingWorksite.workersCount == x) return;
             else
             {
-                int maxWorkers = observingWorksite.GetMaxWorkers();
+                int maxWorkers = observingWorksite.maxWorkersCount;
                 if (x > maxWorkers) x = maxWorkers;
                 else
                 {

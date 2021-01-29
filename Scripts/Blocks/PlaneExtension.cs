@@ -6,7 +6,10 @@ public sealed class PlaneExtension
     public Grassland grassland { get; private set; }
     private readonly Plane myPlane;
     private List<Structure> structures;
-    public FullfillStatus fullfillStatus;
+    public FullfillStatus fullfillStatus
+    {
+        get; private set;
+    }
     public int artificialStructuresCount { get; private set; }
     private BitArray map;
     public const byte INNER_RESOLUTION = 16;

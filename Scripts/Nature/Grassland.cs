@@ -12,7 +12,13 @@ public sealed class Grassland
     public readonly int ID;
     private bool ignoreRecalculationsRequest = false;
     public byte level { get; private set; }
-    private bool cultivating = false;
+    public bool isCultivating
+    {
+        get
+        {
+            return (plane.mainStructure != null && plane.mainStructure is Farm);
+        }
+    }
     private float lifepowerSurplus;
     private float lifepower;
     private const int MAX_CATEGORIES_COUNT = 3;
@@ -50,12 +56,11 @@ public sealed class Grassland
         fs.WriteByte((byte)categoriesCatalog[1]); //9
         fs.WriteByte((byte)categoriesCatalog[2]); // 10
         fs.WriteByte(level); //11
-        fs.WriteByte(cultivating ? (byte)1 : (byte)0); //12
-        fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 13 - 16
+        fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 12 - 15
     }
     public static Grassland Load(System.IO.FileStream fs, Chunk c)
     {
-        var data = new byte[17];
+        var data = new byte[16];
         fs.Read(data, 0, data.Length);        
         var b = c.GetBlock(data[0], data[1], data[2]);
         if (b != null)
@@ -67,8 +72,7 @@ public sealed class Grassland
                 g.categoriesCatalog[0] = (PlantCategory)data[8];
                 g.categoriesCatalog[1] = (PlantCategory)data[9];
                 g.categoriesCatalog[2] = (PlantCategory)data[10];
-                g.cultivating = data[12] == 1;
-                g.lifepower = System.BitConverter.ToSingle(data, 13);
+                g.lifepower = System.BitConverter.ToSingle(data, 12);
                 g.SetLevel(data[11]);               
                 return g;
             }
@@ -154,7 +158,7 @@ public sealed class Grassland
         if (!canBeBoosted) return;
         if (needRecalculation) Recalculation();
         lifepower += lifepowerSurplus;
-        if (lifepower <= BOOST_VALUE | cultivating) return;
+        if (lifepower <= BOOST_VALUE | isCultivating) return;
         else
         {
             //#update inners
@@ -335,7 +339,7 @@ public sealed class Grassland
         {
             if (level > MAX_LEVEL) level = MAX_LEVEL;
             level = l;
-            if (!cultivating && plane.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
+            if (!isCultivating && plane.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
             {
                 //var fi = plane.faceIndex;
                 {
@@ -355,11 +359,6 @@ public sealed class Grassland
             }
         }
     }
-    public void SetCultivatingStatus(bool x)
-    {
-        cultivating = x;
-    } 
-
     public void Annihilate(bool plantsDestruction, bool sendMessageToPlane)
     {
         if (plantsDestruction)

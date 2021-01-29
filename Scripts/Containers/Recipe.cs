@@ -7,7 +7,7 @@ public class Recipe {
 		public readonly float inputValue;
 		public readonly ResourceType output;
 		public readonly float outputValue;
-		public readonly float workflowToResult;
+		public readonly float workComplexity;
 		public readonly int ID;
 
 	public static readonly Recipe[] smelteryRecipes, oreRefiningRecipes, fuelFacilityRecipes, plasticFactoryRecipes, graphoniumEnricherRecipes, composterRecipes;
@@ -26,7 +26,6 @@ public class Recipe {
 	METAL_K_REFINIG_ID = 10, METAL_E_REFINING_ID = 11, METAL_N_REFINING_ID = 12, METAL_M_REFINING_ID = 13, METAL_P_REFINING_ID = 14,
 	METAL_S_REFINING_ID = 15, MINERAL_F_REFINING_ID = 16, MINERAL_L_REFINING_ID = 17, FUEL_FROM_NMETAL_ID = 18, FUEL_FROM_NMETAL_ORE_ID = 19,
 	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23, FOOD_AND_METALP_TO_SUPPLIES_ID = 24, COMPOSTERING_ID = 25;
-    public const float RECIPE_LVL1_WORKLOAD = 10f, RECIPE_LVL2_WORKLOAD = 25f, RECIPE_LVL3_WORKLOAD = 100f;
 
     public override bool Equals(object obj)
     {
@@ -37,7 +36,7 @@ public class Recipe {
             if (GetType() != obj.GetType()) return false;
         }
         var r = (Recipe)obj;
-        if (ID != r.ID || input != r.input || output != r.output || inputValue != r.inputValue || outputValue != r.outputValue || workflowToResult != r.workflowToResult)
+        if (ID != r.ID || input != r.input || output != r.output || inputValue != r.inputValue || outputValue != r.outputValue || workComplexity != r.workComplexity)
             return false;
         else return true;
     }
@@ -52,7 +51,7 @@ public class Recipe {
 		List<Recipe> smelteryRecipesList = new List<Recipe>();
 		smelteryRecipesList.Add(NoRecipe);
 
-        float w1 = RECIPE_LVL1_WORKLOAD;        
+        float w1 = GetRecipeComplexity(1);        
 		StoneToConcrete = new Recipe(ResourceType.Stone, ResourceType.Concrete, STONE_TO_CONCRETE_ID, 3, 2,  w1 * 0.8f); smelteryRecipesList.Add(StoneToConcrete);
 		LumberToPlastics = new Recipe(ResourceType.Lumber, ResourceType.Plastics, LUMBER_TO_PLASTICS_ID, 3, 1,  w1 * 1.5f);  smelteryRecipesList.Add(LumberToPlastics);
 		MetalK_smelting = new Recipe(ResourceType.metal_K_ore, ResourceType.metal_K, METAL_K_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalK_smelting);
@@ -63,7 +62,7 @@ public class Recipe {
 		MetalS_smelting = new Recipe(ResourceType.metal_S_ore, ResourceType.metal_S, METAL_S_SMELTING_ID, 1,1, w1); smelteryRecipesList.Add(MetalS_smelting);
 		smelteryRecipes = smelteryRecipesList.ToArray();
 
-        float w2 = RECIPE_LVL2_WORKLOAD;
+        float w2 = GetRecipeComplexity(2);
         oreRefiningRecipes = new Recipe[9];
 		MetalK_refining= new Recipe(ResourceType.Stone, ResourceType.metal_K_ore, METAL_K_REFINIG_ID, 4,1, w2);
 		MetalE_refining = new Recipe(ResourceType.Stone, ResourceType.metal_E_ore, METAL_E_REFINING_ID, 8,1,w2); 
@@ -79,7 +78,7 @@ public class Recipe {
 		oreRefiningRecipes[5] = MetalP_refining; oreRefiningRecipes[6] = MetalS_refining;
 		oreRefiningRecipes[7] = MineralF_refining; oreRefiningRecipes[8] = MineralL_refining;
 
-        float w3 = RECIPE_LVL3_WORKLOAD;
+        float w3 = GetRecipeComplexity(3);
 		fuelFacilityRecipes = new Recipe[5];
 		Fuel_fromNmetal = new Recipe(ResourceType.metal_N, ResourceType.Fuel,  FUEL_FROM_NMETAL_ID, 1, 10, w3);
 		Fuel_fromNmetalOre = new Recipe(ResourceType.metal_N_ore, ResourceType.Fuel,  FUEL_FROM_NMETAL_ORE_ID, 1, 9, 3f * w3);
@@ -107,12 +106,22 @@ public class Recipe {
         ComposteringFood = new Recipe(ResourceType.Food, ResourceType.Dirt, COMPOSTERING_ID, 100f, 1f, w2 * 10f);
         composterRecipes = new Recipe[2] {NoRecipe, ComposteringFood };
     }
+    public static float GetRecipeComplexity(byte level)
+    {
+        float f = GameConstants.GetWorkComplexityCf(WorkType.Factory);
+        if (level == 1) return f;
+        else
+        {
+            if (level == 2) return 2f * f;
+            else return 4f * f;
+        }
+    }
 
 	public Recipe (ResourceType res_input, ResourceType res_output,int f_id, float val_input, float val_output,  float workflowNeeded) {
 		ID = f_id;
 		input = res_input; output = res_output;
 		inputValue = val_input; outputValue = val_output;
-		workflowToResult = workflowNeeded;
+		workComplexity = workflowNeeded;
 	}
 
 	public static Recipe GetRecipeByNumber (int n) {

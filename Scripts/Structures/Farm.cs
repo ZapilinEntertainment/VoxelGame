@@ -20,6 +20,7 @@ public class Farm : WorkBuilding
             case COVERED_FARM:
             case FARM_BLOCK_ID:
                 cropType = PlantType.Corn;
+                workComplexityCoefficient = Corn.COMPLEXITY;
                 break;
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
@@ -27,6 +28,7 @@ public class Farm : WorkBuilding
             case COVERED_LUMBERMILL:
             case LUMBERMILL_BLOCK_ID:
                 cropType = PlantType.OakTree;
+                workComplexityCoefficient = OakTree.COMPLEXITY;
                 break;
         }  
     }
@@ -42,91 +44,95 @@ public class Farm : WorkBuilding
         }
         var gl = basement.GetGrassland();
         if (gl == null) basement.TryCreateGrassland(out gl);
-        gl?.SetCultivatingStatus(true);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
     }
 
-    override public void LabourUpdate()
+    override protected void LabourResult(int iterations)
     {
-        if (isActive & isEnergySupplied)
-        {
-            workSpeed = colony.workspeed * workersCount * GameConstants.OPEN_FARM_SPEED;
-            workflow += workSpeed;
-            colony.gears_coefficient -= gearsDamage * workSpeed;
-            if (workflow >= workflowToProcess)
-            {
-                LabourResult();
-            }
-        }
-    }
-    override protected void LabourResult()
-    {
+        if (iterations < 1) return;
+        workflow -= iterations;
         int i = 0;
         float totalCost = 0;
-        int actionsPoints = (int)(workflow / workflowToProcess);
-        workflow -= actionsPoints * workflowToProcess;
+        Plant p;
 
         if (basement.fulfillStatus != FullfillStatus.Full)
         {
-            List<PixelPosByte> pos = basement.FORCED_GetExtension().GetAcceptableCellPositions(actionsPoints);
-            i = 0;
-            while (i < pos.Count)
+            if (iterations == 1)
             {
-                Plant p = Plant.GetNewPlant(cropType);
-                p.SetBasement(basement, pos[i]);
-                actionsPoints--;
+                p = Plant.GetNewPlant(cropType);
+                p.SetBasement(basement, basement.FORCED_GetExtension().GetRandomCell());
                 totalCost += ACTION_LIFEPOWER_COST;
-                i++;
+            }
+            else
+            {
+                List<PixelPosByte> pos = basement.FORCED_GetExtension().GetAcceptableCellPositions(iterations);
+                i = 0;
+                while (i < pos.Count)
+                {
+                    p = Plant.GetNewPlant(cropType);
+                    p.SetBasement(basement, pos[i]);
+                    totalCost += ACTION_LIFEPOWER_COST;
+                    i++;
+                }
             }
         }
         else
         {
             var allplants = basement.GetPlants();
-            var indexes = new List<int>();
-            int count = allplants.Length, complexity;            
-            indexes.Capacity = count;
-            for (i = 0; i < count; i++)
-            {
-                indexes.Add(i);
-            }
-            Plant p;
-            while (actionsPoints > 0 & indexes.Count > 0)
-            {               
-                if (lastPlantIndex >= count) lastPlantIndex = 0;
-                p = allplants[indexes[lastPlantIndex]];
-                complexity = p.GetPlantComplexity();
-                if (p.type == cropType)
+            int count = allplants.Length;
+            if (lastPlantIndex >= count) lastPlantIndex = 0;
+
+            if (count > 0) {
+                if (iterations == 1)
                 {
-                    if (!p.IsFullGrown() & p.type == cropType)
+                    p = allplants[lastPlantIndex];
+                    if (p.type == cropType)
                     {
-                        p.UpdatePlant();
-                        totalCost += ACTION_LIFEPOWER_COST * complexity;
-                        lastPlantIndex++;
-                        actionsPoints -= 10 * complexity;
+                        if (!p.IsFullGrown())
+                        {
+                            p.UpdatePlant();
+                            totalCost += ACTION_LIFEPOWER_COST * workComplexityCoefficient;
+
+                            if (lastPlantIndex >= count) lastPlantIndex = 0;
+                        }
+                        else
+                        {
+                            p.Harvest(true);
+                        }
                     }
                     else
                     {
-                        actionsPoints -= complexity;
-                        p.Harvest(true);
-                        indexes.RemoveAt(lastPlantIndex);
-                        count--;                        
+                        p.Harvest(false);
                     }
+                    lastPlantIndex++;
                 }
                 else
                 {
-                    p.Harvest(false);
-                    indexes.RemoveAt(lastPlantIndex);
-                    count--;
-                    actionsPoints -= complexity;
+                    while (iterations > 0)
+                    {
+                        p = allplants[lastPlantIndex];
+                        if (p.type == cropType)
+                        {
+                            if (!p.IsFullGrown())
+                            {
+                                p.UpdatePlant();
+                                totalCost += ACTION_LIFEPOWER_COST * p.GetPlantComplexity();
+                            }
+                            else p.Harvest(true);
+                        }
+                        else p.Harvest(false);
+                        iterations--;
+                        lastPlantIndex++;
+                        if (lastPlantIndex >= count) lastPlantIndex = 0;
+                    }
                 }
             }
-        }
-        if (actionsPoints > 0) workflow += actionsPoints * workflowToProcess;
-        else workflow -= actionsPoints * (-1) * workflowToProcess;
-        if (totalCost > 0) {
-            var gl = basement.GetGrassland();
-            if (gl == null) basement.TryCreateGrassland(out gl);
-            gl.TakeLifepower(totalCost);
+            if (totalCost > 0)
+            {
+                var gl = basement.GetGrassland();
+                if (gl == null) basement.TryCreateGrassland(out gl);
+                gl.TakeLifepower(totalCost);
+            }
         }
     }
 
@@ -146,7 +152,6 @@ public class Farm : WorkBuilding
         else destroyed = true;
         if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        basement?.GetGrassland()?.SetCultivatingStatus(false);
         if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ChangeMaterial(ResourceType.DIRT_ID, true);
         if (subscribedToUpdate)
         {
@@ -176,7 +181,6 @@ public class Farm : WorkBuilding
         lastPlantIndex = System.BitConverter.ToInt32(data, 0);
         var gl = basement.GetGrassland();
         if (gl == null) basement.TryCreateGrassland(out gl);
-        gl?.SetCultivatingStatus(true);
     }
     #endregion
 }

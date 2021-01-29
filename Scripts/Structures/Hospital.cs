@@ -22,10 +22,6 @@ public class Hospital : WorkBuilding {
             colony.AddHospital(this);
         }
 	}
-    public override float GetWorkSpeed()
-    {
-        return coverage;
-    }
 
     protected override void SwitchActivityState()
     {

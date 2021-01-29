@@ -4,12 +4,13 @@ using UnityEngine;
 
 public enum WorksiteType : byte { Abstract, BlockBuildingSite, CleanSite, DigSite, GatherSite }
 
-public abstract class Worksite
+public abstract class Worksite : ILabourable
 {
     public static UIWorkbuildingObserver observer; // все правильно, он на две ставки работает
 
     public Plane workplace { get; protected set; }
     public int workersCount { get; protected set; }
+    public int maxWorkersCount { get; protected set; }
     public WorksiteSign sign;
     public string actionLabel { get; protected set; }
     public bool showOnGUI = false;
@@ -18,7 +19,7 @@ public abstract class Worksite
     public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
 
     protected bool subscribedToUpdate = false;
-    protected float workflow, gearsDamage, workSpeed;
+    protected float workflow = 0f, gearsDamage, workComplexityCoefficient = 1f;
     protected ColonyController colony;
 
     public override bool Equals(object obj)
@@ -39,31 +40,36 @@ public abstract class Worksite
     {
         colony = GameMaster.realMaster.colonyController;
         workplace = i_workplace;
+        maxWorkersCount = 32;
         colony.AddWorksiteToList(this);
-        destroyed = false;
+        destroyed = false;        
 
-        GameMaster.realMaster.labourUpdateEvent += WorkUpdate;
+        GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
         subscribedToUpdate = true;
     }
 
-    public virtual int GetMaxWorkers() { return 32; }
-    public virtual void WorkUpdate()
+    #region ILabourable
+    virtual public float GetLabourCoefficient()
     {
+        return colony.workers_coefficient * workersCount / (workComplexityCoefficient * maxWorkersCount);
     }
-    public virtual float GetWorkSpeed() { return 0f; }
-    /// <summary>
-    /// returns excess workers
-    /// </summary>
-    public int AddWorkers(int x)
+    virtual public void LabourUpdate()
     {
-        int maxWorkers = GetMaxWorkers();
-        if (workersCount == maxWorkers) return x;
+        if (workplace == null)
+        {
+            StopWork(true);
+        }
+        INLINE_WorkCalculation();
+    }  
+    virtual public int AddWorkers(int x)
+    {
+        if (workersCount == maxWorkersCount) return x;
         else
         {
-            if (x > maxWorkers - workersCount)
+            if (x > maxWorkersCount - workersCount)
             {
-                x -= (maxWorkers - workersCount);
-                workersCount = maxWorkers;
+                x -= (maxWorkersCount - workersCount);
+                workersCount = maxWorkersCount;
             }
             else
             {
@@ -73,19 +79,39 @@ public abstract class Worksite
             return x;
         }
     }
-    public void FreeWorkers() { FreeWorkers(workersCount); }
-    public void FreeWorkers(int x)
+    public void FreeWorkers()
     {
+        FreeWorkers(workersCount);
+    }
+    virtual public void FreeWorkers(int x)
+    {
+        if (workersCount == 0) return;
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
+    }
+    virtual public bool ShowWorkspeed() { return false; }
+    virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
+    #endregion
+
+    protected void INLINE_WorkCalculation()
+    {
+        float work = GetLabourCoefficient();
+        workflow += work;
+        colony.gears_coefficient -= gearsDamage * work;
+        if (workflow >= 1f) LabourResult((int)workflow);
+    }
+
+    virtual protected void LabourResult(int iterations)
+    {
+        workflow -= iterations;
     }
     public static void TransferWorkers(Worksite source, Worksite destination)
     {
         int x = source.workersCount;
         source.workersCount = 0;
         int sum = destination.workersCount + x;
-        int maxWorkers = destination.GetMaxWorkers();
+        int maxWorkers = destination.maxWorkersCount;
         if (sum > maxWorkers)
         {
             GameMaster.realMaster.colonyController.AddWorkers(sum - maxWorkers);
@@ -102,7 +128,6 @@ public abstract class Worksite
         showOnGUI = true;
         return observer;
     }
-
     virtual public void StopWork(bool removeFromListRequest)
     {
         if (destroyed) return;
@@ -115,7 +140,7 @@ public abstract class Worksite
         if (sign != null) Object.Destroy(sign.gameObject);
         if (subscribedToUpdate)
         {
-            GameMaster.realMaster.labourUpdateEvent -= WorkUpdate;
+            GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
         if (showOnGUI)
