@@ -6,10 +6,9 @@ using UnityEngine.UI;
 public sealed class UIWorkbuildingObserver : UIObserver { // работает и на workbuilding, и на worksite
 	 
 	int showingWorkersCount, showingWorkersMaxCount;
-    private bool workbuildingMode = true, workspeedStringEnabled = true, ignoreWorkersSlider = false;
+    private bool workspeedStringEnabled = true, ignoreWorkersSlider = false;
 
-	public WorkBuilding observingWorkbuilding { get; private set; }
-    public Worksite observingWorksite { get; private set; }
+    public ILabourable observingPlace { get; private set; }
 #pragma warning disable 0649
     [SerializeField] private GameObject stopButton;
     [SerializeField] private Button minusAllButton, minusButton, plusButton, plusAllButton;
@@ -25,20 +24,21 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         return uwb;
     }
 
-	public void SetObservingWorkBuilding( WorkBuilding wb ) {
-        workbuildingMode = true;
+	public void SetObservingPlace( ILabourable wb ) {
         if (wb == null) {
 			SelfShutOff();
 			return;
 		}
-		UIBuildingObserver ub = Building.buildingObserver;
-        if (ub == null) ub = UIBuildingObserver.InitializeBuildingObserverScript();
-        else ub.gameObject.SetActive(true);
-		observingWorkbuilding = wb; isObserving = true;
-		ub.SetObservingBuilding(observingWorkbuilding);
-
-		showingWorkersCount = wb.workersCount;
-		showingWorkersMaxCount = wb.maxWorkers;
+        if (!wb.IsWorksite())
+        {
+            UIBuildingObserver ub = Building.buildingObserver;
+            if (ub == null) ub = UIBuildingObserver.InitializeBuildingObserverScript();
+            else ub.gameObject.SetActive(true);            
+            ub.SetObservingBuilding(wb as WorkBuilding);
+        }
+        observingPlace = wb; isObserving = true;
+        showingWorkersCount = wb.GetWorkersCount();
+		showingWorkersMaxCount = wb.GetMaxWorkersCount();
 
         ignoreWorkersSlider = true;// иначе будет вызывать ивент
         slider.minValue = 0; 
@@ -47,328 +47,162 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         ignoreWorkersSlider = false;
 
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-        workSpeedField.text = observingWorkbuilding.UI_GetProductionSpeedInfo();
+        workSpeedField.text = observingPlace.UI_GetProductionSpeedInfo();
 
-		workspeedStringEnabled = observingWorkbuilding.ShowWorkspeed();
+		workspeedStringEnabled = observingPlace.ShowWorkspeed();
         workSpeedField.enabled = workspeedStringEnabled;
-        actionLabel.enabled = false;        
-        stopButton.SetActive(false);
-	}
-
-    public void SetObservingWorksite(Worksite ws)
-    {
-        workbuildingMode = false;
-        if (ws == null)
+        if (observingPlace.IsWorksite())
         {
-            SelfShutOff();
-            return;
+            actionLabel.enabled = true;
+            actionLabel.text = (observingPlace as Worksite).actionLabel;
+            stopButton.SetActive(true);           
         }
-        observingWorksite = ws; isObserving = true;
-
-        showingWorkersCount = ws.workersCount;
-        showingWorkersMaxCount = ws.maxWorkersCount;
-
-        ignoreWorkersSlider = true;// иначе будет вызывать ивент
-        slider.value = showingWorkersCount; 
-        slider.minValue = 0;
-        slider.maxValue = showingWorkersMaxCount;
-        ignoreWorkersSlider = false;
-
-        workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-        workSpeedField.text = ws.UI_GetProductionSpeedInfo();
-        workSpeedField.enabled = true;
-        actionLabel.enabled = true;
-        actionLabel.text = ws.actionLabel;        
-        stopButton.SetActive(true);
+        else
+        {
+            actionLabel.enabled = false;
+            stopButton.SetActive(false);
+        }
         StatusUpdate();
     }
 
 	override public void StatusUpdate() {
 		if ( !isObserving ) return;
-        if (workbuildingMode)
-        { // WORKBUILDING
-            if (observingWorkbuilding == null)
-            {
-                SelfShutOff();                
-            }
-            else
-            {
-                if (showingWorkersCount != observingWorkbuilding.workersCount)
-                {
-                    showingWorkersCount = observingWorkbuilding.workersCount;
-                    workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-                    ignoreWorkersSlider = true;
-                    slider.value = showingWorkersCount;
-                    ignoreWorkersSlider = false;
-                }
-                if (showingWorkersMaxCount != observingWorkbuilding.maxWorkers)
-                {
-                    showingWorkersMaxCount = observingWorkbuilding.maxWorkers;
-                    ignoreWorkersSlider = true;
-                    slider.maxValue = showingWorkersMaxCount;
-                    ignoreWorkersSlider = false;
-                }
-                if (workspeedStringEnabled)
-                {
-                    workSpeedField.text = observingWorkbuilding.UI_GetProductionSpeedInfo();
-                    if (!workSpeedField.enabled) workSpeedField.enabled = true;
-                }
-            }
+        if (observingPlace == null)
+        {
+            SelfShutOff();
         }
         else
-        {// WORKSITE
-            if (observingWorksite == null)
+        {
+            int wcount = observingPlace.GetWorkersCount();
+            if (showingWorkersCount != wcount)
             {
-                SelfShutOff();                
+                showingWorkersCount = wcount;
+                workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
+                ignoreWorkersSlider = true;
+                slider.value = showingWorkersCount;
+                ignoreWorkersSlider = false;
             }
-            else
+            wcount = observingPlace.GetMaxWorkersCount();
+            if (showingWorkersMaxCount != wcount)
             {
-                if (showingWorkersCount != observingWorksite.workersCount)
-                {
-                    showingWorkersCount = observingWorksite.workersCount;
-                    workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-                    ignoreWorkersSlider = true;
-                    slider.value = showingWorkersCount;
-                    ignoreWorkersSlider = false;
-                }
-                int maxWorkers = observingWorksite.maxWorkersCount;
-                if (showingWorkersMaxCount != maxWorkers)
-                {
-                    showingWorkersMaxCount = maxWorkers;
-                    ignoreWorkersSlider = true;
-                    slider.maxValue = showingWorkersMaxCount;
-                    ignoreWorkersSlider = false;
-                }
-                if (workspeedStringEnabled )
-                {
-                        workSpeedField.text = observingWorksite.UI_GetProductionSpeedInfo();
-                        if (!workSpeedField.enabled) workSpeedField.enabled = true;
-                }
-                actionLabel.text = observingWorksite.actionLabel;
+                showingWorkersMaxCount = wcount;
+                ignoreWorkersSlider = true;
+                slider.maxValue = showingWorkersMaxCount;
+                ignoreWorkersSlider = false;
+            }
+            if (workspeedStringEnabled)
+            {
+                workSpeedField.text = observingPlace.UI_GetProductionSpeedInfo();
+                if (!workSpeedField.enabled) workSpeedField.enabled = true;
+            }
+            if (observingPlace.IsWorksite())
+            {
+                actionLabel.text = (observingPlace as Worksite).actionLabel;
             }
         }
-	}
+    }
 
     override public void SelfShutOff()
     {
         isObserving = false;
-        if (workbuildingMode)
-        {
-            Building.buildingObserver.SelfShutOff();
-            if (mycanvas.progressPanelMode != ProgressPanelMode.Offline) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
-        }
+        Building.buildingObserver?.SelfShutOff();
         gameObject.SetActive(false);
     }
 
     override public void ShutOff()
     {
         isObserving = false;
-        if (observingWorksite != null)
+        if (observingPlace != null)
         {
-            observingWorksite.showOnGUI = false;
-            observingWorkbuilding = null;
+            observingPlace.DisabledOnGUI();
+            observingPlace = null;
         }
-        if (workbuildingMode)
-        {
-            Building.buildingObserver.ShutOff();
-            observingWorkbuilding = null;
-            if (mycanvas.progressPanelMode != ProgressPanelMode.Offline) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
-        }
-        else observingWorksite = null;
+        Building.buildingObserver?.ShutOff();
         gameObject.SetActive(false);
     }
 
     public void PlusButton() {
-        if (workbuildingMode)
-        {   // WORKBUILDING
-            if (observingWorkbuilding == null)
-            {
-                SelfShutOff(); return;
-            }
-            else
-            {
-                if (observingWorkbuilding.workersCount < observingWorkbuilding.maxWorkers)
-                {
-                    GameMaster.realMaster.colonyController.SendWorkers(1, observingWorkbuilding);
-                }
-                StatusUpdate();
-            }
+        if (observingPlace == null)
+        {
+            SelfShutOff(); return;
         }
         else
-        {   //WORKSITE
-            if (observingWorksite == null)
+        {
+            if (!observingPlace.MaximumWorkersReached())
             {
-                SelfShutOff(); return;
+                GameMaster.realMaster.colonyController.SendWorkers(1, observingPlace);
             }
-            else
-            {
-                if (observingWorksite.workersCount < observingWorksite.maxWorkersCount)
-                {
-                    GameMaster.realMaster.colonyController.SendWorkers(1, observingWorksite);
-                }
-                StatusUpdate();
-            }
+            StatusUpdate();
         }
-	}
+    }
 	public void PlusAllButton() {
-        if (workbuildingMode)
-        { // WORKBUILDING
-            if (observingWorkbuilding == null)
+            if (observingPlace == null)
             {
                 SelfShutOff(); return;
             }
             else
             {
-                int wcount = observingWorkbuilding.workersCount, max = observingWorkbuilding.maxWorkers;
-                if (wcount == max) return;
+                if (observingPlace.MaximumWorkersReached()) return;
                 else
                 {
-                    if (wcount + 10 < max)
-                    {
-                        GameMaster.realMaster.colonyController.SendWorkers(10, observingWorkbuilding);
-                    }
-                    else
-                    {
-                        GameMaster.realMaster.colonyController.SendWorkers(max - wcount, observingWorkbuilding);
-                    }
+                    GameMaster.realMaster.colonyController.SendWorkers(10, observingPlace);
                     StatusUpdate();
                 }
             }
-        }
-        else
-        { //WORKSITE
-            if (observingWorksite == null)
-            {
-                SelfShutOff(); return;
-            }
-            else
-            {
-                int wcount = observingWorksite.workersCount;
-                int max = observingWorksite.maxWorkersCount;
-                if (wcount == max) return;
-                else
-                {
-                    if (wcount + 10 < max)
-                    {
-                        GameMaster.realMaster.colonyController.SendWorkers(10, observingWorksite);
-                    }
-                    else GameMaster.realMaster.colonyController.SendWorkers(max - wcount, observingWorksite);
-                    StatusUpdate();
-                }
-            }
-        }
 	}
 	public void MinusButton() {
-        if (workbuildingMode)
-        { // WORKBUILDING
-            if (observingWorkbuilding == null)
-            {
-                SelfShutOff(); return;
-            }
-            else
-            {                
-                if (observingWorkbuilding.workersCount > 0)
-                {
-                    observingWorkbuilding.FreeWorkers(1);
-                }
-                StatusUpdate();
-            }
+        if (observingPlace == null)
+        {
+            SelfShutOff(); return;
         }
         else
-        {// WORKSITE
-            if (observingWorksite == null)
+        {
+            if (observingPlace.GetWorkersCount() != 0)
             {
-                SelfShutOff(); return;
-            }
-            else
-            {
-                if (observingWorksite.workersCount > 0)
-                {
-                    observingWorksite.FreeWorkers(1);
-                }
+                observingPlace.FreeWorkers(1);
                 StatusUpdate();
             }
         }
-	}
+    }
 	public void MinusAllButton() {
-        if (workbuildingMode)
-        { //WORKBUILDING
-            if (observingWorkbuilding == null)
+        if (observingPlace == null)
+        {
+            SelfShutOff(); return;
+        }
+        else
+        {
+            if (observingPlace.GetWorkersCount() != 0)
             {
-                SelfShutOff(); return;
-            }
-            else
-            {                
-                int wcount = observingWorkbuilding.workersCount;
-                if (wcount == 0) return;
-                if (wcount > 10) observingWorkbuilding.FreeWorkers(10);
-                else observingWorkbuilding.FreeWorkers();
+                observingPlace.FreeWorkers(10);
                 StatusUpdate();
             }
         }
-        else
-        { //WORKSITE
-            if (observingWorksite == null)
-            {
-                SelfShutOff(); return;
-            }
-            else
-            {
-                int wcount = observingWorksite.workersCount;
-                if (wcount == 0) return;
-                else
-                {
-                    if (wcount > 10) observingWorksite.FreeWorkers(10);
-                    else observingWorkbuilding.FreeWorkers();
-                    StatusUpdate();
-                }
-            }
-        }
-	}
+    }
     public void StopButton()
     {
-        if (observingWorksite != null)
+        if (observingPlace != null && observingPlace.IsWorksite())
         {
-            observingWorksite.StopWork(true);
-            observingWorksite = null;
+            var ow = observingPlace as Worksite;
+            ow.StopWork(true);
+            observingPlace = null;
             SelfShutOff();            
         }
     }
     public void Slider_SetWorkersCount() {
-        if (ignoreWorkersSlider) return;
+        if (ignoreWorkersSlider) return;        
+        int wcount = observingPlace.GetWorkersCount(), mwcount = observingPlace.GetMaxWorkersCount();
         int x = (int)slider.value;
-        if (workbuildingMode)
-        {
-            if (observingWorkbuilding.workersCount == x) return;
-            else
-            {
-                if (x > observingWorkbuilding.maxWorkers) x = observingWorkbuilding.maxWorkers;
-                else
-                {
-                    if (x < 0) x = 0;
-                }
-                if (x > observingWorkbuilding.workersCount) GameMaster.realMaster.colonyController.SendWorkers(x - observingWorkbuilding.workersCount, observingWorkbuilding);
-                else observingWorkbuilding.FreeWorkers(observingWorkbuilding.workersCount - x);
-                showingWorkersCount = observingWorkbuilding.workersCount;
-                workersCountField.text = showingWorkersCount.ToString();
-            }
-        }
+        if (wcount == x) return;
         else
         {
-            if (observingWorksite.workersCount == x) return;
+            if (x > mwcount) x = mwcount;
             else
             {
-                int maxWorkers = observingWorksite.maxWorkersCount;
-                if (x > maxWorkers) x = maxWorkers;
-                else
-                {
-                    if (x < 0) x = 0;
-                }
-                if (x > observingWorksite.workersCount) GameMaster.realMaster.colonyController.SendWorkers(x - observingWorksite.workersCount, observingWorksite);
-                else observingWorksite.FreeWorkers(observingWorksite.workersCount - x);
-                showingWorkersCount = observingWorksite.workersCount;
-                workersCountField.text = showingWorkersCount.ToString();
+                if (x < 0) x = 0;
             }
+            if (x > wcount) GameMaster.realMaster.colonyController.SendWorkers(x - wcount, observingPlace);
+            else observingPlace.FreeWorkers(wcount - x);
+            StatusUpdate();
         }
     }
     public void SetActionLabel(string s)

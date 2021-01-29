@@ -129,10 +129,14 @@ public class Powerplant : WorkBuilding
     {
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
-        workbuildingObserver.SetObservingWorkBuilding(this);
+        workbuildingObserver.SetObservingPlace(this);
         colony.observer.ActivateProgressPanel(ProgressPanelMode.Powerplant);
         showOnGUI = true;
         return workbuildingObserver;
+    }
+    public override void DisabledOnGUI()
+    {
+        UIObserver.mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

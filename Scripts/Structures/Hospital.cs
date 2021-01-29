@@ -50,7 +50,7 @@ public class Hospital : WorkBuilding {
     {
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
-        workbuildingObserver.SetObservingWorkBuilding(this);
+        workbuildingObserver.SetObservingPlace(this);
         colony.observer?.ActivateHospitalPanel();
         showOnGUI = true;
         return workbuildingObserver;

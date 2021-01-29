@@ -35,7 +35,7 @@ public sealed class UIRecruitingCenterObserver : UIObserver
         if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else uwb.gameObject.SetActive(true);
         observingRCenter = rc; isObserving = true;
-        uwb.SetObservingWorkBuilding(rc);        
+        uwb.SetObservingPlace(rc);        
         PrepareWindow();
     }
 

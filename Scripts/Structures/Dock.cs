@@ -497,7 +497,7 @@ public sealed class Dock : WorkBuilding {
         }
         return dockObserver;
     }
-    public override void DisableGUI()
+    public override void DisabledOnGUI()
     {
         if (showOnGUI)
         {

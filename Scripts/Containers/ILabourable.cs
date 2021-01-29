@@ -4,6 +4,7 @@ using UnityEngine;
 
 public interface ILabourable 
 {
+    bool IsWorksite();
     float GetLabourCoefficient();
     void LabourUpdate();
     /// <summary>
@@ -12,7 +13,11 @@ public interface ILabourable
     int AddWorkers(int x);
     void FreeWorkers(int x);
     void FreeWorkers();
+    int GetWorkersCount();
+    int GetMaxWorkersCount();
+    bool MaximumWorkersReached();
     bool ShowWorkspeed();
     string UI_GetProductionSpeedInfo();
+    void DisabledOnGUI();
 }
 

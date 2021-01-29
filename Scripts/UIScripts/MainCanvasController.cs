@@ -209,7 +209,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                                 }
                                 else
                                 {
-                                    Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                                    Powerplant pp = uwb.observingPlace as Powerplant;
                                     RawImage ri = progressPanel.transform.GetChild(0).GetComponent<RawImage>();
                                     ri.texture = resourcesIcons;
                                     ri.uvRect = ResourceType.GetResourceIconRect(pp.GetFuelResourceID());
@@ -1165,7 +1165,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                     }
                     else
                     {
-                        Powerplant pp = uwb.observingWorkbuilding as Powerplant;
+                        Powerplant pp = uwb.observingPlace as Powerplant;
                         progressPanelIcon.texture = resourcesIcons;
                         int resourceID = pp.GetFuelResourceID();
                         progressPanelIcon.uvRect = ResourceType.GetResourceIconRect(resourceID);

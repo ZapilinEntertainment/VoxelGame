@@ -316,6 +316,7 @@ public abstract class WorkBuilding : Building, ILabourable
 
 
     #region ILabourable
+    public bool IsWorksite() { return false; }
     virtual public float GetLabourCoefficient()
     {
         return colony.workers_coefficient * factoryCoefficient * workersCount /  (workComplexityCoefficient * maxWorkers);
@@ -354,6 +355,9 @@ public abstract class WorkBuilding : Building, ILabourable
         workersCount -= x;
         colony.AddWorkers(x);
     }
+    public int GetWorkersCount() { return workersCount; }
+    public int GetMaxWorkersCount() { return maxWorkers; }
+    public bool MaximumWorkersReached() { return workersCount == maxWorkers; }
     virtual public bool ShowWorkspeed() { return false; }
     virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
     #endregion
@@ -375,7 +379,7 @@ public abstract class WorkBuilding : Building, ILabourable
     {
         if (workbuildingObserver == null) workbuildingObserver = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else workbuildingObserver.gameObject.SetActive(true);
-        workbuildingObserver.SetObservingWorkBuilding(this);
+        workbuildingObserver.SetObservingPlace(this);
         showOnGUI = true;
         return workbuildingObserver;
     }

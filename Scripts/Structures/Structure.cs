@@ -1266,7 +1266,7 @@ public class Structure : MonoBehaviour
         structureObserver.SetObservingStructure(this);
         return structureObserver;
     }
-    virtual public void DisableGUI()
+    virtual public void DisabledOnGUI()
     {
         showOnGUI = false;
     }    

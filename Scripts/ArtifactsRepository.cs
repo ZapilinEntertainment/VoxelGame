@@ -12,7 +12,7 @@ public class ArtifactsRepository : Building
         // open artifacts window
         return buildingObserver;
     }
-    override public void DisableGUI()
+    override public void DisabledOnGUI()
     {
         showOnGUI = false;
         //disable artifacts window

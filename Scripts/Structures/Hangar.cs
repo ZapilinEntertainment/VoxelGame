@@ -428,7 +428,7 @@ public sealed class Hangar : WorkBuilding
         }
         return hangarObserver;
     }
-    public override void DisableGUI()
+    public override void DisabledOnGUI()
     {
         if (showOnGUI)
         {

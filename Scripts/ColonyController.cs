@@ -396,13 +396,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         freeWorkers += x;
     }
-    public void SendWorkers(int x, WorkBuilding w)
-    {
-        if (freeWorkers == 0 | w == null) return;
-        if (x > freeWorkers) x = freeWorkers;
-        freeWorkers = freeWorkers - x + w.AddWorkers(x);
-    }
-    public void SendWorkers(int x, Worksite w)
+    public void SendWorkers(int x, ILabourable w)
     {
         if (freeWorkers == 0 | w == null) return;
         if (x > freeWorkers) x = freeWorkers;

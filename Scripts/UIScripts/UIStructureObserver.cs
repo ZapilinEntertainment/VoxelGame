@@ -22,7 +22,7 @@ public class UIStructureObserver : UIObserver {
 	public void SetObservingStructure(Structure s) {
 		if (s == null) {SelfShutOff();return;}
 		else {
-            if (observingStructure != null) observingStructure.DisableGUI();
+            if (observingStructure != null) observingStructure.DisabledOnGUI();
 			observingStructure = s; isObserving = true;
             CheckName();
 			demolishButton.gameObject.SetActive(!s.indestructible);
@@ -105,7 +105,7 @@ public class UIStructureObserver : UIObserver {
     }
 
     override public void SelfShutOff() { // публичный, потому что на кнопках
-        if (observingStructure != null) observingStructure.DisableGUI();
+        if (observingStructure != null) observingStructure.DisabledOnGUI();
         isObserving = false;
 		mycanvas.SelectedObjectLost();
 		gameObject.SetActive(false);
@@ -114,7 +114,7 @@ public class UIStructureObserver : UIObserver {
 	override public void ShutOff() {
         if (observingStructure != null)
         {
-            observingStructure.DisableGUI();
+            observingStructure.DisabledOnGUI();
             observingStructure = null;
         }
 		isObserving = false;

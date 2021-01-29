@@ -455,7 +455,7 @@ public sealed class Hotel : Building, IPlanable
         UIObserver.mycanvas.EnableTextfield(ID);
         return bo;
     }
-    override public void DisableGUI()
+    override public void DisabledOnGUI()
     {
         showOnGUI = false;
         UIObserver.mycanvas.DisableTextfield(ID);

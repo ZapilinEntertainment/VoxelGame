@@ -36,7 +36,7 @@ public sealed class UIFactoryObserver : UIObserver
         else uwb.gameObject.SetActive(true);
         observingFactory = f; isObserving = true;
         advancedFactoryMode = f is AdvancedFactory;
-        uwb.SetObservingWorkBuilding(observingFactory);
+        uwb.SetObservingPlace(observingFactory);
 
         Recipe[] recipes = observingFactory.GetFactoryRecipes();
         recipesDropdown.enabled = true;       

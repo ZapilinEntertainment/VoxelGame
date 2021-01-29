@@ -84,7 +84,7 @@ public sealed class XStation : WorkBuilding {
         colony.observer.EnableTextfield(ID);
         return wo;
     }
-    override public void DisableGUI()
+    override public void DisabledOnGUI()
     {
         showOnGUI = false;
         if (markerEnabled)

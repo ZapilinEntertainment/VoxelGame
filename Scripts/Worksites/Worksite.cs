@@ -13,7 +13,7 @@ public abstract class Worksite : ILabourable
     public int maxWorkersCount { get; protected set; }
     public WorksiteSign sign;
     public string actionLabel { get; protected set; }
-    public bool showOnGUI = false;
+    protected bool showOnGUI = false;
     public bool destroyed { get; protected set; }
     public float gui_ypos = 0;
     public const string WORKSITE_SIGN_COLLIDER_TAG = "WorksiteSign";
@@ -49,6 +49,7 @@ public abstract class Worksite : ILabourable
     }
 
     #region ILabourable
+    public bool IsWorksite() { return true; }
     virtual public float GetLabourCoefficient()
     {
         return colony.workers_coefficient * workersCount / (workComplexityCoefficient * maxWorkersCount);
@@ -90,8 +91,15 @@ public abstract class Worksite : ILabourable
         workersCount -= x;
         colony.AddWorkers(x);
     }
+    public int GetWorkersCount() { return workersCount; }
+    public int GetMaxWorkersCount() { return maxWorkersCount; }
+    public bool MaximumWorkersReached() { return workersCount == maxWorkersCount; }
     virtual public bool ShowWorkspeed() { return false; }
     virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
+    virtual public void DisabledOnGUI()
+    {
+        showOnGUI = false;
+    }
     #endregion
 
     protected void INLINE_WorkCalculation()
@@ -124,10 +132,11 @@ public abstract class Worksite : ILabourable
     {
         if (observer == null) observer = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else observer.gameObject.SetActive(true);
-        observer.SetObservingWorksite(this);
+        observer.SetObservingPlace(this);
         showOnGUI = true;
         return observer;
     }
+   
     virtual public void StopWork(bool removeFromListRequest)
     {
         if (destroyed) return;
@@ -145,7 +154,7 @@ public abstract class Worksite : ILabourable
         }
         if (showOnGUI)
         {
-            if (observer.observingWorksite == this)
+            if (observer.observingPlace == this)
             {
                 observer.SelfShutOff();
                 UIController.GetCurrent().GetMainCanvasController().ChangeChosenObject(ChosenObjectType.Plane);

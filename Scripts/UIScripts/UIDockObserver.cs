@@ -40,7 +40,7 @@ public sealed class UIDockObserver : UIObserver
             UIWorkbuildingObserver uwb = WorkBuilding.workbuildingObserver;
             if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
             else uwb.gameObject.SetActive(true);
-            uwb.SetObservingWorkBuilding(observingDock);
+            uwb.SetObservingPlace(observingDock);
             if (tradingListPanel.activeSelf) PrepareTradingPanel();
             else PrepareImmigrationPanel();
             if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();

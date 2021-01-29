@@ -37,7 +37,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
         if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else uwb.gameObject.SetActive(true);
         observingHangar = h; isObserving = true;
-        uwb.SetObservingWorkBuilding(h);
+        uwb.SetObservingPlace(h);
         PrepareHangarWindow();
     }
 
