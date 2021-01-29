@@ -351,16 +351,7 @@ public sealed class Hangar : WorkBuilding
     {
         if (isActive & isEnergySupplied)
         {
-            if (status == HangarStatus.ConstructingShuttle)
-            {
-                float work = GetLabourCoefficient();
-                workflow += work;
-                colony.gears_coefficient -= gearsDamage * work;
-                if (workflow >= 1f)
-                {
-                    LabourResult((int)workflow);
-                }
-            }
+            if (status == HangarStatus.ConstructingShuttle) INLINE_WorkCalculation();
         }
     }
     override protected void LabourResult(int iterations)

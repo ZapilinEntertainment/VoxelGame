@@ -80,7 +80,7 @@ public class BlockBuildingSite : Worksite
         while (iterations > 0)
         {
             iterations--;
-            if (pe.fullfillStatus != FullfillStatus.Empty)
+            if (pe.fulfillStatus != FullfillStatus.Empty)
             { // на поверхности есть какие-то структуры
                 byte maxVolume = ScalableHarvestableResource.MAX_STICK_VOLUME;
                 int i = 0;

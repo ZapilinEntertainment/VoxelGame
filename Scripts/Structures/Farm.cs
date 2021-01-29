@@ -6,8 +6,9 @@ using UnityEngine;
 public class Farm : WorkBuilding
 {
     private int lastPlantIndex;
+    private float _cropComplexity, _plantLPCost = 0f, _updateLPCost = 1f;
+    private int _cropPlantCost = 1, _cropUpdateCost = 1, _cropHarvestCost = 1; // MUST NOT BE ZERO!
     public PlantType cropType;
-    private const float ACTION_LIFEPOWER_COST = 1f;
 
     override public void Prepare()
     {
@@ -20,7 +21,12 @@ public class Farm : WorkBuilding
             case COVERED_FARM:
             case FARM_BLOCK_ID:
                 cropType = PlantType.Corn;
-                workComplexityCoefficient = Corn.COMPLEXITY;
+                _cropComplexity = Corn.COMPLEXITY;
+                _cropPlantCost = 1;
+                _cropUpdateCost = 1;
+                _cropHarvestCost = 1;
+                _plantLPCost = 1f;
+                _updateLPCost = 1f;
                 break;
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
@@ -28,9 +34,18 @@ public class Farm : WorkBuilding
             case COVERED_LUMBERMILL:
             case LUMBERMILL_BLOCK_ID:
                 cropType = PlantType.OakTree;
-                workComplexityCoefficient = OakTree.COMPLEXITY;
+                _cropComplexity = OakTree.COMPLEXITY;
+                _cropPlantCost = 1;
+                _cropUpdateCost = 3;
+                _cropHarvestCost = 10;
+                _plantLPCost = 1f;
+                _updateLPCost = 5f;
                 break;
         }  
+    }
+    override public float GetLabourCoefficient()
+    {
+        return base.GetLabourCoefficient() * _cropComplexity;
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
@@ -51,88 +66,94 @@ public class Farm : WorkBuilding
     {
         if (iterations < 1) return;
         workflow -= iterations;
-        int i = 0;
-        float totalCost = 0;
+        //
+        var field = basement.FORCED_GetExtension();               
         Plant p;
+        float totalCost = 0f;
 
-        if (basement.fulfillStatus != FullfillStatus.Full)
-        {
-            if (iterations == 1)
+        if (field.fulfillStatus != FullfillStatus.Full)
+        { // setting saplings    
+            List<PixelPosByte> freePositions = field.GetRandomCells(iterations / _cropPlantCost);
+            int positionsCount = freePositions.Count, index;
+            while (iterations > _cropPlantCost && positionsCount > 0)
             {
                 p = Plant.GetNewPlant(cropType);
-                p.SetBasement(basement, basement.FORCED_GetExtension().GetRandomCell());
-                totalCost += ACTION_LIFEPOWER_COST;
-            }
-            else
-            {
-                List<PixelPosByte> pos = basement.FORCED_GetExtension().GetAcceptableCellPositions(iterations);
-                i = 0;
-                while (i < pos.Count)
-                {
-                    p = Plant.GetNewPlant(cropType);
-                    p.SetBasement(basement, pos[i]);
-                    totalCost += ACTION_LIFEPOWER_COST;
-                    i++;
-                }
+                index = Random.Range(0, positionsCount);
+                p.SetBasement(basement, freePositions[index]);
+                freePositions.RemoveAt(index);
+                positionsCount--;
+                iterations -= _cropPlantCost;
+                totalCost += _plantLPCost;
             }
         }
-        else
+        if (field.fulfillStatus == FullfillStatus.Full && iterations > 1)
         {
-            var allplants = basement.GetPlants();
-            int count = allplants.Length;
-            if (lastPlantIndex >= count) lastPlantIndex = 0;
-
-            if (count > 0) {
-                if (iterations == 1)
+            var plants = field.GetPlants();
+            if (plants != null && plants.Length != 0) {
+                int i = (int)(256f * GameMaster.gameSpeed);
+                while (iterations > 0 && i > 0)
                 {
-                    p = allplants[lastPlantIndex];
-                    if (p.type == cropType)
+                    i--;
+                    if (lastPlantIndex >= plants.Length) lastPlantIndex = 0;
+                    p = plants[lastPlantIndex];
+                    if (p == null)
                     {
-                        if (!p.IsFullGrown())
-                        {
-                            p.UpdatePlant();
-                            totalCost += ACTION_LIFEPOWER_COST * workComplexityCoefficient;
-
-                            if (lastPlantIndex >= count) lastPlantIndex = 0;
-                        }
-                        else
-                        {
-                            p.Harvest(true);
-                        }
+                        lastPlantIndex++;
+                        continue;
                     }
                     else
                     {
-                        p.Harvest(false);
-                    }
-                    lastPlantIndex++;
-                }
-                else
-                {
-                    while (iterations > 0)
-                    {
-                        p = allplants[lastPlantIndex];
                         if (p.type == cropType)
                         {
-                            if (!p.IsFullGrown())
+                            if (p.IsFullGrown())
                             {
-                                p.UpdatePlant();
-                                totalCost += ACTION_LIFEPOWER_COST * p.GetPlantComplexity();
+                                // HARVEST CROP
+                                if (iterations >= _cropHarvestCost)
+                                {
+                                    p.Harvest(true);
+                                    iterations -= _cropHarvestCost;
+                                    lastPlantIndex++;                                    
+                                }
+                                else break;
                             }
-                            else p.Harvest(true);
+                            else
+                            {
+                                // CROP UPDATE
+                                if (iterations >= _cropUpdateCost)
+                                {
+                                    p.UpdatePlant();
+                                    iterations -= _cropUpdateCost;
+                                    lastPlantIndex++;
+                                    totalCost += _updateLPCost;
+                                }
+                                else break;
+                            }
                         }
-                        else p.Harvest(false);
-                        iterations--;
-                        lastPlantIndex++;
-                        if (lastPlantIndex >= count) lastPlantIndex = 0;
+                        else
+                        {
+                            // HARVEST NON-CROP PLANT
+                            int cost = (int)(p.GetPlantComplexity() * p.stage);
+                            if (iterations >= cost)
+                            {
+                                p.Harvest(false);
+                                iterations -= cost;
+                            }
+                            else break;
+                        }
                     }
                 }
+                if (i == 0) Debug.Log("Farm - Attention, too much tries per tick");
             }
-            if (totalCost > 0)
-            {
-                var gl = basement.GetGrassland();
-                if (gl == null) basement.TryCreateGrassland(out gl);
-                gl.TakeLifepower(totalCost);
-            }
+        }
+        workflow += iterations;
+        
+        //
+        
+        if (totalCost > 0)
+        {
+            var gl = basement.GetGrassland();
+            if (gl == null) basement.TryCreateGrassland(out gl);
+            gl.TakeLifepower(totalCost);
         }
     }
 

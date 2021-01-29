@@ -6,7 +6,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     public static List<RecruitingCenter> recruitingCentersList;
     private static float hireCost = -1;       
 
-    private float backupSpeed = 0.02f;
+    private const float backupSpeed = 0.02f;
     public bool finding = false;
     const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
     public const int REPLENISH_COST = 50;	
@@ -156,7 +156,6 @@ public sealed class RecruitingCenter : WorkBuilding {
     override public List<byte> Save()
     {
         var data = base.Save();
-        data.AddRange(System.BitConverter.GetBytes(backupSpeed));
         data.Add(finding ? (byte)1 : (byte)0);
         return data;
     }
@@ -164,10 +163,7 @@ public sealed class RecruitingCenter : WorkBuilding {
     override public void Load(System.IO.FileStream fs, Plane sblock)
     {
         base.Load(fs, sblock);
-        var data = new byte[5];
-        fs.Read(data, 0, data.Length);
-        backupSpeed = System.BitConverter.ToSingle(data, 0);
-        finding = data[4] == 1;
+        finding = fs.ReadByte() == 1;
     }   
     #endregion
 }

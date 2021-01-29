@@ -17,11 +17,11 @@ public class Plane
         {
             if (mainStructure != null)  {
                 if (mainStructure.surfaceRect == SurfaceRect.full) return FullfillStatus.Full;
-                else return FullfillStatus.Unknown;
+                else return extension?.fulfillStatus ?? FullfillStatus.Unknown;
             }
             else
             {
-                if (extension != null) return extension.fullfillStatus;
+                if (extension != null) return extension.fulfillStatus;
                 else return FullfillStatus.Empty;
             }
         }
@@ -404,7 +404,7 @@ public class Plane
         else
         {
             if (extension == null) return false;
-            else return (extension.fullfillStatus != FullfillStatus.Empty);
+            else return (extension.fulfillStatus != FullfillStatus.Empty);
         }
     }
     public bool IsAnyBuildingInArea(SurfaceRect sa)

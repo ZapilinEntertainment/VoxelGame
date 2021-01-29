@@ -179,7 +179,6 @@ public abstract class WorkBuilding : Building, ILabourable
                 break;
             case ORE_ENRICHER_2_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 80;
                     gearsDamage *= 2f;
                 }
@@ -193,56 +192,48 @@ public abstract class WorkBuilding : Building, ILabourable
                 break;
             case FUEL_FACILITY_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 100;
                     gearsDamage *= 0.68f;
                 }
                 break;
             case GRPH_REACTOR_4_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 80;
                     gearsDamage *= 0.03f;
                 }
                 break;
             case REACTOR_BLOCK_5_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 120;
                     gearsDamage *= 0.04f;
                 }
                 break;
             case PLASTICS_FACTORY_3_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 150;
                     gearsDamage *= 0.8f;
                 }
                 break;
             case SUPPLIES_FACTORY_4_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 140;
                     gearsDamage *= 0.7f;
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 250;
                     gearsDamage *= 0.7f;
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 60;
                     gearsDamage *= 1.4f;
                 }
                 break;
             case XSTATION_3_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 40;
                     gearsDamage *= 0.01f;
                 }
@@ -262,7 +253,6 @@ public abstract class WorkBuilding : Building, ILabourable
                 break;
             case EXPEDITION_CORPUS_4_ID:
                 {
-                    workComplexityCoefficient = 1;
                     maxWorkers = 60;
                     gearsDamage *= 0.01f;
                 }
@@ -359,7 +349,9 @@ public abstract class WorkBuilding : Building, ILabourable
     public int GetMaxWorkersCount() { return maxWorkers; }
     public bool MaximumWorkersReached() { return workersCount == maxWorkers; }
     virtual public bool ShowWorkspeed() { return false; }
-    virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
+    virtual public string UI_GetProductionSpeedInfo() {
+        return ((int)(GetLabourCoefficient() * 100f)).ToString() + '%';
+    }
     #endregion
 
     virtual protected void LabourResult(int iterations)

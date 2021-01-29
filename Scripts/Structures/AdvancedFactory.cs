@@ -28,7 +28,7 @@ public sealed class AdvancedFactory : Factory
     override public void LabourUpdate()
     {
         if (recipe == AdvancedRecipe.NoRecipe) return;
-        INLINE_LabourUpdate();
+        INLINE_FactoryLabourUpdate();
     }
     override protected void LabourResult(int iterations)
     {

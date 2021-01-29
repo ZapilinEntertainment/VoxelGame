@@ -158,7 +158,7 @@ public sealed class Grassland
         if (!canBeBoosted) return;
         if (needRecalculation) Recalculation();
         lifepower += lifepowerSurplus;
-        if (lifepower <= BOOST_VALUE | isCultivating) return;
+        if (lifepower <= BOOST_VALUE ) return;
         else
         {
             //#update inners

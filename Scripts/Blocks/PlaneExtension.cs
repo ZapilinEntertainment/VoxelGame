@@ -6,7 +6,7 @@ public sealed class PlaneExtension
     public Grassland grassland { get; private set; }
     private readonly Plane myPlane;
     private List<Structure> structures;
-    public FullfillStatus fullfillStatus
+    public FullfillStatus fulfillStatus
     {
         get; private set;
     }
@@ -122,7 +122,7 @@ public sealed class PlaneExtension
         artificialStructuresCount = 0;
         myPlane = i_myPlane;
         if (i_mainStructure != null) AddStructure(i_mainStructure);
-        else fullfillStatus = FullfillStatus.Empty;
+        else fulfillStatus = FullfillStatus.Empty;
     }
     private void ResetMap()
     {
@@ -134,7 +134,7 @@ public sealed class PlaneExtension
     {
         ResetMap();
         artificialStructuresCount = 0;
-        fullfillStatus = FullfillStatus.Empty;
+        fulfillStatus = FullfillStatus.Empty;
 
         if (structures != null)
         {
@@ -166,7 +166,7 @@ public sealed class PlaneExtension
                 else
                 {
                     map.SetAll(true);
-                    fullfillStatus = FullfillStatus.Full;
+                    fulfillStatus = FullfillStatus.Full;
                     return;
                 }
                 a++;
@@ -182,11 +182,11 @@ public sealed class PlaneExtension
                 {
                     if (b == false)
                     {
-                        fullfillStatus = FullfillStatus.Unknown;
+                        fulfillStatus = FullfillStatus.Unknown;
                         return;
                     }
                 }
-                fullfillStatus = FullfillStatus.Full;
+                fulfillStatus = FullfillStatus.Full;
             }
         }
     }
@@ -241,7 +241,7 @@ public sealed class PlaneExtension
         // eo red axis
 
         RecalculateSurface(); // обновит данные и избавит от проверки на null
-        if (fullfillStatus != FullfillStatus.Empty)
+        if (fulfillStatus != FullfillStatus.Empty)
         {
             foreach (Structure s in structures)
             {
@@ -298,7 +298,7 @@ public sealed class PlaneExtension
             AddCellStructure(s);
             return;
         }
-        if (fullfillStatus != FullfillStatus.Empty)
+        if (fulfillStatus != FullfillStatus.Empty)
         {
             SurfaceRect sr = s.surfaceRect;
             int i = 0;
@@ -479,10 +479,10 @@ public sealed class PlaneExtension
 
     public void EnvironmentalStrike(Vector3 hitpoint, byte radius, float damage)
     {
-        if (fullfillStatus == FullfillStatus.Empty) return;
+        if (fulfillStatus == FullfillStatus.Empty) return;
         else
         {
-            if (fullfillStatus == FullfillStatus.Full & structures.Count == 1)
+            if (fulfillStatus == FullfillStatus.Full & structures.Count == 1)
             {
                 structures[0].ApplyDamage(damage);
                 return;
@@ -533,10 +533,10 @@ public sealed class PlaneExtension
 
     public PixelPosByte GetRandomCell()
     {
-        if (fullfillStatus == FullfillStatus.Full) return PixelPosByte.Empty;
+        if (fulfillStatus == FullfillStatus.Full) return PixelPosByte.Empty;
         else
         {
-            if (fullfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+            if (fulfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
             else
             {
                 List<PixelPosByte> acceptableVariants = GetAcceptableCellPositions(10);
@@ -553,7 +553,7 @@ public sealed class PlaneExtension
     {
         //возвращает перемешанный в случайном порядке список доступных позиций размером 1
         List<PixelPosByte> positions = new List<PixelPosByte>();
-        if (count > 0 && fullfillStatus != FullfillStatus.Full)
+        if (count > 0 && fulfillStatus != FullfillStatus.Full)
         {
             List<PixelPosByte> acceptableVariants = GetAcceptableCellPositions(INNER_RESOLUTION * INNER_RESOLUTION);
             int ac = acceptableVariants.Count, index;
@@ -570,8 +570,8 @@ public sealed class PlaneExtension
     }
     public PixelPosByte GetRandomPosition(byte size)
     {
-        if (fullfillStatus == FullfillStatus.Full || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
-        if (fullfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
+        if (fulfillStatus == FullfillStatus.Full || size >= INNER_RESOLUTION || size < 1) return PixelPosByte.Empty;
+        if (fulfillStatus == FullfillStatus.Empty) return new PixelPosByte((byte)(Random.value * (INNER_RESOLUTION - 1)), (byte)(Random.value * (INNER_RESOLUTION - 1)));
         else return GetAcceptablePosition(size);
     }
 
@@ -668,7 +668,7 @@ public sealed class PlaneExtension
         }
         if (acceptableVariants.Count == 0)
         {
-            fullfillStatus = FullfillStatus.Full;
+            fulfillStatus = FullfillStatus.Full;
             return acceptableVariants;
         }
         else
@@ -693,7 +693,7 @@ public sealed class PlaneExtension
 
     public bool IsAnyBuildingInArea(SurfaceRect sa)
     {
-        if (fullfillStatus == FullfillStatus.Empty) return false;
+        if (fulfillStatus == FullfillStatus.Empty) return false;
         bool found = false;
         foreach (Structure suro in structures)
         {
@@ -713,7 +713,7 @@ public sealed class PlaneExtension
     }
     public Structure GetBuildingByHitpoint(Vector3 point)
     {
-        if (fullfillStatus == FullfillStatus.Empty) return null;
+        if (fulfillStatus == FullfillStatus.Empty) return null;
         else
         {
             var p = myPlane.WorldToMapPosition(point);
