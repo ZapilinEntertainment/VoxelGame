@@ -161,7 +161,7 @@ public class Platform : Structure, IPlanable
         {
             if (upperPlane != null)
             {
-                if (upperPlane.isClean) upperPlane = null; else upperPlane.SetVisibility(false);
+                if (upperPlane.isClean) upperPlane = null; else upperPlane.SetVisibilityMode(VisibilityMode.Invisible);
                 myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }

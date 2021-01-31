@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 public class Plane
 {
-    public bool isVisible { get; protected set; }
+    public VisibilityMode visibilityMode { get; protected set; }
+    public bool invisibleByOptimization { get; protected set; }
     public bool haveWorksite { get; protected set; }
     public bool destroyed { get; private set; }
     public int materialID { get; protected set; }
@@ -42,6 +43,7 @@ public class Plane
     public IPlanable host { get; protected set; }
     public Chunk myChunk { get { return host.GetBlock().myChunk; } }
     public ChunkPos pos { get { return host.GetBlock().pos; } }
+    public event System.Action<VisibilityMode> visibilityChangedEvent;
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
     private static UISurfacePanelController observer;
@@ -194,7 +196,7 @@ public class Plane
         mainStructure = null;
         faceIndex = i_faceIndex;
         meshRotation = i_meshRotation;
-        isVisible = true;
+        visibilityMode = VisibilityMode.DrawAll;
         if (i_meshType != defaultMeshType | meshRotation != 0) dirty = true;
     }
 
@@ -207,13 +209,18 @@ public class Plane
         }
     }
 
-    virtual public void SetVisibility(bool x)
+    virtual public void SetVisibilityMode(VisibilityMode vmode)
     {
-        if (x != isVisible)
+        if (visibilityMode == vmode) return;
+        else
         {
-            isVisible = x;
-            mainStructure?.SetVisibility(isVisible);
+            visibilityMode = vmode;
+            visibilityChangedEvent?.Invoke(visibilityMode);
         }
+    }
+    public void SetBasisVisibility()
+    {
+        SetVisibilityMode(GetBlock()?.GetVisibilityMode() ?? VisibilityMode.DrawAll);
     }
     public void AddStructure(Structure s)
     {
@@ -249,7 +256,7 @@ public class Plane
                     default: t.position = GetCenterPosition();break;
                 }
             }
-            if (!s.IsIPlanable()) s.SetVisibility(isVisible);
+            mainStructure.SetVisibility(visibilityMode);
         }
     }
     public void RemoveStructure(Structure s)
@@ -305,7 +312,7 @@ public class Plane
                         meshType = MeshType.Quad;
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
-                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
+                        if (visibilityMode != VisibilityMode.Invisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
                 else
@@ -316,7 +323,7 @@ public class Plane
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (haveGrassland) extension?.RemoveGrassland();
-                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
+                        if (visibilityMode != VisibilityMode.Invisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
             }
@@ -330,7 +337,7 @@ public class Plane
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (haveGrassland) extension?.RemoveGrassland();
-                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
+                        if (visibilityMode != VisibilityMode.Invisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
                 else
@@ -341,7 +348,7 @@ public class Plane
                         meshRotation = (byte)Random.Range(0, 4);
                         dirty = true;
                         if (haveGrassland) extension?.RemoveGrassland();
-                        if (isVisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
+                        if (visibilityMode != VisibilityMode.Invisible) myChunk.RefreshBlockVisualising(host.GetBlock(), faceIndex);
                     }
                 }
             }

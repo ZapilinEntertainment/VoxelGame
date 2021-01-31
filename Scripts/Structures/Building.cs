@@ -780,18 +780,6 @@ public class Building : Structure
         //copy to SettlementStructure.SetActivationStatus
         //copy to StorageBlock and other IPlanables
     }
-    override public void SetVisibility(bool x)
-    {
-        if (x == isVisible) return;
-        else
-        {
-            isVisible = x;
-            if (transform.childCount > 0)
-            {
-                transform.GetChild(0).gameObject.SetActive(isVisible);
-            }
-        }
-    }
 
     public override UIObserver ShowOnGUI()
     {

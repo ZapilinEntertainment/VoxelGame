@@ -63,13 +63,14 @@ public sealed partial class Chunk : MonoBehaviour
             }
         }
         LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
+        distancesArray = new float[chunkSize, chunkSize, chunkSize];
 
         GameMaster.layerCutHeight = chunkSize;
         GameMaster.prevCutHeight = chunkSize;
     }
     public void Awake()
     {
-        FollowingCamera.main.cameraChangedEvent += CullingUpdate;
+        FollowingCamera.main.cameraChangedEvent += CameraUpdate;
 
         //var g = new GameObject("test");
         //g.AddComponent<MeshFilter>().sharedMesh = PoolMaster.GetMesh(MeshType.Quad, ResourceType.METAL_E_ID);
@@ -103,7 +104,7 @@ public sealed partial class Chunk : MonoBehaviour
     }
     public bool CheckForPlanttype(PlantType pt)
     {
-       return nature?.islandFlora?.Contains(pt) ?? false;
+       return nature?.islandFloraRegister?.Contains(pt) ?? false;
     }
 
     public bool IsAnyStructureInABlockSpace(ChunkPos cpos)
@@ -1359,6 +1360,6 @@ public sealed partial class Chunk : MonoBehaviour
         //    if (b != null) b.Annihilate();
         // }
         //surfaceBlocks.Clear();
-        FollowingCamera.main.cameraChangedEvent -= CullingUpdate;
+        FollowingCamera.main.cameraChangedEvent -= CameraUpdate;
     }
 }

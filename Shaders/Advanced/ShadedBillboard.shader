@@ -61,10 +61,10 @@ Shader "Custom/ShadedBillboard" {
 
 			v2f vert(appdata_base v) {
 				v2f o;
-				//o.vertex = mul(UNITY_MATRIX_P,
-				//	mul(UNITY_MATRIX_MV, float4(0, 0, 0, 1))
-				//	- float4(-v.vertex.x, -v.vertex.y, 0, 0));
-				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.vertex = mul(UNITY_MATRIX_P,
+					mul(UNITY_MATRIX_MV, float4(0, 0, 0, 1))
+					- float4(-v.vertex.x, -v.vertex.y, 0, 0));
+				//o.vertex = UnityObjectToClipPos(v.vertex);
 				o.texcoord = v.texcoord;
 
 				// 5.) The TRANSFER_VERTEX_TO_FRAGMENT macro populates the chosen LIGHTING_COORDS in the v2f structure

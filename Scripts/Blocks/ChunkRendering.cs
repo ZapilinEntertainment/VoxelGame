@@ -127,6 +127,8 @@ public sealed class BlockpartVisualizeInfo
     }
 }
 
+public enum VisibilityMode : byte { DrawAll, SmallObjectsHidden, MediumObjectsLOD, HugeObjectsLOD, Invisible}
+
 public sealed partial class Chunk : MonoBehaviour {
     public byte[,,] lightMap { get; private set; }
 
@@ -137,8 +139,11 @@ public sealed partial class Chunk : MonoBehaviour {
     private List<MeshVisualizeInfo> redrawRequiredTypes; // <- будут перерисованы и снова скомбинированы
     private GameObject combinedShadowCaster;
     private GameObject[] renderersHolders; // 6 холдеров для каждой стороны куба + 1 нестандартная
+    private float[,,] distancesArray;
 
     public const byte UP_LIGHT = 255, BOTTOM_LIGHT = 128;
+    // visibility distances
+    public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 64, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 100, HUGE_OBJECTS_LOD_DISTANCE_SQR = 225;
 
     public void RenderDataFullRecalculation()
     {
@@ -644,7 +649,7 @@ public sealed partial class Chunk : MonoBehaviour {
         }
         shadowsUpdateRequired = false;
     }
-    public void CullingUpdate()
+    public void CameraUpdate()
     {
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
@@ -683,7 +688,32 @@ public sealed partial class Chunk : MonoBehaviour {
             */
             prevBitmask = renderBitmask;
         }
+
+        float x0 = cpos.x, y0 = cpos.y, z0 = cpos.z;
+        if (blocks != null && blocks.Count > 0)
+        {
+            float sqrdistance;
+            float x, y, z;
+            foreach (var b in blocks.Values) {
+                //#set block visibility - copy
+                x = b.pos.x * Block.QUAD_SIZE; y = b.pos.y * Block.QUAD_SIZE; z = b.pos.z * Block.QUAD_SIZE;
+                sqrdistance = (x - x0) * (x - x0) + (y - y0) * (y - y0) + (z - z0) * (z - z0);
+                if (sqrdistance < SMALL_OBJECTS_HIDE_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.DrawAll);
+                else
+                {
+                    if (sqrdistance > HUGE_OBJECTS_LOD_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.HugeObjectsLOD);
+                    else
+                    {
+                        if (sqrdistance > MEDIUM_OBJECTS_LOD_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.MediumObjectsLOD);
+                        else b.SetVisibilityMode(VisibilityMode.SmallObjectsHidden);
+                    }
+                }
+                //end
+            }
+        }
     }
+
+
     public void RenderStatusUpdate()
     {
         if (redrawRequiredTypes.Count > 0)

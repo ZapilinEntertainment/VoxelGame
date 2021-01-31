@@ -37,7 +37,7 @@ public class Mine : WorkBuilding {
             Transform model = transform.GetChild(0);
             if (model != null) Destroy(model.gameObject);
             GameObject newModelGO = Instantiate(nextModel, transform.position, transform.rotation, transform);
-            newModelGO.SetActive(isVisible);
+            newModelGO.SetActive(visibilityMode != VisibilityMode.Invisible);
             if (!isActive | !isEnergySupplied) ChangeRenderersView(false);
         }
         level = f_level;

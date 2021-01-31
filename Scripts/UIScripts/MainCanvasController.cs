@@ -82,6 +82,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         resourcesIcons = Resources.Load<Texture>("Textures/resourcesIcons");
         buildingsIcons = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
+        questUI.enabled = colony != null;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         activeFastButtons = new List<int>();
 
@@ -107,6 +108,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         leftPanel.SetActive(true);
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
+        if (!questUI.enabled) questUI.enabled = true;
     }
 
     void Update()

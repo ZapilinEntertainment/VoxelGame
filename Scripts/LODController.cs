@@ -165,6 +165,7 @@ public sealed class LODController : MonoBehaviour
 
     public void CameraUpdate()
     {
+        return;
         camPos = FollowingCamera.camPos;
         float sqdist = 0;
         bool? newStatus = null;

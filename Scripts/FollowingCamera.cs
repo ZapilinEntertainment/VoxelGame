@@ -260,7 +260,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         if (camPosChanged)
         {
             cameraChangedEvent?.Invoke();
-            OakTree.CameraUpdate();
+            //OakTree.CameraUpdate();
             camPosChanged = false;
         }
    }

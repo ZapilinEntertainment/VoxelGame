@@ -128,7 +128,9 @@ public abstract class Plant : Structure {
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { basement = null; }
+        if (!clearFromSurface) {
+            basement = null;
+        }
         PreparePlantForDestruction(clearFromSurface, sendMessageToGrassland);
         basement = null;
         Destroy(gameObject);

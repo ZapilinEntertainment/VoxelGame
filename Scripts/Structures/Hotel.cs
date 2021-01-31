@@ -346,7 +346,7 @@ public sealed class Hotel : Building, IPlanable
         {
             if (upperPlane != null)
             {
-                if (upperPlane.isClean) upperPlane = null; else upperPlane.SetVisibility(false);
+                if (upperPlane.isClean) upperPlane = null; else upperPlane.SetVisibilityMode(VisibilityMode.Invisible);
                 myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }
@@ -356,7 +356,7 @@ public sealed class Hotel : Building, IPlanable
             {
                 if (bottomPlane != null)
                 {
-                    if (bottomPlane.isClean) bottomPlane = null; else bottomPlane.SetVisibility(false);
+                    if (bottomPlane.isClean) bottomPlane = null; else bottomPlane.SetVisibilityMode(VisibilityMode.Invisible);
                     myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
                 }
             }

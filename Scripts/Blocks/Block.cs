@@ -9,6 +9,7 @@ public sealed class Block {
         + (1 << LEFT_FACE_INDEX) + (1 << UP_FACE_INDEX) + (1 << DOWN_FACE_INDEX);
 
     public readonly ChunkPos pos;
+    private VisibilityMode visibilityMode = VisibilityMode.DrawAll;
     public bool destroyed { get; private set; }
     public Chunk myChunk { get; private set; }
     
@@ -22,7 +23,7 @@ public sealed class Block {
             if (extension == null) return mainStructure?.indestructible ?? false;
             else return extension.isInvincible;
         }
-    }
+    }   
 
     public override bool Equals(object obj)
     {
@@ -275,6 +276,22 @@ public sealed class Block {
     {
         return GetPlanesHost()?.GetFaceVisualData(faceIndex);
     }
+    public void SetVisibilityMode(VisibilityMode vm)
+    {
+        if (visibilityMode != vm)
+        {
+            visibilityMode = vm;
+            if (extension != null)
+            {
+                extension.SetVisibility(vm);
+            }
+            else
+            {
+                mainStructure?.SetVisibility(vm);
+            }
+        }
+    }
+    public VisibilityMode GetVisibilityMode() { return visibilityMode; }
     
     /// <summary>
     /// Don not use directly, use chunk.DeleteBlock() instead

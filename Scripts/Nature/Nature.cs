@@ -7,7 +7,7 @@ public sealed class Nature : MonoBehaviour
     
     public bool needRecalculation = false;
     public float lifepowerSupport { get; private set; }
-    public List<PlantType> islandFlora { get; private set; }
+    public List<PlantType> islandFloraRegister { get; private set; }
 
     private bool prepared = false, sideGrasslandsSupport = false, ceilGrasslandsSupport = false;
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
@@ -88,13 +88,13 @@ public sealed class Nature : MonoBehaviour
         else fs.WriteByte(ct);
         //
         ct = 0;
-        if (islandFlora != null)
+        if (islandFloraRegister != null)
         {
-            ct = (byte)islandFlora.Count;
+            ct = (byte)islandFloraRegister.Count;
             fs.WriteByte(ct);
             if (ct > 0)
             {
-                foreach (var t in islandFlora) fs.WriteByte((byte)t);
+                foreach (var t in islandFloraRegister) fs.WriteByte((byte)t);
             }
         }
         else fs.WriteByte(ct);
@@ -175,12 +175,12 @@ public sealed class Nature : MonoBehaviour
         }
         //
         count = fs.ReadByte();
-        islandFlora = new List<PlantType>();
+        islandFloraRegister = new List<PlantType>();
         if (count != 0)
         {
             for (i = 0; i < count; i++)
             {
-                islandFlora.Add((PlantType)fs.ReadByte());
+                islandFloraRegister.Add((PlantType)fs.ReadByte());
             }
         }
         //
@@ -633,21 +633,21 @@ public sealed class Nature : MonoBehaviour
 
     public void RegisterNewLifeform(PlantType pt)
     {
-        if (islandFlora == null)
+        if (islandFloraRegister == null)
         {
-            islandFlora = new List<PlantType>() { pt };
+            islandFloraRegister = new List<PlantType>() { pt };
             return;
         }
         else
         {
-            if (!islandFlora.Contains(pt)) islandFlora.Add(pt);
+            if (!islandFloraRegister.Contains(pt)) islandFloraRegister.Add(pt);
         }
     }
     public void UnregisterLifeform(PlantType pt)
     {
-        if (islandFlora != null)
+        if (islandFloraRegister != null)
         {
-            islandFlora.Remove(pt);
+            islandFloraRegister.Remove(pt);
         }
     }
 

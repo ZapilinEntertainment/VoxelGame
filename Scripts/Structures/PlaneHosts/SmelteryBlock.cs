@@ -112,7 +112,10 @@ public sealed class SmelteryBlock : Factory, IPlanable
 
     #region cubeStructures standart functions
     protected override void SetModel() { }
-    override public void SetVisibility(bool x) { }
+    public override void SetVisibility(VisibilityMode vmode)
+    {
+        // нужно переопределение, чтобы не действовали функции предков
+    }
 
     // side-models only
     override protected void ChangeRenderersView(bool setOnline)
@@ -294,9 +297,10 @@ public sealed class SmelteryBlock : Factory, IPlanable
         {
             if (planes != null && planes.ContainsKey(faceIndex))
             {
-                if (!planes[faceIndex].isVisible)
+                var p = planes[faceIndex];
+                if (p.visibilityMode == VisibilityMode.Invisible)
                 {
-                    planes[faceIndex].SetVisibility(true);
+                    p.SetBasisVisibility();
                 }
                 return true;
             }
@@ -320,8 +324,8 @@ public sealed class SmelteryBlock : Factory, IPlanable
                     planes.Remove(faceIndex);
                     if (planes.Count == 0) planes = null;
                 }
-                else planes[faceIndex].SetVisibility(false);
-                myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
+                else planes[faceIndex].SetVisibilityMode(VisibilityMode.Invisible);
+                if (!GameMaster.loading) myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }
     }
@@ -352,7 +356,7 @@ public sealed class SmelteryBlock : Factory, IPlanable
                 }
                 else
                 {
-                    if (planes != null && planes.ContainsKey(i)) planes[i].SetVisibility(false);
+                    if (planes != null && planes.ContainsKey(i)) planes[i].SetVisibilityMode(VisibilityMode.Invisible);
                 }
             }
             return data;
@@ -368,11 +372,10 @@ public sealed class SmelteryBlock : Factory, IPlanable
         }
         else
         {
-            if (planes != null && planes.ContainsKey(faceIndex)) planes[faceIndex].SetVisibility(false);
+            if (planes != null && planes.ContainsKey(faceIndex)) planes[faceIndex].SetVisibilityMode(VisibilityMode.Invisible);
             return null;
         }
     }
-
 
     public void Damage(float f, byte faceIndex)
     {

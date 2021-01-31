@@ -12,11 +12,11 @@ public class Structure : MonoBehaviour
     public float maxHp { get; protected set; } // fixed in ID
     public bool rotate90only { get; private set; } // fixed in ID
     public bool showOnGUI { get; protected set; }
-    public int ID { get; protected set; }
-    public bool isVisible { get; protected set; }
+    public int ID { get; protected set; }    
     public byte modelRotation { get; protected set; }
 
     protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false;
+    protected VisibilityMode visibilityMode;
     protected uint skinIndex = 0;
 
     //проверь при добавлении
@@ -605,7 +605,7 @@ public class Structure : MonoBehaviour
         hp = t;
         if (hp == 0) Annihilate(true, false, true);
     }
-    public bool IsDestroyed() { return destroyed; }
+    public bool IsDestroyed() { return destroyed; }    
     virtual public bool IsIPlanable() { return false; }
     virtual public void AfterloadRecalculation() { }
    
@@ -1249,13 +1249,21 @@ public class Structure : MonoBehaviour
 
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
     virtual public void ChunkUpdated() { }
-    virtual public void SetVisibility(bool x)
+    virtual public void SetVisibility(VisibilityMode vmode)
     {
-        if (x == isVisible) return;
+        if (visibilityMode == vmode) return;
         else
         {
-            isVisible = x;
-            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(isVisible);
+            if (visibilityMode == VisibilityMode.Invisible)
+            {
+                visibilityMode = VisibilityMode.Invisible;
+                if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(false);
+            }
+            else
+            {
+                if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(true);
+                visibilityMode = vmode;
+            }
         }
     }
 

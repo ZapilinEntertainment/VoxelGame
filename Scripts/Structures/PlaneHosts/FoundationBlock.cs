@@ -56,7 +56,10 @@ public class FoundationBlock : Building, IPlanable
     #region cubeStructures standart functions
     protected override void SetModel() { }
     override public void SetModelRotation(int r) { }
-    override public void SetVisibility(bool x) { }
+    public override void SetVisibility(VisibilityMode vmode)
+    {
+        // нужно переопределение, чтобы не действовали функции предков
+    }
 
     // side-models only
     override protected void ChangeRenderersView(bool setOnline) { }
@@ -238,9 +241,10 @@ public class FoundationBlock : Building, IPlanable
         {
             if (planes != null && planes.ContainsKey(faceIndex))
             {
-                if (!planes[faceIndex].isVisible)
+                var p = planes[faceIndex];
+                if (p.visibilityMode == VisibilityMode.Invisible)
                 {
-                    planes[faceIndex].SetVisibility(true);
+                    p.SetBasisVisibility();
                 }
                 return true;
             }
@@ -263,7 +267,7 @@ public class FoundationBlock : Building, IPlanable
                     planes.Remove(faceIndex);
                     if (planes.Count == 0) planes = null;
                 }
-                else planes[faceIndex].SetVisibility(false);
+                else planes[faceIndex].SetVisibilityMode(VisibilityMode.Invisible);
                 myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }

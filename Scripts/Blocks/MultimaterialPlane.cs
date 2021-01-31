@@ -31,7 +31,7 @@ public class MultimaterialPlane : Plane
         model.transform.localRotation = Quaternion.Euler(GetEulerRotationForBlockpart() + Vector3.forward * 90f * meshRotation);
         model.AddComponent<StructurePointer>().SetStructureLink((Structure)host, faceIndex);
         if (!isActive) PoolMaster.SwitchMaterialToOffline(model.GetComponentInChildren<Renderer>());
-        model.SetActive(isVisible);
+        model.SetActive(visibilityMode != VisibilityMode.Invisible);
     }
     public void ChangeMesh(MeshType mtype)
     {
@@ -57,20 +57,17 @@ public class MultimaterialPlane : Plane
     }
 
     override public void ChangeMaterial(int newId, bool redrawCall) { }  
-    override public void SetVisibility(bool x)
+    override public void SetVisibilityMode(VisibilityMode vmode)
     {
-        if (x != isVisible)
+        var pvm = vmode;
+        base.SetVisibilityMode(pvm);
+        if (visibilityMode == VisibilityMode.Invisible)
         {
-            isVisible = x;
-            mainStructure?.SetVisibility(isVisible);
-            if (model == null )
-            {
-                if (x) PrepareModel();
-            }
-            else
-            {
-                if (!x) model.SetActive(false);
-            }
+            if (model != null) model.SetActive(false);
+        }
+        else
+        {
+            if (pvm == VisibilityMode.Invisible && model == null) PrepareModel(); 
         }
     }
     override public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
