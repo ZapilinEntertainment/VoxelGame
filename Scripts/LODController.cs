@@ -115,6 +115,8 @@ public sealed class LODRegistrationTicket
 
 public sealed class LODController : MonoBehaviour
 {
+    // НЕ НУЖЕН И ДОЛЖЕН БЫТЬ УДАЛЕН
+
     private static LODController current; // singleton
     public static float lodCoefficient { get; private set; } // 0 is always lod, 1 is when it matches its real pixelsize
 

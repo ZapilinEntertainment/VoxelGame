@@ -227,7 +227,14 @@ public sealed class QuestUI : MonoBehaviour
         }
         activeQuests[i] = Quest.AwaitingQuest;
         yield return new WaitForSeconds(QUEST_REFRESH_TIME);
-        if (activeQuests[i] == Quest.AwaitingQuest & questAccessMap[i] == true) SetNewQuest(i);
+        if (enabled)
+        {
+            if (activeQuests[i] == Quest.AwaitingQuest & questAccessMap[i] == true) SetNewQuest(i);
+        }
+        else
+        {
+            if (activeQuests[i] == Quest.AwaitingQuest) activeQuests[i] = Quest.NoQuest;
+        }
     }
 
     public void UnblockQuestPosition(QuestSection qs, bool prepareQuestIfNone)

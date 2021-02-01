@@ -57,10 +57,10 @@ public class MultimaterialPlane : Plane
     }
 
     override public void ChangeMaterial(int newId, bool redrawCall) { }  
-    override public void SetVisibilityMode(VisibilityMode vmode)
+    override public void SetVisibilityMode(VisibilityMode vmode, bool forcedRefresh)
     {
         var pvm = vmode;
-        base.SetVisibilityMode(pvm);
+        base.SetVisibilityMode(pvm, forcedRefresh);
         if (visibilityMode == VisibilityMode.Invisible)
         {
             if (model != null) model.SetActive(false);

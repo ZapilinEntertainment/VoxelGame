@@ -362,7 +362,7 @@ public sealed class BlockExtension : IPlanable
         {
             if (planes != null && planes.ContainsKey(faceIndex))
             {
-                if (planes[faceIndex].visibilityMode == VisibilityMode.Invisible) planes[faceIndex].SetVisibilityMode(myBlock.GetVisibilityMode());
+                if (planes[faceIndex].visibilityMode == VisibilityMode.Invisible) planes[faceIndex].SetBasisVisibility();
                 return !MeshMaster.IsMeshTransparent(planes[faceIndex].meshType);
             }
             else
@@ -430,13 +430,14 @@ public sealed class BlockExtension : IPlanable
                     planes.Remove(faceIndex);
                     if (planes.Count == 0) planes = null;
                 }
-                else planes[faceIndex].SetVisibilityMode(VisibilityMode.Invisible);
+                else planes[faceIndex].SetVisibilityMode(VisibilityMode.Invisible, true);
                 myBlock.myChunk.RefreshBlockVisualising(myBlock, faceIndex);
             }
         }
     }
 
-    public void SetVisibility(VisibilityMode vmode)
+    public void SetVisibility(VisibilityMode vmode) { SetVisibility(vmode, false); }
+    public void SetVisibility(VisibilityMode vmode, bool forcedRefresh)
     {
         if (planes != null && planes.Count > 0)
         {
@@ -448,9 +449,23 @@ public sealed class BlockExtension : IPlanable
                 if (vmode != VisibilityMode.Invisible)
                 {
                     pmask = (1 << p.faceIndex);
-                    if (pmask != 0) p.SetVisibilityMode(vmode);
+                    if ((pmask & vismask) != 0) p.SetVisibilityMode(vmode, forcedRefresh);
                 }
-                else p.SetVisibilityMode(vmode);
+                else p.SetVisibilityMode(vmode, forcedRefresh);
+            }
+        }
+    }
+    public void RefreshVisibility()
+    {
+        if (planes != null && planes.Count > 0)
+        {
+            byte vismask = myBlock.myChunk.GetVisibilityMask(myBlock.pos);
+            vismask &= existingPlanesMask;
+            int pmask = 0;
+            foreach (var p in planes.Values)
+            {
+                pmask = (1 << p.faceIndex);
+                if ((pmask & vismask) != 0) p.SetBasisVisibility();
             }
         }
     }

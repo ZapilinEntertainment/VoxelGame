@@ -82,7 +82,7 @@ public sealed class PoolMaster : MonoBehaviour {
         verticalBillboardMaterial = Resources.Load<Material>("Materials/VerticalBillboard");
         verticalWavingBillboardMaterial = Resources.Load<Material>("Materials/VerticalWavingBillboard");
 
-        billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/ShadedBillboard");
+        billboardShadedMaterial = Resources.Load<Material>("Materials/Advanced/shadedBillboard");
         billboardMaterial = Resources.Load<Material>("Materials/BillboardMaterial");
         // android errors here:
        // celestialBillboardMaterial = new Material(Shader.Find("Custom/CelestialBillboard"));
@@ -659,7 +659,7 @@ public sealed class PoolMaster : MonoBehaviour {
                                 receiveShadows = true;
                                 break;
                             case "BillboardMaterial":
-                            case "ShadedBillboard":
+                            case "shadedBillboard":
                                 if (shadowCasting) mr.sharedMaterial = billboardShadedMaterial;
                                 else mr.sharedMaterial = billboardMaterial;
                                 castShadows = true;
@@ -723,7 +723,7 @@ public sealed class PoolMaster : MonoBehaviour {
                                 receiveShadows = true;
                                 break;
                             case "BillboardMaterial":
-                            case "ShadedBillboard":
+                            case "shadedBillboard":
                                 if (shadowCasting) sm2[i] = billboardShadedMaterial;
                                 else sm2[i] = billboardMaterial;
                                 castShadows = true;

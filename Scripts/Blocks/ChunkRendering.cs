@@ -143,7 +143,7 @@ public sealed partial class Chunk : MonoBehaviour {
 
     public const byte UP_LIGHT = 255, BOTTOM_LIGHT = 128;
     // visibility distances
-    public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 64, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 100, HUGE_OBJECTS_LOD_DISTANCE_SQR = 225;
+    public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 128, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 200, HUGE_OBJECTS_LOD_DISTANCE_SQR = 450;
 
     public void RenderDataFullRecalculation()
     {
@@ -693,24 +693,31 @@ public sealed partial class Chunk : MonoBehaviour {
         if (blocks != null && blocks.Count > 0)
         {
             float sqrdistance;
-            float x, y, z;
+            float x, y, z, lod_cf = LODController.lodCoefficient;
+            float dist1 = SMALL_OBJECTS_HIDE_DISTANCE_SQR * (0.2f + lod_cf),
+                dist2 = MEDIUM_OBJECTS_LOD_DISTANCE_SQR * (0.2f + lod_cf),
+                dist3 = HUGE_OBJECTS_LOD_DISTANCE_SQR * (0.2f + lod_cf);
             foreach (var b in blocks.Values) {
                 //#set block visibility - copy
                 x = b.pos.x * Block.QUAD_SIZE; y = b.pos.y * Block.QUAD_SIZE; z = b.pos.z * Block.QUAD_SIZE;
                 sqrdistance = (x - x0) * (x - x0) + (y - y0) * (y - y0) + (z - z0) * (z - z0);
-                if (sqrdistance < SMALL_OBJECTS_HIDE_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.DrawAll);
+                if (sqrdistance < dist1 ) b.SetVisibilityMode(VisibilityMode.DrawAll);
                 else
                 {
-                    if (sqrdistance > HUGE_OBJECTS_LOD_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.HugeObjectsLOD);
+                    if (sqrdistance > dist3) b.SetVisibilityMode(VisibilityMode.HugeObjectsLOD);
                     else
                     {
-                        if (sqrdistance > MEDIUM_OBJECTS_LOD_DISTANCE_SQR) b.SetVisibilityMode(VisibilityMode.MediumObjectsLOD);
+                        if (sqrdistance > dist2) b.SetVisibilityMode(VisibilityMode.MediumObjectsLOD);
                         else b.SetVisibilityMode(VisibilityMode.SmallObjectsHidden);
                     }
                 }
                 //end
             }
         }
+    }
+    public void BlocksVisibilityRefresh()
+    {
+
     }
 
 

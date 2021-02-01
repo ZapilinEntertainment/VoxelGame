@@ -297,16 +297,7 @@ public sealed class OakTree : Plant
             if (blankTrees_stage6.Count > MAX_INACTIVE_BUFFERED_STAGE6) blankTrees_stage6.RemoveAt(blankTrees_stage6.Count - 1);
     }
 
-    private void RefreshVisibility()
-    {
-        ChangeVisibilityMode_FORCED(basement?.visibilityMode ?? VisibilityMode.DrawAll);
-    }
-    public override void SetVisibility(VisibilityMode vmode)
-    {
-        if (vmode == visibilityMode) return;
-        else ChangeVisibilityMode_FORCED(vmode);
-    }
-    private void ChangeVisibilityMode_FORCED(VisibilityMode vm)
+    protected override void INLINE_SetVisibility(VisibilityMode vm)
     {
         byte vmode = (byte)vm;
         if (stage <= TRANSIT_STAGE) // Спрайт
@@ -397,6 +388,10 @@ public sealed class OakTree : Plant
             // eo setting lod
         }
         visibilityMode = vm;
+    }
+    private void RefreshVisibility()
+    {
+        INLINE_SetVisibility(basement?.visibilityMode ?? VisibilityMode.DrawAll);
     }
 
     override protected void SetStage(byte newStage)

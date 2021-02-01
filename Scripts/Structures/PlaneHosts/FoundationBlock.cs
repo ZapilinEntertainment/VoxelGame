@@ -56,7 +56,7 @@ public class FoundationBlock : Building, IPlanable
     #region cubeStructures standart functions
     protected override void SetModel() { }
     override public void SetModelRotation(int r) { }
-    public override void SetVisibility(VisibilityMode vmode)
+    protected override void INLINE_SetVisibility(VisibilityMode vmode)
     {
         // нужно переопределение, чтобы не действовали функции предков
     }

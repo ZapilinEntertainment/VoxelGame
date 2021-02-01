@@ -1249,21 +1249,23 @@ public class Structure : MonoBehaviour
 
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
     virtual public void ChunkUpdated() { }
-    virtual public void SetVisibility(VisibilityMode vmode)
+
+    public void SetVisibility(VisibilityMode vmode) { SetVisibility(vmode, false); }
+    public void SetVisibility(VisibilityMode vmode, bool refreshAnyway)
     {
-        if (visibilityMode == vmode) return;
+        if (visibilityMode != vmode | refreshAnyway) INLINE_SetVisibility(vmode);
+    }
+    protected virtual void INLINE_SetVisibility(VisibilityMode vmode)
+    {
+        if (visibilityMode == VisibilityMode.Invisible)
+        {
+            visibilityMode = VisibilityMode.Invisible;
+            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(false);
+        }
         else
         {
-            if (visibilityMode == VisibilityMode.Invisible)
-            {
-                visibilityMode = VisibilityMode.Invisible;
-                if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(false);
-            }
-            else
-            {
-                if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(true);
-                visibilityMode = vmode;
-            }
+            if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(true);
+            visibilityMode = vmode;
         }
     }
 

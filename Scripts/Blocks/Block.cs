@@ -276,10 +276,11 @@ public sealed class Block {
     {
         return GetPlanesHost()?.GetFaceVisualData(faceIndex);
     }
-    public void SetVisibilityMode(VisibilityMode vm)
+
+    public void SetVisibilityMode(VisibilityMode vm) { SetVisibilityMode(vm, false); }
+    public void SetVisibilityMode(VisibilityMode vm, bool forcedRefresh)
     {
-        if (visibilityMode != vm)
-        {
+        if (visibilityMode != vm | forcedRefresh) {
             visibilityMode = vm;
             if (extension != null)
             {
@@ -287,11 +288,12 @@ public sealed class Block {
             }
             else
             {
-                mainStructure?.SetVisibility(vm);
+                mainStructure?.SetVisibility(vm, forcedRefresh);
             }
         }
     }
     public VisibilityMode GetVisibilityMode() { return visibilityMode; }
+   
     
     /// <summary>
     /// Don not use directly, use chunk.DeleteBlock() instead

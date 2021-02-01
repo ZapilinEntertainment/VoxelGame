@@ -43,7 +43,7 @@ public class Plane
     public IPlanable host { get; protected set; }
     public Chunk myChunk { get { return host.GetBlock().myChunk; } }
     public ChunkPos pos { get { return host.GetBlock().pos; } }
-    public event System.Action<VisibilityMode> visibilityChangedEvent;
+    public event System.Action<VisibilityMode, bool> visibilityChangedEvent;
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
     private static UISurfacePanelController observer;
@@ -209,19 +209,21 @@ public class Plane
         }
     }
 
-    virtual public void SetVisibilityMode(VisibilityMode vmode)
+    public void SetVisibilityMode(VisibilityMode vmode) { SetVisibilityMode(vmode, false); }
+    virtual public void SetVisibilityMode(VisibilityMode vmode, bool forcedRefresh)
     {
-        if (visibilityMode == vmode) return;
-        else
+        if (visibilityMode != vmode | forcedRefresh)
         {
             visibilityMode = vmode;
-            visibilityChangedEvent?.Invoke(visibilityMode);
+            visibilityChangedEvent?.Invoke(visibilityMode, forcedRefresh);
         }
     }
     public void SetBasisVisibility()
     {
-        SetVisibilityMode(GetBlock()?.GetVisibilityMode() ?? VisibilityMode.DrawAll);
+        SetVisibilityMode(GetBlock()?.GetVisibilityMode() ?? VisibilityMode.DrawAll, true);
     }
+
+
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)
@@ -256,7 +258,7 @@ public class Plane
                     default: t.position = GetCenterPosition();break;
                 }
             }
-            mainStructure.SetVisibility(visibilityMode);
+            mainStructure.SetVisibility(visibilityMode, true);
         }
     }
     public void RemoveStructure(Structure s)
