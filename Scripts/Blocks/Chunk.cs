@@ -853,7 +853,11 @@ public sealed partial class Chunk : MonoBehaviour
         if (b == null) return;
         else
         {
-            if (b.isInvincible) return;
+            if (b.isInvincible)
+            {
+                Debug.Log("chunk - wrong call : cannot destroy invincible block");
+                return;
+            }
         }
         int x = pos.x, y = pos.y, z = pos.z;
         if (b.ContainSurface()) needSurfacesUpdate = true;
@@ -874,7 +878,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         shadowsUpdateRequired = true;
         chunkDataUpdateRequired = true;
-        // chunkRenderUpdateRequired = true; < в свитче
+        chunkRenderUpdateRequired = true;
     }
     public void ClearChunk()
     {

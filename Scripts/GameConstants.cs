@@ -55,20 +55,21 @@ public abstract class GameConstants {
     {
         switch (wt)
         {
-            case WorkType.ObservatoryFindCycle: return 300f;
-            case WorkType.ShuttleConstructing: return 180f;
-            case WorkType.Recruiting: return 150f;
-            case WorkType.HydroponicsLumbering: return 11f;
-            case WorkType.HydroponicsFarming: return 10f;
-            case WorkType.Digging: return 5f;
-            case WorkType.Clearing: return 5f;
-            case WorkType.Mining: return 9f;
-            case WorkType.BlockBuilding: 
-            case WorkType.Pouring: return 8f;            
-            case WorkType.GearsUpgrading: return 2f;            
-            case WorkType.Factory: return 1f;
-            case WorkType.OpenLumbering: return 1f;
-            case WorkType.OpenFarming: return 0.7f;
+            case WorkType.ObservatoryFindCycle: return 3000f;
+            case WorkType.ShuttleConstructing: return 1800f;
+            case WorkType.Recruiting: return 1500f;
+            case WorkType.HydroponicsLumbering: return 120f;
+            case WorkType.HydroponicsFarming: return 100f;
+            
+            case WorkType.GearsUpgrading: return 800f;
+            case WorkType.Digging: return 30f;
+            case WorkType.Pouring: return 28f;
+            case WorkType.Mining: return 25f;
+            case WorkType.Clearing: return 22f;            
+            case WorkType.BlockBuilding:                      
+            case WorkType.Factory: return 20f;
+            case WorkType.OpenLumbering: return 16f;
+            case WorkType.OpenFarming: return 14f;
             default: return 1f;
         }
     }

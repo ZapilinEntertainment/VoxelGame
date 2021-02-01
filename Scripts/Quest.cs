@@ -293,19 +293,7 @@ public class Quest
                         }
                     case ProgressQuestID.Progress_OreRefiner:
                         {
-                            List<Building> powerGrid = colony.powerGrid;
-                            foreach (Building b in powerGrid)
-                            {
-                                if (b == null) continue;
-                                else
-                                {
-                                    if (b.ID == Structure.ORE_ENRICHER_2_ID)
-                                    {
-                                        MakeQuestCompleted();
-                                        break;
-                                    }
-                                }
-                            }
+                            if (colony.HaveBuilding(Structure.ORE_ENRICHER_2_ID)) MakeQuestCompleted();
                         }
                         break;
                     case ProgressQuestID.Progress_HospitalCoverage:
@@ -789,7 +777,7 @@ public class Quest
                             }
                         case Knowledge.CloudWhaleRouteBoosters.StabilityEnforcerBooster:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.STABILITY_ENFORCER_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.STABILITY_ENFORCER_ID)) MakeQuestCompleted();
                                 break;
                             }
                     }
@@ -805,7 +793,7 @@ public class Quest
                                 if (e >= Knowledge.R_E_ENERGY_STORED_COND) MakeQuestCompleted();
                                 else
                                 {
-                                    stepsAddInfo[0] = e.ToString() + " / " + Knowledge.R_E_ENERGY_STORED_COND.ToString();
+                                    stepsAddInfo[0] = ((int)(e)).ToString() + " / " + Knowledge.R_E_ENERGY_STORED_COND.ToString();
                                 }
                                 break;
                             }                       
@@ -828,12 +816,12 @@ public class Quest
                             }
                         case Knowledge.EngineRouteBoosters.IslandEngineBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.ENGINE_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.ENGINE_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.EngineRouteBoosters.ControlCenterBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.CONTROL_CENTER_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.CONTROL_CENTER_ID)) MakeQuestCompleted();
                                 break;
                             }
                     }
@@ -942,7 +930,7 @@ public class Quest
                             }
                         case Knowledge.PipesRouteBoosters.CapacitorMastBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.CAPACITOR_MAST_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.CAPACITOR_MAST_ID)) MakeQuestCompleted();
                                 break;
                             }
                     }
@@ -990,12 +978,12 @@ public class Quest
                             }
                         case Knowledge.CrystalRouteBoosters.CrystalliserBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.CRYSTALLISER_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.CRYSTALLISER_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.CrystalRouteBoosters.CrystalMastBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.CRYSTAL_MAST_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.CRYSTAL_MAST_ID)) MakeQuestCompleted();
                                 break;
                             }
                     }
@@ -1048,12 +1036,12 @@ public class Quest
                             }
                         case Knowledge.MonumentRouteBoosters.MonumentConstructionBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.MONUMENT_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.MONUMENT_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.MonumentRouteBoosters.AnchorMastBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.ANCHOR_MAST_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.ANCHOR_MAST_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.MonumentRouteBoosters.PointBoost:
@@ -1112,7 +1100,7 @@ public class Quest
                             }
                         case Knowledge.BlossomRouteBoosters.HTowerBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.HANGING_TMAST_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.HANGING_TMAST_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.BlossomRouteBoosters.PointBoost:
@@ -1143,12 +1131,12 @@ public class Quest
                             }
                         case Knowledge.PollenRouteBoosters.FilterBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.RESOURCE_FILTER_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.RESOURCE_FILTER_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.PollenRouteBoosters.ProtectorCoreBoost:
                             {
-                                if (colony.CheckForBuildingPresence(Structure.PROTECTION_CORE_ID)) MakeQuestCompleted();
+                                if (colony.HaveBuilding(Structure.PROTECTION_CORE_ID)) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.PollenRouteBoosters.PointBoost:
@@ -1230,7 +1218,7 @@ public class Quest
                             break;
                         }
                     case ProgressQuestID.Progress_300Population: if (colony.citizenCount < 250) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_OreRefiner: if (lvl >= 2) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_OreRefiner: if (lvl >= 2 && !colony.HaveBuilding(Structure.ORE_ENRICHER_2_ID) ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_HospitalCoverage: if (colony.hospitals_coefficient < 1 & lvl > 1) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(q); break;

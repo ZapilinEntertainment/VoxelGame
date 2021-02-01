@@ -269,7 +269,7 @@ public sealed class DockSystem
             }
         }
 
-        rewardValue *= (float)d.workersCount / (float)d.maxWorkers;
+        rewardValue += d.workersCount * 0.1f ;
         colony.AddEnergyCrystals(rewardValue * GameConstants.PER_DOCKED_SHIP_BASIC_REWARD * GameMaster.realMaster.GetDifficultyCoefficient());
 	}
 

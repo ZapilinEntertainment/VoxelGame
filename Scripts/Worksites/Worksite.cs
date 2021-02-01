@@ -52,7 +52,7 @@ public abstract class Worksite : ILabourable
     public bool IsWorksite() { return true; }
     virtual public float GetLabourCoefficient()
     {
-        return colony.workers_coefficient * workersCount / (workComplexityCoefficient * maxWorkersCount);
+        return colony.workers_coefficient * workersCount / workComplexityCoefficient ;
     }
     virtual public void LabourUpdate()
     {

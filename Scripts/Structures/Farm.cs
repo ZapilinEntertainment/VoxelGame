@@ -6,7 +6,7 @@ using UnityEngine;
 public class Farm : WorkBuilding
 {
     private int lastPlantIndex;
-    private float _cropComplexity, _plantLPCost = 0f, _updateLPCost = 1f, lifepowerSupport;
+    private float _cropComplexity = 1f, _plantLPCost = 0f, _updateLPCost = 1f, lifepowerSupport;
     private int _cropPlantCost = 1, _cropUpdateCost = 1, _cropHarvestCost = 1; // MUST NOT BE ZERO!
     public PlantType cropType;    
 
@@ -71,7 +71,7 @@ public class Farm : WorkBuilding
     }
 
     override protected void LabourResult(int iterations)
-    {
+    {        
         if (iterations < 1) return;
         workflow -= iterations;
         //
@@ -199,7 +199,7 @@ public class Farm : WorkBuilding
     }
     public override string UI_GetProductionSpeedInfo()
     {
-        return Localization.GetWord(LocalizedWord.Effectiveness) + ": " + ((int)(GetLabourCoefficient() * GameConstants.GetWorkComplexityCf(WorkType.OpenFarming) * 100f)).ToString() + '%';
+        return Localization.GetWord(LocalizedWord.Effectiveness) + ": " + ((int)(GetLabourCoefficient() * GameConstants.GetWorkComplexityCf(WorkType.OpenFarming))).ToString() + '%';
     }
 
     #region save-load

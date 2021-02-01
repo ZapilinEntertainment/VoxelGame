@@ -11,12 +11,102 @@ public class PointLODModel
     public bool? drawStatus;
     public float lodSqrDistance, visibilitySqrDistance;
 }
-
 public sealed class AdvancedLODModel : PointLODModel
 {
     public bool oneSide = true;
     public int ticketIndex = -1;
     public byte drawingSpriteIndex = 0;
+}
+
+public sealed class PlaneBoundLODModel {
+    private Plane basement;
+    private GameObject model;
+    private SpriteRenderer spriter;
+    private bool? usingLOD;
+
+    public PlaneBoundLODModel(Plane p, GameObject m, SpriteRenderer sr)
+    {
+        basement = p;
+        model = m;
+        spriter = sr;
+        if (basement == null) throw new System.Exception("lod was assigned to unexisting object");
+        else
+        {
+            basement.visibilityChangedEvent += this.SetVisibility;
+        }
+        SetVisibility(basement.visibilityMode, true);
+    }
+    public void SetVisibility(VisibilityMode vmode, bool forcedRefresh)
+    {
+        byte vm = (byte)vmode;
+        bool? newDrawMode;
+        if (vm >= (byte)VisibilityMode.HugeObjectsLOD )  newDrawMode = null; 
+        else
+        {
+            if (vm < (byte)VisibilityMode.SmallObjectsLOD) newDrawMode = false;
+            else newDrawMode = true;
+        }
+        if (newDrawMode != usingLOD | forcedRefresh)
+        {
+            usingLOD = newDrawMode;
+            if (usingLOD == null)
+            {
+                model.SetActive(false);
+                spriter.enabled = false;
+            }
+            else
+            {
+                if (usingLOD == true)
+                {
+                    model.SetActive(false);
+                    spriter.enabled = true;
+                }
+                else
+                {
+                    model.SetActive(true);
+                    spriter.enabled = false;
+                }
+            }
+        }
+    }
+    public void ChangeBasement(Plane p) {
+        if (basement != null) basement.visibilityChangedEvent -= this.SetVisibility;
+        basement = p;
+        if (basement == null) throw new System.Exception("lod was assigned to unexisting object");
+        else
+        {
+            basement.visibilityChangedEvent += this.SetVisibility;
+        }
+    }
+    public void PrepareToDestroy()
+    {
+        if (basement != null) basement.visibilityChangedEvent -= this.SetVisibility;
+    }
+
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        PlaneBoundLODModel b = (PlaneBoundLODModel)obj;
+        return basement == b.basement && model == b.model && spriter == b.spriter;
+    }
+    public override int GetHashCode()
+    {
+        int x = 0;
+        if (usingLOD == null) x = -1;
+        else
+        {
+            if (usingLOD == true) x = 2;
+            else x = 1;
+        }
+        x += model.GetHashCode();
+        x -= spriter.GetHashCode();
+        x += basement.GetHashCode();
+        return x;
+    }
+
 }
 
 public struct LODRegisterInfo
@@ -111,6 +201,7 @@ public sealed class LODRegistrationTicket
         }
     }
 }
+
 #endregion
 
 public sealed class LODController : MonoBehaviour
@@ -384,7 +475,7 @@ public sealed class LODController : MonoBehaviour
         return registeredLODs.Count - 1;
     }
 
-    public void TakeCare(Transform modelHolder, int indexInRegistered, float i_lodSqrDist, float i_visibilitySqrDist)
+    public void SetInControl(Transform modelHolder, int indexInRegistered, float i_lodSqrDist, float i_visibilitySqrDist)
     {
         if (indexInRegistered == -1 | modelHolder == null) return;
         LODRegistrationTicket ticket = registeredLODs[indexInRegistered];
@@ -468,5 +559,13 @@ public sealed class LODController : MonoBehaviour
             mwl.drawStatus = null;
             mwl.model3d.SetActive(false);
         }
+    }
+    public PlaneBoundLODModel SetInControl(Plane basement, GameObject model, SpriteRenderer sr, int indexInRegistered)
+    {
+        if (indexInRegistered == -1 || model == null ||  sr== null|| basement == null) return null;
+        LODRegistrationTicket ticket = registeredLODs[indexInRegistered];
+        ticket.activeUsers++;
+        sr.sprite = ticket.sprites[0];
+        return new PlaneBoundLODModel(basement, model, sr);
     }
 }

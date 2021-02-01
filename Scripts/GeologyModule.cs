@@ -8,8 +8,8 @@ public class GeologyModule : MonoBehaviour {
 	mineralF_abundance, mineralL_abundance; // sum must be less than one!
 
 	public GeologyModule() {
-		metalK_abundance = 0.01f;
-		metalM_abundance = 0.005f; metalE_abundance = 0.003f;
+		metalK_abundance = 0.015f;
+		metalM_abundance = 0.008f; metalE_abundance = 0.003f;
 		metalN_abundance = 0.001f; metalP_abundance = 0.02f; metalS_abundance = 0.0045f;
 		mineralF_abundance = 0.02f; mineralL_abundance = 0.02f; // sum must be less than one!
 	}

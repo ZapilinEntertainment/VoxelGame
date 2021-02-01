@@ -11,7 +11,7 @@
 
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf SimpleLambert alphatest:_Cutoff
+		#pragma surface surf SimpleLambert vertex:vert alphatest:_Cutoff
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
@@ -42,6 +42,28 @@
 			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
 			o.Albedo = c.rgb;
 			o.Alpha = c.a;
+		}
+
+		void vert(inout appdata_full v, out Input o)
+			//void vert(inout appdata_full v)
+		{
+			UNITY_INITIALIZE_OUTPUT(Input, o);
+
+			// get the camera basis vectors
+			float3 forward = -normalize(UNITY_MATRIX_V._m20_m21_m22);
+			float3 up = float3(0, 1, 0); //normalize(UNITY_MATRIX_V._m10_m11_m12);
+			float3 right = normalize(UNITY_MATRIX_V._m00_m01_m02);
+
+			// rotate to face camera
+			float4x4 rotationMatrix = float4x4(right, 0,
+				up, 0,
+				forward, 0,
+				0, 0, 0, 1);
+
+			//float offset = _Object2World._m22 / 2;
+			float offset = 0;
+			v.vertex = mul(v.vertex + float4(0, offset, 0, 0), rotationMatrix) + float4(0, -offset, 0, 0);
+			v.normal = mul(v.normal, rotationMatrix);
 		}
 		ENDCG
 	}

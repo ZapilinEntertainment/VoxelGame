@@ -302,7 +302,7 @@ public sealed class OakTree : Plant
         byte vmode = (byte)vm;
         if (stage <= TRANSIT_STAGE) // Спрайт
         {
-            if (vmode >= (byte)VisibilityMode.SmallObjectsHidden)
+            if (vmode >= (byte)VisibilityMode.SmallObjectsLOD)
             {
                 if (drawmode != OakDrawMode.NoDraw)
                 {
@@ -327,13 +327,11 @@ public sealed class OakTree : Plant
             {
                 if (vmode >= (byte)VisibilityMode.HugeObjectsLOD)
                 {
-                    if (PoolMaster.useDefaultMaterials) newDrawMode = OakDrawMode.NoDraw;
-                    else newDrawMode = OakDrawMode.DrawModel;
+                    newDrawMode = OakDrawMode.NoDraw;
                 }
                 else
                 {
-                    if (PoolMaster.useDefaultMaterials) newDrawMode = OakDrawMode.DrawLOD;
-                    else newDrawMode = OakDrawMode.DrawModel;
+                    newDrawMode = OakDrawMode.DrawLOD;
                 }
             }
             else newDrawMode = OakDrawMode.DrawModel;

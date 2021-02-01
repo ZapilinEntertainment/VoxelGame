@@ -13,7 +13,7 @@ public sealed class ColonyController : MonoBehaviour
     public Storage storage { get; private set; }
     public HeadQuarters hq { get; private set; }
     public MainCanvasController observer { get; private set; }
-    public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false; // hot
+    public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false, hospitalCoverageRecalculationNeeded; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
     public float happiness_coefficient { get; private set; }
@@ -53,6 +53,7 @@ public sealed class ColonyController : MonoBehaviour
         private set {
             _citizenCount = value;
             populationUpdateEvent?.Invoke(_citizenCount);
+            hospitalCoverageRecalculationNeeded = true;
         }
     }
     private int _citizenCount;
@@ -224,6 +225,7 @@ public sealed class ColonyController : MonoBehaviour
             float lvlCf =GetLevelCf();
             //
             //HEALTHCARE
+            if (hospitalCoverageRecalculationNeeded) RecalculateHospitals();
             float healthcareHappiness = HEALTHCARE_MIN_HAPPINESS * lvlCf;
             if (hospitals_coefficient > 0)
             {
@@ -240,8 +242,12 @@ public sealed class ColonyController : MonoBehaviour
 
             // HOUSING
             byte level = hq.level;
-            float housingHappiness = (float)citizenCount / (float)totalLivespace;
+            float housingHappiness = (float)totalLivespace / (float)citizenCount ;
             if (housingHappiness < HOUSING_MIN_HAPPINESS) housingHappiness = HOUSING_MIN_HAPPINESS;
+            else
+            {
+                if (housingHappiness > 1f) housingHappiness = 1f;
+            }
             // HAPPINESS CALCULATION
             targetHappiness = 1f;
             if (happinessModifiers != null)
@@ -541,8 +547,9 @@ public sealed class ColonyController : MonoBehaviour
             else i++;
         }
     }
-    public void RecalculateHospitals()
+    private void RecalculateHospitals()
     {
+        hospitalCoverageRecalculationNeeded = false;
         hospitals_coefficient = 0f;
         bool noHospitals = hospitals == null;
         if (noHospitals || hospitals.Count == 0) {
@@ -798,7 +805,7 @@ public sealed class ColonyController : MonoBehaviour
         }
     }    
 
-    public bool CheckForBuildingPresence(int sid)
+    public bool HaveBuilding(int sid)
     {
         if (powerGrid != null && powerGrid.Count > 0)
         {

@@ -275,33 +275,7 @@ public class FoundationBlock : Building, IPlanable
 
     public List<BlockpartVisualizeInfo> GetVisualizeInfo(byte vismask)
     {
-
-            var data = new List<BlockpartVisualizeInfo>();
-            var cpos = myBlock.pos;
-            var chunk = myBlock.myChunk;
-
-            byte realVisMask = (byte)(vismask & Block.CUBE_MASK);
-            if (realVisMask != 0)
-            {
-                for (byte i = 0; i < 6; i++)
-                {
-                    if ((realVisMask & (1 << i)) != 0)
-                    {
-                        if (planes != null && planes.ContainsKey(i))
-                        {
-                            var bvi = planes[i].GetVisualInfo(chunk, cpos);
-                            if (bvi != null) data.Add(bvi);
-                        }
-                        else
-                        {
-                            var p = CreatePlane(i, false).GetVisualInfo(chunk, cpos);
-                            if (p != null) data.Add(p); 
-                        }
-                    }
-                }
-                return data;
-            }
-            else return null;
+        return IPlanableSupportClass.GetVisualizeInfo(ref vismask, this, ref myBlock, ref planes, CreatePlane);
     }
     public BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex)
     {

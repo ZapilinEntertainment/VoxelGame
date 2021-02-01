@@ -3071,12 +3071,12 @@ public static class Localization
                                     break;
                                 case ProgressQuestID.Progress_CoveredFarm:
                                     q.name = "Поле под колпаком";
-                                    q.description = "Замените обычную ферму крытой. Так вы стабилизируете производство пищи и снизите потребление жизненной энергии острова.";
+                                    q.description = "Попробуйте новую гидропонную ферму! Так вы стабилизируете производство пищи и снизите потребление жизненной энергии острова.";
                                     q.steps[0] = GetStructureName(Structure.COVERED_FARM) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     q.name = "Лес под крышей";
-                                    q.description = "Замените обычную лесопилку крытой - это стабилизирует поток древесины и снизит расход жизненной силы острова.";
+                                    q.description = "Внезапно, гидропонная лесопилк! Стабилизирует поток древесины и снизит расход жизненной силы острова.";
                                     q.steps[0] = GetStructureName(Structure.COVERED_LUMBERMILL) + " построена";
                                     break;
                                 case ProgressQuestID.Progress_Reactor:
@@ -3415,12 +3415,12 @@ public static class Localization
                                     break;
                                 case ProgressQuestID.Progress_CoveredFarm:
                                     q.name = "Covered field";
-                                    q.description = "Replace your old farm with new covered one";
+                                    q.description = "Try out new covered hydroponics farm! It stabilizes food supply and reduces lifepower consumption.";
                                     q.steps[0] = "Build " + GetStructureName(Structure.COVERED_FARM); ;
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     q.name = "Covered forest";
-                                    q.description = "Replace your old lumbermills with new covered one";
+                                    q.description = "Suddenly hydroponics lumbermill! Stabilizaes lumber supply and reduces lifepower consumption.";
                                     q.steps[0] = "Build " + GetStructureName(Structure.COVERED_LUMBERMILL); ;
                                     break;
                                 case ProgressQuestID.Progress_Reactor:

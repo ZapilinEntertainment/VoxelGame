@@ -309,7 +309,7 @@ public abstract class WorkBuilding : Building, ILabourable
     public bool IsWorksite() { return false; }
     virtual public float GetLabourCoefficient()
     {
-        return colony.workers_coefficient * factoryCoefficient * workersCount /  (workComplexityCoefficient * maxWorkers);
+        return colony.workers_coefficient * factoryCoefficient * workersCount /  workComplexityCoefficient;
     }
     virtual public void LabourUpdate()
     {        

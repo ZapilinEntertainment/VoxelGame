@@ -93,7 +93,7 @@ public sealed class UISurfacePanelController : UIObserver {
             //
             var chunk = observingSurface.myChunk;
             var pos = sb.GetLookingPosition();
-            bool buildingAllowed = !chunk.IsAnyStructureInABlockSpace(pos);
+            bool buildingAllowed = !chunk.IsAnyStructureInABlockSpace(pos) & observingSurface.isQuad;
             var col = buildingAllowed ? (chunk.IsSpaceBlocked(pos) ? Color.yellow : Color.white) : Color.grey;
             buildButton.transform.GetChild(0).GetComponent<Text>().color = col;
             buildButton.interactable = buildingAllowed;

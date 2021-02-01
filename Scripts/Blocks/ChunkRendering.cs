@@ -127,7 +127,7 @@ public sealed class BlockpartVisualizeInfo
     }
 }
 
-public enum VisibilityMode : byte { DrawAll, SmallObjectsHidden, MediumObjectsLOD, HugeObjectsLOD, Invisible}
+public enum VisibilityMode : byte { DrawAll, SmallObjectsLOD, MediumObjectsLOD, HugeObjectsLOD, Invisible}
 
 public sealed partial class Chunk : MonoBehaviour {
     public byte[,,] lightMap { get; private set; }
@@ -143,7 +143,7 @@ public sealed partial class Chunk : MonoBehaviour {
 
     public const byte UP_LIGHT = 255, BOTTOM_LIGHT = 128;
     // visibility distances
-    public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 128, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 200, HUGE_OBJECTS_LOD_DISTANCE_SQR = 450;
+    public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 128, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 200, HUGE_OBJECTS_LOD_DISTANCE_SQR = 600;
 
     public void RenderDataFullRecalculation()
     {
@@ -708,7 +708,7 @@ public sealed partial class Chunk : MonoBehaviour {
                     else
                     {
                         if (sqrdistance > dist2) b.SetVisibilityMode(VisibilityMode.MediumObjectsLOD);
-                        else b.SetVisibilityMode(VisibilityMode.SmallObjectsHidden);
+                        else b.SetVisibilityMode(VisibilityMode.SmallObjectsLOD);
                     }
                 }
                 //end

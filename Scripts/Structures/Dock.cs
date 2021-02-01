@@ -119,7 +119,7 @@ public sealed class Dock : WorkBuilding {
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
 					if ( dockSystem.immigrationEnabled  ) {
-                        if (dockSystem.immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value < colony.happiness_coefficient / 2f)
+                        if (dockSystem.immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value >= colony.happiness_coefficient / 2f)
 						sendImmigrants = true;
 					}
 					int transitionsCount = 0;
@@ -131,7 +131,7 @@ public sealed class Dock : WorkBuilding {
 					ShipType stype = ShipType.Cargo;
 					if (sendImmigrants) {
 						if (sendGoods) {
-							if (Random.value > 0.55f ) stype = ShipType.Passenger;
+							if (Random.value > 0.45f ) stype = ShipType.Passenger;
 						}
 						else {
 							if (Random.value < 0.05f) stype = ShipType.Private;

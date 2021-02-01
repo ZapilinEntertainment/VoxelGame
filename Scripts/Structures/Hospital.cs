@@ -26,13 +26,13 @@ public class Hospital : WorkBuilding {
     protected override void SwitchActivityState()
     {
         base.SwitchActivityState();
-        if (!GameMaster.loading) colony.RecalculateHospitals();
+        if (!GameMaster.loading) colony.hospitalCoverageRecalculationNeeded = true;
     }
-    private void RecalculateCoverage()
+    public void RecalculateCoverage()
     {
         float prevCoverage = coverage;
         coverage = STANDART_COVERAGE * level * ((float)workersCount / (float)maxWorkers);
-        if (prevCoverage != coverage) colony.RecalculateHospitals();
+        if (prevCoverage != coverage) colony.hospitalCoverageRecalculationNeeded = true;
     }
     override public int AddWorkers(int x)
     {

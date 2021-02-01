@@ -1,9 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
+﻿// НЕ РАБОТАЕТ - видимо, батчится, несмотря на теги
 Shader "Custom/ShadedBillboard" {
 	Properties{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
@@ -70,7 +65,7 @@ Shader "Custom/ShadedBillboard" {
 				// 5.) The TRANSFER_VERTEX_TO_FRAGMENT macro populates the chosen LIGHTING_COORDS in the v2f structure
 				// with appropriate values to sample from the shadow/lighting map
 
-				TRANSFER_VERTEX_TO_FRAGMENT(o);
+				//TRANSFER_VERTEX_TO_FRAGMENT(o);
 
 				return o;
 			}

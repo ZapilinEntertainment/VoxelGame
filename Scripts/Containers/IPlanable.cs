@@ -57,5 +57,34 @@ public static class IPlanableSupportClass
         {
             chunk.RecalculateVisibilityAtPoint(myBlock.pos, s.GetAffectionMask());
         }
-    }    
+    }
+    public static List<BlockpartVisualizeInfo> GetVisualizeInfo(ref byte vismask, IPlanable obj, ref Block b, ref Dictionary<byte, Plane> planes, System.Func<byte, bool, Plane> createAction)
+    {
+        var data = new List<BlockpartVisualizeInfo>();
+        var cpos = b.pos;
+        var chunk = b.myChunk;
+
+        byte realVisMask = (byte)(vismask & Block.CUBE_MASK);
+        if (realVisMask != 0)
+        {
+            for (byte i = 0; i < 6; i++)
+            {
+                if ((realVisMask & (1 << i)) != 0)
+                {
+                    if (planes != null && planes.ContainsKey(i))
+                    {
+                        var bvi = planes[i].GetVisualInfo(chunk, cpos);
+                        if (bvi != null) data.Add(bvi);
+                    }
+                    else
+                    {
+                        var p = createAction(i,false).GetVisualInfo(chunk, cpos);
+                        if (p != null) data.Add(p);
+                    }
+                }
+            }
+            return data;
+        }
+        else return null;
+    }
 }
