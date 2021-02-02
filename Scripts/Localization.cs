@@ -5,8 +5,8 @@ public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Refuse, Return,
-    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness
+    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return,
+    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage
 };
 
 public enum LocalizedPhrase : ushort
@@ -16,7 +16,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2377,9 +2377,10 @@ public static class Localization
                         case LocalizedWord.Play: return "Играть";
                         case LocalizedWord.Info: return "Информация";
                         case LocalizedWord.Goals: return "Цели:";
-                        case LocalizedWord.Refuse: return "Отказаться";
+                        case LocalizedWord.Reject: return "Отказаться";
                         case LocalizedWord.Return: return "Вернуться";
                         case LocalizedWord.Effectiveness: return "Эффективность";
+                        case LocalizedWord.HospitalsCoverage: return "Медицинское обеспечение";
                         default: return "...";
                     }
                 }
@@ -2466,9 +2467,10 @@ public static class Localization
                         case LocalizedWord.Play: return "Play";
                         case LocalizedWord.Info: return "Info";
                         case LocalizedWord.Goals: return "Goals:";
-                        case LocalizedWord.Refuse: return "Refuse";
+                        case LocalizedWord.Reject: return "Reject";
                         case LocalizedWord.Return: return "Return"; // lol
                         case LocalizedWord.Effectiveness: return "Effectiveness";
+                        case LocalizedWord.HospitalsCoverage: return "Hospitals coverage";
                         default: return "...";
                     }
                 }
@@ -2578,6 +2580,10 @@ public static class Localization
 
                         case LocalizedPhrase.LodgersCount: return "Постояльцы";
                         case LocalizedPhrase.TotalRent: return "Общий доход";
+
+                        case LocalizedPhrase.AwaitingShip: return "Ожидается прибытие";
+                        case LocalizedPhrase.AwaitingDocking: return "Ожидается стыковка";
+                        case LocalizedPhrase.ShipServicing: return "Обслуживание корабля";
                         default: return "<...>";
                     }
                 }
@@ -2680,6 +2686,10 @@ public static class Localization
 
                         case LocalizedPhrase.LodgersCount: return "Lodgers count";
                         case LocalizedPhrase.TotalRent: return "Total rent";
+
+                        case LocalizedPhrase.AwaitingShip: return "Awaiting arrival";
+                        case LocalizedPhrase.AwaitingDocking: return "Awaiting docking";
+                        case LocalizedPhrase.ShipServicing: return "Ship servicing";
                         default: return "<...>";
                     }
                 }

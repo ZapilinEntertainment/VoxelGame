@@ -34,6 +34,16 @@ public class Hospital : WorkBuilding {
         coverage = STANDART_COVERAGE * level * ((float)workersCount / (float)maxWorkers);
         if (prevCoverage != coverage) colony.hospitalCoverageRecalculationNeeded = true;
     }
+
+    public override bool ShowUIInfo()
+    {
+        return true;
+    }
+    public override string UI_GetInfo()
+    {
+        return Localization.GetWord(LocalizedWord.HospitalsCoverage) + ": "+ ((int)(colony.hospitals_coefficient * 100f)).ToString() +'%';
+    }
+
     override public int AddWorkers(int x)
     {
         var w = base.AddWorkers(x);

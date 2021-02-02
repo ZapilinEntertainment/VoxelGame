@@ -192,7 +192,7 @@ public sealed class Ship : MonoBehaviour {
                     if (destination != null && destination.isActive)
                     {
                         docked = true;
-                        destination.ShipLoading(this);
+                        destination.StartShipService(this);
                     }
                     else Undock();
                 }

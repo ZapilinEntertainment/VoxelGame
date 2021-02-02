@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public sealed class UIDockObserver : UIObserver
 {
     #pragma warning disable 0649
-    [SerializeField] private Text tradingButtonText, immigrationButtonText, immigrationLimitText, nextShipTimer;
+    [SerializeField] private Text tradingButtonText, immigrationButtonText, immigrationLimitText, dockInfoLabel;
     [SerializeField] private GameObject tradingListPanel, immigrationPanel, tradingPanelContent;
     [SerializeField] private Image immigrationToggleButtonImage;
     [SerializeField] private InputField immigrationLimitInputField;
@@ -43,8 +43,7 @@ public sealed class UIDockObserver : UIObserver
             uwb.SetObservingPlace(observingDock);
             if (tradingListPanel.activeSelf) PrepareTradingPanel();
             else PrepareImmigrationPanel();
-            if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
-            else nextShipTimer.text = Localization.GetPhrase(LocalizedPhrase.PathBlocked);
+            dockInfoLabel.text = observingDock.UI_GetInfo();
         }
     }
 
@@ -124,8 +123,7 @@ public sealed class UIDockObserver : UIObserver
                     PrepareImmigrationPanel();
                 }
             }
-            if (observingDock.correctLocation) nextShipTimer.text = observingDock.shipArrivingTimer.ToString();
-            else nextShipTimer.text = Localization.GetPhrase(LocalizedPhrase.PathBlocked);
+            dockInfoLabel.text = observingDock.UI_GetInfo();
         }
     } 
 

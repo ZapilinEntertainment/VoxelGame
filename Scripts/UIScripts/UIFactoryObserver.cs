@@ -200,7 +200,7 @@ public sealed class UIFactoryObserver : UIObserver
                 if (observingFactory.isActive & observingFactory.isEnergySupplied)
                 {
                     if (observingFactory.workPaused) workflowString.text = Localization.GetActionLabel(LocalizationActionLabels.WorkStopped);
-                    else workflowString.text = observingFactory.UI_GetProductionSpeedInfo();
+                    else workflowString.text = observingFactory.UI_GetInfo();
                 }
                 else
                 {

@@ -23,7 +23,7 @@ public class Mine : WorkBuilding {
 		
 	}
 
-    public override bool ShowWorkspeed()
+    public override bool ShowUIInfo()
     {
         return true;
     }

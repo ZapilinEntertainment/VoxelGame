@@ -48,7 +48,7 @@ public abstract class WorkBuilding : Building, ILabourable
                 {
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
                     maxWorkers = 100;
-                    gearsDamage *= 0.8f;
+                    gearsDamage *= 0.5f;
                 }
                 break;
             case FARM_2_ID:
@@ -56,7 +56,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
                     factoryCoefficient = 1.2f;
                     maxWorkers = 100;
-                    gearsDamage *= 0.7f;
+                    gearsDamage *= 0.6f;
                 }
                 break;
             case FARM_3_ID:
@@ -64,7 +64,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     factoryCoefficient = 1.5f;
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenFarming);
                     maxWorkers = 100;
-                    gearsDamage *= 0.6f;
+                    gearsDamage *= 0.7f;
                 }
                 break;
             case COVERED_FARM:
@@ -72,7 +72,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsFarming);
                     factoryCoefficient = 2f;
                     maxWorkers = 100;
-                    gearsDamage *= 0.5f;
+                    gearsDamage *= 0.9f;
                 }
                 break;
             case FARM_BLOCK_ID:
@@ -80,14 +80,14 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsFarming);
                     factoryCoefficient = 2.2f;
                     maxWorkers = 300;
-                    gearsDamage *= 0.5f;
+                    gearsDamage *= 0.85f;
                 }
                 break;
             case LUMBERMILL_1_ID:
                 {
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenLumbering);
                     maxWorkers = 80;
-                    gearsDamage *= 0.6f;
+                    gearsDamage *= 0.5f;
                 }
                 break;
             case LUMBERMILL_2_ID:
@@ -103,7 +103,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.OpenLumbering);
                     factoryCoefficient = 1.8f;
                     maxWorkers = 80;
-                    gearsDamage *= 0.45f;
+                    gearsDamage *= 0.7f;
                 }
                 break;
             case COVERED_LUMBERMILL:
@@ -111,7 +111,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsLumbering);
                     factoryCoefficient = 3f;
                     maxWorkers = 140;
-                    gearsDamage *= 1.1f;
+                    gearsDamage *= 1.2f;
                 }
                 break;
             case LUMBERMILL_BLOCK_ID:
@@ -119,7 +119,7 @@ public abstract class WorkBuilding : Building, ILabourable
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.HydroponicsLumbering);
                     factoryCoefficient = 3.2f;
                     maxWorkers = 280;
-                    gearsDamage *= 1.2f;
+                    gearsDamage *= 1.3f;
                 }
                 break;
             case MINE_ID:
@@ -138,19 +138,21 @@ public abstract class WorkBuilding : Building, ILabourable
                 {
                     factoryCoefficient = 1.2f;
                     maxWorkers = 60;
+                    gearsDamage *= 1.2f;
                 }
                 break;
             case SMELTERY_3_ID:
                 {
                     factoryCoefficient = 1.5f;
                     maxWorkers = 100;
+                    gearsDamage *= 1.4f;
                 }
                 break;
             case SMELTERY_BLOCK_ID:
                 {
                     factoryCoefficient = 2f;
                     maxWorkers = 400;
-                    gearsDamage *= 0.95f;
+                    gearsDamage *= 1.6f;
                 }
                 break;
             case BIOGENERATOR_2_ID:
@@ -211,25 +213,25 @@ public abstract class WorkBuilding : Building, ILabourable
             case PLASTICS_FACTORY_3_ID:
                 {
                     maxWorkers = 150;
-                    gearsDamage *= 0.8f;
+                    gearsDamage *= 1.3f;
                 }
                 break;
             case SUPPLIES_FACTORY_4_ID:
                 {
                     maxWorkers = 140;
-                    gearsDamage *= 0.7f;
+                    gearsDamage *= 1.2f;
                 }
                 break;
             case SUPPLIES_FACTORY_5_ID:
                 {
                     maxWorkers = 250;
-                    gearsDamage *= 0.7f;
+                    gearsDamage *= 1.2f;
                 }
                 break;
             case GRPH_ENRICHER_3_ID:
                 {
                     maxWorkers = 60;
-                    gearsDamage *= 1.4f;
+                    gearsDamage *= 2.2f;
                 }
                 break;
             case XSTATION_3_ID:
@@ -348,8 +350,8 @@ public abstract class WorkBuilding : Building, ILabourable
     public int GetWorkersCount() { return workersCount; }
     public int GetMaxWorkersCount() { return maxWorkers; }
     public bool MaximumWorkersReached() { return workersCount == maxWorkers; }
-    virtual public bool ShowWorkspeed() { return false; }
-    virtual public string UI_GetProductionSpeedInfo() {
+    virtual public bool ShowUIInfo() { return false; }
+    virtual public string UI_GetInfo() {
         return ((int)(GetLabourCoefficient() * 100f)).ToString() + '%';
     }
     #endregion

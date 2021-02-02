@@ -16,8 +16,8 @@ public interface ILabourable
     int GetWorkersCount();
     int GetMaxWorkersCount();
     bool MaximumWorkersReached();
-    bool ShowWorkspeed();
-    string UI_GetProductionSpeedInfo();
+    bool ShowUIInfo();
+    string UI_GetInfo();
     void DisabledOnGUI();
 }
 

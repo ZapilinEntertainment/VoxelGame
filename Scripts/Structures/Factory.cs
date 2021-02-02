@@ -74,10 +74,7 @@ public class Factory : WorkBuilding
     override public void LabourUpdate()
     {
         if (recipe == Recipe.NoRecipe) return;
-        INLINE_FactoryLabourUpdate();
-    }
-    protected void INLINE_FactoryLabourUpdate()
-    {
+        // #copy to advanced factory
         Storage storage = colony.storage;
         if (outputResourcesBuffer > 0)
         {
@@ -103,6 +100,7 @@ public class Factory : WorkBuilding
                 else INLINE_WorkCalculation();
             }
         }
+        // eo copy
     }
 
     override protected void LabourResult(int iterations)
@@ -308,9 +306,10 @@ public class Factory : WorkBuilding
         showOnGUI = true;
         return factoryObserver;
     }
-    override public string UI_GetProductionSpeedInfo()
+    override public string UI_GetInfo()
     {
-        return string.Format("{0:0.##}", GetLabourCoefficient() * recipe.outputValue / GameMaster.LABOUR_TICK )+ ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+        if (recipe != null) return string.Format("{0:0.##}", GetLabourCoefficient() * recipe.outputValue / GameMaster.LABOUR_TICK) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+        else return "No recipe";
     }
 
 

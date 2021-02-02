@@ -193,11 +193,11 @@ public class Farm : WorkBuilding
         Destroy(gameObject);
     }
 
-    public override bool ShowWorkspeed()
+    public override bool ShowUIInfo()
     {
         return true;
     }
-    public override string UI_GetProductionSpeedInfo()
+    public override string UI_GetInfo()
     {
         return Localization.GetWord(LocalizedWord.Effectiveness) + ": " + ((int)(GetLabourCoefficient() * GameConstants.GetWorkComplexityCf(WorkType.OpenFarming))).ToString() + '%';
     }

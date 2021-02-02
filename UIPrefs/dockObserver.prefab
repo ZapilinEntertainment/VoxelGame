@@ -1031,7 +1031,7 @@ MonoBehaviour:
   tradingButtonText: {fileID: 114865815787715312}
   immigrationButtonText: {fileID: 114872933687237976}
   immigrationLimitText: {fileID: 114252619031384150}
-  nextShipTimer: {fileID: 114216477566945284}
+  dockInfoLabel: {fileID: 114216477566945284}
   tradingListPanel: {fileID: 1347142370418182}
   immigrationPanel: {fileID: 1438067389249798}
   tradingPanelContent: {fileID: 1882370668115664}
@@ -2450,7 +2450,7 @@ GameObject:
   - component: {fileID: 222447926621978302}
   - component: {fileID: 114216477566945284}
   m_Layer: 5
-  m_Name: nextShipTimer
+  m_Name: dockInfoLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

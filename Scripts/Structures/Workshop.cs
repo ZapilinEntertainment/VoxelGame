@@ -20,7 +20,7 @@ public sealed class Workshop : WorkBuilding {
         else colony.gears_coefficient = maxVal;
     }
 
-    public override bool ShowWorkspeed()
+    public override bool ShowUIInfo()
     {
         return true;
     }

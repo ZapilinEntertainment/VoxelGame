@@ -170,7 +170,6 @@ public class BlockBuildingSite : Worksite
                                 if (pillarsMap[x, z] == null) emptyPositionsIndexes.Add(x * length + z);
                             }
                         }
-                        pillarsMap = null;
                         int epcount = emptyPositionsIndexes.Count;
                         if (epcount > 0)
                         {

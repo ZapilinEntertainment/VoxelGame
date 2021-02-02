@@ -4,7 +4,7 @@ OpenFarming, HydroponicsFarming, OpenLumbering, HydroponicsLumbering, Mining, Ge
     ShuttleConstructing, ObservatoryFindCycle }
 public abstract class GameConstants {
     public const float GEARS_LEVEL_TO_CREATE_BLOCK = 4, GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL = 2.5f, GEARS_LOWER_LIMIT = 0.8f,
-        GEARS_DAMAGE_COEFFICIENT = 0.000003f;
+        GEARS_DAMAGE_COEFFICIENT = 0.00005f;
 
     public const byte HQ_LEVEL_TO_CREATE_BLOCK = 4, HQ_MAX_LEVEL = 6;
 
@@ -15,7 +15,6 @@ public abstract class GameConstants {
         START_BIRTHRATE_COEFFICIENT = 0.001f, 
         HIRE_COST_INCREASE = 0.1f, ENERGY_IN_CRYSTAL = 1000,
         FOOD_CONSUMPTION = 1,
-        SHIP_ARRIVING_TIME = 300,
         CLOUD_EMITTER_START_SPEED = 0.005f,
         STABILITY_CHANGE_SPEED = 0.002f,
         RSPACE_CONSUMING_VAL = 0.1f,
@@ -42,12 +41,6 @@ public abstract class GameConstants {
     // 3 - 13    
     // 4 - 15+ the history book on a shelf is always repeating itself
 
-    public static float GetShipArrivingTimer()
-    {
-        GameMaster gm = GameMaster.realMaster;
-        return ((SHIP_ARRIVING_TIME / (gm.tradeVesselsTrafficCoefficient)) / (gm.colonyController.docksLevel + 1) / 2f);
-    }
-
     public static float GetUpperBorder() { return Chunk.chunkSize * 2; }
     public static float GetBottomBorder() { return Chunk.chunkSize * (-1); }
 
@@ -61,7 +54,7 @@ public abstract class GameConstants {
             case WorkType.HydroponicsLumbering: return 120f;
             case WorkType.HydroponicsFarming: return 100f;
             
-            case WorkType.GearsUpgrading: return 800f;
+            case WorkType.GearsUpgrading: return 2000f;
             case WorkType.Digging: return 30f;
             case WorkType.Pouring: return 28f;
             case WorkType.Mining: return 25f;

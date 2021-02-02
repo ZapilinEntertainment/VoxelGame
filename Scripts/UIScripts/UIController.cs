@@ -130,7 +130,7 @@ public class UIController : MonoBehaviour
                 case UIMode.ExploringMinigame:
                     haveOwnCamera = true;
                     var mo = GetExploringMinigameController();
-                    if (mo.gameObject.activeSelf) mo.gameObject.SetActive(true);
+                    if (!mo.gameObject.activeSelf) mo.gameObject.SetActive(true);
                     break;
                 case UIMode.GlobalMap:
                     haveOwnCamera = true;
@@ -180,8 +180,8 @@ public class UIController : MonoBehaviour
         switch (e.stage)
         {
             case Expedition.ExpeditionStage.OnMission:
-                ChangeUIMode(UIMode.ExploringMinigame, true);
                 GetExploringMinigameController().Show(e);
+                ChangeUIMode(UIMode.ExploringMinigame, true);                
                 break;
             case Expedition.ExpeditionStage.WayIn:
             case Expedition.ExpeditionStage.WayOut:

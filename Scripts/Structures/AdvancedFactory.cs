@@ -28,7 +28,33 @@ public sealed class AdvancedFactory : Factory
     override public void LabourUpdate()
     {
         if (recipe == AdvancedRecipe.NoRecipe) return;
-        INLINE_FactoryLabourUpdate();
+        // #copy from factory
+        Storage storage = colony.storage;
+        if (outputResourcesBuffer > 0)
+        {
+            outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
+        }
+        if (outputResourcesBuffer <= BUFFER_LIMIT)
+        {
+            if (isActive && isEnergySupplied)
+            {
+                float work = GetLabourCoefficient();
+                if (productionMode == FactoryProductionMode.Limit)
+                {
+                    if (!workPaused) INLINE_WorkCalculation();
+                    else
+                    {
+                        if (storage.standartResources[recipe.output.ID] < productionModeValue)
+                        {
+                            workPaused = false;
+                            INLINE_WorkCalculation();
+                        }
+                    }
+                }
+                else INLINE_WorkCalculation();
+            }
+        }
+        //eo copy
     }
     override protected void LabourResult(int iterations)
     {
@@ -127,6 +153,11 @@ public sealed class AdvancedFactory : Factory
         productionModeValue = 0;
         workComplexityCoefficient = ar.workComplexity;
         workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[ar.output.ID] >= productionModeValue;
+    }
+    override public string UI_GetInfo()
+    {
+        if (recipe != null) return string.Format("{0:0.##}", GetLabourCoefficient() * recipe.outputValue / GameMaster.LABOUR_TICK) + ' ' + Localization.GetPhrase(LocalizedPhrase.PerSecond);
+        else return "No advanced recipe";
     }
 
     #region save-load system

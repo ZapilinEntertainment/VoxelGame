@@ -24,6 +24,7 @@ public sealed class Expedition
     public Artifact artifact { get; private set; }
 
     private bool subscribedToUpdate = false, missionCompleted;
+    public bool IsMissionCompleted() { return missionCompleted; }
     private int shuttleID = Hangar.NO_SHUTTLE_VALUE, transmissionID = QuantumTransmitter.NO_TRANSMISSION_VALUE;
     private FlyingExpedition mapMarker;
     private Vector2Int planPos = Vector2Int.zero;
@@ -194,6 +195,7 @@ public sealed class Expedition
     /// <returns></returns>
     public bool SectorCollapsingTest() // INDEV
     {
+        return true;
         return Mathf.Sqrt(crew.TechSkillsRoll() * crew.SecretKnowledgeRoll()) >= 25f;
     }
     public bool SuccessfulExitTest()
@@ -367,7 +369,7 @@ public sealed class Expedition
         if (x != NO_VALUE)
         {
             destination = GameMaster.realMaster.globalMap.GetMapPointByID(x) as PointOfInterest;
-            destination.AssignExpedition(this);
+            destination?.AssignExpedition(this);
         }
         else destination = null;
         crew = Crew.GetCrewByID(System.BitConverter.ToInt32(data, 9));

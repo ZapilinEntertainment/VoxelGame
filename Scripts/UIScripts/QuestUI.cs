@@ -482,7 +482,7 @@ public sealed class QuestUI : MonoBehaviour
     {
         Transform t = questInfoPanel.transform;
         t.GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Goals);
-        t.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Refuse);
+        t.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Reject);
     }
 
     #region save-load

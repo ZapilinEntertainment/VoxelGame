@@ -141,7 +141,7 @@ public class Plane
     }
     public bool isQuad
     {
-        get { return (meshType == MeshType.Quad); }
+        get { return (meshType == MeshType.Quad | meshType == MeshType.FoundationSide); }
     }
     public bool isSurface
     {

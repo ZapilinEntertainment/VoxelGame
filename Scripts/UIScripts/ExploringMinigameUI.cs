@@ -47,37 +47,15 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
 
     private void Awake()
     {
-        RectTransform rt = deckHolder.GetComponent<RectTransform>();
-        float height = Screen.height;
-        if (rt.rect.width < height) height = rt.rect.width;
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, height);
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
-        rt.anchoredPosition = new Vector3(-height / 2f, 0f, 0f);
+       // RectTransform rt = deckHolder.GetComponent<RectTransform>();
+       // float height = Screen.height;
+       // if (rt.rect.width < height) height = rt.rect.width;
+       // rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, height);
+       // rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+       // rt.anchoredPosition = new Vector3(-height / 2f, 0f, 0f);
 
         infoPanel.gameObject.SetActive(false);
         infoPanel.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopMission);
-        var mempanel = membersPanel;
-        rt = mempanel.GetComponent<RectTransform>();
-        float p = rt.rect.width / (float)Crew.MAX_MEMBER_COUNT;
-        if (p > rt.rect.height) p = rt.rect.height;
-        float ax = p / rt.rect.width, ay = p / rt.rect.height;
-        rt = mempanel.GetChild(0).GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0f, 0f);
-        rt.anchorMax = new Vector2(ax * p, ay);
-        rt.offsetMax = Vector2.zero;
-        rt.offsetMin = Vector2.zero;
-        var g = rt.gameObject;
-        if (Crew.MAX_MEMBER_COUNT > 1)
-        {
-            for (int i = 1; i > Crew.MAX_MEMBER_COUNT; i++)
-            {
-                rt = Instantiate(g, mempanel).GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(ax * i, 0);
-                rt.anchorMax = new Vector2(ax * (i + 1) * p, ay);
-                rt.offsetMax = Vector2.zero;
-                rt.offsetMin = Vector2.zero;
-            }
-        }
 
         var t = suppliesLabel.transform.parent;
         t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(ResourceType.SUPPLIES_ID);
@@ -358,6 +336,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
             pingpongVal = Mathf.PingPong(pingpongVal, 1f);
             rollText.transform.localScale = Vector3.one * (1f + pingpongVal * 0.5f);
         }
+        restButton.SetActive(observingCrew.stamina <= 0.5f & observingExpedition.suppliesCount > 0);
         if (needInfoRefreshing) RefreshInfo();
     }
 
@@ -366,7 +345,6 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
         if (observingExpedition == null | observingExpedition.stage == Expedition.ExpeditionStage.Dismissed)
         {
             observingExpedition = null;
-
             gameObject.SetActive(false);
         }
        else
@@ -378,8 +356,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
             staminaPercentage.text = ((int)(observingCrew.stamina * 100f)).ToString() + '%';
             suppliesLabel.text = observingExpedition.suppliesCount.ToString();
             crystalsLabel.text = observingExpedition.crystalsCollected.ToString();
-            membersCountText.text = observingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();
-            restButton.SetActive(observingCrew.stamina <= 0.1f & observingExpedition.suppliesCount > 0);
+            membersCountText.text = observingCrew.membersCount.ToString() + '/' + Crew.MAX_MEMBER_COUNT.ToString();            
 
             cpanel.gameObject.SetActive(true);
         }
@@ -1249,9 +1226,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
     }
 
     public void StopMissionButton(bool check)
-    {        
+    {
+        bool deleteSector = true;
         if (observingExpedition != null)
         {
+            if (observingExpedition.IsMissionCompleted()) deleteSector = true; else deleteSector = Random.value < 0.8f;
             if (!check) observingExpedition.EndMission();
             else {
                 if (!observingExpedition.SuccessfulExitTest()) observingExpedition.Disappear();
@@ -1263,7 +1242,8 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
         if (observingPoint != null)
         {
             observingPoint.ResetChallengesArray();
-            GameMaster.realMaster.globalMap.RockSector(observingPoint);
+            //GameMaster.realMaster.globalMap.RockSector(observingPoint);
+            if (deleteSector) GameMaster.realMaster.globalMap.RemoveSector(observingPoint);
             observingPoint = null;
         }
         gameObject.SetActive(false);        
@@ -1272,6 +1252,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
     {
         observingExpedition.SpendSupplyCrate();
         observingCrew.RestOnMission(observingPoint.difficulty);
+        RefreshInfo();
     }
 
     private void OnDisable()

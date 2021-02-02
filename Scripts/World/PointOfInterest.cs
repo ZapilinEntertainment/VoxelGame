@@ -606,7 +606,7 @@ public class PointOfInterest : MapPoint
                             v = Random.value;
                             if (v < 0.66f)
                             {
-                                if (v < 0.33f) challengeArray[x, y] = new ChallengeField(ChallengeType.CrystalFee, (byte)(255 * df));
+                                if (v < 0.33f) challengeArray[x, y] = new ChallengeField(ChallengeType.CrystalFee, (byte)(15 * df));
                                 else challengeArray[x, y] = new ChallengeField(ChallengeType.AscensionTest, (byte)(100 * df));
                             }
                             else challengeArray[x, y] = ChallengeField.impassableField;

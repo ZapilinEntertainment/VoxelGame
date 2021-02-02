@@ -13,9 +13,16 @@ public sealed class Dock : WorkBuilding {
 
     private bool subscribedToRestoreBlockersEvent = false;
 	private const float LOADING_TIME = 20f;
+    private float shipArrivingTime
+    {
+        get
+        {
+            return LOADING_TIME * (16f - level - 10f * GameMaster.realMaster.tradeVesselsTrafficCoefficient);
+        }
+    }
     private float loadingTimer = 0f, availableVolume = 0f;    
 	private int preparingResourceIndex;
-    private Ship loadingShip;
+    private Ship servicingShip;
     private List<Block> dependentBlocksList;
 
     public const int SMALL_SHIPS_PATH_WIDTH = 2, MEDIUM_SHIPS_PATH_WIDTH = 3, HEAVY_SHIPS_PATH_WIDTH = 4;
@@ -35,7 +42,7 @@ public sealed class Dock : WorkBuilding {
         }
         if (!GameMaster.loading)
         {
-            if (r != modelRotation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+            if (r != modelRotation) shipArrivingTimer = shipArrivingTime;
         }
         modelRotation = (byte)r;
         var model = transform.childCount > 0 ? transform.GetChild(0) : null;
@@ -77,7 +84,7 @@ public sealed class Dock : WorkBuilding {
         {
             basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
             CheckPositionCorrectness();
-            if (correctLocation) shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+            if (correctLocation) shipArrivingTimer = shipArrivingTime;
         }
         else
         {
@@ -103,18 +110,29 @@ public sealed class Dock : WorkBuilding {
 
     override public void LabourUpdate () {
         if ( !isEnergySupplied ) return;
-		if ( maintainingShip ) {           
-			if (loadingTimer > 0) {
-					loadingTimer -= GameMaster.LABOUR_TICK;
-					if (loadingTimer <= 0) {
-						if (loadingShip != null) ShipLoading(loadingShip);
-						loadingTimer = 0;
-					}
-			}
+		if ( maintainingShip ) {
+            if (loadingTimer > 0f)
+            {
+                loadingTimer -= GameMaster.LABOUR_TICK;
+                if (loadingTimer <= 0f)
+                {
+                    if (servicingShip != null) FinishShipService(servicingShip);
+                    else maintainingShip = false;
+                    loadingTimer = 0f;
+                }
+            }
+            else
+            {
+               //корабль спаунился и ожидается в порту
+               if (servicingShip == null)
+                {
+                    maintainingShip = false;
+                    shipArrivingTimer = shipArrivingTime;
+                }
+            }
 		}
-		else {            // ship arriving
-            
-            if (shipArrivingTimer > 0 & correctLocation) { 
+		else {            // ship arriving            
+            if (shipArrivingTimer >= 0 & correctLocation) { 
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
@@ -155,21 +173,59 @@ public sealed class Dock : WorkBuilding {
 						}
 					}
 
-					Ship s = PoolMaster.current.GetShip( level, stype );
-                    if (s != null)
-                    {
-                        s.gameObject.SetActive(true);
-                        if (s != null)
-                        {
-                            maintainingShip = true;
-                            s.SetDestination(this);
-                        }
+					servicingShip = PoolMaster.current.GetShip( level, stype );
+                    if (servicingShip != null)
+                    {                        
+                        servicingShip.gameObject.SetActive(true);                        
+                        servicingShip.SetDestination(this);
+                        maintainingShip = true;
                     }
-                    shipArrivingTimer = GameConstants.GetShipArrivingTimer();
+                    else shipArrivingTimer = shipArrivingTime;
                 }
 			}
 		}
 	}
+
+    public void StartShipService(Ship s)
+    {
+        if (servicingShip != s)
+        {
+            servicingShip.Undock();
+        }
+        servicingShip = s;
+        loadingTimer = LOADING_TIME;
+        if (announceNewShips) AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
+    }
+    private void FinishShipService(Ship s)
+    {
+        availableVolume = workersCount * WORK_PER_WORKER;
+        DockSystem.GetCurrent().HandleShip(this, s, colony);
+        servicingShip = null;
+        maintainingShip = false;
+        s.Undock();
+
+        shipArrivingTimer = shipArrivingTime;
+    }
+
+    public override string UI_GetInfo()
+    {
+        if (isActive & isEnergySupplied)
+        {
+            if (correctLocation)
+            {
+                if (!maintainingShip)
+                    return Localization.GetPhrase(LocalizedPhrase.AwaitingShip) + ": " + shipArrivingTimer.ToString();
+                else
+                {
+                    if (loadingTimer == 0f) return Localization.GetPhrase(LocalizedPhrase.AwaitingDocking);
+                    else return Localization.GetPhrase(LocalizedPhrase.ShipServicing) + ": " + ((int)loadingTimer).ToString();
+                }
+                
+            }
+            else return Localization.GetPhrase(LocalizedPhrase.PathBlocked);
+        }
+        else return '[' + Localization.GetWord(LocalizedWord.Offline) + ']';
+    }
 
     public void CheckPositionCorrectness()
     {
@@ -261,7 +317,7 @@ public sealed class Dock : WorkBuilding {
         if (!correctLocation)
         {
             maintainingShip = false;
-            loadingShip = null;
+            servicingShip = null;
         }
         // end
     }
@@ -390,25 +446,7 @@ public sealed class Dock : WorkBuilding {
             }
             else return false;
         }
-    }
-
-    public void ShipLoading(Ship s)
-    {
-        if (loadingShip == null)
-        {
-            loadingTimer = LOADING_TIME;
-            loadingShip = s;
-            if (announceNewShips) AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.ShipArrived));
-            return;
-        }
-        availableVolume = workersCount * WORK_PER_WORKER;
-        DockSystem.GetCurrent().HandleShip(this, s, colony);
-        loadingShip = null;
-        maintainingShip = false;
-        s.Undock();
-
-        shipArrivingTimer = GameConstants.GetShipArrivingTimer();     
-    }
+    }  
     public void SellResource(ResourceType rt, float volume)
     {
         if (availableVolume <= 0f) return;
@@ -444,7 +482,7 @@ public sealed class Dock : WorkBuilding {
     override public void FreeWorkers(int x)
     {
         base.FreeWorkers(x);
-        if (workersCount == 0 && maintainingShip && loadingShip != null) loadingShip.Undock();
+        if (workersCount == 0 && maintainingShip && servicingShip != null) servicingShip.Undock();
     }
 
     public override UIObserver ShowOnGUI()
@@ -520,7 +558,7 @@ public sealed class Dock : WorkBuilding {
         if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         colony.RemoveDock(this);
-        if (maintainingShip & loadingShip != null) loadingShip.Undock();
+        if (maintainingShip & servicingShip != null) servicingShip.Undock();
         if (colony.docks.Count == 0 & dockObserver != null) Destroy(dockObserver);
         if (subscribedToRestoreBlockersEvent)
         {
@@ -540,10 +578,10 @@ public sealed class Dock : WorkBuilding {
         byte zero = 0, one = 1;
         data.Add(correctLocation ? one : zero);
 
-        if (maintainingShip & loadingShip != null)
+        if (maintainingShip & servicingShip != null)
         {
             data.Add(one);
-            data.AddRange(loadingShip.Save());
+            data.AddRange(servicingShip.Save());
         }
         else data.Add(zero);
         data.AddRange(System.BitConverter.GetBytes(loadingTimer));
@@ -564,8 +602,12 @@ public sealed class Dock : WorkBuilding {
         maintainingShip = fs.ReadByte() == 1;
         if (maintainingShip)
         {
-            loadingShip = Ship.Load(fs, this);
-            if (loadingShip == null) maintainingShip = false;
+            servicingShip = Ship.Load(fs, this);
+            if (servicingShip == null)
+            {
+                Debug.Log("Dock - load error, no save maintaining ship");
+                maintainingShip = false;
+            }
         }
         data = new byte[8];
         fs.Read(data, 0, 8);        

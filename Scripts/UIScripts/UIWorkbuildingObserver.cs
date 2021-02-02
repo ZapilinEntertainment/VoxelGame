@@ -47,9 +47,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         ignoreWorkersSlider = false;
 
         workersCountField.text = showingWorkersCount.ToString() + '/' + showingWorkersMaxCount.ToString();
-        workSpeedField.text = observingPlace.UI_GetProductionSpeedInfo();
+        workSpeedField.text = observingPlace.UI_GetInfo();
 
-		workspeedStringEnabled = observingPlace.ShowWorkspeed();
+		workspeedStringEnabled = observingPlace.ShowUIInfo();
         workSpeedField.enabled = workspeedStringEnabled;
         if (observingPlace.IsWorksite())
         {
@@ -92,7 +92,7 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
             }
             if (workspeedStringEnabled)
             {
-                workSpeedField.text = observingPlace.UI_GetProductionSpeedInfo();
+                workSpeedField.text = observingPlace.UI_GetInfo();
                 if (!workSpeedField.enabled) workSpeedField.enabled = true;
             }
             if (observingPlace.IsWorksite())

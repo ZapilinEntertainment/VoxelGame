@@ -348,25 +348,24 @@ public sealed class Crew : MonoBehaviour {
     {
         switch (level)
         {
-            case 1: return 300;
-            case 2: return 900;
-            case 3: return 2700;
-            case 4: return 6500;
-            case 5: return 14000;
-            case 6: return 23000;
-            case 7: return 34000;
-            case 8: return 48000;
-            case 9: return 64000;
-            case 10: return 85000;
-            case 11: return 100000;
-            case 12: return 12000;
-            case 13: return 140000;
-            case 14: return 165000;
-            case 15: return 195000;
-            case 16: return 225000;
-            case 17: return 265000;
-            case 18: return 305000;
-            default: return 355000;
+            case 1: return 50;
+            case 2: return 100;
+            case 3: return 120;
+            case 4: return 125;
+            case 5: return 130;
+            case 6: return 142;
+            case 7: return 156;
+            case 8: return 172;
+            case 9: return 190;
+            case 10: return 210;
+            case 11: return 232;
+            case 12: return 256;
+            case 13: return 280;
+            case 14: return 320;
+            case 15: return 360;
+            case 16: return 420;
+            case 17: return 480;
+            default: return 512;
         }
     }
     public void ImprovePerception()

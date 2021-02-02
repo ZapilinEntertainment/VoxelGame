@@ -94,8 +94,8 @@ public abstract class Worksite : ILabourable
     public int GetWorkersCount() { return workersCount; }
     public int GetMaxWorkersCount() { return maxWorkersCount; }
     public bool MaximumWorkersReached() { return workersCount == maxWorkersCount; }
-    virtual public bool ShowWorkspeed() { return false; }
-    virtual public string UI_GetProductionSpeedInfo() { return string.Empty; }
+    virtual public bool ShowUIInfo() { return false; }
+    virtual public string UI_GetInfo() { return string.Empty; }
     virtual public void DisabledOnGUI()
     {
         showOnGUI = false;
