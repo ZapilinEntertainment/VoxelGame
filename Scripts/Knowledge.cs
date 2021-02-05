@@ -21,7 +21,7 @@ public sealed class Knowledge
     private byte routeCompletenessMask = 0;
     public float[] routePoints { get; private set; }
     public byte[] puzzlePartsCount { get; private set; }
-    public byte[] colorCodesArray{get; private set;}
+    public byte[] buttonsColorCodesArray{get; private set;}
     public float completeness { get; private set; }
     public int changesMarker { get; private set; }
 
@@ -40,8 +40,7 @@ public sealed class Knowledge
         new Color(0.1f, 0.92f, 0.9f, 1f), // 4 - cyan
         new Color(0.2f, 0.17f, 0.17f, 1f), // 5 - black      
     };
-    public static readonly float[] STEPVALUES = new float[7] { 10f, 15f, 25f, 50f, 75f, 100f, 125f }; // 400 total
-    public const float MAX_RESEARCH_PTS = 400f;
+    public static readonly float[] STEPVALUES = new float[7] { 10f, 15f, 25f, 50f, 75f, 100f, 125f }; 
     public static readonly byte[,] routeButtonsIndexes = new byte[8, 7] {
         {36, 44, 43,51,52,60,59},
         {45, 53,46,54,62,55,63},
@@ -639,23 +638,24 @@ public sealed class Knowledge
         {
             puzzlePins[i] = Random.value > 0.55f ? true : false;
         }
-        SYSTEM_FillBasicData();
+        SYSTEM_ResetBasicData();
     }    
     private Knowledge(bool[] pinsArray)
     {
         puzzlePins = pinsArray;
-        SYSTEM_FillBasicData();
+        SYSTEM_ResetBasicData();
     }
-    private void SYSTEM_FillBasicData()
+    public void SYSTEM_ResetBasicData()
     {
         routePoints = new float[ROUTES_COUNT];
         completeness = 0f;
         puzzlePartsCount = new byte[PUZZLECOLORS_COUNT];
-        colorCodesArray = new byte[PUZZLEPARTS_COUNT]; //filed with 0 - whitecolor
+        buttonsColorCodesArray = new byte[PUZZLEPARTS_COUNT]; //filed with 0 - whitecolor
         foreach (byte b in blockedCells)
         {
-            colorCodesArray[b] = BLACKCOLOR_CODE;
+            buttonsColorCodesArray[b] = BLACKCOLOR_CODE;
         }
+        changesMarker++;
     }
 
     public byte GenerateCellColor(byte route, byte step)
@@ -743,7 +743,22 @@ public sealed class Knowledge
 
     public void AddPuzzlePart(byte colorcode)
     {
-        if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255) puzzlePartsCount[colorcode]++;  
+        if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255)
+        {
+            puzzlePartsCount[colorcode]++;
+            changesMarker++;
+        }
+    }
+    public void AddPuzzlePart(byte colorcode, int count)
+    {
+        if (count <= 0) return;
+        if (colorcode < puzzlePartsCount.Length)
+        {
+            int x = puzzlePartsCount[colorcode] + count;
+            if (x >= 255) puzzlePartsCount[colorcode] = 255;
+            else puzzlePartsCount[colorcode] = (byte)x;
+            changesMarker++;
+        }
     }
     public void AddRewardResearchPoints(PointOfInterest poi)
     {
@@ -759,9 +774,9 @@ public sealed class Knowledge
             routePoints[routeIndex] = maxvalue;
             for (byte step = 0; step < STEPS_COUNT; step++)
             {
-                if (colorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
+                if (buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
                 {
-                    colorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
+                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
                     changesMarker++;
                 }                    
             }
@@ -771,9 +786,9 @@ public sealed class Knowledge
             byte step = 0;
             while (step < STEPS_COUNT && f >= STEPVALUES[step])
             {
-                if ( colorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
+                if ( buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
                 {
-                    colorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
+                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
                     changesMarker++;
                 }
                 step++;
@@ -781,35 +796,34 @@ public sealed class Knowledge
             routePoints[routeIndex] = f;
         }
     }
+    public float GetResearchProgress(int i)
+    {
+        if (i >= 0 && i < ROUTES_COUNT)
+        {
+            return routePoints[i] / STEPVALUES[STEPS_COUNT - 1];
+        }
+        else return 0f;
+    }
     public bool UnblockButton(int i)
     {
         if (IsButtonUnblocked(i)) return true;
-        var colorcode = colorCodesArray[i];
+        var colorcode = buttonsColorCodesArray[i];
         if (puzzlePartsCount[colorcode] > 0)
         {
             puzzlePartsCount[colorcode]--;
-            colorCodesArray[i] = NOCOLOR_CODE;
+            buttonsColorCodesArray[i] = NOCOLOR_CODE;
             changesMarker++;
-            for (int a = 0; a < ROUTES_COUNT; a++)
-            {
-                int index = routeButtonsIndexes[a, STEPS_COUNT - 3];
-                if (i != index)
-                {
-                    index = routeButtonsIndexes[a, STEPS_COUNT - 4];
-                    if (i != index) index = -1;
-                    else index = 0;
-                }
-                else index = 1;
-                if (index != -1)
-                {
-                    var ui = UIController.GetCurrent();                    
-                    if (ui.currentMode == UIMode.KnowledgeTab)
-                    {
-                        int x = GetBonusStructure((ResearchRoute)a, index);
-                        if (x != -1) ui.GetKnowledgeTabUI().UnblockAnnouncement(x);
-                    }
-                }                
+
+            // проверка на получение бонусов
+            var data = CellIndexToRouteAndStep(i);
+            int x = GetBonusStructure((ResearchRoute)data.routeIndex, data.step);
+            if (x != -1) {
+                var uic = UIController.GetCurrent();
+                if (uic != null && uic.currentMode == UIMode.KnowledgeTab)   uic.GetKnowledgeTabUI().UnblockAnnouncement(x);
             }
+            float requiredPts = STEPVALUES[data.step];
+            if (routePoints[data.routeIndex] < requiredPts) routePoints[data.routeIndex] = requiredPts;
+
             RecalculateCompletenessMask();
             return true;
         }
@@ -817,7 +831,7 @@ public sealed class Knowledge
     }
     public bool IsButtonUnblocked(int i)
     {
-        return colorCodesArray[i] == NOCOLOR_CODE;
+        return buttonsColorCodesArray[i] == NOCOLOR_CODE;
     }
     public bool IsRouteUnblocked(ResearchRoute rr)
     {
@@ -893,34 +907,38 @@ public sealed class Knowledge
 
         //connected with GetBonusStructure
     }
-    private int GetBonusStructure(ResearchRoute r, int i)
+    private int GetBonusStructure(ResearchRoute r, byte step)
     {
-        if (i < 0) return -1;
+        bool lowerStep = step == STEPS_COUNT - 4;
+        if (!lowerStep)
+        {
+            if (step != STEPS_COUNT - 3) return -1;
+        }
         switch(r)
         {
             case ResearchRoute.Foundation:
-                if (i == 0) return Structure.HOTEL_BLOCK_6_ID;
-                else return Structure.HOUSING_MAST_6_ID;
+                if (lowerStep) return Structure.HOTEL_BLOCK_6_ID;
+                else  return Structure.HOUSING_MAST_6_ID;
             case ResearchRoute.CloudWhale:
-                if (i == 0) return Structure.XSTATION_3_ID;
+                if (lowerStep) return Structure.XSTATION_3_ID;
                 else return Structure.STABILITY_ENFORCER_ID;
             case ResearchRoute.Engine:
-                if (i == 0) return Structure.ENGINE_ID;
+                if (lowerStep) return Structure.ENGINE_ID;
                 else return Structure.CONNECT_TOWER_6_ID;
             case ResearchRoute.Pipes:
-                if (i == 0) return Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID;
+                if (lowerStep) return Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID;
                 else return  Structure.CAPACITOR_MAST_ID;
             case ResearchRoute.Crystal:
-                if (i == 0) return -1; //Structure.Crystalliser;
+                if (lowerStep) return -1; //Structure.Crystalliser;
                 else return -1;// crystal lightning mast
             case ResearchRoute.Monument:
-                if (i == 0) return Structure.MONUMENT_ID;
+                if (lowerStep) return Structure.MONUMENT_ID;
                 else return -1; // anchormast
             case ResearchRoute.Blossom:
-                if (i == 0) return -1; // gardens
+                if (lowerStep) return -1; // gardens
                 else return -1; //hanging tower mast
             case ResearchRoute.Pollen:
-                if (i == 0) return -1; // resource filter
+                if (lowerStep) return -1; // resource filter
                 else return -1; // protector core
             default: return -1;
         }
@@ -1143,7 +1161,7 @@ public sealed class Knowledge
         }
         return Quest.NoQuest;
     }
-    public (byte,byte) CellIndexToRouteAndStep(int buttonIndex)
+    public ( byte routeIndex,byte step) CellIndexToRouteAndStep(int buttonIndex)
     {
         for (byte ri = 0; ri < ROUTES_COUNT; ri++)
         {
@@ -1177,7 +1195,7 @@ public sealed class Knowledge
         //
         for (i = 0; i < PUZZLEPARTS_COUNT; i++)
         {
-            fs.WriteByte(colorCodesArray[i]);
+            fs.WriteByte(buttonsColorCodesArray[i]);
         }
         for (i = 0; i < ROUTES_COUNT; i++)
         {
@@ -1215,7 +1233,7 @@ public sealed class Knowledge
         {
             cca[i] = (byte)fs.ReadByte();
         }
-        current.colorCodesArray = cca;
+        current.buttonsColorCodesArray = cca;
         //
         current.routeBonusesMask = new byte[ROUTES_COUNT];
         for (i = 0; i < ROUTES_COUNT; i++)

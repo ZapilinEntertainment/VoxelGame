@@ -9,7 +9,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     [SerializeField] private Image unsufficientLabel, unsufficientLight;
     [SerializeField] private Transform holder, infoPanel, maincanvas;
     [SerializeField] private RectTransform unblockAnnouncePanel;
-    [SerializeField] private RectTransform[] routeBackgrounds;
+    [SerializeField] private RawImage[] routeBackgrounds;
     private Knowledge knowledge;
     private GameObject[] buttons;
     private UIController uicontroller;
@@ -30,7 +30,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     private static int puzzleTexSize;
 
     private static readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
-    private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), unvisibleColor = new Color(0f, 0f, 0f, 0f);
+    private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), invisibleColor = new Color(0f, 0f, 0f, 0f);
     private const float DISAPPEAR_SPEED = 1.5f;
     private const int PLAIN = 0, PIN = 1, CUT = 2;
 
@@ -330,7 +330,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
                     ri.texture = UIController.iconsTexture;
                     ri.uvRect = UIController.GetIconUVRect(Icons.QuestBlockedIcon);
                     ri.raycastTarget = false;
-                }
+                }               
             }
             //
             ascensionPanel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.AscensionIcon);
@@ -356,7 +356,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
 
     public void Redraw()
     {
-        var carray = knowledge.colorCodesArray;
+        // PAINTING PUZZLE BUTTONS
+        var carray = knowledge.buttonsColorCodesArray;
         var colors = Knowledge.colors;
         GameObject b;
         Transform bt;
@@ -377,7 +378,10 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
                 if (b.activeSelf) b.SetActive(false);
             }
         }
+        colors = null;
+        carray = null;
 
+        // PUZZLE PARTS COUNT
         var parts = knowledge.puzzlePartsCount;
         ascensionPanel.GetChild(1).GetComponent<Text>().text = ((int)(knowledge.completeness * 100f)).ToString() + '%';
         redpartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.REDCOLOR_CODE].ToString();
@@ -397,6 +401,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         }
         t = whitepartsPanel;
         pc = parts[Knowledge.WHITECOLOR_CODE];
+        parts = null;
         if (pc > 0)
         {
             t.GetChild(1).GetComponent<Text>().text = pc.ToString();
@@ -407,10 +412,10 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
             if (t.gameObject.activeSelf) t.gameObject.SetActive(false);
         }
 
-        var cca = knowledge.colorCodesArray;
-        var ia = Knowledge.routeButtonsIndexes;
+        // BACKGROUND
         for (i = 0; i< Knowledge.ROUTES_COUNT; i++)
-        {                    
+        {            
+            routeBackgrounds[i].color = Color.Lerp(invisibleColor, Color.white, knowledge.GetResearchProgress(i));
             if (knowledge.IsRouteUnblocked(i) && endQuestButtons[i] == null)
             {
                 var g = new GameObject();
@@ -432,7 +437,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
                     () => QuestUI.current.StartEndQuest(index), Localization.GetWord(LocalizedWord.Yes),
                     AnnouncementCanvasController.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
                     ));
-                endQuestButtons[i] = g;
+                endQuestButtons[i] = g;                
             }
         }
 
@@ -443,8 +448,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     {
         if (unsufficientMarkering)
         {
-            Color col = Vector4.MoveTowards(unsufficientLight.color, unvisibleColor, DISAPPEAR_SPEED * Time.deltaTime);
-            if (col == unvisibleColor)
+            Color col = Vector4.MoveTowards(unsufficientLight.color, invisibleColor, DISAPPEAR_SPEED * Time.deltaTime);
+            if (col == invisibleColor)
             {
                 unsufficientMarkering = false;
                 unsufficientLabel.gameObject.SetActive(false);
@@ -463,7 +468,12 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         }
 
         //test
-        if (Input.GetKeyDown("r")) knowledge.AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 8), Random.value * 20f);
+        if (Input.GetKeyDown("r"))
+        {
+            //knowledge.AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 8), Random.value * 20f);
+            //knowledge.SYSTEM_ResetBasicData();
+           // knowledge.AddPuzzlePart(knowledge.buttonsColorCodesArray[Knowledge.WHITECOLOR_CODE], 64);
+        }
     }
 
     public void Click(int i)
@@ -480,7 +490,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         }
         else
         {
-            var code = knowledge.colorCodesArray[i];
+            var code = knowledge.buttonsColorCodesArray[i];
             if (code != Knowledge.BLACKCOLOR_CODE & code != Knowledge.WHITECOLOR_CODE)
             {
                 ShowUnsufficientParts(code);

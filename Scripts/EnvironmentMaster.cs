@@ -444,6 +444,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     public void EnableDecorations()
     {
+        if (GameMaster.sceneClearing) return;
         showCelestialBodies = true;
         if (celestialBodies !=null && celestialBodies.Count > 0)
         {
@@ -455,6 +456,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     }
     public void DisableDecorations()
     {
+        if (GameMaster.sceneClearing) return;
         showCelestialBodies = false;
         if (celestialBodies != null && celestialBodies.Count > 0)
         {

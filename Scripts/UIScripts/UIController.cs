@@ -101,6 +101,7 @@ public class UIController : MonoBehaviour
 
     public void ChangeUIMode(UIMode newUIMode, bool disableCanvas)
     {
+        if (GameMaster.sceneClearing) return;
         if (currentMode != newUIMode)
         {
             switch (currentMode)
