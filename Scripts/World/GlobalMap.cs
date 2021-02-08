@@ -232,7 +232,7 @@ public sealed class GlobalMap : MonoBehaviour
         if (mapSectors[index] != null) RemoveSector(index);
         Vector2 spos = GetSectorPosition(index);
         MapPoint mpoint = MapPoint.CreatePointOfType(spos.x, spos.y, mtype);
-        mapPoints.Add(mpoint);
+        AddPoint(mpoint, false);
         RingSector rs = new RingSector(mpoint, e);
         mapSectors[index] = rs;
         actionsHash++;
@@ -670,6 +670,15 @@ public sealed class GlobalMap : MonoBehaviour
         );
         mapSectors[x] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
         AddPoint(centralPoint, true);
+    }
+    public void TEST_MakeNewPoint(MapMarkerType mmt)
+    {
+        int x = Random.Range(0, mapSectors.Length);
+        var rs = mapSectors[x];
+        if (rs == null)
+        {
+            AddNewSector((byte)x, mmt, Environment.defaultEnvironment);
+        }
     }
 
     #region save-load system

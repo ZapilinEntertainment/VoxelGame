@@ -31,7 +31,7 @@ public sealed class MenuUI : MonoBehaviour
     public void Start()
     {
         int k = 0;
-        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF)) k = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
+        if (PlayerPrefs.HasKey(GameConstants.PP_BASE_SETTINGS_PROPERTY)) k = PlayerPrefs.GetInt(GameConstants.PP_BASE_SETTINGS_PROPERTY);
 
         if ( (k & 2) == 0) // first launch
         {
@@ -260,13 +260,13 @@ public sealed class MenuUI : MonoBehaviour
     {
         Localization.ChangeLanguage((Language)i);
         int x = 0;
-        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF)) x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
+        if (PlayerPrefs.HasKey(GameConstants.PP_BASE_SETTINGS_PROPERTY)) x = PlayerPrefs.GetInt(GameConstants.PP_BASE_SETTINGS_PROPERTY);
         if (i == 1) { if ((x & 1) == 0) x += 1; }
         else
         {
             if ((x & 1) == 1) x -= 1;
         }
-        PlayerPrefs.SetInt(GameConstants.BASE_SETTINGS_PLAYERPREF, x);
+        PlayerPrefs.SetInt(GameConstants.PP_BASE_SETTINGS_PROPERTY, x);
         PlayerPrefs.Save();
 
         transform.root.BroadcastMessage("LocalizeTitles", SendMessageOptions.DontRequireReceiver);
@@ -374,7 +374,7 @@ public sealed class MenuUI : MonoBehaviour
                         for (int i = 1; i < highscores.Length; i++)
                         {
                             RectTransform rt = Instantiate(exampleItem, exampleItem.parent);
-                            rt.localPosition += Vector3.down * exampleItem.rect.height * (i - 1);
+                            rt.localPosition += Vector3.down * exampleItem.rect.height * i;
                             h = highscores[i];
                             if (h != null)
                             {

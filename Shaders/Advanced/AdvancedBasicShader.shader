@@ -1,5 +1,6 @@
 ﻿Shader "Custom/AdvancedBasicShader"
 {
+	// copy to Environment_Advanced
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)

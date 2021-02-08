@@ -27,12 +27,14 @@ public abstract class GameConstants {
         ARTIFACT_FOUND_CHANCE = 0.05f,
         PER_DOCKED_SHIP_BASIC_REWARD = 5f
         ;
+    
 
     public static float WORLD_CONSUMING_TIMER {
         get { return 15 * (2f - GameMaster.realMaster.GetDifficultyCoefficient()); }
     }
 
-    public const string BASE_SETTINGS_PLAYERPREF = "baseSettings";
+    public const string PP_GAMEID_PROPERTY = "NextGameID",PP_LOD_DISTANCE_PROPERTY = "LOD distance";
+    public const string PP_BASE_SETTINGS_PROPERTY = "baseSettings";
     // int key - 32 values
     // 0 - lang
     // 1 - (0 -> first launch, 1 - not first)
@@ -75,5 +77,10 @@ public abstract class GameConstants {
             if (lvl < 6) return lvl;
             else return 5;
         }
+    }
+
+    public static int GetEnvironmentLayerMask()
+    {
+        return UnityEngine.LayerMask.NameToLayer("Environment");
     }
 }

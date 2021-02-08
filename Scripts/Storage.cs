@@ -155,7 +155,7 @@ public sealed class Storage : MonoBehaviour {
                     if (!secondTry)
                     {
                         secondTry = true;
-                        sblock = chunk.GetRandomSurface(Block.UP_FACE_INDEX);
+                        sblock = chunk.GetRandomSurface();
                         goto SECOND_TRY;
                     }
                 }

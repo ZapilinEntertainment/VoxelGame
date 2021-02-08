@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,13 +14,19 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
 #pragma warning restore 0649
     private static AnnouncementCanvasController _currentLog;
 
-    public delegate void DecisionAction();
     private bool activeAnnouncement = false, importantAnnouncementEnabled = false;
     private float lastMessageTimer = 0;
     private int lastMessageIndex = 0;
-    private DecisionAction leftDecision, rightDecision, monoDecision;    
+    private Action leftDecision, rightDecision, monoDecision;    
     private const byte MAX_MESSAGES = 10;
     private const float IMPORTANT_ANNOUNCE_DISSAPPEAR_SPEED = 1f, MESSAGE_DISSAPPEAR_TIME = 3f, INNER_LOG_CLEAR_TIME = 120f;
+
+    private static AnnouncementCanvasController GetCurrent()
+    {
+        if (_currentLog == null)
+            _currentLog = Instantiate(Resources.Load<GameObject>("UIPrefs/logCanvas"), UIController.GetCurrent()?.transform).GetComponent<AnnouncementCanvasController>();
+        return _currentLog;
+    }
 
     public static void MakeAnnouncement(string s)
     {
@@ -49,21 +56,15 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.NotEnoughMoney);
     }
 
-    public static void EnableDecisionWindow(DecisionAction monoaction, string text)
+    public static void EnableDecisionWindow(Action monoaction, string text)
     {
         GetCurrent().PrepareDecisionWindow(monoaction,text);
     }
-    public static void EnableDecisionWindow(string question, DecisionAction leftDecision, string leftChoice, DecisionAction rightDecision, string rightChoice )
+    public static void EnableDecisionWindow(string question, Action leftDecision, string leftChoice, System.Action rightDecision, string rightChoice )
     {
         GetCurrent().PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
     }
-
-    private static AnnouncementCanvasController GetCurrent()
-    {
-        if (_currentLog == null)
-            _currentLog = Instantiate(Resources.Load<GameObject>("UIPrefs/logCanvas"), UIController.GetCurrent()?.transform).GetComponent<AnnouncementCanvasController>();
-        return _currentLog;
-    }
+    
     public static void DeactivateLogWindow()
     {
             if (_currentLog != null && _currentLog.logWindow.activeSelf) _currentLog.LogButton();
@@ -158,7 +159,7 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
         activeAnnouncement = true;
         lastMessageTimer = INNER_LOG_CLEAR_TIME;
     }
-    private void PrepareDecisionWindow(DecisionAction monoDecision, string text)
+    private void PrepareDecisionWindow(System.Action monoDecision, string text)
     {
         blockingMask.SetActive(true);
         decisionWindowText.text = text;
@@ -167,7 +168,7 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
         decisionMonoButton.SetActive(true);
         decisionPanel.SetActive(true);
     }
-    private void PrepareDecisionWindow(string question, DecisionAction i_leftDecision, string leftChoice, DecisionAction i_rightDecision, string rightChoice)
+    private void PrepareDecisionWindow(string question, Action i_leftDecision, string leftChoice, Action i_rightDecision, string rightChoice)
     {
         blockingMask.SetActive(true);
         decisionWindowText.text = question;

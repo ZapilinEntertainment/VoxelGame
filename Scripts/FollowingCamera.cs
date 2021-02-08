@@ -21,21 +21,22 @@ public sealed class FollowingCamera : MonoBehaviour {
 	[SerializeField] private Vector3 camPoint = new Vector3(0,3,-3);
 
 	Vector3 lookPoint;
-	bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false;
+	private bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false, useEnvironmentalCamera = false;
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
-    [SerializeField] Transform celestialCamera;
-    [SerializeField] RectTransform controllerBack, controllerStick;
-    [SerializeField] GameObject camUpButton, camLowButton;
+    [SerializeField] private bool initializeEnvCameraOnStart = false;
+    [SerializeField] private Transform celestialCamera;
+    [SerializeField] private RectTransform controllerBack, controllerStick;
+    [SerializeField] private GameObject camUpButton, camLowButton;
 #pragma warning restore 0649
-    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50;
+    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50, ENV_CAMERA_CF = 0.01f;
 
     private bool camPosChanged = false;
     private bool? verticalMovement = null;
     public Vector2 controllerStickOriginalPos, camMoveVector;
+    private Transform environmentalCamera;
 
-    public delegate void CameraChangedHandler();
-    public event CameraChangedHandler cameraChangedEvent;
+    public event System.Action cameraChangedEvent;
 
     public static void SetTouchControl(bool x)
     {
@@ -82,6 +83,8 @@ public sealed class FollowingCamera : MonoBehaviour {
 
         controllerStickOriginalPos = new Vector2(controllerBack.position.y, controllerBack.position.y); // ?
         camMoveVector = Vector2.zero;
+
+        if (initializeEnvCameraOnStart) EnableEnvironmentalCamera();
     }
 
     void Update()
@@ -244,13 +247,21 @@ public sealed class FollowingCamera : MonoBehaviour {
                 moveSmoothCoefficient = Vector3.zero;
             }
             else moveSmoothCoefficient.x = moveSmoothAcceleration * moveSmoothAcceleration;
-        }
-       
-        celestialCamera.rotation = camTransform.rotation;
-        //if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
+        }     
 
         camPos = camTransform.position;
         camPosChanged = true;
+
+        // Add cameras
+        celestialCamera.rotation = camTransform.rotation;
+        //if (moveSmoothCoefficient > 2) moveSmoothCoefficient = 2;
+        if (useEnvironmentalCamera)
+        {
+            environmentalCamera.rotation = camTransform.rotation;
+            environmentalCamera.position = camPos / 100f;
+        }
+        //
+
 
         if ( camRotateTrace > 0) camRotateTrace -= Time.deltaTime;
     }    
@@ -259,9 +270,8 @@ public sealed class FollowingCamera : MonoBehaviour {
    {
         if (camPosChanged)
         {
-            cameraChangedEvent?.Invoke();
-            //OakTree.CameraUpdate();
-            camPosChanged = false;
+            cameraChangedEvent?.Invoke();           
+            camPosChanged = false;            
         }
    }
    public void WeNeedUpdate()
@@ -357,5 +367,35 @@ public sealed class FollowingCamera : MonoBehaviour {
     public void ResetTouchRightBorder()
     {
         touchRightBorder = Screen.width;
+    }
+
+    public void EnableEnvironmentalCamera()
+    {
+        if (!useEnvironmentalCamera)
+        {
+            var g = new GameObject("Environmental camera");
+            int lmask = GameConstants.GetEnvironmentLayerMask();
+            g.layer = lmask;
+            var c = g.AddComponent<Camera>();
+            c.cullingMask = 1 << lmask;
+            c.farClipPlane = 100f;
+            c.clearFlags = CameraClearFlags.Nothing;
+            c.depth = -50;
+            c.nearClipPlane = 0.01f;
+            c.farClipPlane = 100f;
+            c.useOcclusionCulling = false;
+            environmentalCamera = g.transform;
+            environmentalCamera.position = camPos / 100f;
+            environmentalCamera.rotation = camTransform.rotation;
+            useEnvironmentalCamera = true;
+        }
+    }
+    public void DisableEnvironmentalCamera()
+    {
+        if (useEnvironmentalCamera)
+        {
+            environmentalCamera.gameObject.SetActive(false);
+            useEnvironmentalCamera = false;
+        }
     }
 }

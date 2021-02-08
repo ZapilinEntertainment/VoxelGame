@@ -223,7 +223,13 @@ public class Plane
         SetVisibilityMode(GetBlock()?.GetVisibilityMode() ?? VisibilityMode.DrawAll, true);
     }
 
-
+    public Structure CreateStructure(int id)
+    {
+        // no checks?
+        var s = Structure.GetStructureByID(id);
+        s?.SetBasement(this);
+        return s;
+    }
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)

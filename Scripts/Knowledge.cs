@@ -9,7 +9,7 @@ public sealed class Knowledge
    // Expedition.Dismiss
    // DockSystem.HandleShip
 
-    public enum ResearchRoute : byte { Foundation = 0, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen }
+    public enum ResearchRoute : byte { Foundation = 0, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Himitsu }
     //dependence: 
     //uiController icons enum
     // labels in Localization - get challenge label
@@ -51,7 +51,7 @@ public sealed class Knowledge
         {35,34,26,25,33,32,24 },
         {42,50,41,49,57,48,56 }
     };
-    private static readonly byte[] blockedCells = new byte[8] { 2, 5, 16, 23, 40, 47, 58, 61 };
+    private static readonly byte[] blockedCells = new byte[8] { 58, 61, 47, 23, 5, 2, 16, 40 }; // in order of routes
 
     #region boosting
     //foundation:
@@ -446,7 +446,7 @@ public sealed class Knowledge
         }
         if (!BoostCounted(BlossomRouteBoosters.GrasslandsBoost))
         {
-            float scount = GameMaster.realMaster.mainChunk?.surfaces?.Length ?? 0;
+            float scount = GameMaster.realMaster.mainChunk.GetSurfacesCount();
             scount = (float)glist.Count / scount;
             if (scount >= R_B_GRASSLAND_RATIO_COND) CountRouteBonus(BlossomRouteBoosters.GrasslandsBoost);
         }
@@ -766,6 +766,7 @@ public sealed class Knowledge
     }
     public void AddResearchPoints (ResearchRoute route, float pts)
     {
+        if (route == ResearchRoute.Himitsu) return;
         byte routeIndex = (byte)route;
         float f = routePoints[routeIndex] + pts;
         float maxvalue = STEPVALUES[STEPS_COUNT - 1];
@@ -804,6 +805,7 @@ public sealed class Knowledge
         }
         else return 0f;
     }
+
     public bool UnblockButton(int i)
     {
         if (IsButtonUnblocked(i)) return true;
@@ -833,6 +835,8 @@ public sealed class Knowledge
     {
         return buttonsColorCodesArray[i] == NOCOLOR_CODE;
     }
+
+    // доступность финального квеста рута
     public bool IsRouteUnblocked(ResearchRoute rr)
     {
         int rc = (int)rr;
@@ -859,6 +863,21 @@ public sealed class Knowledge
             }
             if (complete) routeCompletenessMask += (byte)(1 << i);
         }
+    }
+    public void FinishRoute(ResearchRoute rr)
+    {
+        int i = (int)rr;
+        buttonsColorCodesArray[i] = WHITECOLOR_CODE;
+        changesMarker++;
+    }
+    public bool IsEndquestButtonAvailable(int i)
+    {
+        var rr = (ResearchRoute)i;
+        if (rr != ResearchRoute.Himitsu)
+        {
+            return IsRouteUnblocked(i) && (!QuestUI.IsEndquestInProgress());
+        }
+        else return false;
     }
 
     public void AddUnblockedBuildings(byte face, ref List<int> bdlist)

@@ -13,11 +13,6 @@ public enum ProgressQuestID : byte
     Progress_4MiniReactors, Progress_100Fuel, Progress_XStation, Progress_Tier4, Progress_CoveredFarm, Progress_CoveredLumbermill, Progress_Reactor, Progress_FirstExpedition,
     Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, Progress_FoodStocks, LASTONE
 }
-public enum EndgameQuestID : byte
-{
-    Endgame_TransportHub_step1, Endgame_TransportHub_step2, Endgame_TransportHub_step3, FoundationEnd, CloudWhaleEnd,
-    EngineEnd, PipesEnd, CrystalEnd, MonumentEnd, BlossomEnd, PollenEnd
-}
 
 public class Quest
 {
@@ -134,35 +129,8 @@ public class Quest
                     break;
                 }
             case QuestType.Endgame:
-                switch ((EndgameQuestID)subID)
-                {
-                    case EndgameQuestID.Endgame_TransportHub_step1:
-                        stepsCount = 3;
-                        reward = 1000;
-                        break;
-                    case EndgameQuestID.Endgame_TransportHub_step2:
-                        stepsCount = 2;
-                        reward = 1000;
-                        break;
-                    case EndgameQuestID.Endgame_TransportHub_step3:
-                        stepsCount = 3;
-                        reward = 1000;
-                        break;
-                    case EndgameQuestID.FoundationEnd:
-                        break;
-                    case EndgameQuestID.CloudWhaleEnd:
-                        break;
-                    case EndgameQuestID.EngineEnd:
-                        break;
-                    case EndgameQuestID.CrystalEnd:
-                        break;
-                    case EndgameQuestID.MonumentEnd:
-                        break;
-                    case EndgameQuestID.BlossomEnd:
-                        break;
-                    case EndgameQuestID.PollenEnd:
-                        break;
-                }
+                //switch ((Knowledge.ResearchRoute)subID) { }
+                reward = 10000;
                 break;
             case QuestType.System:
                 if (subID == NO_QUEST_SUBINDEX) name = "no quest";
@@ -558,112 +526,16 @@ public class Quest
                 }
                 break;
             case QuestType.Endgame:
-                switch ((EndgameQuestID)subIndex)
+                // Сделать последовательное появление эффектов и не завершать кв, пока все не появится
+                switch ((Knowledge.ResearchRoute)subIndex)
                 {
-                    case EndgameQuestID.Endgame_TransportHub_step1:
-                        {
-                            byte conditionsMet = 0;
-
-                            int docksNeeded = 4;
-                            int docksCount = colony.docks.Count;
-                            if (docksCount >= docksNeeded)
-                            {
-                                stepsFinished[0] = true;
-                                conditionsMet++;
-                            }
-                            else stepsFinished[0] = false;
-                            stepsAddInfo[0] = docksCount.ToString() + " / " + docksNeeded.ToString();
-
-                            if (colony.docksLevel >= 3)
-                            {
-                                stepsFinished[1] = true;
-                                conditionsMet++;
-                            }
-                            else stepsFinished[1] = false;
-
-                            int storagesNeeded = 2;
-                            int storagesCount = 0;
-                            foreach (StorageHouse sh in colony.storage.warehouses)
-                            {
-                                if (sh.level == 5) storagesCount++;
-                            }
-                            if (storagesCount >= storagesNeeded)
-                            {
-                                stepsFinished[2] = true;
-                                conditionsMet++;
-                            }
-                            else stepsFinished[2] = false;
-                            stepsAddInfo[2] = storagesCount.ToString() + " / " + storagesNeeded.ToString();
-
-                            if (conditionsMet == 3) MakeQuestCompleted();
-                        }
-                        break;
-                    case EndgameQuestID.Endgame_TransportHub_step2:
-                        {
-                            byte conditionsMet = 0;
-                            //if (ControlCenter.current != null)
-                            {
-                                stepsFinished[0] = true;
-                                conditionsMet++;
-                            }
-                           // else stepsFinished[0] = false;
-
-                            if (ConnectTower.current != null)
-                            {
-                                stepsFinished[1] = true;
-                                conditionsMet++;
-                            }
-                            else stepsFinished[1] = false;
-                            if (conditionsMet == 2) MakeQuestCompleted();
-                            break;
-                        }
-                    case EndgameQuestID.Endgame_TransportHub_step3:
-                        {
-                            byte conditionsMet = 0;
-                            foreach (Building b in colony.powerGrid)
-                            {
-                                if (b.ID == Structure.REACTOR_BLOCK_5_ID)
-                                {
-                                    stepsFinished[0] = true;
-                                    conditionsMet++;
-                                    break;
-                                }
-                            }
-                            if (conditionsMet == 0) stepsFinished[0] = false;
-
-                            byte housingMastsNeeded = 5, housingMastsCount = 0;
-                            bool hotelFound = false;
-                            foreach (Building b in colony.houses)
-                            {
-                                if (b.ID == Structure.HOUSING_MAST_6_ID) housingMastsCount++; // можно запихнуть и в проверку выше
-                                else
-                                {
-                                    if (b.ID == Structure.HOTEL_BLOCK_6_ID) hotelFound = true;
-                                }
-                            }
-                            if (housingMastsCount >= housingMastsNeeded)
-                            {
-                                stepsFinished[1] = true;
-                                conditionsMet++;
-                            }
-                            else stepsFinished[1] = false;
-                            stepsAddInfo[1] = housingMastsCount.ToString() + " / " + housingMastsNeeded.ToString();
-                            stepsFinished[2] = hotelFound;
-                            if (conditionsMet == 2 & hotelFound)
-                            {
-                                MakeQuestCompleted();
-                                GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
-                            }
-                        }
-                        break;
-                    case EndgameQuestID.FoundationEnd:
+                    case Knowledge.ResearchRoute.Foundation:
                         {
                             int a = colony.citizenCount, b = Knowledge.R_F_QUEST_POPULATION_COND;
                             steps[0] = "Текущее население: " + a.ToString() + " / " + b.ToString();
                             if (a >= b)
                             {
                                 MakeQuestCompleted();
-                                GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
                             }
                             break;
                         }
@@ -1057,14 +929,15 @@ public class Quest
                             {
                                 var c = GameMaster.realMaster.mainChunk;
                                 var glist = c?.TryGetNature()?.GetGrasslandsList();
-                                int count = 0;
+                                int gcount = 0;
                                 if (glist != null)
                                 {
-                                    count = glist.Count;
+                                    gcount = glist.Count;
                                 }
-                                if (c != null && c.surfaces != null && c.surfaces.Length > 0)
+                                float scount = c.GetSurfacesCount();
+                                if (c != null && scount > 0)
                                 {
-                                    var f = count / (float)c.surfaces.Length;
+                                    var f = gcount / scount;
                                     int pc = (int)(f * 100f);
                                     stepsAddInfo[0] = pc.ToString() + "% / " + ((int)Knowledge.R_B_GRASSLAND_RATIO_COND * 100f).ToString();
                                 }
@@ -1155,14 +1028,14 @@ public class Quest
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
         if (type == QuestType.Endgame)
         {
-            switch ((EndgameQuestID)subIndex)
+            switch ((Knowledge.ResearchRoute)subIndex)
             {
-                case EndgameQuestID.FoundationEnd:
+                case Knowledge.ResearchRoute.Foundation:
                     GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
                     break;
             }
         }
-        else QuestUI.current.ResetQuestCell(this);
+        QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
         completed = true;
     }
@@ -1354,14 +1227,9 @@ public class Quest
             case QuestType.Endgame:
                 {
                     icon = Resources.Load<Texture>("Textures/endGameIcons");
-                    switch ((EndgameQuestID)q.subIndex)
+                    switch ((Knowledge.ResearchRoute)q.subIndex)
                     {
-                        case EndgameQuestID.Endgame_TransportHub_step1:
-                        case EndgameQuestID.Endgame_TransportHub_step2:
-                        case EndgameQuestID.Endgame_TransportHub_step3:
-                            iconRect = new Rect(0.75f, 0.75f, 0.25f, 0.25f);
-                            break;
-                        case EndgameQuestID.FoundationEnd:
+                        case Knowledge.ResearchRoute.Foundation:
                             icon = UIController.iconsTexture;
                             iconRect = UIController.GetIconUVRect(Icons.FoundationRoute);
                             break;

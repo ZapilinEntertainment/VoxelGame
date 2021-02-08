@@ -209,20 +209,6 @@ public sealed class Hangar : WorkBuilding
         if (b == null) return;
         if (!GameMaster.loading)
         {
-            Chunk c = b.myChunk;
-            if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z + 1) == null) modelRotation = 0;
-            else
-            {
-                if (c.GetBlock(b.pos.x + 1, b.pos.y, b.pos.z) == null) modelRotation = 2;
-                else
-                {
-                    if (c.GetBlock(b.pos.x, b.pos.y, b.pos.z - 1) == null) modelRotation = 4;
-                    else
-                    {
-                        if (c.GetBlock(b.pos.x - 1, b.pos.y, b.pos.z) == null) modelRotation = 6;
-                    }
-                }
-            }
             if (!hangarsList.Contains(this))
             {
                 status = HangarStatus.NoShuttle;
@@ -299,7 +285,7 @@ public sealed class Hangar : WorkBuilding
             {
                 //#incorrectLocationDisplaying - Hangar
                 float len = 1;
-                Vector3 pos = basement.pos.ToWorldSpace();
+                Vector3 pos = basement.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE ;
                 switch (modelRotation)
                 {
                     case 0:
@@ -379,7 +365,7 @@ public sealed class Hangar : WorkBuilding
         {
             //#incorrectLocationDisplaying - Hangar
             float len = 1;
-            Vector3 pos = basement.pos.ToWorldSpace();
+            Vector3 pos = basement.pos.ToWorldSpace() + Vector3.up * Block.QUAD_SIZE;
             switch (modelRotation)
             {
                 case 0:

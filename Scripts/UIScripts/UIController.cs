@@ -23,10 +23,10 @@ public class UIController : MonoBehaviour
     private float updateTimer;
     private MainCanvasController mainCanvasController;
     private ExploringMinigameUI exploringMinigameController;
-    private GameObject endpanel;
     private GlobalMapCanvasController globalMapCanvasController;
     private KnowledgeTabUI knowledgeTabUI;
     private EditorUI editorCanvasController;
+    private EndPanelController endPanelController;
 
     public UIMode currentMode { get; private set; }
     private UIMode previousMode = UIMode.Standart;
@@ -86,6 +86,14 @@ public class UIController : MonoBehaviour
         }
         return editorCanvasController;
     }
+    public EndPanelController GetEndPanelController()
+    {
+        if (endPanelController == null)
+        {
+            endPanelController = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), transform).GetComponent<EndPanelController>();
+        }
+        return endPanelController;
+    }
 
     private void Update()
     {
@@ -110,7 +118,6 @@ public class UIController : MonoBehaviour
                     if (disableCanvas) mainCanvasController?.gameObject.SetActive(false);                    
                     GameMaster.realMaster.environmentMaster?.DisableDecorations();
                     break;
-                case UIMode.Endgame: if (endpanel != null) Destroy(endpanel); break;
                 case UIMode.ExploringMinigame: if (disableCanvas) exploringMinigameController?.gameObject.SetActive(false); break;
                 case UIMode.GlobalMap:
                     if (disableCanvas) globalMapCanvasController.gameObject.SetActive(false);
@@ -122,6 +129,11 @@ public class UIController : MonoBehaviour
                             Destroy(editorCanvasController.gameObject);
                             editorCanvasController = null;
                         }
+                        break;
+                    }
+                case UIMode.Endgame:
+                    {                        
+                        if (endPanelController != null) Destroy(endPanelController);
                         break;
                     }
             }
@@ -145,7 +157,10 @@ public class UIController : MonoBehaviour
                     if (!kt.gameObject.activeSelf) kt.gameObject.SetActive(true);
                     kt.Redraw();
                     break;
-                case UIMode.Endgame: break;
+                case UIMode.Endgame:
+                    AnnouncementCanvasController.DeactivateLogWindow();
+                    endPanelController.transform.SetAsLastSibling();
+                    break;
                 case UIMode.Standart:
                     var mcc = GetMainCanvasController();
                     if (!mcc.gameObject.activeSelf) mcc.gameObject.SetActive(true);
@@ -195,44 +210,9 @@ public class UIController : MonoBehaviour
     }
     
     public void GameOver( GameEndingType endType, ulong score )
-    {
-        string reason = Localization.GetEndingTitle(endType);
-        var rmaster = GameMaster.realMaster;
-        if (rmaster == null) return;
-        ChangeUIMode(UIMode.Endgame, false);
-        switch (endType)
-        {
-            case GameEndingType.FoundationRoute:
-                {
-                    endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), transform);
-                    Transform ep = endpanel.transform;
-                    ep.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
-                    ep.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    var b = ep.GetChild(3).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(rmaster.ReturnToMenuAfterGameOver);
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-                    b = ep.GetChild(4).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(() => { rmaster.ContinueGameAfterEnd(); this.ChangeUIMode(UIMode.Standart, true); });
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Continue);
-                    break;
-                }
-            case GameEndingType.ColonyLost:
-            case GameEndingType.Default:
-            case GameEndingType.ConsumedByReal:
-            case GameEndingType.ConsumedByLastSector:
-            default:
-                {
-                    endpanel = Instantiate(Resources.Load<GameObject>("UIPrefs/failPanel"), transform);
-                    Transform ep = endpanel.transform;
-                    ep.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = reason;
-                    ep.GetChild(2).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    var b = ep.GetChild(3).GetComponent<UnityEngine.UI.Button>();
-                    b.onClick.AddListener(rmaster.ReturnToMenuAfterGameOver);
-                    b.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-                    break;
-                }
-        }
-        endpanel?.transform.SetAsLastSibling();
+    {        
+        GetEndPanelController().Prepare(endType, score);
+        ChangeUIMode(UIMode.Endgame, true);           
     }
 
 

@@ -96,6 +96,7 @@ public sealed class GameMaster : MonoBehaviour
 
     public Difficulty difficulty { get; private set; }
     //data
+    private int gameID = -1;
     private float timeGone;
     public byte day { get; private set; }
     public byte month { get; private set; }
@@ -108,7 +109,7 @@ public sealed class GameMaster : MonoBehaviour
     private bool gameStarted = false;
     // FOR TESTING
     [SerializeField] private GameMode _gameMode;
-    [SerializeField] public bool testMode = false;
+    [SerializeField] public bool testMode = false, test_loadSpecifiedSave = false;
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     [SerializeField] private string savenameToLoad = string.Empty;
@@ -230,7 +231,7 @@ public sealed class GameMaster : MonoBehaviour
 
             byte chunksize;
             chunksize = gameStartSettings.chunkSize;
-            if (testMode && savenameToLoad != string.Empty)
+            if (test_loadSpecifiedSave && savenameToLoad != string.Empty)
             {
                 gameStartSettings = new GameStartSettings(ChunkGenerationMode.GameLoading);
                 savename = savenameToLoad;
@@ -269,64 +270,33 @@ public sealed class GameMaster : MonoBehaviour
                         break;
 
                     case GameStart.Headquarters:
-                        var sblocks = mainChunk.surfaces;
-                        Plane sb = sblocks[Random.Range(0, sblocks.Length)];
-                        int xpos = sb.pos.x;
-                        int zpos = sb.pos.z;
-
-                        Structure s;
-                        if (testMode)
                         {
-                            s = HeadQuarters.GetHQ(6);
-                            weNeedNoResources = true;
-                        }
-                        else
-                        {
-                            weNeedNoResources = false;
-                            s = HeadQuarters.GetHQ(1);
-                        }
-                        
-                        Plane b = mainChunk.GetHighestSurfacePlane(xpos, zpos);
-                        s.SetBasement(b, PixelPosByte.zero);
+                            Plane sb = mainChunk.GetRandomSurface();
+                            int xpos = sb.pos.x;
+                            int zpos = sb.pos.z;
 
-
-                        sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos + 1);
-                        if (sb == null)
-                        {
-                            sb = mainChunk.GetHighestSurfacePlane(xpos, zpos + 1);
-                            if (sb == null)
+                            Structure s;
+                            if (testMode)
                             {
-                                sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos + 1);
-                                if (sb == null)
-                                {
-                                    sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos);
-                                    if (sb == null)
-                                    {
-                                        sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos);
-                                        if (sb == null)
-                                        {
-                                            sb = mainChunk.GetHighestSurfacePlane(xpos - 1, zpos - 1);
-                                            if (sb == null)
-                                            {
-                                                sb = mainChunk.GetHighestSurfacePlane(xpos, zpos - 1);
-                                                if (sb == null)
-                                                {
-                                                    sb = mainChunk.GetHighestSurfacePlane(xpos + 1, zpos - 1);
-                                                    if (sb == null)
-                                                    {
-                                                        Debug.Log("bad generation, do something!");
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                s = HeadQuarters.GetHQ(6);
+                                weNeedNoResources = true;
                             }
+                            else
+                            {
+                                weNeedNoResources = false;
+                                s = HeadQuarters.GetHQ(1);
+                            }
+
+                            Plane b = mainChunk.GetHighestSurfacePlane(xpos, zpos);
+                            s.SetBasement(b, PixelPosByte.zero);
+
+
+                            sb = mainChunk.GetNearestUnoccupiedSurface(b.pos);
+                            StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
+                            firstStorage.SetBasement(sb, PixelPosByte.zero);
+                            SetStartResources();
+                            break;
                         }
-                        StorageHouse firstStorage = Structure.GetStructureByID(Structure.STORAGE_0_ID) as StorageHouse;
-                        firstStorage.SetBasement(sb, PixelPosByte.zero);
-                        SetStartResources();
-                        break;
                 }               
                 FollowingCamera.main.WeNeedUpdate();
             }
@@ -424,6 +394,14 @@ public sealed class GameMaster : MonoBehaviour
         colonyController = c;
         environmentMaster.LinkColonyController(c);
         uicontroller.GetMainCanvasController()?.LinkColonyController();
+        var keyname = GameConstants.PP_GAMEID_PROPERTY;
+        if (gameID == -1)
+        {
+            if (PlayerPrefs.HasKey(keyname))  gameID = PlayerPrefs.GetInt(keyname);
+            else gameID = 1;
+            PlayerPrefs.SetInt(keyname, gameID + 1);
+            PlayerPrefs.Save();
+        }
     }  
 
     #region updates
@@ -435,7 +413,17 @@ public sealed class GameMaster : MonoBehaviour
         //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
         if (Input.GetKeyDown("x"))
         {
-            TEST_AddCitizens(1000);
+            //TEST_AddCitizens(1000);
+            //TEST_PrepareForExpeditions();
+            TEST_GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
+        }
+        if (Input.GetKeyDown("c"))
+        {
+            TEST_GivePuzzleParts(50);
+        }
+        if (Input.GetKeyDown("n"))
+        {
+            TEST_AddPopulation(5000);
         }
         gameSpeed = _gameSpeed;
     }
@@ -561,11 +549,11 @@ public sealed class GameMaster : MonoBehaviour
     public void GameOver(GameEndingType endType)
     {
         if (gameMode == GameMode.Ended) return;
-        SetPause(true);
-        ulong score = (ulong)ScoreCalculator.GetScore(this);
-        Highscore.AddHighscore(new Highscore(colonyController.cityName, score, endType));
-        uicontroller?.GameOver(endType, score);      
         gameMode = GameMode.Ended;
+        ulong score = (ulong)ScoreCalculator.GetScore(this);
+        uicontroller?.GameOver(endType, score);
+        if (gameID != -1) Highscore.AddHighscore(new Highscore(gameID, colonyController.cityName, score, endType));
+        SetPause(true);                              
     }
     public void ReturnToMenuAfterGameOver()
     {
@@ -577,6 +565,7 @@ public sealed class GameMaster : MonoBehaviour
     public void ContinueGameAfterEnd()
     {
         if (gameMode != GameMode.Ended) return;
+        uicontroller.ChangeUIMode(UIMode.Standart, true);
         uicontroller.GetMainCanvasController().FullReactivation();
         SetPause(false);
         gameMode = GameMode.Play;
@@ -629,7 +618,8 @@ public sealed class GameMaster : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(gearsDegradeSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(labourTimer), 0, 4);
         fs.Write(System.BitConverter.GetBytes(RecruitingCenter.GetHireCost()), 0, 4);
-        //65 (+4) end
+        fs.Write(System.BitConverter.GetBytes(gameID),0,4);
+        //69 (+4) end
         #endregion
 
         DockSystem.SaveDockSystem(fs);
@@ -690,8 +680,8 @@ public sealed class GameMaster : MonoBehaviour
             data = new byte[4];
             fs.Read(data, 0, 4);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
-            //start writing
-            data = new byte[65]; 
+            //start reading
+            data = new byte[69]; 
             fs.Read(data, 0, data.Length);
             gameSpeed = System.BitConverter.ToSingle(data, 0);
             lifeGrowCoefficient = System.BitConverter.ToSingle(data, 4);
@@ -715,6 +705,7 @@ public sealed class GameMaster : MonoBehaviour
             gearsDegradeSpeed = System.BitConverter.ToSingle(data, 53);
             labourTimer = System.BitConverter.ToSingle(data, 57);
             RecruitingCenter.SetHireCost(System.BitConverter.ToSingle(data, 61));
+            gameID = System.BitConverter.ToInt32(data, 65);
             #endregion
 
             DockSystem.LoadDockSystem(fs);
@@ -964,22 +955,15 @@ public sealed class GameMaster : MonoBehaviour
             realMaster = g.AddComponent<GameMaster>();
         }
     }
-    public void TEST_GiveMoneyAndPuzzleParts()
+
+    public void TEST_GivePuzzleParts(int count)
     {
-        if (colonyController != null)
-        {
-            colonyController.AddEnergyCrystals(1000f);
-            colonyController.storage.AddResource(ResourceType.Fuel, 1000f);
-            colonyController.AddCitizens(1000);
-            var k = Knowledge.GetCurrent();
-            for (int i = 0; i < 50; i++)
-            {
-                k.AddPuzzlePart(Knowledge.GREENCOLOR_CODE);
-                k.AddPuzzlePart(Knowledge.BLUECOLOR_CODE);
-                k.AddPuzzlePart(Knowledge.REDCOLOR_CODE);
-            }
-            k.AddResearchPoints(Knowledge.ResearchRoute.Foundation, 1000);
-        }
+        var k = Knowledge.GetCurrent();
+        k.AddPuzzlePart(Knowledge.GREENCOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.BLUECOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.REDCOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.WHITECOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.CYANCOLOR_CODE, count);
     }
     public void TEST_AddCitizens(int count)
     {
@@ -989,6 +973,89 @@ public sealed class GameMaster : MonoBehaviour
             cc.storage.AddResource(ResourceType.Food, 3000);
             cc.AddCitizens(count);
         }
+    }
+    public void TEST_PrepareForExpeditions()
+    {
+        if (colonyController == null) return;
+        var planes = mainChunk.GetUnoccupiedSurfaces(8);
+        planes[0]?.CreateStructure(Structure.RECRUITING_CENTER_4_ID);
+        var c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Mony Mony");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Black Rabbit");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Bonemaker");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Eiffiel Dungeon");
+        planes[1]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[2]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[3]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[4]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[5]?.CreateStructure(Structure.EXPEDITION_CORPUS_4_ID);
+        planes[6]?.CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
+        planes[7]?.CreateStructure(Structure.STORAGE_BLOCK_ID);
+        colonyController.storage.AddResource(ResourceType.Fuel, 25000);
+        colonyController.storage.AddResource(ResourceType.Supplies, 2000);
+
+        var pf = mainChunk.GetUnoccupiedEdgePosition(false,false);
+        var p = pf.plane;
+        Structure s;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false,false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+    }
+    public void TEST_GiveRoutePoints(Knowledge.ResearchRoute rr, int count)
+    {
+        Knowledge.GetCurrent()?.AddResearchPoints(rr, count);
+    }
+    public void TEST_AddPopulation(int count)
+    {
+        colonyController?.AddCitizens(count);
     }
 }
   

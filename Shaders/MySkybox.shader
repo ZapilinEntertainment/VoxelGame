@@ -11,14 +11,14 @@ Shader "Custom/MySkybox"
 		[NoScaleOffset] _cloudlayer("Cloud layer", 2D) = "white" {}
 
 		_BottomColor("Bottom color", Color) = (1, 1, 1, 0)
-		_TopColor("Top color", Color) = (1, 1, 1, 0)
-		_HorizonColor("Horizon color", Color) = (1,1,1,0)
+		_TopColor("Top color", Color) = (0, 0, 0, 0)
+		_HorizonColor("Horizon color", Color) = (0.266, 0.533, 0.533, 0.5)
 		_UpVector("Up Vector", Vector) = (0, 1, 0, 0)
 
-		_HorizonCompression("Horizon Compression", Float) = 1
-		_TopExponent("Top exponent", Float) = 1.0
-		_BottomExponent("Bottom exponent", Float) = 1.0
-		_Saturation("Saturation", Range(0,1)) = 1
+		_HorizonCompression("Horizon Compression", Float) = 5
+		_TopExponent("Top exponent", Float) = 10.0
+		_BottomExponent("Bottom exponent", Float) = 10.0
+		_Saturation("Saturation", Range(0,1)) = 0.81
 	}
 
 		CGINCLUDE

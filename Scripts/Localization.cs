@@ -42,9 +42,9 @@ public static class Localization
     static Localization()
     {
         int x = 0;
-        if (PlayerPrefs.HasKey(GameConstants.BASE_SETTINGS_PLAYERPREF))
+        if (PlayerPrefs.HasKey(GameConstants.PP_BASE_SETTINGS_PROPERTY))
         {
-            x = PlayerPrefs.GetInt(GameConstants.BASE_SETTINGS_PLAYERPREF);
+            x = PlayerPrefs.GetInt(GameConstants.PP_BASE_SETTINGS_PROPERTY);
         }
         if ((x & 1) == 0) ChangeLanguage(Language.English); // default language
         else ChangeLanguage(Language.Russian);
@@ -2834,6 +2834,7 @@ public static class Localization
                 {
                     switch (endType)
                     {
+                        case GameEndingType.FoundationRoute: return "Путь Основания пройден успешно!";
                         case GameEndingType.ColonyLost: return "И никого не стало.";
                         //case GameEndingType.TransportHubVictory: return "Вы установили прочную связь между вашей колонией и другими Ограниченными Мирами. Благодаря вам, будущее колонии в безопасности. Теперь вы свободны.";
                         case GameEndingType.ConsumedByLastSector: return "Ваш остров пропал в Последнем Секторе. Теперь он в безопасности.";
@@ -2848,6 +2849,7 @@ public static class Localization
                 {
                     switch (endType)
                     {
+                        case GameEndingType.FoundationRoute: return "Foundation Route success!";
                         case GameEndingType.ColonyLost: return "And then there were none."; 
                         //case GameEndingType.TransportHubVictory: return "Your established a thick connection between your colony and other Limited Worlds. Thanks to you, now colony's future is safe. You are free now.";
                         case GameEndingType.ConsumedByLastSector: return "Your island has been consumed by the Last Sector. It is in safe now.";
@@ -3130,29 +3132,9 @@ public static class Localization
                             }
                             break;
                         case QuestType.Endgame:
-                            switch ((EndgameQuestID)q.subIndex)
+                            switch ((Knowledge.ResearchRoute)q.subIndex)
                             {
-                                case EndgameQuestID.Endgame_TransportHub_step1:
-                                    q.name = "Создание транспортного узла - начало";
-                                    q.description = "Превращение колонии в надёжный портовый город стабилизирует этот участок пространства и жить здесь в дальнейшем будет безопасно. Чтобы пойти по этому пути, нужно сначала построить док третьего уровня с соответствующей инфраструктурой.";
-                                    q.steps[0] = "Количество доков (любого уровня) ";
-                                    q.steps[1] = "Док третьего уровня построен ";
-                                    q.steps[2] = "Количество блоков склада ";
-                                    break;
-                                case EndgameQuestID.Endgame_TransportHub_step2:
-                                    q.name = "Создание транспортного узла - шаг 2";
-                                    q.description = "Для управления транспортным узлом потребуются соответствующие службы и оборудование. Постройте Контрольный центр и Башню Сообщения.";
-                                    //q.steps[0] = GetStructureName(Structure.CONTROL_CENTER_6_ID) + " построен ";
-                                    q.steps[1] = GetStructureName(Structure.CONNECT_TOWER_6_ID) + " построена ";
-                                    break;
-                                case EndgameQuestID.Endgame_TransportHub_step3:
-                                    q.name = "Создание транспортного узла - завершение";
-                                    q.description = "В завершении, ваш город должен быть в состоянии принять множество людей. Постройте жилые шпили и один блок отеля. Также, не стоит забывать и про энергоснабжение, поэтому не лишним будет построить блок реактора.";
-                                    q.steps[0] = "Блок реактора построен ";
-                                    q.steps[1] = "Жилые шпили построены ";
-                                    q.steps[2] = "Блок отеля построен ";
-                                    break;
-                                case EndgameQuestID.FoundationEnd:
+                                case Knowledge.ResearchRoute.Foundation:
                                     {
                                         int b = Knowledge.R_F_QUEST_POPULATION_COND;
                                         q.name = "Путь Основания - Завершение";
@@ -3474,30 +3456,9 @@ public static class Localization
                             }
                             break;
                         case QuestType.Endgame:
-                            switch ((EndgameQuestID)q.subIndex)
-                            {
-                                case EndgameQuestID.Endgame_TransportHub_step1:
-                                    q.name = "Transport Hub way 1 - start";
-                                    q.description = "Stabling your city as solid port make it's future certain and life will be safe here. Chosing this path requires third-stage dock and attendant infrastructure first.";
-                                    q.steps[0] = "Docks count (any level) ";
-                                    q.steps[1] = "Third stage dock built ";
-                                    q.steps[2] = "Storage blocks count ";
-                                    break;
-                                case EndgameQuestID.Endgame_TransportHub_step2:
-                                    q.name = "Transport Hub way 2";
-                                    q.description = "Second step means your port needs strict management and reliable connection hardware. Build the Connection Tower and a control center.";
-                                    q.steps[0] = "Control center built ";
-                                    q.steps[1] = "Connect Tower built ";
-                                    break;
-                                case EndgameQuestID.Endgame_TransportHub_step3:
-                                    q.name = "Transport Hub way 3 - final";
-                                    q.description = "At the end, you city must be prepared to place lot of people. Build new housing skyscrapers and at least one hotel complex. Also you shall care about power supply, so it will be good decision to built a reactor block.";
-                                    q.steps[0] = "Reactor block built ";
-                                    q.steps[1] = "Housing spires built ";
-                                    q.steps[2] = "Hotel block built ";
-                                    break;
-                                default: return;
-                                case EndgameQuestID.FoundationEnd:
+                            switch ((Knowledge.ResearchRoute)q.subIndex)
+                            {                                
+                                case Knowledge.ResearchRoute.Foundation:
                                     {
                                         int b = Knowledge.R_F_QUEST_POPULATION_COND;
                                         q.name = "Foundation Route - Ending";
@@ -3505,6 +3466,7 @@ public static class Localization
                                         q.steps[0] = "Current population: " + GameMaster.realMaster.colonyController.citizenCount.ToString() + " / " + b.ToString();
                                         break;
                                     }
+                                default: return;
                             }
                             break;
                         case QuestType.Foundation:

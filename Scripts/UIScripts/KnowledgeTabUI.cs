@@ -412,32 +412,50 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
             if (t.gameObject.activeSelf) t.gameObject.SetActive(false);
         }
 
-        // BACKGROUND
+        // BACKGROUND and ENDQUEST buttons
+        bool buttonAvailable = false;
         for (i = 0; i< Knowledge.ROUTES_COUNT; i++)
         {            
             routeBackgrounds[i].color = Color.Lerp(invisibleColor, Color.white, knowledge.GetResearchProgress(i));
-            if (knowledge.IsRouteUnblocked(i) && endQuestButtons[i] == null)
+            buttonAvailable = knowledge.IsEndquestButtonAvailable(i);
+            if (buttonAvailable)
             {
-                var g = new GameObject();
-                RectTransform eqButton = g.AddComponent<RectTransform>();
-                eqButton.transform.parent = routeBackgrounds[i].transform;
-                eqButton.anchorMax = Vector2.zero;
-                eqButton.anchorMin = Vector2.zero;
-                eqButton.localPosition = Vector3.zero;
-                float s = Screen.height / 10f;
-                eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, s);
-                eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, s);
-                var ri = g.AddComponent<RawImage>();
-                ri.texture = UIController.iconsTexture;
-                ri.uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
-                var btn = g.AddComponent<Button>();
-                byte index = (byte)i;
-                btn.onClick.AddListener(() => AnnouncementCanvasController.EnableDecisionWindow(
-                    Localization.GetPhrase(LocalizedPhrase.Ask_StartFinalQuest),
-                    () => QuestUI.current.StartEndQuest(index), Localization.GetWord(LocalizedWord.Yes),
-                    AnnouncementCanvasController.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
-                    ));
-                endQuestButtons[i] = g;                
+                if (endQuestButtons[i] == null)
+                {
+                    var g = new GameObject();
+                    RectTransform eqButton = g.AddComponent<RectTransform>();
+                    eqButton.transform.parent = routeBackgrounds[i].transform;
+                    eqButton.anchorMax = Vector2.zero;
+                    eqButton.anchorMin = Vector2.zero;
+                    eqButton.localPosition = Vector3.zero;
+                    float s = Screen.height / 10f;
+                    eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, s);
+                    eqButton.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, s);
+                    var ri = g.AddComponent<RawImage>();
+                    ri.texture = UIController.iconsTexture;
+                    ri.uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
+                    var btn = g.AddComponent<Button>();
+                    byte index = (byte)i;
+                    btn.onClick.AddListener(() =>
+                    {
+                        AnnouncementCanvasController.EnableDecisionWindow(
+                            Localization.GetPhrase(LocalizedPhrase.Ask_StartFinalQuest),
+                            () => {
+                                QuestUI.current.StartEndQuest(index);
+                                this.Redraw();
+                                // + Эффект
+                            }, Localization.GetWord(LocalizedWord.Yes),
+                            AnnouncementCanvasController.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
+                            );
+                    }
+                        );
+                    endQuestButtons[i] = g;
+                }
+                else endQuestButtons[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                if (endQuestButtons[i] != null) endQuestButtons[i].gameObject.SetActive(false);
             }
         }
 

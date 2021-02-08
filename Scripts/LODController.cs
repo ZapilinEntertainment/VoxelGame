@@ -219,15 +219,16 @@ public sealed class LODController : MonoBehaviour
     private List<PointLODModel> pointLODmodels;
     private List<AdvancedLODModel> advancedLODmodels;
     private Vector3 camPos;
-    private const string LOD_DIST_KEY = "LOD distance";
 
 
     static LODController()
     {
-        if (PlayerPrefs.HasKey(LOD_DIST_KEY)) lodCoefficient = PlayerPrefs.GetFloat(LOD_DIST_KEY);
+        var key = GameConstants.PP_LOD_DISTANCE_PROPERTY;
+        if (PlayerPrefs.HasKey(key)) lodCoefficient = PlayerPrefs.GetFloat(key);
         else {
             lodCoefficient = 0.5f;
-            PlayerPrefs.SetFloat(LOD_DIST_KEY, lodCoefficient);
+            PlayerPrefs.SetFloat(key, lodCoefficient);
+            PlayerPrefs.Save();
                 }
     }
 
@@ -236,7 +237,7 @@ public sealed class LODController : MonoBehaviour
         if (f != lodCoefficient)
         {
             lodCoefficient = f;
-            PlayerPrefs.SetFloat(LOD_DIST_KEY, lodCoefficient);
+            PlayerPrefs.SetFloat(GameConstants.PP_LOD_DISTANCE_PROPERTY, lodCoefficient);
             PlayerPrefs.Save();
             if (FollowingCamera.main != null) FollowingCamera.main.WeNeedUpdate();
         }

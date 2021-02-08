@@ -246,7 +246,7 @@ public sealed class Nature : MonoBehaviour
             lifepower = lpower;
             return;
         }
-        var slist = new List<Plane>(myChunk.surfaces);        
+        var slist = new List<Plane>(myChunk.GetSurfaces());        
         if (slist != null)
         {
             int count = slist.Count;
@@ -351,7 +351,7 @@ public sealed class Nature : MonoBehaviour
                     if (expansion) CreateGrassland(cost);
                     else
                     {
-                        var slist = myChunk.surfaces;
+                        var slist = myChunk.GetSurfaces();
                         if (slist != null)
                         {
                             var ilist = new List<int>();

@@ -15,24 +15,24 @@ public struct ChunkRaycastHit
 public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, Peak, TerrainLoading, DontGenerate }
 
 public sealed partial class Chunk : MonoBehaviour
-{  
-    public Dictionary<ChunkPos, Block > blocks;
+{
+    public Dictionary<ChunkPos, Block> blocks;
     public bool needSurfacesUpdate = false; // hot
     public byte prevBitmask = 63;
     public float lifePower = 0;
     public static byte chunkSize { get; private set; }
     //private bool allGrasslandsCreated = false;
-   
+
     public event System.Action ChunkUpdateEvent;
 
-    public Plane[] surfaces { get; private set; }
+    private Plane[] surfaces;
     private Nature nature;
 
     public const float CHUNK_UPDATE_TICK = 0.5f;
-    public const byte MIN_CHUNK_SIZE = 3 , NO_FACE_VALUE = 10;
-    public const string BLOCK_COLLIDER_TAG = "BlockCollider";    
+    public const byte MIN_CHUNK_SIZE = 3, NO_FACE_VALUE = 10;
+    public const string BLOCK_COLLIDER_TAG = "BlockCollider";
 
-    static Chunk() 
+    static Chunk()
     {
         chunkSize = 16;
     }
@@ -81,13 +81,13 @@ public sealed partial class Chunk : MonoBehaviour
     {
         if (chunkDataUpdateRequired)
         {
-            if (ChunkUpdateEvent != null) ChunkUpdateEvent();           
+            if (ChunkUpdateEvent != null) ChunkUpdateEvent();
             chunkDataUpdateRequired = false;
         }
-        if (chunkRenderUpdateRequired)  RenderStatusUpdate();
+        if (chunkRenderUpdateRequired) RenderStatusUpdate();
         if (PoolMaster.shadowCasting & shadowsUpdateRequired) ShadowsUpdate();
         if (needSurfacesUpdate) RecalculateSurfacesList();
-    }  
+    }
 
     public Nature GetNature()
     {
@@ -104,7 +104,7 @@ public sealed partial class Chunk : MonoBehaviour
     }
     public bool CheckForPlanttype(PlantType pt)
     {
-       return nature?.islandFloraRegister?.Contains(pt) ?? false;
+        return nature?.islandFloraRegister?.Contains(pt) ?? false;
     }
 
     public bool IsAnyStructureInABlockSpace(ChunkPos cpos)
@@ -142,10 +142,10 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 for (int z = 0; z < size; z++)
                 {
-                    if (newData[x,y,z] != 0)
+                    if (newData[x, y, z] != 0)
                     {
                         cpos = new ChunkPos(x, y, z);
-                        blocks.Add(cpos, new Block(this,cpos, newData[x, y, z], true));
+                        blocks.Add(cpos, new Block(this, cpos, newData[x, y, z], true));
                     }
                 }
             }
@@ -155,9 +155,9 @@ public sealed partial class Chunk : MonoBehaviour
         RecalculateSurfacesList();
         if (surfaces != null && GameMaster.realMaster.gameMode != GameMode.Editor)
         {
-           GameMaster.geologyModule.SpreadMinerals(surfaces);
+            GameMaster.geologyModule.SpreadMinerals(surfaces);
         }
-        
+
         FollowingCamera.main.WeNeedUpdate();
     }
     private void PreparePlanes()
@@ -165,9 +165,9 @@ public sealed partial class Chunk : MonoBehaviour
         if (blocks != null)
         {
             Block[,,] blockArray = new Block[chunkSize, chunkSize, chunkSize];
-            Block b;            
+            Block b;
             foreach (var fb in blocks)
-            {              
+            {
                 b = fb.Value;
                 var cpos = b.pos;
                 blockArray[cpos.x, cpos.y, cpos.z] = b;
@@ -347,7 +347,7 @@ public sealed partial class Chunk : MonoBehaviour
                     }
                 }
             }
-            
+
             if (plist.Count == 0) surfaces = null;
             else
             {
@@ -395,10 +395,10 @@ public sealed partial class Chunk : MonoBehaviour
         {
             bool planesCheck = false;
             b = new Block(this, f_pos, i_materialID, i_naturalGeneration);
-            if (blocks == null)  blocks = new Dictionary<ChunkPos, Block>();                
+            if (blocks == null) blocks = new Dictionary<ChunkPos, Block>();
             else planesCheck = true;
             blocks.Add(f_pos, b);
-            if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);            
+            if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(b.pos);
 
             RecalculateVisibilityAtPoint(f_pos, b.GetAffectionMask());
             if (planesCheck) PlanesCheck(b, i_naturalGeneration);
@@ -409,7 +409,7 @@ public sealed partial class Chunk : MonoBehaviour
             chunkRenderUpdateRequired = true;
             shadowsUpdateRequired = true;
             return b;
-        }      
+        }
     }
     public Block AddBlock(ChunkPos i_pos, IPlanable ms, bool i_natural, bool planesCheck)
     {
@@ -562,13 +562,13 @@ public sealed partial class Chunk : MonoBehaviour
         var orig = hitpoint;
         Vector3Int blockpos = new Vector3Int((int)(hitpoint.x / bs), (int)(hitpoint.y / bs), (int)(hitpoint.z / bs));
 
-        hitpoint = ( hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs) ) / bs;        
+        hitpoint = (hitpoint - new Vector3(blockpos.x * bs, blockpos.y * bs, blockpos.z * bs)) / bs;
         if (hitpoint.x > 0.5f) { blockpos.x++; hitpoint.x -= 0.5f; }
         if (hitpoint.y > 0.5f) { blockpos.y++; hitpoint.y -= 0.5f; }
         if (hitpoint.z > 0.5f) { blockpos.z++; hitpoint.z -= 0.5f; }
         //print(blockpos.ToString() + ' ' + hitpoint.ToString());
 
-        Block b = GetBlock(blockpos.x, blockpos.y, blockpos.z);        
+        Block b = GetBlock(blockpos.x, blockpos.y, blockpos.z);
         if (hitpoint.y == 0.5f)
         {
             if (normal == Vector3.down)
@@ -596,7 +596,7 @@ public sealed partial class Chunk : MonoBehaviour
             }
         }
         else
-        {            
+        {
             if (hitpoint.y == -0.5f)
             {
                 if (normal == Vector3.up)
@@ -701,6 +701,8 @@ public sealed partial class Chunk : MonoBehaviour
     }
 
     #region taking surfaces
+    public int GetSurfacesCount() { return surfaces?.Length ?? 0; }
+    public Plane[] GetSurfaces() { return surfaces; }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= chunkSize || z >= chunkSize) return null;
@@ -722,7 +724,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         return fp;
     }
-    public Plane GetRandomSurface(byte faceIndex)
+    public Plane GetRandomSurface()
     {
         if (surfaces != null)
         {
@@ -730,7 +732,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         return null;
     }
-    public Plane GetNearestUnoccupiedSurface( ChunkPos origin)
+    public Plane GetNearestUnoccupiedSurface(ChunkPos origin)
     {
         if (surfaces == null) return null;
         else
@@ -777,7 +779,58 @@ public sealed partial class Chunk : MonoBehaviour
             }
             return null;
         }
-    }   
+    }
+    public Plane GetUnoccupiedSurface()
+    {
+        if (surfaces == null) return null;
+        else
+        {
+            foreach (var s in surfaces)
+            {
+                if (s != null && s.artificialStructuresCount == 0) return s;
+            }
+            return null;
+        }
+    }
+    public Plane[] GetUnoccupiedSurfaces(int count)
+    {
+        if (surfaces == null) return null;
+        else
+        {
+            var planes = new Plane[count];
+            int x = 0;
+            foreach (var s in surfaces)
+            {
+                if (s != null && s.artificialStructuresCount == 0) {
+                    planes[x++] = s;
+                    if (x == count) break;
+                }
+            }
+            return planes;
+        }
+    }
+    public (Plane plane, byte faceIndex) GetUnoccupiedEdgePosition(bool ignoreBlockers, bool ignoreStructures )
+    {
+        if (surfaces == null) return (null,0);
+        else
+        {
+            ChunkPos cpos;
+            foreach (var s in surfaces)
+            {
+                if (s.isTerminal || s.artificialStructuresCount != 0) continue;
+                else
+                {
+                    cpos = s.pos.OneBlockHigher();
+                    if (!BlocksCast(cpos, new Vector3Int(0, 0, 1), ignoreBlockers, ignoreStructures)) return (s, Block.FWD_FACE_INDEX);
+                    if (!BlocksCast(cpos, Vector3Int.right, ignoreBlockers, ignoreStructures)) return (s, Block.RIGHT_FACE_INDEX);
+                    if (!BlocksCast(cpos, new Vector3Int(0,0,-1), ignoreBlockers, ignoreStructures)) return (s, Block.BACK_FACE_INDEX);
+                    if (!BlocksCast(cpos, Vector3Int.left, ignoreBlockers, ignoreStructures)) return (s, Block.LEFT_FACE_INDEX);
+                }
+            }
+            return (null, 0);
+        }
+    }
+
     #endregion
     /// <summary>
     /// Seek a position for structure somewhere. Returns (xpos, zpos, surface_block_index)
@@ -948,8 +1001,67 @@ public sealed partial class Chunk : MonoBehaviour
     }
     public bool IsSpaceBlocked(ChunkPos cpos)
     {
-        var b = GetBlock(cpos);
-        return b != null && b.IsBlocker();
+        if (!blocks.ContainsKey(cpos)) return false;
+        else  return blocks[cpos].IsBlocker();
+    }
+    public bool BlocksCast(ChunkPos position, Vector3Int direction, bool ignoreBlockers, bool ignoreStructures)
+    {
+        Vector3Int pos = new Vector3Int(position.x, position.y, position.z);
+        if (ignoreStructures)
+        {
+            if (!ignoreBlockers) // любые блоки
+            {
+                pos += direction;
+                while (pos.x != 0 && pos.x < chunkSize && pos.y != 0 && pos.y < chunkSize && pos.z != 0 && pos.z < chunkSize)
+                {
+                    if (blocks.ContainsKey(new ChunkPos(pos.x, pos.y, pos.z))) return true;
+                    else pos += direction;
+                }
+            }
+            else
+            {  // только цельные
+                pos += direction;
+                while (pos.x != 0 && pos.x < chunkSize && pos.y != 0 && pos.y < chunkSize && pos.z != 0 && pos.z < chunkSize)
+                {
+                    if (blocks.TryGetValue(new ChunkPos(pos.x, pos.y, pos.z), out Block b) && !b.IsBlocker()) return true;
+                    else pos += direction;
+                }
+            }
+        }
+        else
+        {
+            if (!ignoreBlockers)
+            {
+                pos += direction;
+                ChunkPos cpos;
+                while (pos.x != 0 && pos.x < chunkSize && pos.y != 0 && pos.y < chunkSize && pos.z != 0 && pos.z < chunkSize)
+                {
+                    cpos = new ChunkPos(pos.x, pos.y, pos.z);
+                    if (blocks.ContainsKey(cpos)) return true;
+                    else
+                    {
+                        if (IsAnyStructureInABlockSpace(cpos)) return true;
+                        else pos += direction;
+                    }
+                }
+            }
+            else
+            {
+                pos += direction;
+                ChunkPos cpos;
+                while (pos.x != 0 && pos.x < chunkSize && pos.y != 0 && pos.y < chunkSize && pos.z != 0 && pos.z < chunkSize)
+                {
+                    cpos = new ChunkPos(pos.x, pos.y, pos.z);
+                    if (blocks.TryGetValue(cpos, out Block b) && !b.IsBlocker()) return true;
+                    else
+                    {
+                        if (IsAnyStructureInABlockSpace(cpos)) return true;
+                        else pos += direction;
+                    }
+                }
+            }
+        }
+        return false;
     }
     /// <summary>
     /// uses min coordinates ( left down corner); start positions including!

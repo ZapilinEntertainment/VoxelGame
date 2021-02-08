@@ -204,6 +204,11 @@ public sealed class RingSector
         var data = new byte[4];
         fs.Read(data, 0, 4);
         int count = System.BitConverter.ToInt32(data, 0), readVal1 = -1, readVal2 = -1;
+        if (count > 1000)
+        {
+            GameMaster.LoadingFail();
+            return null;
+        }
         var sectors = new RingSector[count];
         MapPoint f_centralPoint = null;
         RingSector rs = null;
