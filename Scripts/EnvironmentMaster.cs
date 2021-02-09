@@ -6,11 +6,6 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     [SerializeField] private Vector2 newWindVector;
 
     public bool positionChanged = false; // hot
-
-    public float environmentalConditions { get { return currentEnvironment.conditions; } } 
-    public float lifepowerSupport { get { return currentEnvironment.lifepowerSupport; } }
-    public float envRichness { get { return currentEnvironment.richness; } }
-    public float envStability { get { return currentEnvironment.stability; } }
     public float islandStability { get; private set; }
 
     public Vector2 windVector { get; private set; }    
@@ -18,14 +13,23 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public event WindChangeHandler WindUpdateEvent;
     public event System.Action<Environment> environmentChangingEvent;
 
-    private bool prepared = false, showCelestialBodies = true, lightning = false;
+    private bool prepared = false, showCelestialBodies = true, lightning = false, noEnvironmentChanges = false;
     private int vegetationShaderWindPropertyID, lastDrawnMapActionHash;
-    private float windTimer = 0, prevSkyboxSaturation = 1, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10,
+    private float windTimer = 0, environmentEventTimer = 0, lastSpawnDistance = 0, effectsTimer = 10,
         targetStability = DEFAULT_ISLAND_STABILITY;
     private ColonyController colonyController;
-    private Environment currentEnvironment = Environment.defaultEnvironment;
+    //
+    private Environment currentEnvironment = Environment.defaultEnvironment, 
+        targetEnvironment = Environment.defaultEnvironment;
+    private const float ENV_LERP_SPEED = 0.1f;
+    private float envLerpSpeed = ENV_LERP_SPEED;
+    //
+    public float environmentalConditions { get { return currentEnvironment.conditions; } }
+    public float lifepowerSupport { get { return currentEnvironment.lifepowerSupport; } }
+    public float envRichness { get { return currentEnvironment.richness; } }
+    //
     private GameMaster gm;
-    private GlobalMap gmap;
+    private GlobalMap globalMap;
     private Material skyboxMaterial;
     private List<Transform> decorations;
     private Light sun;
@@ -35,8 +39,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     private Dictionary<int, float> stabilityModifiers;
     private int nextSModifiersID;
 
-    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6, BASIC_SUN_INTENSITY = 0.5f, 
-        DEFAULT_ISLAND_STABILITY = 0.5f, CITY_CHANGE_HEIGHT_STEP = 0.001f, POPULATION_STABILITY_EFFECT_1 = 0.1f, 
+    private const float WIND_CHANGE_STEP = 1, WIND_CHANGE_TIME = 120, DECORATION_PLANE_WIDTH = 6, BASIC_SUN_INTENSITY = 0.5f,
+        DEFAULT_ISLAND_STABILITY = 0.5f, CITY_CHANGE_HEIGHT_STEP = 0.001f, POPULATION_STABILITY_EFFECT_1 = 0.1f,
         POPULATION_STABILITY_EFFECT_2 = 0.25f, POPULATION_STABILITY_EFFECT_3 = 0.5f;
     private const int POPULATION_CONDITION_1 = 2500, POPULATION_CONDITION_2 = 10000, POPULATION_CONDITION_3 = 25000;
     private const int SKY_SPHERE_RADIUS = 9, CLOUD_LAYER_INDEX = 9;
@@ -63,10 +67,10 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
         skyboxMaterial = RenderSettings.skybox;
         gm = GameMaster.realMaster;
-        gmap = gm.globalMap;
+        globalMap = gm.globalMap;
         if (gm.gameMode != GameMode.Editor)
         {
-            RefreshEnvironment();
+            RefreshVisual();
             RecalculateCelestialDecorations();
         }
         else
@@ -74,7 +78,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             SetEnvironment(Environment.defaultEnvironment);
         }       
         islandStability = DEFAULT_ISLAND_STABILITY;
-        gmap?.LinkEnvironmentMaster(this);
+        globalMap?.LinkEnvironmentMaster(this);
         if (GameMaster.realMaster.testMode) AnnouncementCanvasController.MakeAnnouncement("environment master loaded");
     }
     public void LinkColonyController(ColonyController cc)
@@ -97,50 +101,42 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     }
 
 
-    public void SetEnvironment(Environment e)
+    private void SetEnvironment(Environment e)
     {
         currentEnvironment = e;       
-        prevSkyboxSaturation = 1f;
-        SetLightParameters(BASIC_SUN_INTENSITY * e.lightIntensityMultiplier, 1f);
+        RefreshVisual();
         environmentChangingEvent?.Invoke(currentEnvironment);
         positionChanged = false;
     }
-    public void RefreshEnvironment()
+    public void StartConvertingEnvironment(Environment e) { LerpToEnvironment(1f, e); }
+    public void LerpToEnvironment(float speedMultiplier, Environment e)
     {
-        var rs = gmap.GetCurrentSector();
-        if (currentEnvironment != rs.environment)
-        {
-            currentEnvironment = rs.environment;
-            environmentChangingEvent(currentEnvironment);
-        }
-        float s = rs.GetVisualSaturationValue();
-        float li = BASIC_SUN_INTENSITY * currentEnvironment.lightIntensityMultiplier * s;
-        SetLightParameters(li, s);        
-        positionChanged = false;
+        if (noEnvironmentChanges) return;
+        targetEnvironment = e;
+        envLerpSpeed = ENV_LERP_SPEED * speedMultiplier;
     }
-    private void SetLightParameters(float sunIntesity, float ambientColorSaturation)
-    {        
-        sun.intensity = sunIntesity;
-        Color scolor = sun.color * (0.5f + 0.5f * sunIntesity);
+
+    private void RefreshVisual()
+    {
+        float sunIntensity = currentEnvironment.lightIntensityMultiplier;
+        sun.intensity = sunIntensity;
+        Color scolor = sun.color * (0.5f + 0.5f * sunIntensity);
         PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
         PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
 
-        var skyColor = Color.Lerp(Color.white, currentEnvironment.skyColor, ambientColorSaturation);
-        float h = gmap?.cityPoint?.height ?? 0.5f;
-        var horColor = Color.Lerp(Color.cyan * Mathf.Cos(h * Mathf.PI / 2f), currentEnvironment.horizonColor, ambientColorSaturation);
-        var bottomColor = Color.Lerp(Color.white, currentEnvironment.bottomColor, ambientColorSaturation);
-        RenderSettings.ambientSkyColor = skyColor;
-        RenderSettings.ambientEquatorColor = horColor;
-        RenderSettings.ambientGroundColor = bottomColor;
-        skyboxMaterial.SetColor("_BottomColor", bottomColor);
-        skyboxMaterial.SetColor("_HorizonColor", horColor);
-        prevSkyboxSaturation = ambientColorSaturation;
-        //Debug.Log("light recalc");
+       // RenderSettings.ambientSkyColor = currentEnvironment.skyColor;
+        RenderSettings.ambientEquatorColor = currentEnvironment.horizonColor;
+        RenderSettings.ambientGroundColor = currentEnvironment.bottomColor;
+        skyboxMaterial.SetColor("_TopColor", currentEnvironment.skyColor);
+        skyboxMaterial.SetColor("_BottomColor", currentEnvironment.bottomColor);
+        skyboxMaterial.SetColor("_HorizonColor", currentEnvironment.horizonColor);
+        RenderSettings.skybox = skyboxMaterial;
+       // Debug.Log("light recalc");
     }
 
     public void AddDecoration(float size, GameObject dec)
     {
-        var mv = gmap.cityFlyDirection;
+        var mv = globalMap.cityFlyDirection;
         var v = new Vector3(mv.x, 0, mv.z).normalized;
         v *= -1;
         dec.layer = CLOUD_LAYER_INDEX;
@@ -198,7 +194,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         sr.color = sp.color;
         celestialBodies.Add(sp, g.transform);
         if (!showCelestialBodies) g.SetActive(false);
-        Vector3 cpoint = Quaternion.AngleAxis(gmap.cityPoint.angle, Vector3.back) * (Vector3.up * gmap.cityPoint.height),
+        Vector3 cpoint = Quaternion.AngleAxis(globalMap.cityPoint.angle, Vector3.back) * (Vector3.up * globalMap.cityPoint.height),
             mpoint = Quaternion.AngleAxis(sp.angle, Vector3.back) * (Vector3.up * sp.height);
         mpoint -= cpoint;
         mpoint.z = mpoint.y;
@@ -237,9 +233,9 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private void LateUpdate()
     {
-        if (gmap == null) return;
+        if (globalMap == null) return;
         float t = Time.deltaTime * GameMaster.gameSpeed,
-            ascension = gmap.ascension;
+            ascension = globalMap.ascension;
             ;
 
         //wind:
@@ -260,7 +256,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 if (WindUpdateEvent != null) WindUpdateEvent(windVector);
             }
         }
-
+        //env
+        if (envLerpSpeed != 0f )
+        {
+            if (currentEnvironment != targetEnvironment)
+            {
+                currentEnvironment = currentEnvironment.ConvertTo(targetEnvironment, envLerpSpeed * t);
+                RefreshVisual();
+            }
+            else envLerpSpeed = 0f;
+        }
+        //
         if (GameMaster.realMaster.gameMode != GameMode.Editor & !GameMaster.loading)
         {          
             //if (currentEnvironment.presetType != Environment.EnvironmentPresets.Default)
@@ -276,7 +282,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             }
             //}
 
-            var dir = gmap.cityFlyDirection / 500f;
+            var dir = globalMap.cityFlyDirection / 500f;
             dir.y = 0;
             if (decorations.Count > 0)
             {
@@ -302,7 +308,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             {
                 if (celestialBodies != null && celestialBodies.Count > 0)
                 {
-                    Vector3 cpoint = Quaternion.AngleAxis(gmap.cityPoint.angle, Vector3.back) * (Vector3.up * gmap.cityPoint.height);
+                    Vector3 cpoint = Quaternion.AngleAxis(globalMap.cityPoint.angle, Vector3.back) * (Vector3.up * globalMap.cityPoint.height);
                     Vector3 mpoint;
                     foreach (var sb in celestialBodies)
                     {
@@ -355,7 +361,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             }
             #endregion
             //sunlight changing
-            var clv = gmap.cityLookVector * -1f;
+            var clv = globalMap.cityLookVector * -1f;
             clv.y = -0.3f;
             //var rightVector = Vector3.Cross(clv, Vector3.down);
             // sunTransform.forward = Quaternion.AngleAxis(15f + ascension * 75f ,rightVector) * clv;
@@ -401,7 +407,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                     + (1f - ascension) * structureStabilizersEffect
                     )
                     *
-                    envStability;
+                    currentEnvironment.stability;
                 if (targetStability > 1f) targetStability = 1f;
                 else
                 {
@@ -419,17 +425,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                     {
                         if (ascension < 0.5f)
                         {
-                            if (gmap.cityPoint.height != 1f)
+                            if (globalMap.cityPoint.height != 1f)
                             {
-                                gmap.ChangeCityPointHeight(step);
+                                globalMap.ChangeCityPointHeight(step);
                                 positionChanged = true;
                             }
                         }
                         else
                         {
-                            if (gmap.cityPoint.height != 0f)
+                            if (globalMap.cityPoint.height != 0f)
                             {
-                                gmap.ChangeCityPointHeight(-step);
+                                globalMap.ChangeCityPointHeight(-step);
                                 positionChanged = true;
                             }
                         }
@@ -437,7 +443,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 }
             }
             // обновление освещения при движении города
-            if (positionChanged) RefreshEnvironment();
+            if (positionChanged) RefreshVisual();
             #endregion
         }
     }
@@ -474,8 +480,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(newWindVector.y), 0, 4);// 4 - 7
         fs.Write(System.BitConverter.GetBytes(windVector.x), 0, 4);   // 8 - 11
         fs.Write(System.BitConverter.GetBytes(windVector.y), 0, 4);  // 12 - 15
-        fs.Write(System.BitConverter.GetBytes(environmentalConditions), 0, 4); // 16 - 19
-        fs.Write(System.BitConverter.GetBytes(windTimer), 0, 4);  // 20 - 23
+        fs.Write(System.BitConverter.GetBytes(windTimer), 0, 4);  // 16-19
+        fs.Write(System.BitConverter.GetBytes(envLerpSpeed), 0, 4); // 20 - 23
+        currentEnvironment.Save(fs);
+        targetEnvironment.Save(fs);
+        
         //сохранение декораций?
         //save environment
     }
@@ -485,7 +494,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         fs.Read(data, 0, data.Length);
         newWindVector = new Vector2(System.BitConverter.ToSingle(data, 0), System.BitConverter.ToSingle(data, 4));
         windVector = new Vector2(System.BitConverter.ToSingle(data, 8), System.BitConverter.ToSingle(data, 12));        
-        windTimer = System.BitConverter.ToSingle(data, 20);
+        windTimer = System.BitConverter.ToSingle(data, 16);
 
         vegetationShaderWindPropertyID = Shader.PropertyToID("_Windpower");
         float windPower = windVector.magnitude;
@@ -493,10 +502,13 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         if (WindUpdateEvent != null) WindUpdateEvent(windVector);
 
         skyboxMaterial = RenderSettings.skybox;
-        gmap = GameMaster.realMaster.globalMap;
-        SetEnvironment(gmap.GetCurrentEnvironment());
-        RecalculateCelestialDecorations();
+        globalMap = GameMaster.realMaster.globalMap;
 
+        SetEnvironment(Environment.Load(fs));
+        targetEnvironment = Environment.Load(fs);
+        envLerpSpeed = System.BitConverter.ToSingle(data, 20);
+
+        RecalculateCelestialDecorations();       
         prepared = true;
     }
     #endregion

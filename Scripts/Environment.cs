@@ -3,54 +3,109 @@ using System.Collections.Generic;
 
 public sealed class Environment
 {
+    [System.Serializable]
     public enum EnvironmentPreset : byte
     {
         Default, Ocean, Meadows, WhiteSpace, // normal
         Space, Ice, Desert, Fire, // dead
         Ruins, Crystal, Forest, Pollen, // ascended
-        Pipe // special
+        Pipe, // special
             // edge -> center
+            Custom, TotalCount
     }
     //dependecies:
     // PickEnvironmentPreset
     // PickMainPointType
+    // get by preset & static constructor
 
-    public static readonly Environment defaultEnvironment;
-    public readonly EnvironmentPreset presetType;
+    private static Dictionary<EnvironmentPreset, Environment> presets;
+    public static Environment defaultEnvironment {  get { return GetEnvironment(EnvironmentPreset.Default); } }
+
+    public EnvironmentPreset presetType { get; private set; }
     public float conditions { get; private set; }
-    public readonly float richness, lifepowerSupport, stability, lightIntensityMultiplier;
-    public readonly Color bottomColor, skyColor, horizonColor;
+    public float richness{ get; private set; }
+    public float lifepowerSupport { get; private set; }
+    public float stability { get; private set; }
+    public float lightIntensityMultiplier { get; private set; }
+    public Color bottomColor { get; private set; }
+    public Color skyColor { get; private set; }
+    public Color horizonColor { get; private set; }
+
+    //dependency in conversion!
     private const float DEFAULT_CONDITIONS = 0.75f, DEFAULT_RICHNESS = 0.2f, DEFAULT_LP_SUPPORT = 0.8f, DEFAULT_STABILITY = 0.5f;
-    private static Dictionary<EnvironmentPreset, Environment> elist;
+
+
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        Environment b = (Environment)obj;
+        if (presetType == EnvironmentPreset.Custom || b.presetType == EnvironmentPreset.Custom)
+            return bottomColor == b.bottomColor && skyColor == b.skyColor && horizonColor == b.horizonColor &&
+                conditions == b.conditions && richness == b.richness && lifepowerSupport == b.lifepowerSupport && stability == b.stability
+                && lightIntensityMultiplier == b.lightIntensityMultiplier;
+        else return presetType == b.presetType;
+    }
+    public override int GetHashCode()
+    {
+        return (int)presetType + (int)((richness + lifepowerSupport + stability + lightIntensityMultiplier + conditions ) * 10f + bottomColor.GetHashCode() + horizonColor.GetHashCode() + skyColor.GetHashCode());
+    }
+    public static bool operator ==(Environment A, Environment B)
+    {
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return A.Equals(B);
+    }
+    public static bool operator !=(Environment A, Environment B)
+    {
+        return !(A == B);
+    }
 
     static Environment()
     {
-        defaultEnvironment = new Environment(EnvironmentPreset.Default);
+        presets = new Dictionary<EnvironmentPreset, Environment>();
     } 
+    public static Environment GetEnvironment(float ascension, float height)
+    {
+        return new Environment(PickEnvironmentPreset(ascension, height));
+    }
     public static Environment GetEnvironment(EnvironmentPreset ep)
     {
-        if (elist != null)
-        {
-            if (elist.ContainsKey(ep)) return elist[ep];
-            else
-            {
-                var e = new Environment(ep);
-                elist.Add(ep, e);
-                return e;
-            }
-        }
+        if (presets.ContainsKey(ep)) return presets[ep];
         else
         {
             var e = new Environment(ep);
-            elist = new Dictionary<EnvironmentPreset, Environment>();
-            elist.Add(ep, e);
+            presets.Add(ep, e);
             return e;
         }
     }
-    public static Environment GetEnvironment(float ascension, float height)
+    public static Environment GetConvertingEnvironment(Environment a, Environment b, float speed)
     {
-        return GetEnvironment(PickEnvironmentPreset(ascension, height));
+        if (a.presetType == EnvironmentPreset.Custom) return a.ConvertTo(b, speed);
+        else
+        {
+            var e = a.GetCustomCopy();
+            return e.ConvertTo(b, speed);
+        }
     }
+    public static Environment GetLerpedEnvironment(EnvironmentPreset a, EnvironmentPreset b, float val)
+    {
+        if (a == EnvironmentPreset.Custom)
+        {
+            if (b == EnvironmentPreset.Custom) return defaultEnvironment;
+            else return GetEnvironment(b);
+        }
+        else
+        {
+            if (b == EnvironmentPreset.Custom) return GetEnvironment(a);
+            else return GetEnvironment(a).Lerp(b, val);
+        }
+    }
+
     private Environment(EnvironmentPreset ep)
     {
         presetType = ep;
@@ -171,11 +226,39 @@ public sealed class Environment
                 stability = DEFAULT_STABILITY;
                 lightIntensityMultiplier = 1f;
                 bottomColor = Color.white;
-                skyColor = Color.white;
+                skyColor = Color.black;
                 horizonColor = Color.cyan * 0.5f;
                 break;
         }
     }    
+    private Environment(System.IO.FileStream fs)
+    {
+        presetType = EnvironmentPreset.Custom;
+        var data = new byte[56];
+        fs.Read(data, 0, data.Length);
+        int i = 0;
+        conditions = System.BitConverter.ToSingle(data, i); i += 4;
+        richness = System.BitConverter.ToSingle(data, i); i += 4;
+        lifepowerSupport = System.BitConverter.ToSingle(data, i); i += 4;
+        stability = System.BitConverter.ToSingle(data, i); i += 4;
+        lightIntensityMultiplier = System.BitConverter.ToSingle(data, i); i += 4;
+
+        bottomColor = new Color(
+            System.BitConverter.ToSingle(data, i),
+            System.BitConverter.ToSingle(data, i + 4),
+            System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+        horizonColor = new Color(
+           System.BitConverter.ToSingle(data, i),
+           System.BitConverter.ToSingle(data, i + 4),
+           System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+        skyColor = new Color(
+           System.BitConverter.ToSingle(data, i),
+           System.BitConverter.ToSingle(data, i + 4),
+           System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+    }
     public static EnvironmentPreset PickEnvironmentPreset(float ascension, float height)
     {
         float outerVar = (height - 0.7f) / 0.3f; if (outerVar < 0f) outerVar = 0f;
@@ -396,5 +479,104 @@ public sealed class Environment
     public Color GetMapColor()
     {
         return Color.Lerp(skyColor, Color.white, 0.6f);
+    }
+    public Environment ConvertTo(Environment target, float speed)
+    {
+        if (presetType != EnvironmentPreset.Custom) return GetConvertingEnvironment(this, target, speed);
+        else
+        {
+            int equalsCount = 0;
+            if (conditions != target.conditions) conditions = Mathf.MoveTowards(conditions, target.conditions, speed); else equalsCount++;
+            if (richness != target.richness) richness = Mathf.MoveTowards(richness, target.richness, speed); else equalsCount++;
+            if (lifepowerSupport != target.lifepowerSupport) lifepowerSupport = Mathf.MoveTowards(lifepowerSupport, target.lifepowerSupport, speed); else equalsCount++;
+            if (stability != target.stability) stability = Mathf.MoveTowards(stability, target.stability, speed); else equalsCount++;
+            if (lightIntensityMultiplier != target.lightIntensityMultiplier) lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, target.lightIntensityMultiplier, speed); else equalsCount++;
+
+            if (bottomColor != target.bottomColor) bottomColor = Vector4.MoveTowards(bottomColor, target.bottomColor, speed); else equalsCount++;
+            if (skyColor != target.skyColor) skyColor = Vector4.MoveTowards(skyColor, target.skyColor, speed); else equalsCount++;
+            if (horizonColor != target.horizonColor) horizonColor = Vector4.MoveTowards(horizonColor, target.horizonColor, speed); else equalsCount++;
+            
+            if (target.presetType != EnvironmentPreset.Custom && equalsCount == 8)
+            {
+                presetType = target.presetType;
+            }
+            return this;
+        }
+    }
+    public Environment Lerp(EnvironmentPreset target, float val)
+    {
+        if (target == EnvironmentPreset.Custom) return this;
+        else
+        {
+            if (presetType != EnvironmentPreset.Custom) return this.GetCustomCopy().Lerp(target, val);
+            else
+            {
+                var t = GetEnvironment(target);
+                conditions = Mathf.Lerp(conditions, t.conditions, val);
+                richness = Mathf.Lerp(richness, t.richness, val);
+                lifepowerSupport = Mathf.MoveTowards(lifepowerSupport, t.lifepowerSupport, val);
+                stability = Mathf.MoveTowards(stability, t.stability, val);
+                lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, t.lightIntensityMultiplier, val);
+
+                bottomColor = Vector4.MoveTowards(bottomColor, t.bottomColor, val);
+                skyColor = Vector4.MoveTowards(skyColor, t.skyColor, val);
+                horizonColor = Vector4.MoveTowards(horizonColor, t.horizonColor, val);
+                return this;
+            }
+        }
+    }
+    public Environment GetCustomCopy()
+    {
+        Environment e;
+        if (presetType != EnvironmentPreset.Custom)
+        {
+            e = new Environment(presetType);
+            e.presetType = EnvironmentPreset.Custom;
+        }
+        else
+        {
+            e = new Environment(EnvironmentPreset.Custom);
+            e.conditions = conditions;
+            e.richness = richness;
+            e.lifepowerSupport = lifepowerSupport;
+            e.stability = stability;
+            e.lightIntensityMultiplier = lightIntensityMultiplier;
+            e.bottomColor = bottomColor;
+            e.skyColor = skyColor;
+            e.horizonColor = horizonColor;
+        }
+        return e;
+    }
+
+    public void Save(System.IO.FileStream fs)
+    {
+        fs.WriteByte((byte)presetType);
+        if (presetType == EnvironmentPreset.Custom)
+        {
+            fs.Write(System.BitConverter.GetBytes(conditions),0,4);
+            fs.Write(System.BitConverter.GetBytes(richness), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(lifepowerSupport), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(stability), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(lightIntensityMultiplier), 0, 4);
+
+            fs.Write(System.BitConverter.GetBytes(bottomColor.r), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(bottomColor.g), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(bottomColor.b), 0, 4);
+
+            fs.Write(System.BitConverter.GetBytes(horizonColor.r), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(horizonColor.g), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(horizonColor.b), 0, 4);
+
+            fs.Write(System.BitConverter.GetBytes(skyColor.r), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(skyColor.g), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(skyColor.b), 0, 4);
+            //14 * 4 = 56
+        }
+    }
+    public static Environment Load(System.IO.FileStream fs)
+    {
+        EnvironmentPreset ep = (EnvironmentPreset)fs.ReadByte();
+        if (ep != EnvironmentPreset.Custom) return GetEnvironment(ep);
+        else return new Environment(fs);
     }
 }    

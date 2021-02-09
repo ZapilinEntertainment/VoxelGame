@@ -1,17 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class TestMaster : MonoBehaviour
 {
+    [SerializeField] private GameObject testObject0;
+    public Environment.EnvironmentPreset selectedPreset;
+    private EnvironmentMaster emaster;
+
+
     public static void CreateCube(Vector3 point)
     {
         GameObject.CreatePrimitive(PrimitiveType.Cube).transform.position = point;
     }
 
+    private void Awake()
+    {
+        emaster = GameMaster.realMaster.environmentMaster;
+        selectedPreset = Environment.EnvironmentPreset.Default;
+    }
+
     private void Start()
     {
-        InstantiateHouses();
+        //InstantiateHouses();
+        ReplaceMaterials(testObject0);
     }
 
     private void Update()
@@ -22,13 +35,59 @@ public class TestMaster : MonoBehaviour
         }
     }
 
-    private void InstantiateHouses()
+    private void ReplaceMaterials(GameObject g)
     {
         Material env_basic = Resources.Load<Material>("Materials/Advanced/Basic_ENV_ADV"),
-             env_glass = Resources.Load<Material>("Materials/Advanced/Glass_ENV_ADV"),
-             env_metal = Resources.Load<Material>("Materials/Advanced/Metal_ENV_ADV"),
-             env_green = Resources.Load<Material>("Materials/Advanced/Green_ENV_ADV"),
-             env_energy = Resources.Load<Material>("Materials/ColouredENV");
+            env_glass = Resources.Load<Material>("Materials/Advanced/Glass_ENV_ADV"),
+            env_metal = Resources.Load<Material>("Materials/Advanced/Metal_ENV_ADV"),
+            env_green = Resources.Load<Material>("Materials/Advanced/Green_ENV_ADV"),
+            env_energy = Resources.Load<Material>("Materials/ColouredENV");
+        Material[] mts, nmts;
+        int layerIndex = GameConstants.GetEnvironmentLayerMask();
+        foreach (var r in g.GetComponentsInChildren<Renderer>())
+        {
+            {
+                if (r.sharedMaterials == null || r.sharedMaterials.Length == 1)
+                {
+                    switch (r.sharedMaterial.name)
+                    {
+                        case "Basic": r.sharedMaterial = env_basic; break;
+                        case "Glass": r.sharedMaterial = env_glass; break;
+                        case "Metal": r.sharedMaterial = env_metal; break;
+                        case "Green": r.sharedMaterial = env_green; break;
+                        case "ChargedMaterial": r.sharedMaterial = env_energy; break;
+                    }
+                }
+                else
+                {
+                    mts = r.sharedMaterials;
+                    nmts = new Material[mts.Length];
+                    int i = 0;
+                    foreach (var m in mts)
+                    {
+                        switch (m.name)
+                        {
+                            case "Basic": nmts[i++] = env_basic; break;
+                            case "Glass": nmts[i++] = env_glass; break;
+                            case "Metal": nmts[i++] = env_metal; break;
+                            case "Green": nmts[i++] = env_green; break;
+                            case "ChargedMaterial": nmts[i++] = env_energy; break;
+                            default: nmts[i++] = m; break;
+                        }
+                    }
+                    mts = null;
+                    r.sharedMaterials = nmts;
+                    nmts = null;
+                }
+            }
+            r.receiveShadows = false;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.gameObject.layer = layerIndex;
+        }
+    }
+    private void InstantiateHouses()
+    {
+       
         GameObject[] prefs = new GameObject[12];
         prefs[0] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl1");
         prefs[1] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl2");
@@ -44,48 +103,10 @@ public class TestMaster : MonoBehaviour
         prefs[10] = Resources.Load<GameObject>("Structures/Settlement/settlementCenter_5");
         prefs[11] = Resources.Load<GameObject>("Structures/Settlement/settlementCenter_6");
 
-        int rowsCount = 10, totalCount = 16 + rowsCount * 2, index, layerIndex = GameConstants.GetEnvironmentLayerMask();
+        int rowsCount = 10, totalCount = 16 + rowsCount * 2, index;
         float density = 0.9f, x, sz = 5f;
         Transform parent = new GameObject("decsParent").transform;
-        GameObject g;
-        Renderer[] rrs;
-        Material[] mts, nmts;
-
-        void ReplaceMaterials(Renderer r)
-        {
-            if (r.sharedMaterials == null || r.sharedMaterials.Length == 1)
-            {
-                switch(r.sharedMaterial.name)
-                {
-                    case "Basic": r.sharedMaterial = env_basic; break;
-                    case "Glass": r.sharedMaterial = env_glass; break;
-                    case "Metal": r.sharedMaterial = env_metal; break;
-                    case "Green": r.sharedMaterial = env_green; break;
-                    case "ChargedMaterial": r.sharedMaterial = env_energy;break;
-                }
-            }
-            else
-            {
-                mts = r.sharedMaterials;
-                nmts = new Material[mts.Length];
-                int i = 0;
-                foreach (var m in mts)
-                {
-                    switch (m.name)
-                    {
-                        case "Basic": nmts[i++] = env_basic; break;
-                        case "Glass": nmts[i++] = env_glass; break;
-                        case "Metal": nmts[i++] = env_metal; break;
-                        case "Green": nmts[i++] = env_green; break;
-                        case "ChargedMaterial": nmts[i++] = env_energy; break;
-                        default: nmts[i++] = m;break;
-                    }
-                }
-                mts = null;
-                r.sharedMaterials = nmts;
-                nmts = null;
-            }
-        }
+        GameObject g;        
 
 
         for (int i = 0; i < totalCount;i++ )
@@ -126,26 +147,34 @@ public class TestMaster : MonoBehaviour
                         }
                     }
 
+                    if (index < 6) continue;
                     g = Instantiate(
                         prefs[index],
                         new Vector3((i - rowsCount) * sz, -1f, (j - rowsCount) * sz),
                         Quaternion.Euler(Vector3.up * Random.value * 360f),
                         parent
                         );
-                    foreach (Transform trans in g.GetComponentsInChildren<Transform>(true))
-                    {
-                        trans.gameObject.layer = layerIndex;
-                    }
-                    rrs = g.GetComponentsInChildren<Renderer>();
-                    foreach (var r in rrs)
-                    {
-                        ReplaceMaterials(r);
-                    }
-                    rrs = null;
+                    ReplaceMaterials(g);
                     g.transform.localScale = Vector3.one * 4f;
                 }
             }
         }
         //parent.localScale = Vector3.one * 16f;
+    }
+
+    public void StartApplyingEnvChanges()
+    {
+        emaster.StartConvertingEnvironment(Environment.GetEnvironment(selectedPreset));
+    }
+}
+
+[CustomEditor(typeof(TestMaster))]
+public class TestMasterEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+        TestMaster script = (TestMaster)target;
+         if (GUILayout.Button("Apply")) script.StartApplyingEnvChanges();
     }
 }

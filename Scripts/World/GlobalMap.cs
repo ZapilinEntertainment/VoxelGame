@@ -28,6 +28,8 @@ public sealed class GlobalMap : MonoBehaviour
 
     private bool prepared = false;
     private EnvironmentMaster envMaster;
+    private Environment _outerSpaceEnvironment;
+    private bool SYSTEM_envWasCalculatedThisTick = false;
     public System.Action<MapPoint> pointsExploringEvent;
 
     //Island Engine
@@ -410,15 +412,17 @@ public sealed class GlobalMap : MonoBehaviour
         int currentSectorIndex = GetCurrentSectorIndex();
         if (sIndex != currentSectorIndex)
         {
+            Environment env;
             if (mapSectors[currentSectorIndex] != null)
             {
-                envMaster.RefreshEnvironment();
+                env = mapSectors[currentSectorIndex].environment;
             }
             else
             {
                 var rs = CreateNewSector(sIndex);
-                envMaster.SetEnvironment(rs.environment);
+                env = rs?.environment ?? GetEmptySpaceEnvironment();
             }
+            envMaster.StartConvertingEnvironment(env);
         }
         else envMaster.positionChanged = true;
     }
@@ -546,7 +550,8 @@ public sealed class GlobalMap : MonoBehaviour
         }
         //
         cityLookVector = Quaternion.AngleAxis(cityPoint.angle, Vector3.up) * Vector3.forward;
-        cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);        
+        cityFlyDirection = new Vector3(cityPoint.angle - prevX + rotationSpeed[cityPoint.ringIndex], ascensionChange, cityPoint.height - prevY);
+        SYSTEM_envWasCalculatedThisTick = false;
     }
 
     //=============  
@@ -639,8 +644,17 @@ public sealed class GlobalMap : MonoBehaviour
     public Environment GetCurrentEnvironment()
     {
         int i = GetCurrentSectorIndex();
-        if (mapSectors[i] == null) return Environment.defaultEnvironment;
+        if (mapSectors[i] == null) return GetEmptySpaceEnvironment();
         else return mapSectors[i].environment;
+    }
+    public Environment GetEmptySpaceEnvironment()
+    {
+        if (!SYSTEM_envWasCalculatedThisTick)
+        {
+            _outerSpaceEnvironment = Environment.GetLerpedEnvironment(Environment.EnvironmentPreset.Space, Environment.EnvironmentPreset.WhiteSpace, ascension);
+            SYSTEM_envWasCalculatedThisTick = true;
+        }
+        return _outerSpaceEnvironment;
     }
 
     public bool Search()
