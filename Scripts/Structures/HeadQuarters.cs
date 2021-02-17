@@ -43,12 +43,12 @@ public sealed class HeadQuarters : Building
         PrepareBuilding();
         switch (level)
         {
-            case 1: energySurplus = 1f; energyCapacity = 100f; break;
-            case 2: energySurplus = 3f; energyCapacity = 200f; break;
-            case 3: energySurplus = 5f; energyCapacity = 400f; break;
-            case 4: energySurplus = 12f; energyCapacity = 500f; break;
-            case 5: energySurplus = 20f; energyCapacity = 600f; break;
-            case 6: energySurplus = 25f; energyCapacity = 700f; ChangeUpgradedIndex(-1); break;
+            case 1: energySurplus = 10f; energyCapacity = 100f; break;
+            case 2: energySurplus = 30f; energyCapacity = 200f; break;
+            case 3: energySurplus = 50f; energyCapacity = 400f; break;
+            case 4: energySurplus = 120f; energyCapacity = 600f; break;
+            case 5: energySurplus = 200f; energyCapacity = 800f; break;
+            case 6: energySurplus = 250f; energyCapacity = 1000f; ChangeUpgradedIndex(-1); break;
         }
         indestructible = true;
     }

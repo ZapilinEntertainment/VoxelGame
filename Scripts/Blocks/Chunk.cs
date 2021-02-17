@@ -12,7 +12,7 @@ public struct ChunkRaycastHit
         faceIndex = face;
     }
 }
-public enum ChunkGenerationMode : byte { Standart, GameLoading, Cube, Peak, TerrainLoading, DontGenerate }
+public enum ChunkGenerationMode : byte { Standart, Cube, Peak, LoadSavedTerrain, NoActions }
 
 public sealed partial class Chunk : MonoBehaviour
 {
@@ -941,6 +941,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         blocks = new Dictionary<ChunkPos, Block>();
         surfaces = null;
+        Destroy(nature);
         lifePower = 0;
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;

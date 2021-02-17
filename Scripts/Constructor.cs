@@ -104,7 +104,7 @@ public abstract class Constructor
         }
     }
 
-    public static void ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
+    public static Chunk ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
     {
         int size = chunkSize;
         int[,,] dat = new int[size, size, size];
@@ -134,23 +134,22 @@ public abstract class Constructor
 
         GameObject g = new GameObject("chunk");
         Chunk c = g.AddComponent<Chunk>();
-        GameMaster.realMaster.SetMainChunk(c);
-        c.CreateNewChunk(dat);
-        c.GetNature().FirstLifeformGeneration(size * size * 500f);
+        c.CreateNewChunk(dat);       
         //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();
+        return c;
     }
-    public static void ConstructBlock(byte chunkSize)
+    public static Chunk ConstructBlock(byte chunkSize)
     {
         int size = chunkSize;
         int[,,] dat = new int[size, size, size];
         dat[0, 0, 0] = ResourceType.STONE_ID;
         GameObject g = new GameObject("chunk");
         Chunk c = g.AddComponent<Chunk>();
-        GameMaster.realMaster.SetMainChunk(c);
         c.CreateNewChunk(dat);
         //NatureCreation(c);
         //CheckForLandingPosition(c);
+        return c;
     }
 
     private static void GenerateSpiralsData(int size, ref int[,,] data)

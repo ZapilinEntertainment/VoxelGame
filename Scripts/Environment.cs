@@ -1,6 +1,147 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+public sealed class SceneAmbientSettings
+{
+    public float lightIntensityMultiplier { get; private set; }
+    public Color bottomColor { get; private set; }
+    public Color skyColor { get; private set; }
+    public Color horizonColor { get; private set; }
+    private float horizonCompression = 5, topExponent = 10, bottomExponent = 10, saturation = 0.85f, horizonDistortion = 1f;
+
+    public override bool Equals(object obj)
+    {
+        // Check for null values and compare run-time types.
+        if (obj == null || GetType() != obj.GetType())
+            return false;
+
+        SceneAmbientSettings b = (SceneAmbientSettings)obj;
+        return lightIntensityMultiplier == b.lightIntensityMultiplier && bottomColor == b.bottomColor &&
+            skyColor == b.skyColor && horizonColor == b.horizonColor;
+    }
+    public override int GetHashCode()
+    {
+        return (int)(lightIntensityMultiplier * 56f) + bottomColor.GetHashCode() + horizonColor.GetHashCode() + skyColor.GetHashCode();
+    }
+    public static bool operator ==(SceneAmbientSettings A, SceneAmbientSettings B)
+    {
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return A.Equals(B);
+    }
+    public static bool operator !=(SceneAmbientSettings A, SceneAmbientSettings B)
+    {
+        return !(A == B);
+    }
+
+    public SceneAmbientSettings(Color i_topColor, Color i_horizonColor, Color i_bottomColor, float i_intensity)
+    {
+        skyColor = i_topColor;
+        horizonColor = i_horizonColor;
+        bottomColor = i_bottomColor;
+        lightIntensityMultiplier = i_intensity;
+    }
+    public SceneAmbientSettings Copy()
+    {
+        return new SceneAmbientSettings(skyColor, horizonColor, bottomColor, lightIntensityMultiplier);
+    }
+    public void CopyFrom(SceneAmbientSettings source)
+    {
+        skyColor = source.skyColor;
+        bottomColor = source.bottomColor;
+        horizonColor = source.horizonColor;
+        lightIntensityMultiplier = source.lightIntensityMultiplier;
+    }
+
+    public void SetAdditionalValues(float i_horizonCompression, float i_topExponent, float i_bottomExponent, float i_saturation, float i_distortion)
+    {
+        horizonCompression = i_horizonCompression;
+        topExponent = i_topExponent;
+        bottomExponent = i_bottomExponent;
+        saturation = i_saturation;
+        horizonDistortion = i_distortion;
+    }
+
+    /// <summary>
+    /// returns true if all values are equal
+    /// </summary>
+    public bool MoveTo(SceneAmbientSettings target, float speed)
+    {
+        int equalsCount = 0;
+        if (lightIntensityMultiplier != target.lightIntensityMultiplier) lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, target.lightIntensityMultiplier, speed); else equalsCount++;
+        if (bottomColor != target.bottomColor) bottomColor = Vector4.MoveTowards(bottomColor, target.bottomColor, speed); else equalsCount++;
+        if (skyColor != target.skyColor) skyColor = Vector4.MoveTowards(skyColor, target.skyColor, speed); else equalsCount++;
+        if (horizonColor != target.horizonColor) horizonColor = Vector4.MoveTowards(horizonColor, target.horizonColor, speed); else equalsCount++;
+        return equalsCount == 4;
+    }
+    public void Lerp(SceneAmbientSettings target, float val)
+    {
+        lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, target.lightIntensityMultiplier, val);
+        bottomColor = Vector4.MoveTowards(bottomColor, target.bottomColor, val);
+        skyColor = Vector4.MoveTowards(skyColor, target.skyColor, val);
+        horizonColor = Vector4.MoveTowards(horizonColor, target.horizonColor, val);
+    }
+
+    public void ApplyToSkyboxMaterial()
+    {
+        var r = RenderSettings.skybox;
+        ApplyToSkyboxMaterial(ref r);
+        RenderSettings.skybox = r;
+    }
+    public void ApplyToSkyboxMaterial(ref Material m)
+    {
+        m.SetColor("_TopColor", skyColor);
+        m.SetColor("_BottomColor", bottomColor);
+        m.SetColor("_HorizonColor", horizonColor);
+        m.SetFloat("_HorizonCompression", horizonCompression);
+        m.SetFloat("_TopExponent", topExponent);
+        m.SetFloat("_BottomExponent", bottomExponent);
+        m.SetFloat("_Saturation", saturation);
+        m.SetFloat("_HorizonDistortion", horizonDistortion);
+    }
+
+    public void Save(System.IO.FileStream fs)
+    {
+        fs.Write(System.BitConverter.GetBytes(lightIntensityMultiplier), 0, 4);
+
+        fs.Write(System.BitConverter.GetBytes(bottomColor.r), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(bottomColor.g), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(bottomColor.b), 0, 4);
+
+        fs.Write(System.BitConverter.GetBytes(horizonColor.r), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(horizonColor.g), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(horizonColor.b), 0, 4);
+
+        fs.Write(System.BitConverter.GetBytes(skyColor.r), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(skyColor.g), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(skyColor.b), 0, 4);
+        // 40
+    }
+    public SceneAmbientSettings(System.IO.FileStream fs)
+    {
+        var data = new byte[40];
+        int i = 0;
+        skyColor = new Color(
+           System.BitConverter.ToSingle(data, i),
+           System.BitConverter.ToSingle(data, i + 4),
+           System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+        horizonColor = new Color(
+           System.BitConverter.ToSingle(data, i),
+           System.BitConverter.ToSingle(data, i + 4),
+           System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+        bottomColor = new Color(
+           System.BitConverter.ToSingle(data, i),
+           System.BitConverter.ToSingle(data, i + 4),
+           System.BitConverter.ToSingle(data, i + 8));
+        i += 12;
+        lightIntensityMultiplier = System.BitConverter.ToSingle(data, i);
+    }
+}
+
 public sealed class Environment
 {
     [System.Serializable]
@@ -11,7 +152,7 @@ public sealed class Environment
         Ruins, Crystal, Forest, Pollen, // ascended
         Pipe, // special
             // edge -> center
-            Custom, TotalCount
+            Custom, FoundationSkies,TotalCount
     }
     //dependecies:
     // PickEnvironmentPreset
@@ -26,10 +167,8 @@ public sealed class Environment
     public float richness{ get; private set; }
     public float lifepowerSupport { get; private set; }
     public float stability { get; private set; }
-    public float lightIntensityMultiplier { get; private set; }
-    public Color bottomColor { get; private set; }
-    public Color skyColor { get; private set; }
-    public Color horizonColor { get; private set; }
+    public SceneAmbientSettings lightSettings { get; private set; }
+   
 
     //dependency in conversion!
     private const float DEFAULT_CONDITIONS = 0.75f, DEFAULT_RICHNESS = 0.2f, DEFAULT_LP_SUPPORT = 0.8f, DEFAULT_STABILITY = 0.5f;
@@ -43,14 +182,14 @@ public sealed class Environment
 
         Environment b = (Environment)obj;
         if (presetType == EnvironmentPreset.Custom || b.presetType == EnvironmentPreset.Custom)
-            return bottomColor == b.bottomColor && skyColor == b.skyColor && horizonColor == b.horizonColor &&
+            return  lightSettings == b.lightSettings &&
                 conditions == b.conditions && richness == b.richness && lifepowerSupport == b.lifepowerSupport && stability == b.stability
-                && lightIntensityMultiplier == b.lightIntensityMultiplier;
+                ;
         else return presetType == b.presetType;
     }
     public override int GetHashCode()
     {
-        return (int)presetType + (int)((richness + lifepowerSupport + stability + lightIntensityMultiplier + conditions ) * 10f + bottomColor.GetHashCode() + horizonColor.GetHashCode() + skyColor.GetHashCode());
+        return (int)presetType + (int)((richness + lifepowerSupport + stability + conditions ) * 10f) + lightSettings.GetHashCode();
     }
     public static bool operator ==(Environment A, Environment B)
     {
@@ -114,150 +253,155 @@ public sealed class Environment
             case EnvironmentPreset.Desert:
                 conditions = 0.3f;
                 lifepowerSupport = 0.1f;
-                lightIntensityMultiplier = 1.1f;
                 stability = 0.4f;
-                skyColor = new Color(1f, 0.74f, 0.65f);
-                bottomColor = new Color(1f, 0.95f, 0.74f);
-                horizonColor = Color.white;
+                lightSettings = new SceneAmbientSettings(new Color(1f, 0.74f, 0.65f), Color.white, new Color(1f, 0.95f, 0.74f), 1.1f);
                 break;
             case EnvironmentPreset.WhiteSpace:
                 conditions = 1f;
                 lifepowerSupport = 0.01f;
-                lightIntensityMultiplier = 1.5f;
                 stability = 0f;
-                skyColor = Color.white;
-                bottomColor = skyColor;
-                horizonColor = skyColor;
+                var wc = Color.white;
+                lightSettings = new SceneAmbientSettings(wc,wc, wc, 1.5f);
                 break;
             case EnvironmentPreset.Pipe:
                 conditions = DEFAULT_CONDITIONS;
                 lifepowerSupport = DEFAULT_LP_SUPPORT / 2f;
                 stability = 0.98f;
-                lightIntensityMultiplier = 0.25f;
-                skyColor = new Color(0.58f, 1f, 0.75f);
-                bottomColor = new Color(0f, 0.65f, 0.4f);
-                horizonColor = new Color(0.22f, 0.46f, 0.29f);
+                lightSettings = new SceneAmbientSettings(
+                    new Color(0.58f, 1f, 0.75f), 
+                    new Color(0.22f, 0.46f, 0.29f), 
+                    new Color(0f, 0.65f, 0.4f),
+                    0.25f);
                 break;
             case EnvironmentPreset.Ice:
                 conditions = 0.25f;
                 lifepowerSupport = 0.2f;
                 stability = 0.55f;
-                lightIntensityMultiplier = 0.7f;
-                skyColor = new Color(0.588f, 0.853f, 0.952f);
-                bottomColor = Color.blue;
-                horizonColor = Color.white;
+                lightSettings = new SceneAmbientSettings(
+                    new Color(0.588f, 0.853f, 0.952f),
+                    Color.white,
+                    Color.blue,
+                    0.7f);
                 break;
             case EnvironmentPreset.Pollen:
                 conditions = 0.4f;
                 lifepowerSupport = 0.6f;
                 stability = 0.3f;
-                lightIntensityMultiplier = 0.8f;
-                skyColor = new Color(1f, 0.99f, 0.86f);
-                bottomColor = new Color(0.58f, 0.58f, 0.52f);
-                horizonColor = new Color(0.96f, 0.79f, 0.4f);
+                lightSettings = new SceneAmbientSettings(
+                   new Color(1f, 0.99f, 0.86f),
+                    new Color(0.96f, 0.79f, 0.4f),
+                   new Color(0.58f, 0.58f, 0.52f),
+                   0.8f);
                 break;
             case EnvironmentPreset.Forest:
                 conditions = 0.89f;
                 lifepowerSupport = 0.8f;
                 stability = DEFAULT_STABILITY;
-                lightIntensityMultiplier = 1f;
-                skyColor = new Color(1f, 0.96f, 0.74f);
-                bottomColor = new Color(0.57f, 0.84f, 0.57f);
-                horizonColor = new Color(0.07f, 0.43f, 0.07f);
+                lightSettings = new SceneAmbientSettings(
+                  new Color(1f, 0.96f, 0.74f),
+                   new Color(0.07f, 0.43f, 0.07f),
+                  new Color(0.57f, 0.84f, 0.57f),
+                  1f);
                 break;
             case EnvironmentPreset.Ruins:
                 conditions = 0.4f;
                 lifepowerSupport = 0.3f;
                 stability = 0.6f;
-                lightIntensityMultiplier = 0.9f;
-                skyColor = new Color(0.6f, 0.6f, 0.2f);
-                bottomColor = new Color(0.82f, 0.83f, 0.17f);
-                horizonColor = new Color(0.25f, 0.25f, 0.15f);
+                lightSettings = new SceneAmbientSettings(
+                  new Color(0.6f, 0.6f, 0.2f),
+                   new Color(0.25f, 0.25f, 0.15f),
+                  new Color(0.82f, 0.83f, 0.17f),
+                  0.9f);
                 break;
             case EnvironmentPreset.Crystal:
                 conditions = 0.5f;
                 lifepowerSupport = 0.1f;
                 stability = 0.85f;
-                lightIntensityMultiplier = 0.85f;
-                skyColor = new Color(0.27f, 0.83f, 0.85f);
-                bottomColor = new Color(0.73f, 0.83f, 0.83f);
-                horizonColor = new Color(0.04f, 0.91f, 0.95f);
+                lightSettings = new SceneAmbientSettings(
+                  new Color(0.27f, 0.83f, 0.85f),
+                   new Color(0.04f, 0.91f, 0.95f),
+                  new Color(0.73f, 0.83f, 0.83f),
+                  0.85f);
                 break;
             case EnvironmentPreset.Meadows:
                 conditions = DEFAULT_CONDITIONS * 1.1f;
                 lifepowerSupport = DEFAULT_LP_SUPPORT * 1.2f;
                 stability = DEFAULT_STABILITY;
-                lightIntensityMultiplier = 1f;
-                skyColor = new Color(1f, 0.94f, 0.71f);
-                bottomColor = new Color(0.88f, 0.82f, 0.54f);
-                horizonColor = new Color(2f, 0.84f, 0f);
+                lightSettings = new SceneAmbientSettings(
+                  new Color(1f, 0.94f, 0.71f),
+                    new Color(2f, 0.84f, 0f),
+                  new Color(0.88f, 0.82f, 0.54f),
+                  1f);
                 break;
             case EnvironmentPreset.Space:
                 conditions = 0f;
                 lifepowerSupport = 0f;
                 stability = 0.1f;
-                lightIntensityMultiplier = 1f;
-                skyColor = Color.white;
-                bottomColor = Color.black;
-                horizonColor = Color.cyan * 0.25f;
+                lightSettings = new SceneAmbientSettings(
+                  Color.white,
+                   Color.cyan * 0.25f,
+                  Color.black,
+                  1f);
                 break;
             case EnvironmentPreset.Fire:
                 conditions = 0.2f;
                 lifepowerSupport = 0.1f;
                 stability = 0.33f;
-                lightIntensityMultiplier = 1.1f;
-                skyColor = new Color(0.93f, 0.26f, 0.11f);
-                bottomColor = new Color(0.31f, 0.07f, 0.05f);
-                horizonColor = Color.yellow;
+                lightSettings = new SceneAmbientSettings(
+                   new Color(0.93f, 0.26f, 0.11f),
+                   Color.yellow,
+                   new Color(0.31f, 0.07f, 0.05f),
+                  1.1f);
                 break;
             case EnvironmentPreset.Ocean:
                 conditions = DEFAULT_CONDITIONS * 0.9f;
                 lifepowerSupport = DEFAULT_LP_SUPPORT * 0.75f;
                 stability = 0.8f;
-                lightIntensityMultiplier = 0.5f;
-                skyColor = new Color(0.61f, 0.99f, 0.94f);
-                bottomColor = new Color(0f, 0.62f, 1f);
-                horizonColor = new Color(0f, 0f, 0.65f);
+                lightSettings = new SceneAmbientSettings(
+                   new Color(0.61f, 0.99f, 0.94f),                   
+                   new Color(0.61f, 0.99f, 0.94f),
+                   new Color(0f, 0f, 0.65f),
+                  0.5f);
+                break;
+            case EnvironmentPreset.FoundationSkies:
+                presetType = EnvironmentPreset.FoundationSkies;
+                conditions = DEFAULT_CONDITIONS * 1.1f;
+                lifepowerSupport = DEFAULT_LP_SUPPORT;
+                stability = 1f;
+                lightSettings = new SceneAmbientSettings(
+                  new Color(0.1647059f, 0.6964906f, 1f),
+                   new Color(0.631052f, 0.7755874f, 0.8207547f),
+                  new Color(0.7224546f, 0.7693326f, 0.8018868f),
+                  1f);
+                lightSettings.SetAdditionalValues(
+                  1f, 1f, 1f, 1f, 0f
+                  );
                 break;
             default:
                 presetType = EnvironmentPreset.Default;
                 conditions = DEFAULT_CONDITIONS;
                 lifepowerSupport = DEFAULT_LP_SUPPORT;
                 stability = DEFAULT_STABILITY;
-                lightIntensityMultiplier = 1f;
-                bottomColor = Color.white;
-                skyColor = Color.black;
-                horizonColor = Color.cyan * 0.5f;
+                lightSettings = new SceneAmbientSettings(
+                  Color.black,
+                   Color.cyan * 0.75f,
+                  Color.white,
+                  1f);              
                 break;
         }
     }    
     private Environment(System.IO.FileStream fs)
     {
         presetType = EnvironmentPreset.Custom;
-        var data = new byte[56];
+        var data = new byte[16];
         fs.Read(data, 0, data.Length);
         int i = 0;
         conditions = System.BitConverter.ToSingle(data, i); i += 4;
         richness = System.BitConverter.ToSingle(data, i); i += 4;
         lifepowerSupport = System.BitConverter.ToSingle(data, i); i += 4;
         stability = System.BitConverter.ToSingle(data, i); i += 4;
-        lightIntensityMultiplier = System.BitConverter.ToSingle(data, i); i += 4;
-
-        bottomColor = new Color(
-            System.BitConverter.ToSingle(data, i),
-            System.BitConverter.ToSingle(data, i + 4),
-            System.BitConverter.ToSingle(data, i + 8));
-        i += 12;
-        horizonColor = new Color(
-           System.BitConverter.ToSingle(data, i),
-           System.BitConverter.ToSingle(data, i + 4),
-           System.BitConverter.ToSingle(data, i + 8));
-        i += 12;
-        skyColor = new Color(
-           System.BitConverter.ToSingle(data, i),
-           System.BitConverter.ToSingle(data, i + 4),
-           System.BitConverter.ToSingle(data, i + 8));
-        i += 12;
+        data = null;
+        lightSettings = new SceneAmbientSettings(fs);
     }
     public static EnvironmentPreset PickEnvironmentPreset(float ascension, float height)
     {
@@ -478,7 +622,7 @@ public sealed class Environment
 
     public Color GetMapColor()
     {
-        return Color.Lerp(skyColor, Color.white, 0.6f);
+        return Color.Lerp(lightSettings.skyColor, Color.white, 0.6f);
     }
     public Environment ConvertTo(Environment target, float speed)
     {
@@ -490,13 +634,10 @@ public sealed class Environment
             if (richness != target.richness) richness = Mathf.MoveTowards(richness, target.richness, speed); else equalsCount++;
             if (lifepowerSupport != target.lifepowerSupport) lifepowerSupport = Mathf.MoveTowards(lifepowerSupport, target.lifepowerSupport, speed); else equalsCount++;
             if (stability != target.stability) stability = Mathf.MoveTowards(stability, target.stability, speed); else equalsCount++;
-            if (lightIntensityMultiplier != target.lightIntensityMultiplier) lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, target.lightIntensityMultiplier, speed); else equalsCount++;
 
-            if (bottomColor != target.bottomColor) bottomColor = Vector4.MoveTowards(bottomColor, target.bottomColor, speed); else equalsCount++;
-            if (skyColor != target.skyColor) skyColor = Vector4.MoveTowards(skyColor, target.skyColor, speed); else equalsCount++;
-            if (horizonColor != target.horizonColor) horizonColor = Vector4.MoveTowards(horizonColor, target.horizonColor, speed); else equalsCount++;
-            
-            if (target.presetType != EnvironmentPreset.Custom && equalsCount == 8)
+            if (lightSettings.MoveTo(target.lightSettings, speed)) equalsCount++;
+
+            if (target.presetType != EnvironmentPreset.Custom && equalsCount == 5)
             {
                 presetType = target.presetType;
             }
@@ -516,11 +657,7 @@ public sealed class Environment
                 richness = Mathf.Lerp(richness, t.richness, val);
                 lifepowerSupport = Mathf.MoveTowards(lifepowerSupport, t.lifepowerSupport, val);
                 stability = Mathf.MoveTowards(stability, t.stability, val);
-                lightIntensityMultiplier = Mathf.MoveTowards(lightIntensityMultiplier, t.lightIntensityMultiplier, val);
-
-                bottomColor = Vector4.MoveTowards(bottomColor, t.bottomColor, val);
-                skyColor = Vector4.MoveTowards(skyColor, t.skyColor, val);
-                horizonColor = Vector4.MoveTowards(horizonColor, t.horizonColor, val);
+               
                 return this;
             }
         }
@@ -540,10 +677,8 @@ public sealed class Environment
             e.richness = richness;
             e.lifepowerSupport = lifepowerSupport;
             e.stability = stability;
-            e.lightIntensityMultiplier = lightIntensityMultiplier;
-            e.bottomColor = bottomColor;
-            e.skyColor = skyColor;
-            e.horizonColor = horizonColor;
+            if (e.lightSettings != null) e.lightSettings.CopyFrom(lightSettings);
+            else e.lightSettings = lightSettings.Copy();
         }
         return e;
     }
@@ -557,20 +692,8 @@ public sealed class Environment
             fs.Write(System.BitConverter.GetBytes(richness), 0, 4);
             fs.Write(System.BitConverter.GetBytes(lifepowerSupport), 0, 4);
             fs.Write(System.BitConverter.GetBytes(stability), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(lightIntensityMultiplier), 0, 4);
-
-            fs.Write(System.BitConverter.GetBytes(bottomColor.r), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(bottomColor.g), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(bottomColor.b), 0, 4);
-
-            fs.Write(System.BitConverter.GetBytes(horizonColor.r), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(horizonColor.g), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(horizonColor.b), 0, 4);
-
-            fs.Write(System.BitConverter.GetBytes(skyColor.r), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(skyColor.g), 0, 4);
-            fs.Write(System.BitConverter.GetBytes(skyColor.b), 0, 4);
-            //14 * 4 = 56
+            //16
+            lightSettings.Save(fs);
         }
     }
     public static Environment Load(System.IO.FileStream fs)

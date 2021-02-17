@@ -184,7 +184,8 @@ public class UIController : MonoBehaviour
             case UIMode.ExploringMinigame: return exploringMinigameController.GetMainCanvasTransform();
             case UIMode.GlobalMap: return globalMapCanvasController.GetMainCanvasTransform();
             case UIMode.KnowledgeTab:return knowledgeTabUI.GetMainCanvasTransform();
-            default: return mainCanvasController.GetMainCanvasTransform();
+            case UIMode.Editor: return editorCanvasController.GetMainCanvasTransform();
+            default: return mainCanvasController?.GetMainCanvasTransform();
         }
     }
     public void ReturnToPreviousCanvas(bool disableCanvas)

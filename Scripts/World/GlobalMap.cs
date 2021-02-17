@@ -220,7 +220,7 @@ public sealed class GlobalMap : MonoBehaviour
             SunPoint sunpoint = new SunPoint(
                 pos.x,
                 pos.y,
-                e.horizonColor
+                e.GetMapColor()
                 );
             rs = new RingSector(sunpoint, e);
             AddPoint(sunpoint, true);

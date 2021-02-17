@@ -5,7 +5,9 @@ using UnityEditor;
 
 public class TestMaster : MonoBehaviour
 {
-    [SerializeField] private GameObject testObject0;
+    [SerializeField] private GameObject replacingMatsHost;
+    [SerializeField] private Transform facingObj;
+
     public Environment.EnvironmentPreset selectedPreset;
     private EnvironmentMaster emaster;
 
@@ -18,13 +20,14 @@ public class TestMaster : MonoBehaviour
     private void Awake()
     {
         emaster = GameMaster.realMaster.environmentMaster;
-        selectedPreset = Environment.EnvironmentPreset.Default;
+        selectedPreset = Environment.EnvironmentPreset.Default;       
     }
 
     private void Start()
     {
         //InstantiateHouses();
-        ReplaceMaterials(testObject0);
+        if (replacingMatsHost != null) ReplaceMaterials(replacingMatsHost);
+        emaster.TEST_SetEnvironment(Environment.EnvironmentPreset.FoundationSkies, true);
     }
 
     private void Update()
@@ -41,7 +44,7 @@ public class TestMaster : MonoBehaviour
             env_glass = Resources.Load<Material>("Materials/Advanced/Glass_ENV_ADV"),
             env_metal = Resources.Load<Material>("Materials/Advanced/Metal_ENV_ADV"),
             env_green = Resources.Load<Material>("Materials/Advanced/Green_ENV_ADV"),
-            env_energy = Resources.Load<Material>("Materials/ColouredENV");
+            env_energy = Resources.Load<Material>("Materials/Environment/ColouredENV");
         Material[] mts, nmts;
         int layerIndex = GameConstants.GetEnvironmentLayerMask();
         foreach (var r in g.GetComponentsInChildren<Renderer>())
@@ -166,6 +169,20 @@ public class TestMaster : MonoBehaviour
     {
         emaster.StartConvertingEnvironment(Environment.GetEnvironment(selectedPreset));
     }
+    public void RedrawSkybox()
+    {
+        var m = RenderSettings.skybox;
+        Environment.GetEnvironment(selectedPreset).lightSettings.ApplyToSkyboxMaterial(ref m);
+        RenderSettings.skybox = m;
+    }
+    public void FaceObj()
+    {
+        if (facingObj != null)
+        {
+            var pos = Vector3.up * facingObj.position.y;
+            facingObj.LookAt(pos);
+        }
+    }
 }
 
 [CustomEditor(typeof(TestMaster))]
@@ -175,6 +192,8 @@ public class TestMasterEditor : Editor
     {
         base.OnInspectorGUI();
         TestMaster script = (TestMaster)target;
-         if (GUILayout.Button("Apply")) script.StartApplyingEnvChanges();
+         if (GUILayout.Button("Apply in game")) script.StartApplyingEnvChanges();
+        if (GUILayout.Button("Redraw")) script.RedrawSkybox();
+        if (GUILayout.Button("Face to zero")) script.FaceObj();
     }
 }

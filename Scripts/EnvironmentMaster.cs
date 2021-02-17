@@ -68,6 +68,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         skyboxMaterial = RenderSettings.skybox;
         gm = GameMaster.realMaster;
         globalMap = gm.globalMap;
+        SetEnvironment(Environment.defaultEnvironment);
         if (gm.gameMode != GameMode.Editor)
         {
             RefreshVisual();
@@ -75,11 +76,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         }
         else
         {
-            SetEnvironment(Environment.defaultEnvironment);
+            
         }       
         islandStability = DEFAULT_ISLAND_STABILITY;
         globalMap?.LinkEnvironmentMaster(this);
-        if (GameMaster.realMaster.testMode) AnnouncementCanvasController.MakeAnnouncement("environment master loaded");
+        if (GameMaster.realMaster.IsInTestMode) AnnouncementCanvasController.MakeAnnouncement("environment master loaded");
     }
     public void LinkColonyController(ColonyController cc)
     {
@@ -94,7 +95,8 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 GameObject g = Constructor.CreatePeakBasis(resolution, ResourceType.STONE_ID);
                 float cs = Chunk.chunkSize * Block.QUAD_SIZE;
                 g.transform.localScale = Vector3.one * cs / 2f;
-                g.transform.position = new Vector3(cs / 2f - 0.5f * Block.QUAD_SIZE , g.transform.localScale.y / 2f - 0.5f * Block.QUAD_SIZE, cs / 2f - 0.5f * Block.QUAD_SIZE);
+                g.transform.Rotate(Vector3.up * 180f);
+                g.transform.position = new Vector3( (cs / 2f - 0.5f * Block.QUAD_SIZE)/2f , g.transform.localScale.y / 2f - 0.5f * Block.QUAD_SIZE, (cs / 2f - 0.5f * Block.QUAD_SIZE) / 2f);
                 break;
             default: return;
         }        
@@ -103,10 +105,17 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private void SetEnvironment(Environment e)
     {
-        currentEnvironment = e;       
+        currentEnvironment = e;
+        targetEnvironment = e;
+        envLerpSpeed = 0f;
         RefreshVisual();
         environmentChangingEvent?.Invoke(currentEnvironment);
         positionChanged = false;
+    }
+    public void TEST_SetEnvironment(Environment.EnvironmentPreset e, bool blockChanges)
+    {
+        SetEnvironment(Environment.GetEnvironment(e));
+        if (blockChanges) noEnvironmentChanges = true;
     }
     public void StartConvertingEnvironment(Environment e) { LerpToEnvironment(1f, e); }
     public void LerpToEnvironment(float speedMultiplier, Environment e)
@@ -118,18 +127,18 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     private void RefreshVisual()
     {
-        float sunIntensity = currentEnvironment.lightIntensityMultiplier;
+        var ls = currentEnvironment.lightSettings;
+        float sunIntensity = ls.lightIntensityMultiplier;
         sun.intensity = sunIntensity;
         Color scolor = sun.color * (0.5f + 0.5f * sunIntensity);
         PoolMaster.billboardMaterial.SetColor("_MainColor", scolor);
         PoolMaster.verticalBillboardMaterial.SetColor("_MainColor", scolor);
 
        // RenderSettings.ambientSkyColor = currentEnvironment.skyColor;
-        RenderSettings.ambientEquatorColor = currentEnvironment.horizonColor;
-        RenderSettings.ambientGroundColor = currentEnvironment.bottomColor;
-        skyboxMaterial.SetColor("_TopColor", currentEnvironment.skyColor);
-        skyboxMaterial.SetColor("_BottomColor", currentEnvironment.bottomColor);
-        skyboxMaterial.SetColor("_HorizonColor", currentEnvironment.horizonColor);
+        RenderSettings.ambientEquatorColor = ls.horizonColor;
+        RenderSettings.ambientGroundColor = ls.bottomColor;
+        skyboxMaterial = RenderSettings.skybox;
+        ls.ApplyToSkyboxMaterial(ref skyboxMaterial);
         RenderSettings.skybox = skyboxMaterial;
        // Debug.Log("light recalc");
     }
@@ -264,7 +273,11 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 currentEnvironment = currentEnvironment.ConvertTo(targetEnvironment, envLerpSpeed * t);
                 RefreshVisual();
             }
-            else envLerpSpeed = 0f;
+            else
+            {
+                Debug.Log("env master - visual changes completed");
+                envLerpSpeed = 0f;
+            }
         }
         //
         if (GameMaster.realMaster.gameMode != GameMode.Editor & !GameMaster.loading)

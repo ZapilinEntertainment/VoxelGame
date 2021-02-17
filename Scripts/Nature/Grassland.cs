@@ -204,11 +204,8 @@ public sealed class Grassland
     }
     public void FORCED_AddLifepower(float f)
     {
-        if (f < 10f)
-        {
-            lifepower += f;
-            return;
-        }
+        lifepower += f;
+        if (f < 10f) return;
         else SYSTEM_UseLifepower();
     }
     public void SYSTEM_UseLifepower()

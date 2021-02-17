@@ -676,9 +676,13 @@ public class Plane
             {
                 if (mainStructure != null)
                 {
-                    mainStructure.ClearBasementLink(this);
-                    var b = host?.GetBlock();
-                    if (b != null) mainStructure.SectionDeleted(b.pos);
+                    if (mainStructure is IPlanable)
+                    {
+                        mainStructure.ClearBasementLink(this);
+                        var b = host?.GetBlock();
+                        if (b != null) mainStructure.SectionDeleted(b.pos);
+                    }
+                    else mainStructure.Annihilate(false, compensateStructures, false);
                 }
             }
             if (!GameMaster.sceneClearing)

@@ -6,8 +6,8 @@ using System.IO;
 
 public sealed class SaveSystemUI : MonoBehaviour
 {
-    public bool saveMode = false, ingame = false;
-    private bool deleteSubmit = false, terrainsLoading = false;
+    public bool saveMode = false;
+    private bool deleteSubmit = false, terrainsLoading;
     string[] saveNames;
 #pragma warning disable 0649
     [SerializeField] private RectTransform exampleButton, saveNamesContainer; // fiti
@@ -181,7 +181,7 @@ public sealed class SaveSystemUI : MonoBehaviour
     }
     public void InputField_SaveGame()
     {
-        if (terrainsLoading) GameMaster.realMaster.SaveTerrain(inputFieldBasis.GetComponent<InputField>().text);
+        if (terrainsLoading) GameMaster.realMaster.SaveTerrain(savenameField.text);
         else GameMaster.realMaster.SaveGame(savenameField.text);
         inputFieldBasis.SetActive(false);
         gameObject.SetActive(false);
@@ -235,6 +235,7 @@ public sealed class SaveSystemUI : MonoBehaviour
         }
         else
         {
+            bool ingame = GameMaster.realMaster != null;
             if (terrainsLoading)
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  РЕДАКТОРА
                 string fullPath = GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION;
@@ -247,10 +248,7 @@ public sealed class SaveSystemUI : MonoBehaviour
                     // теоретический сценарий, не должен использоваться
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.SetSavename(saveNames[lastSelectedIndex]);
-                        GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.TerrainLoading);
-                        GameMaster.gameStartSettings = gss;
-                        GameMaster.ChangeScene(GameMaster.EDITOR_SCENE_INDEX);
+                        GameMaster.LoadSavedGame(saveNames[lastSelectedIndex], true);
                     }
                     else
                     {
@@ -273,10 +271,7 @@ public sealed class SaveSystemUI : MonoBehaviour
                 {
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.SetSavename(saveNames[lastSelectedIndex]);
-                        GameStartSettings gss = new GameStartSettings(ChunkGenerationMode.GameLoading);
-                        GameMaster.gameStartSettings = gss;
-                        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);
+                        GameMaster.LoadSavedGame(saveNames[lastSelectedIndex], false);
                     }
                     else
                     {

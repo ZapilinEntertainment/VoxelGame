@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class EditorUI : MonoBehaviour
+public sealed class EditorUI : MonoBehaviour, IObserverController
 {
 #pragma warning disable 0649
     [SerializeField] GameObject actionsPanel, listPanel, menuPanel, settingsPanel, touchZone;
@@ -43,13 +43,17 @@ public sealed class EditorUI : MonoBehaviour
 
     private const float LIFEPOWER_PORTION = 100;
 
+    public Transform GetMainCanvasTransform()
+    {
+        return GetComponent<RectTransform>();
+    }
+
     private void Start()
     {        
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
         materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
-        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
-        saveSystem.ingame = true;
+        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(UIController.GetCurrent().GetCurrentCanvasTransform());
         ActionsPanel();
         
         FollowingCamera.main.ResetTouchRightBorder();
@@ -159,19 +163,22 @@ public sealed class EditorUI : MonoBehaviour
                     }
                 case ClickAction.AddGrassland:
                     {
-                        Plane p = b.FORCED_GetPlane(bh.faceIndex);
-                        if (p != null && !p.haveGrassland && p.isSurface)
+                        Plane p = b.FORCED_GetPlane(bh.faceIndex);                        
+                        if (p != null && !p.haveGrassland && p.isQuad && p.isSurface)
                         {
+                            if (p.materialID != ResourceType.DIRT_ID) p.ChangeMaterial(ResourceType.DIRT_ID, false);
                             Grassland g;
-                            if (p.TryCreateGrassland(out g) && g != null) 
-                            g.FORCED_AddLifepower(LIFEPOWER_PORTION * 10);
+                            if (p.TryCreateGrassland(out g) && g != null)
+                            {
+                                g.FORCED_AddLifepower(LIFEPOWER_PORTION * 10);
+                            }
                         }
                         break;
                     }
                 case ClickAction.DeleteGrassland:
                     {
                         Plane p = b.FORCED_GetPlane(bh.faceIndex);
-                        if (p.haveGrassland) p.extension?.RemoveGrassland();
+                        if (p!= null && p.haveGrassland) p.extension?.RemoveGrassland();
                         break;
                     }
                 case ClickAction.MakeSurface:
@@ -343,7 +350,7 @@ public sealed class EditorUI : MonoBehaviour
     }
     public void BackToMenu()
     {
-        GameMaster.ChangeScene(GameMaster.MENU_SCENE_INDEX);
+        GameMaster.ReturnToMainMenu();
     }
 
     public void LocalizeTitles()

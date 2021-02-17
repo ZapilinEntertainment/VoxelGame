@@ -64,21 +64,31 @@ public sealed class Zeppelin : MonoBehaviour {
                 {
                     destroyed = true;
                     //hq
-                    Structure s = HeadQuarters.GetHQ(1);
-                    if (landingByZAxis == true) s.SetModelRotation(0); else s.SetModelRotation(2);
-                    s.SetBasement(landingSurface, PixelPosByte.zero);
+                    Structure hq = HeadQuarters.GetHQ(1);
                     //storage
-                    s = Structure.GetStructureByID(Structure.STORAGE_0_ID);
-                    Plane sb = (landingByZAxis == true) ?
-                        landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockForward())
-                        :
-                        landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockRight());
-                    s.SetBasement(sb, PixelPosByte.zero);
+                    if (landingByZAxis == true)
+                    {
+                        hq.SetModelRotation(0);
+                        hq.SetBasement(landingSurface, PixelPosByte.zero);
+                        var p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockForward());
+                        p2.CreateStructure(Structure.STORAGE_0_ID);
+                        p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockBack());
+                        p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
+                    }
+                    else
+                    {
+                        hq.SetModelRotation(2);
+                        hq.SetBasement(landingSurface, PixelPosByte.zero);
+                        var p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockRight());
+                        p2.CreateStructure(Structure.STORAGE_0_ID);
+                        p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockLeft());
+                        p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
+                    }
                     
                     GameMaster.realMaster.SetStartResources();
                     PoolMaster.current.BuildSplash(transform.position);
                     if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.ColonyFounded);
-                    FollowingCamera.main.SetLookPoint(s.transform.position);
+                    FollowingCamera.main.SetLookPoint(hq.transform.position);
                     Destroy(gameObject);
                 }
             }

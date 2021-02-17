@@ -307,7 +307,7 @@ public sealed class Block {
         if (mainStructure != null)
         {
             if (mainStructureIsABlocker) mainStructure.SectionDeleted(pos);
-            else mainStructure.Annihilate(true, compensateStructures, false); // было Delete
+            else mainStructure.Annihilate(true, compensateStructures, false); 
             mainStructure = null;
         }
     }

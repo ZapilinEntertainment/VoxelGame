@@ -1105,7 +1105,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     {
         if (GameMaster.realMaster.colonyController != null) GameMaster.realMaster.SaveGame("autosave");
         SetMenuPanelSelection(MenuSection.NoSelection);
-        GameMaster.ChangeScene(GameMaster.MENU_SCENE_INDEX);
+        GameMaster.ReturnToMainMenu();
     }
     public void ExitButton()
     {

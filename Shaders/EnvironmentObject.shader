@@ -72,7 +72,7 @@ Shader "Custom/EnvironmentObject"
 				fixed4 col = tex2D(_MainTex, i.uv);
 				float a = i.distance * (3.55 - 2.55 * i.distance);
 				col.xyz = col.xyz * a + _FogColor * (1 - a);
-				col.a = saturate(i.distance / _SaturationMultiplier);
+				col.a *= saturate(i.distance / _SaturationMultiplier);
 				return col;
 			}
 			ENDCG

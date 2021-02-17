@@ -23,10 +23,17 @@ public sealed class MenuUI : MonoBehaviour
 
     enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores, Authors }
     private MenuSection currentSection = MenuSection.NoSelection;
-    private ChunkGenerationMode newGameGenMode;
+    private GameStartMode startMode;    
     private SaveSystemUI saveSystem;
-    private List<ChunkGenerationMode> availableGenerationModes;
+    private ChunkGenerationMode[] availableGenerationModes;
+    private ChunkGenerationMode selectedGenerationMode = ChunkGenerationMode.Standart;
     private string[] terrainSavenames;
+    private string selectedSaveName = string.Empty;
+
+    private void Awake()
+    {
+        Environment.defaultEnvironment.lightSettings.ApplyToSkyboxMaterial();
+    }
 
     public void Start()
     {
@@ -45,14 +52,14 @@ public sealed class MenuUI : MonoBehaviour
         {
             if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.root);
 
-            availableGenerationModes = new List<ChunkGenerationMode>() {
+            availableGenerationModes = new ChunkGenerationMode[3] {
                 ChunkGenerationMode.Standart, ChunkGenerationMode.Cube, ChunkGenerationMode.Peak
             };
             List<string> genModenames = new List<string>();
             foreach (ChunkGenerationMode cmode in availableGenerationModes) genModenames.Add(cmode.ToString());
             generationTypeDropdown.AddOptions(genModenames);
             generationTypeDropdown.value = 0;
-            newGameGenMode = availableGenerationModes[0];
+
             LocalizeTitles();
             transform.GetChild(0).gameObject.SetActive(true);            
         }
@@ -61,10 +68,10 @@ public sealed class MenuUI : MonoBehaviour
 
     public void StartGame()
     {
-        if (newGameGenMode == ChunkGenerationMode.TerrainLoading & GameMaster.savename == string.Empty) return;
-        GameStartSettings gss = new GameStartSettings(newGameGenMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value);
-        GameMaster.gameStartSettings = gss;        
-        GameMaster.ChangeScene(GameMaster.PLAY_SCENE_INDEX);            
+        GameMaster.StartNewGame(
+            selectedGenerationMode == ChunkGenerationMode.LoadSavedTerrain ?
+            GameStartSettings.GetSurvivalOnPresetSettings(selectedSaveName, (Difficulty)difficultyDropdown.value) :
+         GameStartSettings.GetSurvivalSettings(selectedGenerationMode, (byte)sizeSlider.value, (Difficulty)difficultyDropdown.value));
     }
     public void NewGameButton()
     {
@@ -109,7 +116,7 @@ public sealed class MenuUI : MonoBehaviour
 
     public void NG_GenerateButton()
     {
-        newGameGenMode = availableGenerationModes[generationTypeDropdown.value];
+        selectedGenerationMode = availableGenerationModes[generationTypeDropdown.value];
         terrainPresetsPanel.SetActive(false);
         terrainSavenames = null;
         usePresetsButtonImage.overrideSprite = null;
@@ -120,8 +127,8 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void NG_UsePresetButton()
     {
-        newGameGenMode = ChunkGenerationMode.TerrainLoading;
-        GameMaster.SetSavename(string.Empty);
+        selectedSaveName = string.Empty;
+        startMode = GameStartMode.Loading;
         generationPanel.SetActive(false);
         generateButtonImage.overrideSprite = null;
         gameStartButton.interactable = false;
@@ -198,12 +205,13 @@ public sealed class MenuUI : MonoBehaviour
     {
        if (terrainSavenames == null || terrainSavenames.Length <= index)
         {
-            GameMaster.SetSavename(string.Empty);
+            selectedSaveName = string.Empty;
             gameStartButton.interactable = false;
         }
        else
         {
-            GameMaster.SetSavename( terrainSavenames[index] );
+            selectedSaveName =  terrainSavenames[index];
+            selectedGenerationMode = ChunkGenerationMode.LoadSavedTerrain;
             gameStartButton.interactable = true;
             Transform buttonsHolder = terrainPresetsPanel.transform.GetChild(0).GetChild(0);
             for (int i = 0; i < buttonsHolder.childCount; i++)
@@ -214,7 +222,7 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void NG_SetGenMode()
     {
-        newGameGenMode = availableGenerationModes[generationTypeDropdown.value];
+        selectedGenerationMode = availableGenerationModes[generationTypeDropdown.value];
     }
 
     public void Editor_InputFieldValueChanged()
@@ -244,7 +252,7 @@ public sealed class MenuUI : MonoBehaviour
     }
     public void Editor_Start()
     {
-        GameMaster.ChangeScene(GameMaster.EDITOR_SCENE_INDEX);
+        GameMaster.StartNewEditorScene(GameStartSettings.GetDefaultSettings());
     }
 
     public void QualityDropdownChanged()
@@ -415,10 +423,10 @@ public sealed class MenuUI : MonoBehaviour
         generateButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Generate);
         usePresetsButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.UsePresets);
         Transform t = generationPanel.transform;
-        t.GetChild(0).GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Size);
-        t.GetChild(1).GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GenerationType);
+        t.GetChild(2).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Size);
+        t.GetChild(3).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GenerationType);
         difficultyDropdown.transform.GetChild(3).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Difficulty);
-        newGamePanel.transform.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
+        newGamePanel.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Start);
 
         loadButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
 

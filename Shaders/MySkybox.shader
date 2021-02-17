@@ -1,6 +1,6 @@
 ﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
-//original: https://github.com/keijiro/UnitySkyboxShaders/blob/master/Assets/Skybox%20Shaders/Gradient%20Skybox.shader
+//based on: https://github.com/keijiro/UnitySkyboxShaders/blob/master/Assets/Skybox%20Shaders/Gradient%20Skybox.shader
 Shader "Custom/MySkybox" 
 {
 	Properties
@@ -18,7 +18,8 @@ Shader "Custom/MySkybox"
 		_HorizonCompression("Horizon Compression", Float) = 5
 		_TopExponent("Top exponent", Float) = 10.0
 		_BottomExponent("Bottom exponent", Float) = 10.0
-		_Saturation("Saturation", Range(0,1)) = 0.81
+		_Saturation("Saturation", Range (0.0,1.0)) = 0.81
+		_HorizonDistortion("Horizon distortion", Range (0.0,1.0)) = 1
 	}
 
 		CGINCLUDE
@@ -40,7 +41,7 @@ Shader "Custom/MySkybox"
 
 	half4 _TopColor, _BottomColor, _HorizonColor;
 	half4 _UpVector;
-	float _TopExponent, _BottomExponent, _HorizonCompression, _Saturation;
+	float _TopExponent, _BottomExponent, _HorizonCompression, _Saturation,_HorizonDistortion;
 	static const float _Speed = 0.05;
 	sampler2D _layer0,  _starlayer0, _starlayer1,_cloudlayer;
 
@@ -71,19 +72,20 @@ Shader "Custom/MySkybox"
 		float z = i.originalPos.z, x = i.originalPos.x, y = i.originalPos.y, t = _Time * _Speed;
 		float distex = tex2D(_layer0, float2(x, z));
 		float distortion = sin( (z + x) * 10 + t * 10) * (0.3 + 0.3 * sin(t) ) + cos(z + x + t + 3.14) * 0.3 + distex * 0.4 ;	
+		distortion *= _HorizonDistortion;
 
 		//stars layer:
 		float xp = x + t , xp2 = x + t * 0.75, zp = z + t * 0.025, zp2 = z - t * 0.012;
 		fixed4 sc0 = tex2D(_starlayer0, float2(xp, z)), sc1 = tex2D(_starlayer1, float2(0.5 + xp2 / 2, 0.5 +z /2));
-		fixed4 starCol = _TopColor;
+		fixed4 skyColor = _TopColor;
 		float colorVal = (1 - _TopColor.rgb) * 0.9 + 0.1;
 		float heightVal = (y + y * sign(y)) / 2;
 		heightVal -= 0.3;
 		heightVal = (heightVal + heightVal * sign(heightVal)) / 2;
 		heightVal = sin(heightVal * 2.244); // x/ 0.7 * pi / 2 
-		starCol.r += (sc0.r * sc0.a + sc1.r * sc1.a) * colorVal * heightVal;
-		starCol.g += (sc0.g * sc0.a + sc1.g * sc1.a)* colorVal* heightVal;
-		starCol.b += (sc0.b * sc0.a + sc1.b * sc1.a)* colorVal* heightVal;
+		skyColor.r += (sc0.r * sc0.a + sc1.r * sc1.a) * colorVal * heightVal;
+		skyColor.g += (sc0.g * sc0.a + sc1.g * sc1.a)* colorVal* heightVal;
+		skyColor.b += (sc0.b * sc0.a + sc1.b * sc1.a)* colorVal* heightVal;
 
 		//cloud layer:
 		//xp = ( i.texcoord.x  + distex * 0.01 + t * 10 ) * 3;
@@ -96,8 +98,8 @@ Shader "Custom/MySkybox"
 		bCol *= (1 - cloudCol.a * (1 - sin(z * 4) * sin(x * 5 + _Time * _Saturation) ) / 2 * (0.3 * distex + 0.7)) ;
 
 		half4 col =
-			starCol * i.originalPos.y * p1 +
-			_HorizonColor *p2 * _Saturation  * (2 +  sin(distortion) * 0.5) / 1.4
+			skyColor * p1 +
+			+_HorizonColor *p2 * _Saturation  * (2 +  sin(distortion) * 0.5) / 1.4
 			+ bCol * p3;
 
 		return  col;
