@@ -12,7 +12,61 @@ public struct ChunkRaycastHit
         faceIndex = face;
     }
 }
-public enum ChunkGenerationMode : byte { Standart, Cube, Peak, LoadSavedTerrain, NoActions }
+public enum ChunkPreparingAction : byte { NoAction, Generate, Load};
+public enum ChunkGenerationMode: byte { Standart, Cube, Peak, EditorPreset}
+public sealed class ChunkGenerationSettings : MyObject
+{
+    public ChunkPreparingAction preparingActionMode { get; private set; }
+    private byte chunkSize = 0, subIndex = 255;
+    private string savename;
+
+    private ChunkGenerationSettings() {  }
+    public static ChunkGenerationSettings GetNoActionSettings() {
+        var cgs =  new ChunkGenerationSettings();
+        cgs.preparingActionMode = ChunkPreparingAction.NoAction;
+        return cgs;
+    }
+    public static ChunkGenerationSettings GetGenerationSettings(ChunkGenerationMode cgm, byte i_size)
+    {
+        var cgs = new ChunkGenerationSettings();
+        cgs.preparingActionMode = ChunkPreparingAction.Generate;
+        cgs.subIndex = (byte)cgm;
+        cgs.chunkSize = i_size;
+        return cgs;
+    }
+    public static ChunkGenerationSettings GetDefaultSettings()
+    {
+        var cgs = new ChunkGenerationSettings();
+        cgs.preparingActionMode = ChunkPreparingAction.Generate;
+        cgs.subIndex = (byte)ChunkGenerationMode.Standart;
+        cgs.chunkSize = 16;
+        return cgs;
+    }
+    public static ChunkGenerationSettings GetLoadingSettings(string i_savename)
+    {
+        var cgs = new ChunkGenerationSettings();
+        cgs.preparingActionMode = ChunkPreparingAction.Load;
+        cgs.savename = i_savename;
+        return cgs;
+    }
+
+
+    protected override bool IsEqualNoCheck(object obj)
+    {
+        var cgs = (ChunkGenerationSettings)obj;
+        return preparingActionMode == cgs.preparingActionMode && chunkSize == cgs.chunkSize && subIndex == cgs.subIndex  && savename == cgs.savename;
+    }    
+
+    public byte GetChunkSize() { return chunkSize == 0 ? Chunk.MIN_CHUNK_SIZE : chunkSize; }
+    public string GetTerrainName()
+    {
+        return savename ?? string.Empty;
+    }
+    public ChunkGenerationMode DefineGenerationMode()
+    {
+        return subIndex == 255 ? ChunkGenerationMode.Standart : (ChunkGenerationMode)subIndex;
+    }
+}
 
 public sealed partial class Chunk : MonoBehaviour
 {

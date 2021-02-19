@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-public class Plane
+public class Plane : MyObject
 {
     public VisibilityMode visibilityMode { get; protected set; }
     public bool invisibleByOptimization { get; protected set; }
@@ -49,13 +49,9 @@ public class Plane
     private static UISurfacePanelController observer;
     protected const byte BASIC_PLANE_CODE = 0, MULTIMATERIAL_PLANE_CODE = 1;
 
-    public override bool Equals(object obj)
+    protected override bool IsEqualNoCheck(object obj)
     {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        Plane p = (Plane)obj;
+        var p = (Plane)obj;
         return faceIndex == p.faceIndex && pos == p.pos && materialID == p.materialID && meshType == p.meshType && destroyed == p.destroyed;
     }
     public override int GetHashCode()

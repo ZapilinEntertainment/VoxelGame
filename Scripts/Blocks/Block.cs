@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class Block {
+public sealed class Block : MyObject {
     public const byte FWD_FACE_INDEX = 0, RIGHT_FACE_INDEX = 1, BACK_FACE_INDEX = 2, LEFT_FACE_INDEX = 3, UP_FACE_INDEX = 4, DOWN_FACE_INDEX = 5, SURFACE_FACE_INDEX = 6, CEILING_FACE_INDEX = 7;
     public const float QUAD_SIZE = 1, CEILING_THICKNESS = 0.1f;
     public const byte CUBE_MASK = (1 << FWD_FACE_INDEX) + (1 << RIGHT_FACE_INDEX) + (1 << BACK_FACE_INDEX)
@@ -25,19 +25,17 @@ public sealed class Block {
         }
     }   
 
-    public override bool Equals(object obj)
-    {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
 
-        Block b = (Block)obj;
+    override protected bool IsEqualNoCheck(object x)
+    {
+        // проверки не нужны
+        var b = (Block) x;
         return pos == b.pos && destroyed == b.destroyed && myChunk == b.myChunk;
     }
     public override int GetHashCode()
     {
         return pos.x + pos.y * 3 + pos.z * 5;
-    }
+    }  
 
     #region save-load
     public void Save(System.IO.FileStream fs)

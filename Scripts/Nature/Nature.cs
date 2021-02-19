@@ -316,7 +316,7 @@ public sealed class Nature : MonoBehaviour
         }
         else
         {
-            if (gm.gameMode != GameMode.Play) return;
+            if (gm.gameMode == GameMode.Editor) return;
             if (needRecalculation)
             {
                 lifepowerSurplus = 0f;

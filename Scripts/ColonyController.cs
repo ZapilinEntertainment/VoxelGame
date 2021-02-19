@@ -1072,8 +1072,10 @@ public sealed class ColonyController : MonoBehaviour
             fs.Read(data, 0, bytesCount);
             System.Text.Decoder d = System.Text.Encoding.Default.GetDecoder();
             var chars = new char[d.GetCharCount(data, 0, bytesCount)];
-            d.GetChars(data, 0, bytesCount, chars, 0, true);
+            d.GetChars(data, 0, bytesCount, chars, 0, true);            
             cityName = new string(chars);
+            d = null;
+            chars = null;
         }
 
         if (docks.Count > 0)

@@ -14,7 +14,7 @@ public enum ProgressQuestID : byte
     Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, Progress_FoodStocks, LASTONE
 }
 
-public class Quest
+public class Quest : MyObject
 {
     public string name;
     public string description;
@@ -42,18 +42,6 @@ public class Quest
         NoQuest = new Quest(QuestType.System, NO_QUEST_SUBINDEX);
         AwaitingQuest = new Quest(QuestType.System, AWAITING_QUEST_SUBINDEX);
     }
-    public static bool operator ==(Quest A, Quest B)
-    {
-        if (ReferenceEquals(A, null))
-        {
-            return ReferenceEquals(B, null);
-        }
-        return A.Equals(B);
-    }
-    public static bool operator !=(Quest A, Quest B)
-    {
-        return !(A == B);
-    }
     public override int GetHashCode()
     {
         var hashCode = 67631244;
@@ -61,12 +49,10 @@ public class Quest
         hashCode = hashCode * -1521134295 + subIndex.GetHashCode();
         return hashCode;
     }
-    public override bool Equals(object obj)
+    protected override bool IsEqualNoCheck(object obj)
     {
-        if (obj == null || GetType() != obj.GetType())   return false;
-        var info = (Quest)obj;
-        return type == info.type &
-               subIndex == info.subIndex;
+        var q = (Quest)obj;
+        return type == q.type & subIndex == q.subIndex;
     }
 
     public static void SetCompletenessMask(uint[] m)

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-public sealed class BlockExtension : IPlanable
+public sealed class BlockExtension : MyObject, IPlanable
 {
     public readonly Block myBlock;
     private bool isNatural;
@@ -22,13 +22,9 @@ public sealed class BlockExtension : IPlanable
         }
     }
 
-    public override bool Equals(object obj)
+    protected override bool IsEqualNoCheck(object obj)
     {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        BlockExtension be = (BlockExtension)obj;
+        var be = (BlockExtension)obj;
         return myBlock == be.myBlock && materialID == be.materialID && existingPlanesMask == be.existingPlanesMask;
     }
     public override int GetHashCode()

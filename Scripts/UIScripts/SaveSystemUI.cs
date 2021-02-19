@@ -248,7 +248,9 @@ public sealed class SaveSystemUI : MonoBehaviour
                     // теоретический сценарий, не должен использоваться
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.LoadSavedGame(saveNames[lastSelectedIndex], true);
+                        GameMaster.StartNewGame(
+                            GameStartSettings.GetEditorStartSettings(saveNames[lastSelectedIndex])
+                            );
                     }
                     else
                     {
@@ -271,7 +273,9 @@ public sealed class SaveSystemUI : MonoBehaviour
                 {
                     if (File.Exists(fullPath))
                     {
-                        GameMaster.LoadSavedGame(saveNames[lastSelectedIndex], false);
+                        GameMaster.StartNewGame(
+                            GameStartSettings.GetLoadingSettings(GameMode.Survival, saveNames[lastSelectedIndex])
+                            );
                     }
                     else
                     {

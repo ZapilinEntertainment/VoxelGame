@@ -104,15 +104,18 @@ public abstract class Constructor
         }
     }
 
-    public static Chunk ConstructChunk(byte chunkSize, ChunkGenerationMode mode)
+    public static Chunk ConstructChunk(ChunkGenerationSettings cgs)
     {
-        int size = chunkSize;
+        int size = cgs.GetChunkSize();
         int[,,] dat = new int[size, size, size];
-        switch (mode)
+        switch (cgs.DefineGenerationMode())
         {
             case ChunkGenerationMode.Standart: GenerateSpiralsData(size, ref dat); break;
             case ChunkGenerationMode.Cube: GeneratePyramidData(size, ref dat); break;
-            case ChunkGenerationMode.Peak: dat = GeneratePeakData(size); break;
+            case ChunkGenerationMode.Peak:
+                dat = GeneratePeakData(size);
+                GameMaster.realMaster?.environmentMaster?.PrepareIslandBasis(ChunkGenerationMode.Peak);
+                break;
         }
 
         //testzone
@@ -137,6 +140,7 @@ public abstract class Constructor
         c.CreateNewChunk(dat);       
         //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();
+
         return c;
     }
     public static Chunk ConstructBlock(byte chunkSize)

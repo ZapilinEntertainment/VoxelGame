@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public sealed class PlaneExtension
+public sealed class PlaneExtension : MyObject
 {
     public Grassland grassland { get; private set; }
     private readonly Plane myPlane;
@@ -16,13 +16,9 @@ public sealed class PlaneExtension
 
     public static UISurfacePanelController surfaceObserver;
 
-    public override bool Equals(object obj)
+    protected override bool IsEqualNoCheck(object obj)
     {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        PlaneExtension pe = (PlaneExtension)obj;
+        var pe = (PlaneExtension)obj;
         return pe.myPlane == myPlane && map == pe.map;
     }
     public override int GetHashCode()

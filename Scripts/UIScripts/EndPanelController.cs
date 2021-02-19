@@ -19,7 +19,7 @@ public class EndPanelController : MonoBehaviour
                 {
                     endLabel.text = reason;
                     scoreLabel.text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
-                    returnToMenuButton.onClick.AddListener(rmaster.ReturnToMenuAfterGameOver);
+                    returnToMenuButton.onClick.AddListener(GameMaster.ReturnToMainMenu);
                     returnToMenuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
                     continueGameButton.onClick.AddListener(rmaster.ContinueGameAfterEnd);
                     continueGameButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Continue);
@@ -39,7 +39,7 @@ public class EndPanelController : MonoBehaviour
                     var rt = returnToMenuButton.GetComponent<RectTransform>();
                     rt.anchorMin = new Vector2(0f, rt.anchorMin.y);
                     rt.offsetMin = new Vector2(rt.offsetMax.x, rt.offsetMin.y);
-                    returnToMenuButton.onClick.AddListener(rmaster.ReturnToMenuAfterGameOver);
+                    returnToMenuButton.onClick.AddListener(GameMaster.ReturnToMainMenu);
                     returnToMenuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
                     returnToMenuButton.enabled = true;
                     break;
