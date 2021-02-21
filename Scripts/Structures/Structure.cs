@@ -54,35 +54,6 @@ public class Structure : MonoBehaviour
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
     public static UIStructureObserver structureObserver;
-    private static bool firstLaunch = true;
-    private static List<System.Type> resetTypesList;
-
-    public static void AddToResetList(System.Type t)
-    {
-        if (resetTypesList == null) resetTypesList = new List<System.Type>();
-        if (!resetTypesList.Contains(t)) resetTypesList.Add(t);
-    }
-    public static void ResetToDefaults_Static()
-    {
-        if (firstLaunch)
-        {
-            firstLaunch = false;
-            return;
-        }
-
-        if (resetTypesList != null)
-        {
-            foreach (var t in resetTypesList)
-            {
-                var func = t.GetMethod("ResetStaticData");
-                if (func != null)
-                {
-                    func.Invoke(null, null);
-                }
-                else Debug.Log("type " + t.ToString() + " not reset successful");
-            }
-        }
-    }
 
     public static Structure GetStructureByID(int i_id)
     {

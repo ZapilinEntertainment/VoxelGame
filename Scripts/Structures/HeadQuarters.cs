@@ -56,13 +56,7 @@ public sealed class HeadQuarters : Building
     public override void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        colony = GameMaster.realMaster.colonyController;
-        if (colony == null)
-        {
-            colony = GameMaster.realMaster.gameObject.AddComponent<ColonyController>();
-            colony.Prepare();
-        }
-        colony.SetHQ(this);
+        GameMaster.realMaster.PrepareColonyController(true)?.SetHQ(this);
 
         SetBuildingData(b, pos);
         maxHp = 1000 * level;
@@ -108,7 +102,7 @@ public sealed class HeadQuarters : Building
         switch (level)
         {
             default: return false;
-            case 1: return (colony.docks.Count != 0);
+            case 1: if (colony?.docks != null) return colony.docks.Count != 0; else return false;
             case 2:
                 if (colony.powerGrid.Count != 0)
                 {

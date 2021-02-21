@@ -24,7 +24,7 @@ public sealed class Settlement : House
 
     static Settlement()
     {
-        AddToResetList(typeof(Settlement));
+        GameMaster.staticResetFunctions += ResetStaticData;
         settlements = new List<Settlement>();
         maxAchievedLevel = 1;
     }

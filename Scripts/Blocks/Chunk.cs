@@ -94,6 +94,10 @@ public sealed partial class Chunk : MonoBehaviour
     {
         chunkSize = x;
     }
+    public static Chunk InitializeChunk()
+    {
+        return new GameObject("chunk").AddComponent<Chunk>();
+    }
 
     private void Prepare()
     {
@@ -1469,8 +1473,7 @@ public sealed partial class Chunk : MonoBehaviour
     {
         if (blocks != null) ClearChunk();   
         chunkSize = (byte)fs.ReadByte();
-        Prepare();
-
+        Prepare();       
         var data = new byte[4];
         fs.Read(data, 0, 4);
         surfaces = null;
@@ -1514,7 +1517,7 @@ public sealed partial class Chunk : MonoBehaviour
         
         RenderDataFullRecalculation();
         FollowingCamera.main.WeNeedUpdate();
-        Debug.Log("chunk load success");
+        if (GameMaster.realMaster.IsInTestMode) Debug.Log("chunk load success");
     }
     #endregion
 

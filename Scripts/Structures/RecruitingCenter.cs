@@ -13,7 +13,7 @@ public sealed class RecruitingCenter : WorkBuilding {
 
     static RecruitingCenter() {
         recruitingCentersList = new List<RecruitingCenter>();
-        AddToResetList(typeof(RecruitingCenter));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
 	public static void ResetStaticData() {
 		hireCost = GetHireCost();

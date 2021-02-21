@@ -14,7 +14,7 @@ public sealed class Hotel : Building, IPlanable
     static Hotel()
     {
         hotels = new List<Hotel>();
-        AddToResetList(typeof(Hangar));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
     public static void ResetStaticData()
     {

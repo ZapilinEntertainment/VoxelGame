@@ -63,6 +63,7 @@ public sealed class GameStartSettings : MyObject  {
         return cgs;
     }
 
+    public bool NeedLoading() { return loadGame; }
     public GameMode DefineGameMode()
     {
         return gameMode;
@@ -75,9 +76,28 @@ public sealed class GameStartSettings : MyObject  {
     {
         return savename ?? string.Empty;
     }
+    public string GetSavenameFullpath()
+    {
+        if (savename != null)
+        {
+            switch (gameMode)
+            {
+                case GameMode.Survival:
+                    if (chunkGenerationSettings.preparingActionMode != ChunkPreparingAction.Load)
+                        return SaveSystemUI.GetGameSaveFullpath(savename);
+                    else return SaveSystemUI.GetTerrainSaveFullpath(savename);
+                case GameMode.Editor: return SaveSystemUI.GetTerrainSaveFullpath(savename);
+            }
+        }
+        return string.Empty;
+    }
     public StartFoundingType DefineFoundingType()
     {
-        return subIndex0 == 255 ? StartFoundingType.Zeppelin : (StartFoundingType)subIndex0;
+        if (subIndex0 == 255) return StartFoundingType.Nothing;
+        else
+        {
+            return (StartFoundingType)subIndex0;
+        }
     }
     public ChunkGenerationSettings GetChunkGenerationSettings() { return chunkGenerationSettings ?? ChunkGenerationSettings.GetDefaultSettings(); }
 
@@ -119,7 +139,7 @@ public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 //ScoreCalculator
 // StabilityEnforcer - LabourUpdate
 
-public enum StartFoundingType : byte { Zeppelin, Headquarters}
+public enum StartFoundingType : byte { Nothing,Zeppelin, Headquarters}
 public enum GameMode: byte { MainMenu, Survival, Scenario, Editor }
     //dependence - equality check
 public enum GameEndingType : byte { Default, ColonyLost, ConsumedByReal, ConsumedByLastSector, FoundationRoute,
@@ -158,7 +178,8 @@ public sealed class GameMaster : MonoBehaviour
     private static byte pauseRequests = 0;
 
     public Chunk mainChunk { get; private set; }
-    public ColonyController colonyController { get; private set; }
+    public ColonyController colonyController { get { return _colonyController; } }
+    private ColonyController _colonyController;
     public EnvironmentMaster environmentMaster { get; private set; }
     public EventChecker eventTracker { get; private set; }
     public GameMode gameMode { get; private set; }
@@ -166,7 +187,9 @@ public sealed class GameMaster : MonoBehaviour
     private UIController uicontroller;
     private GameStartSettings startSettings;
 
-    public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate, afterloadRecalculationEvent;
+    public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate,
+        afterloadRecalculationEvent;
+    public static event System.Action staticResetFunctions;
 
     public float lifeGrowCoefficient { get; private set; }
     public float demolitionLossesPercent { get; private set; }
@@ -200,7 +223,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private GameStartSettings test_gameStartSettings = null;
+    private GameStartSettings test_gameStartSettings = GameStartSettings.GetEditorStartSettings(16);
     //
 
     #region static functions
@@ -234,10 +257,18 @@ public sealed class GameMaster : MonoBehaviour
         }
         else
         {
-            realMaster.ClearPreviousSessionData();
-            _applyingGameStartSettings = gss;
-            realMaster.Awake();
-            realMaster.PrepareSession();
+            if (gss.NeedLoading())
+            {
+                realMaster.gameMode = gss.DefineGameMode();
+                realMaster.LoadGame(gss.GetSavenameFullpath());
+            }
+            else
+            {
+                realMaster.ClearPreviousSessionData();
+                _applyingGameStartSettings = gss;
+                realMaster.Awake();
+                realMaster.PrepareSession();
+            }
         }
     }
     public static void ReturnToMainMenu()
@@ -251,7 +282,7 @@ public sealed class GameMaster : MonoBehaviour
             var m = Component.FindObjectOfType<MenuUI>();
             if (m != null) m.ToLoadingView();
         }
-        sceneClearing = true;
+        sceneClearing = true;        
         SceneManager.LoadScene(index);
         if (realMaster != null) ResetComponentsStaticValues();
         sceneClearing = false;
@@ -265,7 +296,11 @@ public sealed class GameMaster : MonoBehaviour
     }
     private static void ResetComponentsStaticValues()
     {
-        Structure.ResetToDefaults_Static(); // все наследуемые resetToDefaults внутри
+        if (staticResetFunctions != null)
+        {
+            staticResetFunctions.Invoke();
+            staticResetFunctions = null;
+        }
         DockSystem.ResetRequest();
         Crew.Reset();
         Expedition.GameReset();
@@ -283,12 +318,7 @@ public sealed class GameMaster : MonoBehaviour
         mainChunk?.ClearChunk();
         // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
         ResetComponentsStaticValues();
-        if (colonyController != null) colonyController.ResetToDefaults(); // подчищает все списки
-        else
-        {
-            colonyController = gameObject.AddComponent<ColonyController>();
-            colonyController.Prepare();
-        }
+        colonyController?.ResetToDefaults(); // подчищает все списки
         SetDefaultValues();
     }
     public void ChangeModeToPlay()
@@ -305,6 +335,7 @@ public sealed class GameMaster : MonoBehaviour
 
     private void Awake()
     {
+        if (testMode && test_gameStartSettings != null) _applyingGameStartSettings = test_gameStartSettings;
         if (_applyingGameStartSettings == null && startSettings == null) _applyingGameStartSettings = GameStartSettings.GetDefaultStartSettings();
         if (startSettings == null)
         {
@@ -353,7 +384,10 @@ public sealed class GameMaster : MonoBehaviour
 
     private void Start()
     {
-        PrepareSession();
+        if (startSettings != null && startSettings.NeedLoading()) {
+            LoadGame(startSettings.GetSavenameFullpath());
+        }
+        else PrepareSession();
     }
 
     void PrepareSession()
@@ -442,6 +476,7 @@ public sealed class GameMaster : MonoBehaviour
          // set look point
          FollowingCamera.camBasisTransform.position = sceneCenter;
 
+        startSettings = null;
         sessionPrepared = true;
         if (testMode) AnnouncementCanvasController.MakeAnnouncement("game master loaded");
     }
@@ -508,19 +543,30 @@ public sealed class GameMaster : MonoBehaviour
         else RenderSettings.skybox.SetFloat("_Saturation", 1f);
         DockSystem.ResetRequest();
     }
-    public void SetColonyController(ColonyController c)
+    public ColonyController PrepareColonyController(bool assignNewGameID)
     {
-        colonyController = c;
-        environmentMaster.LinkColonyController(c);
+        if (_colonyController == null)
+        {
+            _colonyController = GetComponent<ColonyController>();
+            if (_colonyController == null) _colonyController = gameObject.AddComponent<ColonyController>();
+            _colonyController.Prepare();
+        }
+        environmentMaster.LinkColonyController(_colonyController);
         uicontroller.GetMainCanvasController()?.LinkColonyController();
-        var keyname = GameConstants.PP_GAMEID_PROPERTY;
         if (gameID == -1)
         {
-            if (PlayerPrefs.HasKey(keyname))  gameID = PlayerPrefs.GetInt(keyname);
-            else gameID = 1;
-            PlayerPrefs.SetInt(keyname, gameID + 1);
-            PlayerPrefs.Save();
+            var keyname = GameConstants.PP_GAMEID_PROPERTY;
+            if (assignNewGameID)
+            {
+                if (PlayerPrefs.HasKey(keyname)) gameID = PlayerPrefs.GetInt(keyname);
+                else gameID = Random.Range(int.MinValue, int.MaxValue);
+                int g2 = gameID;
+                if (g2 == int.MaxValue) g2 = int.MinValue; else g2++;
+                PlayerPrefs.SetInt(keyname, g2);
+                PlayerPrefs.Save();
+            }
         }
+        return _colonyController;
     }  
 
     #region updates
@@ -767,7 +813,8 @@ public sealed class GameMaster : MonoBehaviour
             SetPause(true);
             loading = true;
 
-            ClearPreviousSessionData();
+            if (sessionPrepared) ClearPreviousSessionData();
+            else SetDefaultValues();
 
 
             // НАЧАЛО ЗАГРУЗКИ   
@@ -831,11 +878,12 @@ public sealed class GameMaster : MonoBehaviour
                 errorReason = "crews load failure";
                 goto FAIL;
             }
-
+            //
+            if (colonyController == null) PrepareColonyController(false);
+            //
             if (mainChunk == null)
             {
-                GameObject g = new GameObject("chunk");
-                mainChunk = g.AddComponent<Chunk>();
+                mainChunk = Chunk.InitializeChunk();
             }
             mainChunk.LoadChunkData(fs);
             if (loadingFailed)

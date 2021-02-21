@@ -20,7 +20,7 @@ public sealed class Hangar : WorkBuilding
     static Hangar()
     {
         hangarsList = new List<Hangar>();
-        AddToResetList(typeof(Hangar));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
     public static void ResetStaticData()
     {

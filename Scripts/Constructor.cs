@@ -135,8 +135,7 @@ public abstract class Constructor
         */
         //eo testzone
 
-        GameObject g = new GameObject("chunk");
-        Chunk c = g.AddComponent<Chunk>();
+        var c = Chunk.InitializeChunk();
         c.CreateNewChunk(dat);       
         //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();

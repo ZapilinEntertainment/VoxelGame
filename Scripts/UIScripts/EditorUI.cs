@@ -54,7 +54,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
         materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(UIController.GetCurrent().GetCurrentCanvasTransform());
-        ActionsPanel();
+        if (!actionsPanel.activeSelf) ActionsPanel();
         
         FollowingCamera.main.ResetTouchRightBorder();
         FollowingCamera.main.CameraRotationBlock(false);
@@ -203,7 +203,8 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
                     }                    
                 case ClickAction.TakeLifepower:
                     {
-                      
+                        Plane p = b.FORCED_GetPlane(bh.faceIndex);
+                        if (p != null && p.haveGrassland) p.GetGrassland()?.Dry();
                         break;
                     }
                 case ClickAction.CreateLifesource:

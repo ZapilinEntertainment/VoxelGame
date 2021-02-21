@@ -9,7 +9,7 @@ public sealed class OakTree : Plant
     private static List<GameObject> blankTrees_stage4, blankTrees_stage5, blankTrees_stage6;
     private static Sprite[] lodPack_stage4, lodPack_stage5, lodPack_stage6;
 
-    private static bool modelsContainerReady = false, typeRegistered = false;
+    private static bool typeRegistered = false;
     private static int oaksCount = 0;
 
     public static readonly LODRegisterInfo oak4_lod_regInfo = new LODRegisterInfo(LODController.OAK_MODEL_ID, 4, 0);
@@ -34,20 +34,18 @@ public sealed class OakTree : Plant
 
     static OakTree()
     {
-        AddToResetList(typeof(OakTree));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
     public static void ResetStaticData()
     {
-        if (blankModelsContainer == null)   modelsContainerReady = false;
         typeRegistered = false;
         oaksCount = 0;
     }
 
-    // тоже можно рассовать по методам
     override protected void SetModel()
     {
         // проверка на предыдущую модель не нужна  - устанавливается через SetStage  
-        if (!modelsContainerReady) // первая загрузка
+        if (blankModelsContainer == null) // первая загрузка
         {
             startStageSprites = Resources.LoadAll<Sprite>("Textures/Plants/oakTree");
             blankModelsContainer = new GameObject("oakTreesContainer").transform;
@@ -167,7 +165,6 @@ public sealed class OakTree : Plant
             fullModel.transform.parent = blankModelsContainer;
             blankTrees_stage6.Add(fullModel);
             //
-            modelsContainerReady = true;
         }
         if (stage > TRANSIT_STAGE)
         {
@@ -459,7 +456,9 @@ public sealed class OakTree : Plant
     }
     override public void Dry(bool sendMessageToGrassland)
     {
-        if (!sendMessageToGrassland) basement?.RemoveStructure(this);
+        var modelRt = modelRotation;
+        var bs = basement;
+        var sr = surfaceRect;
         if (stage > TRANSIT_STAGE)
         {
             ContainerModelType cmtype;
@@ -470,16 +469,16 @@ public sealed class OakTree : Plant
                 else cmtype = ContainerModelType.DeadOak6;
             }
             HarvestableResource hr = HarvestableResource.ConstructContainer(cmtype, ResourceType.Lumber, CountLumber() * GameMaster.realMaster.environmentMaster.environmentalConditions);
-            hr.SetModelRotation(modelRotation);
-            hr.SetBasement(basement, new PixelPosByte(surfaceRect.x, surfaceRect.z));
+            hr.SetModelRotation(modelRt);
+            hr.SetBasement(bs, new PixelPosByte(sr.x, sr.z));
             // спрайтовый LOD?
         }
         else
         {
             Structure s = GetStructureByID(DRYED_PLANT_ID);
-            s.SetBasement(basement, new PixelPosByte(surfaceRect.x, surfaceRect.z));
+            s.SetBasement(basement, new PixelPosByte(sr.x, sr.z));
             StructureTimer st = s.gameObject.AddComponent<StructureTimer>();
-            st.timer = 5;
+            st.timer = 60f;
         }
     }
 

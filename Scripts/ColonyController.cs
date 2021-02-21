@@ -82,7 +82,6 @@ public sealed class ColonyController : MonoBehaviour
         HOUSING_MIN_HAPPINESS = 0.25f,
         HEALTHCARE_MIN_HAPPINESS = 0.25f;
 
-
     void Awake()
     {
         if (thisIsFirstSet)
@@ -114,9 +113,7 @@ public sealed class ColonyController : MonoBehaviour
     public void Prepare()
     { // call from game master
         if (storage == null) storage = gameObject.AddComponent<Storage>();
-        var gm = GameMaster.realMaster;
-        gm.SetColonyController(this);
-        gm.everydayUpdate += EverydayUpdate;
+        GameMaster.realMaster.everydayUpdate += EverydayUpdate;
     }
     public void LinkObserver(MainCanvasController mcc) { observer = mcc; }
 

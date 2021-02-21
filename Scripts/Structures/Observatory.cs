@@ -11,7 +11,7 @@ public sealed class Observatory : WorkBuilding
 
     static Observatory()
     {
-        AddToResetList(typeof(Observatory));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
     public static void ResetStaticData()
     {

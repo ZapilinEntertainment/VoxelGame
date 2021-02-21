@@ -34,6 +34,15 @@ public sealed class SaveSystemUI : MonoBehaviour
     /// </summary>
     public static string GetTerrainsPath() { return Application.persistentDataPath + "/Terrains"; }
 
+    public static string GetGameSaveFullpath(string savename)
+    {
+        return GetSavesPath() + '/' + savename + '.' + SAVE_FNAME_EXTENSION;
+    }
+    public static string GetTerrainSaveFullpath(string savename)
+    {
+        return GetTerrainsPath() + '/' + savename + '.' + TERRAIN_FNAME_EXTENSION;
+    }
+
     private void Awake()
     {
         LocalizeTitles();
@@ -208,9 +217,9 @@ public sealed class SaveSystemUI : MonoBehaviour
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
         string fullPath = terrainsLoading ?
-            GetTerrainsPath() + '/' + saveNames[index] + '.' + TERRAIN_FNAME_EXTENSION
+            GetTerrainSaveFullpath(saveNames[index])
             :
-            GetSavesPath() + '/' + saveNames[index] + '.' + SAVE_FNAME_EXTENSION;
+            GetGameSaveFullpath(saveNames[index]);
         if (File.Exists(fullPath))
         {
             saveDateString.enabled = true;
@@ -238,7 +247,7 @@ public sealed class SaveSystemUI : MonoBehaviour
             bool ingame = GameMaster.realMaster != null;
             if (terrainsLoading)
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  РЕДАКТОРА
-                string fullPath = GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION;
+                string fullPath = GetTerrainSaveFullpath(saveNames[lastSelectedIndex]);
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadTerrain(fullPath)) gameObject.SetActive(false);
@@ -260,12 +269,13 @@ public sealed class SaveSystemUI : MonoBehaviour
             }
             else
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  ИГРЫ
-                string fullPath = GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
+                string fullPath = GetGameSaveFullpath(saveNames[lastSelectedIndex]);
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadGame(fullPath))
                     {
                         gameObject.SetActive(false);
+                        UIController.GetCurrent().GetMainCanvasController().ChangeActiveWindow(ActiveWindowMode.NoWindow);
                         AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameLoaded));
                     }
                 }
@@ -292,7 +302,7 @@ public sealed class SaveSystemUI : MonoBehaviour
         {// ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ТЕРРЕЙНА
             if (deleteSubmit)
             {
-                File.Delete(GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION);
+                File.Delete(saveNames[lastSelectedIndex]);
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -312,9 +322,9 @@ public sealed class SaveSystemUI : MonoBehaviour
             if (deleteSubmit)
             {
                 File.Delete(terrainsLoading ?
-                    GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION
+                    GetTerrainSaveFullpath(saveNames[lastSelectedIndex])
                     :
-                    GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION);
+                    GetGameSaveFullpath(saveNames[lastSelectedIndex]));
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -343,9 +353,9 @@ public sealed class SaveSystemUI : MonoBehaviour
     {
         if (lastSelectedIndex == -1 | lastSelectedIndex >= saveNames.Length) return;
         string path = terrainsLoading ?
-            GetTerrainsPath() + '/' + saveNames[lastSelectedIndex] + '.' + TERRAIN_FNAME_EXTENSION
+            GetTerrainSaveFullpath(saveNames[lastSelectedIndex])
             :
-            GetSavesPath() + '/' + saveNames[lastSelectedIndex] + '.' + SAVE_FNAME_EXTENSION;
+            GetGameSaveFullpath(saveNames[lastSelectedIndex]);
         if (File.Exists(path))
         {
             deleteSubmit = true;

@@ -13,7 +13,7 @@ public sealed class QuantumTransmitter : Building {
     static QuantumTransmitter()
     {
         transmittersList = new List<QuantumTransmitter>();
-        AddToResetList(typeof(QuantumTransmitter));
+        GameMaster.staticResetFunctions += ResetStaticData;
     }
 	public static void ResetStaticData() {
 		transmittersList = new List<QuantumTransmitter>();

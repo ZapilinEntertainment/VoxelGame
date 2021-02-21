@@ -37,10 +37,7 @@ public sealed class XStation : WorkBuilding {
         {
             if (current != null) current.Annihilate(true, true, false);
         }
-        else
-        {
-            AddToResetList(typeof(XStation));
-        }
+        else GameMaster.staticResetFunctions += ResetStaticData;
         current = this;
         if (!indicatorPrepared)
         {

@@ -469,6 +469,7 @@ public sealed class PlaneExtension : MyObject
         {
             grassland.Annihilate(true, false);
             grassland = null;
+            myPlane.ChangeMaterial(ResourceType.DIRT_ID, true);
         }
     }
     #endregion
