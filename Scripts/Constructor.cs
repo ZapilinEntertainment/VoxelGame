@@ -136,10 +136,9 @@ public abstract class Constructor
         //eo testzone
 
         var c = Chunk.InitializeChunk();
-        c.CreateNewChunk(dat);       
+        c.Rebuild(dat);       
         //CheckForLandingPosition(c);
         c.RenderDataFullRecalculation();
-
         return c;
     }
     public static Chunk ConstructBlock(byte chunkSize)
@@ -149,13 +148,13 @@ public abstract class Constructor
         dat[0, 0, 0] = ResourceType.STONE_ID;
         GameObject g = new GameObject("chunk");
         Chunk c = g.AddComponent<Chunk>();
-        c.CreateNewChunk(dat);
+        c.Rebuild(dat);
         //NatureCreation(c);
         //CheckForLandingPosition(c);
         return c;
     }
 
-    private static void GenerateSpiralsData(int size, ref int[,,] data)
+    public static void GenerateSpiralsData(int size, ref int[,,] data)
     {
         int arms = 3;
         float armsLength = 1;

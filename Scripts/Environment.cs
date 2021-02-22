@@ -386,7 +386,7 @@ public sealed class Environment
                   Color.black,
                    Color.cyan * 0.75f,
                   Color.white,
-                  1f);              
+                  0.75f);              
                 break;
         }
     }    

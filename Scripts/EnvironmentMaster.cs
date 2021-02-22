@@ -157,19 +157,21 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     public void RecalculateCelestialDecorations()
     {
         var gm = GameMaster.realMaster.globalMap;
-        var pts = gm.mapPoints;
+        var pts = gm?.mapPoints;
+        bool noMapAvailable = pts == null;
         if (celestialBodies != null)
         {
             //проверка существующих спрайтов звезд
             var destroyList = new List<MapPoint>();
             foreach (var cb in celestialBodies)
             {
-                if (!pts.Contains(cb.Key))
+                if (noMapAvailable || !pts.Contains(cb.Key))
                 {
                     destroyList.Add(cb.Key);
                 }
             }
-            if (destroyList.Count > 0) {
+            if (destroyList.Count > 0)
+            {
                 foreach (var d in destroyList)
                 {
                     Transform t = celestialBodies[d];
@@ -182,16 +184,21 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             {
                 if (pt.type == MapMarkerType.Star && !celestialBodies.ContainsKey(pt)) AddVisibleStar(pt as SunPoint);
             }
+            lastDrawnMapActionHash = gm.actionsHash;
         }
         else
         {
-            celestialBodies = new Dictionary<MapPoint, Transform>();
-            foreach (var pt in pts)
+            if (!noMapAvailable)
             {
-                if (pt.type == MapMarkerType.Star) AddVisibleStar(pt as SunPoint);
+                celestialBodies = new Dictionary<MapPoint, Transform>();
+                foreach (var pt in pts)
+                {
+                    if (pt.type == MapMarkerType.Star) AddVisibleStar(pt as SunPoint);
+                }
             }
+            lastDrawnMapActionHash = 0;
         }
-        lastDrawnMapActionHash = gm.actionsHash;
+        
     }
     private void AddVisibleStar(SunPoint sp)
     {

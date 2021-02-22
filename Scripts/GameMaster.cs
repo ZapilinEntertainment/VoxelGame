@@ -3,133 +3,6 @@ using UnityEngine; // классы Юнити
 using System.IO; // чтение-запись файлов
 using UnityEngine.SceneManagement;
 
-public sealed class GameStartSettings : MyObject  {
-    private GameMode gameMode;
-    private bool loadGame = false;
-    private string savename;
-    private byte subIndex0 = 255, subIndex1 = 255;
-    private Difficulty difficulty = Difficulty.Normal;
-    private ChunkGenerationSettings chunkGenerationSettings;
-
-    private GameStartSettings() {  }
-    public static GameStartSettings GetDefaultStartSettings() {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = GameMode.Survival;
-        cgs.chunkGenerationSettings = ChunkGenerationSettings.GetDefaultSettings();
-        return cgs;
-    }
-    public static GameStartSettings GetEditorStartSettings(byte i_size)
-    {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = GameMode.Editor;
-        cgs.chunkGenerationSettings = ChunkGenerationSettings.GetGenerationSettings(ChunkGenerationMode.EditorPreset, i_size);
-        return cgs;
-    }
-    /// <summary>
-    /// starts new editor session and loads terrain preset
-    /// </summary>
-    public static GameStartSettings GetEditorStartSettings(string i_savename)
-    {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = GameMode.Editor;
-        cgs.chunkGenerationSettings = ChunkGenerationSettings.GetLoadingSettings(i_savename);
-        return cgs;
-    }
-    public static GameStartSettings GetStartSettings(GameMode i_mode, ChunkGenerationSettings i_chunkSettings, Difficulty i_difficulty, StartFoundingType i_start)
-    {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = i_mode;
-        cgs.chunkGenerationSettings = i_chunkSettings;
-        cgs.difficulty = i_difficulty;
-        cgs.subIndex0 = (byte)i_start;
-        return cgs;
-    }
-    public static GameStartSettings GetModeChangingSettings(GameMode newMode, Difficulty i_difficulty, StartFoundingType i_foundingType)
-    {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = newMode;
-        cgs.chunkGenerationSettings = ChunkGenerationSettings.GetNoActionSettings();
-        cgs.difficulty = i_difficulty;
-        cgs.subIndex0 = (byte)i_foundingType;
-        return cgs;
-    }
-    public static GameStartSettings GetLoadingSettings(GameMode i_gameMode, string i_savename)
-    {
-        var cgs = new GameStartSettings();
-        cgs.gameMode = i_gameMode;
-        cgs.loadGame = true;
-        cgs.chunkGenerationSettings = ChunkGenerationSettings.GetNoActionSettings();
-        cgs.savename = i_savename;
-        return cgs;
-    }
-
-    public bool NeedLoading() { return loadGame; }
-    public GameMode DefineGameMode()
-    {
-        return gameMode;
-    }
-    public Difficulty DefineDifficulty()
-    {
-        return difficulty;
-    }
-    public string GetSavename()
-    {
-        return savename ?? string.Empty;
-    }
-    public string GetSavenameFullpath()
-    {
-        if (savename != null)
-        {
-            switch (gameMode)
-            {
-                case GameMode.Survival:
-                    if (chunkGenerationSettings.preparingActionMode != ChunkPreparingAction.Load)
-                        return SaveSystemUI.GetGameSaveFullpath(savename);
-                    else return SaveSystemUI.GetTerrainSaveFullpath(savename);
-                case GameMode.Editor: return SaveSystemUI.GetTerrainSaveFullpath(savename);
-            }
-        }
-        return string.Empty;
-    }
-    public StartFoundingType DefineFoundingType()
-    {
-        if (subIndex0 == 255) return StartFoundingType.Nothing;
-        else
-        {
-            return (StartFoundingType)subIndex0;
-        }
-    }
-    public ChunkGenerationSettings GetChunkGenerationSettings() { return chunkGenerationSettings ?? ChunkGenerationSettings.GetDefaultSettings(); }
-
-    protected override bool IsEqualNoCheck(object obj)
-    {
-        var gss = (GameStartSettings)obj;
-        if (gameMode == gss.gameMode )
-        {
-            if (gameMode == GameMode.MainMenu) return true;
-            else {
-                if (loadGame && gss.loadGame) return chunkGenerationSettings == gss.chunkGenerationSettings && savename == gss.savename;
-                else {
-                    if (gss.loadGame != loadGame) return false;
-                    else {
-                        switch (gameMode)
-                        {
-                            case GameMode.Survival:
-                                return chunkGenerationSettings == gss.chunkGenerationSettings && difficulty == gss.difficulty && subIndex0 == gss.subIndex0;
-                            case GameMode.Scenario:
-                                return chunkGenerationSettings == gss.chunkGenerationSettings && subIndex0 == gss.subIndex0 && subIndex1 == gss.subIndex1 && difficulty == gss.difficulty && savename == gss.savename;
-                            case GameMode.Editor:
-                                return chunkGenerationSettings == gss.chunkGenerationSettings && savename == gss.savename;
-                            default: return true;
-                        }
-                    }
-                }
-            }
-        }
-        else return false;
-    }
-}
-
 public enum Difficulty : byte {Utopia, Easy, Normal, Hard, Torture}
 //dependencies:
 // GameConstants.GetBlackoutStabilityTestHardness
@@ -223,29 +96,8 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private GameStartSettings test_gameStartSettings = GameStartSettings.GetEditorStartSettings(16);
+    private static GameStartSettings test_gameStartSettings = GameStartSettings.GetTutorialSettings();
     //
-
-    #region static functions
-    //
-    public static void SetPause(bool pause)
-    {
-        if (pause)
-        {
-            pauseRequests++;
-            Time.timeScale = 0;
-            gameSpeed = 0;
-        }
-        else
-        {
-            if (pauseRequests > 0) pauseRequests--;
-            if (pauseRequests == 0)
-            {
-                Time.timeScale = 1;
-                gameSpeed = 1;
-            }
-        }
-    }
   
    // SCENERY CHANGING
     public static void StartNewGame(GameStartSettings gss)
@@ -287,55 +139,27 @@ public sealed class GameMaster : MonoBehaviour
         if (realMaster != null) ResetComponentsStaticValues();
         sceneClearing = false;
     }
-    //
-    public static void LoadingFail()
-    {
-        loadingFailed = true;
-        SetPause(true);
-        Debug.Log("loading failed");
-    }
-    private static void ResetComponentsStaticValues()
-    {
-        if (staticResetFunctions != null)
-        {
-            staticResetFunctions.Invoke();
-            staticResetFunctions = null;
-        }
-        DockSystem.ResetRequest();
-        Crew.Reset();
-        Expedition.GameReset();
-    }
-    #endregion
-
-    private void ClearPreviousSessionData()
-    {
-        // ОЧИСТКА
-        StopAllCoroutines();
-        if (Zeppelin.current != null)
-        {
-            Destroy(Zeppelin.current.gameObject);
-        }
-        mainChunk?.ClearChunk();
-        // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
-        ResetComponentsStaticValues();
-        colonyController?.ResetToDefaults(); // подчищает все списки
-        SetDefaultValues();
-    }
     public void ChangeModeToPlay()
     {
         if (gameMode != GameMode.Editor) return;
         startSettings = null;
         _applyingGameStartSettings = GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Normal, StartFoundingType.Zeppelin);
-        uicontroller.ChangeUIMode(UIMode.Standart,true);
+        startSettings = null;
+        uicontroller.ChangeUIMode(UIMode.Standart, true);
         sessionPrepared = false;
-        
+
         Awake();
         PrepareSession();
     }
+    //   
 
     private void Awake()
     {
-        if (testMode && test_gameStartSettings != null) _applyingGameStartSettings = test_gameStartSettings;
+        if (testMode && test_gameStartSettings != null)
+        {
+            _applyingGameStartSettings = test_gameStartSettings;
+            test_gameStartSettings = null;
+        }
         if (_applyingGameStartSettings == null && startSettings == null) _applyingGameStartSettings = GameStartSettings.GetDefaultStartSettings();
         if (startSettings == null)
         {
@@ -366,10 +190,8 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (gameMode == GameMode.Survival)
         {            
-            uicontroller.ChangeUIMode(UIMode.Standart, true);
             if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
-            globalMap.Prepare();
-            eventTracker = new EventChecker();
+            globalMap.Prepare();            
         }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();
         environmentMaster.Prepare();
@@ -381,7 +203,6 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
     }
-
     private void Start()
     {
         if (startSettings != null && startSettings.NeedLoading()) {
@@ -389,14 +210,15 @@ public sealed class GameMaster : MonoBehaviour
         }
         else PrepareSession();
     }
-
     void PrepareSession()
     {        
-        if (sessionPrepared) return;    
+        if (sessionPrepared) return;
+        bool activateEventTracker = false;
         switch (gameMode)
         {
             case GameMode.Survival:
                 {
+                    uicontroller.ChangeUIMode(UIMode.Standart, true);
                     difficulty = startSettings.DefineDifficulty();
                     SetDefaultValues();
                     var cgs = startSettings.GetChunkGenerationSettings();
@@ -410,6 +232,8 @@ public sealed class GameMaster : MonoBehaviour
                         else
                         {
                             mainChunk = Constructor.ConstructChunk(cgs);
+                            var slist = mainChunk.GetSurfaces();
+                            if (slist != null) geologyModule.SpreadMinerals(slist);
                             mainChunk.GetNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
                         }
                     }
@@ -457,28 +281,61 @@ public sealed class GameMaster : MonoBehaviour
                             }
                     }
                     FollowingCamera.main.WeNeedUpdate();
+                    activateEventTracker = true;
                     break;
                 }
             case GameMode.Editor:
                 {
                     uicontroller.ChangeUIMode(UIMode.Editor, true);
-                    gameObject.AddComponent<PoolMaster>().Load();
                     mainChunk = new GameObject("chunk").AddComponent<Chunk>();
                     int size = Chunk.chunkSize;
                     int[,,] blocksArray = new int[size, size, size];
                     size /= 2;
                     blocksArray[size, size, size] = ResourceType.STONE_ID;
-                    mainChunk.CreateNewChunk(blocksArray);
+                    mainChunk.Rebuild(blocksArray);
                     break;
                 }
-        }   
+            case GameMode.Scenario:
+                {
+                    uicontroller.ChangeUIMode(UIMode.Standart, true);
+                    LoadTerrain(SaveSystemUI.GetTerrainSaveFullpath(startSettings.GetSavename()));
+                    activateEventTracker = true;
+                    break;
+                }
+        }
+        if (activateEventTracker) eventTracker = new EventChecker();
 
-         // set look point
-         FollowingCamera.camBasisTransform.position = sceneCenter;
+        // set look point
+        FollowingCamera.camBasisTransform.position = sceneCenter;
 
         startSettings = null;
         sessionPrepared = true;
         if (testMode) AnnouncementCanvasController.MakeAnnouncement("game master loaded");
+    }
+    public ColonyController PrepareColonyController(bool assignNewGameID)
+    {
+        if (_colonyController == null)
+        {
+            _colonyController = GetComponent<ColonyController>();
+            if (_colonyController == null) _colonyController = gameObject.AddComponent<ColonyController>();
+            _colonyController.Prepare();
+        }
+        environmentMaster.LinkColonyController(_colonyController);
+        uicontroller.GetMainCanvasController()?.LinkColonyController();
+        if (gameID == -1)
+        {
+            var keyname = GameConstants.PP_GAMEID_PROPERTY;
+            if (assignNewGameID)
+            {
+                if (PlayerPrefs.HasKey(keyname)) gameID = PlayerPrefs.GetInt(keyname);
+                else gameID = Random.Range(int.MinValue, int.MaxValue);
+                int g2 = gameID;
+                if (g2 == int.MaxValue) g2 = int.MinValue; else g2++;
+                PlayerPrefs.SetInt(keyname, g2);
+                PlayerPrefs.Save();
+            }
+        }
+        return _colonyController;
     }
 
     private void SetDefaultValues()
@@ -543,31 +400,31 @@ public sealed class GameMaster : MonoBehaviour
         else RenderSettings.skybox.SetFloat("_Saturation", 1f);
         DockSystem.ResetRequest();
     }
-    public ColonyController PrepareColonyController(bool assignNewGameID)
+    private void ClearPreviousSessionData()
     {
-        if (_colonyController == null)
+        // ОЧИСТКА
+        StopAllCoroutines();
+        if (Zeppelin.current != null)
         {
-            _colonyController = GetComponent<ColonyController>();
-            if (_colonyController == null) _colonyController = gameObject.AddComponent<ColonyController>();
-            _colonyController.Prepare();
+            Destroy(Zeppelin.current.gameObject);
         }
-        environmentMaster.LinkColonyController(_colonyController);
-        uicontroller.GetMainCanvasController()?.LinkColonyController();
-        if (gameID == -1)
+        mainChunk?.ClearChunk();
+        // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
+        ResetComponentsStaticValues();
+        colonyController?.ResetToDefaults(); // подчищает все списки
+        SetDefaultValues();
+    }
+    private static void ResetComponentsStaticValues()
+    {
+        if (staticResetFunctions != null)
         {
-            var keyname = GameConstants.PP_GAMEID_PROPERTY;
-            if (assignNewGameID)
-            {
-                if (PlayerPrefs.HasKey(keyname)) gameID = PlayerPrefs.GetInt(keyname);
-                else gameID = Random.Range(int.MinValue, int.MaxValue);
-                int g2 = gameID;
-                if (g2 == int.MaxValue) g2 = int.MinValue; else g2++;
-                PlayerPrefs.SetInt(keyname, g2);
-                PlayerPrefs.Save();
-            }
+            staticResetFunctions.Invoke();
+            staticResetFunctions = null;
         }
-        return _colonyController;
-    }  
+        DockSystem.ResetRequest();
+        Crew.Reset();
+        Expedition.GameReset();
+    }
 
     #region updates
     private void Update()
@@ -575,24 +432,9 @@ public sealed class GameMaster : MonoBehaviour
         if (loading) return;
 
         //if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
-        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();
-        if (Input.GetKeyDown("x"))
-        {
-            //TEST_AddCitizens(1000);
-            //TEST_PrepareForExpeditions();
-            TEST_GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
-        }
-        if (Input.GetKeyDown("c"))
-        {
-            TEST_GivePuzzleParts(50);
-        }
-        if (Input.GetKeyDown("n"))
-        {
-            TEST_AddPopulation(5000);
-        }
+        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();       
         gameSpeed = _gameSpeed;
     }
-
     private void FixedUpdate()
     {
         if (gameSpeed != 0)
@@ -641,6 +483,24 @@ public sealed class GameMaster : MonoBehaviour
     #endregion
 
     #region game parameters
+    public static void SetPause(bool pause)
+    {
+        if (pause)
+        {
+            pauseRequests++;
+            Time.timeScale = 0;
+            gameSpeed = 0;
+        }
+        else
+        {
+            if (pauseRequests > 0) pauseRequests--;
+            if (pauseRequests == 0)
+            {
+                Time.timeScale = 1;
+                gameSpeed = 1;
+            }
+        }
+    }
     public void SetStartResources()
     {
         //start resources
@@ -982,7 +842,9 @@ public sealed class GameMaster : MonoBehaviour
             GameObject g = new GameObject("chunk");
             mainChunk = g.AddComponent<Chunk>();
         }
+        loading = true;
         mainChunk.LoadChunkData(fs);
+        loading = false;
         fs.Close();
         FollowingCamera.main.WeNeedUpdate();
         return true;
@@ -1001,204 +863,13 @@ public sealed class GameMaster : MonoBehaviour
         }
         return hsum;
     }
+
+    public static void LoadingFail()
+    {
+        loadingFailed = true;
+        SetPause(true);
+        Debug.Log("loading failed");
+    }
     #endregion
-
-    public static void TestMethod2(Vector3 pos, Material mat)
-    {
-        var m = new Mesh();
-        m.vertices = new Vector3[] { Vector3.zero, Vector3.forward, new Vector3(1, 0, 1), Vector3.right, new Vector3(1, 1, 0), Vector3.one, new Vector3(0, 1, 1), Vector3.up };
-        m.triangles = new int[] { 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 7, 4, 0, 1, 6, 0, 6, 7, 1, 5, 6, 1, 2, 5, 2, 4, 5, 2, 3, 4, 7, 6, 5, 7, 5, 4 };
-        var g = new GameObject();
-        var mf = g.AddComponent<MeshFilter>();
-        mf.sharedMesh = m;
-        var mr = g.AddComponent<MeshRenderer>();
-        mr.sharedMaterial = mat;
-        g.transform.position = pos;
-    }
-    public static void TestMethod3(Vector3 pos)
-    {
-        var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        g.transform.position = pos;
-    }
-    public static void TestMethod()
-    {       
-       
-        return;
-        /*
-        Vector3Int ecpos = Vector3Int.zero;
-        byte ir = PlaneExtension.INNER_RESOLUTION;
-        var slist = mainChunk.surfaces;
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.MINI_GRPH_REACTOR_3_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.OBSERVATORY_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-            (s as WorkBuilding).AddWorkers(50);
-        }
-       
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.QUANTUM_TRANSMITTER_4_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.SCIENCE_LAB_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.EXPEDITION_CORPUS_4_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.RECRUITING_CENTER_4_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-        }
-        if (mainChunk.TryGetPlace(ref ecpos, ir))
-        {
-            Structure s = Structure.GetStructureByID(Structure.SHUTTLE_HANGAR_4_ID);
-            s.SetBasement(slist[ecpos.z], PixelPosByte.zero);
-            (s as Hangar).FORCED_MakeShuttle();
-        }
-
-        Crew c = Crew.CreateNewCrew(colonyController, Crew.MAX_MEMBER_COUNT);
-        colonyController.storage.AddResources(new ResourceContainer[] {
-            new ResourceContainer(ResourceType.Fuel, 500f),
-            new ResourceContainer(ResourceType.Supplies, 500f)
-        });
-        colonyController.AddEnergyCrystals(1000f);
-
-        globalMap.FORCED_CreatePointOfInterest();
-        */
-    }
-    public static void Test_RepairGameMaster()
-    {
-        if (realMaster == null)
-        {
-            var g = new GameObject("gameMaster");
-            realMaster = g.AddComponent<GameMaster>();
-        }
-    }
-
-    public void TEST_GivePuzzleParts(int count)
-    {
-        var k = Knowledge.GetCurrent();
-        k.AddPuzzlePart(Knowledge.GREENCOLOR_CODE, count);
-        k.AddPuzzlePart(Knowledge.BLUECOLOR_CODE, count);
-        k.AddPuzzlePart(Knowledge.REDCOLOR_CODE, count);
-        k.AddPuzzlePart(Knowledge.WHITECOLOR_CODE, count);
-        k.AddPuzzlePart(Knowledge.CYANCOLOR_CODE, count);
-    }
-    public void TEST_AddCitizens(int count)
-    {
-        var cc = colonyController;
-        if (cc != null)
-        {
-            cc.storage.AddResource(ResourceType.Food, 3000);
-            cc.AddCitizens(count);
-        }
-    }
-    public void TEST_PrepareForExpeditions()
-    {
-        if (colonyController == null) return;
-        var planes = mainChunk.GetUnoccupiedSurfaces(8);
-        planes[0]?.CreateStructure(Structure.RECRUITING_CENTER_4_ID);
-        var c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Mony Mony");
-        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Black Rabbit");
-        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Bonemaker");
-        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Eiffiel Dungeon");
-        planes[1]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
-        planes[2]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
-        planes[3]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
-        planes[4]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
-        planes[5]?.CreateStructure(Structure.EXPEDITION_CORPUS_4_ID);
-        planes[6]?.CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
-        planes[7]?.CreateStructure(Structure.STORAGE_BLOCK_ID);
-        colonyController.storage.AddResource(ResourceType.Fuel, 25000);
-        colonyController.storage.AddResource(ResourceType.Supplies, 2000);
-
-        var pf = mainChunk.GetUnoccupiedEdgePosition(false,false);
-        var p = pf.plane;
-        Structure s;
-        if (p != null)
-        {
-            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
-            if (s != null)
-            {
-                s.SetModelRotation(pf.faceIndex * 2);
-                (s as Hangar).FORCED_MakeShuttle();
-            }
-        }
-        pf = mainChunk.GetUnoccupiedEdgePosition(false,false);
-        p = pf.plane;
-        if (p != null)
-        {
-            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
-            if (s != null)
-            {
-                s.SetModelRotation(pf.faceIndex * 2);
-                (s as Hangar).FORCED_MakeShuttle();
-            }
-        }
-        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
-        p = pf.plane;
-        if (p != null)
-        {
-            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
-            if (s != null)
-            {
-                s.SetModelRotation(pf.faceIndex * 2);
-                (s as Hangar).FORCED_MakeShuttle();
-            }
-        }
-        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
-        p = pf.plane;
-        if (p != null)
-        {
-            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
-            if (s != null)
-            {
-                s.SetModelRotation(pf.faceIndex * 2);
-                (s as Hangar).FORCED_MakeShuttle();
-            }
-        }
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-        globalMap.FORCED_CreatePointOfInterest();
-    }
-    public void TEST_GiveRoutePoints(Knowledge.ResearchRoute rr, int count)
-    {
-        Knowledge.GetCurrent()?.AddResearchPoints(rr, count);
-    }
-    public void TEST_AddPopulation(int count)
-    {
-        colonyController?.AddCitizens(count);
-    }
 }
   

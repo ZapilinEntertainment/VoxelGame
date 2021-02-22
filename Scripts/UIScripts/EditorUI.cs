@@ -10,11 +10,11 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Image saveButtonImage, loadButtonImage;
-    [SerializeField] Text materialNameTextField;
+    [SerializeField] Text materialNameTextField, generateAnewButtonLabel;
 #pragma warning restore 0649  
 
     private Image chosenMaterialButton;
-    private enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, MakeCave, AddLifepower, TakeLifepower, CreateLifesource }
+    public enum ClickAction { CreateBlock, DeleteBlock, AddGrassland, DeleteGrassland, MakeSurface, AddLifepower, TakeLifepower, CreateLifesource, AddMineral, DeleteMineral }
     private ClickAction currentAction;
     private LifeSource lifesource;
     private SaveSystemUI saveSystem;
@@ -51,6 +51,11 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
     private void Start()
     {        
         buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
+        for (int i = 0; i < buttonsImages.Length; i++)
+        {
+            ClickAction ca = (ClickAction)i;
+            buttonsImages[i].GetComponent<Button>().onClick.AddListener(() => this.ChangeClickAction(ca));
+        }
         materialButtonImage.uvRect = ResourceType.GetResourceIconRect(chosenMaterialId);
         materialNameTextField.text = Localization.GetResourceName(chosenMaterialId);
         if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(UIController.GetCurrent().GetCurrentCanvasTransform());
@@ -190,11 +195,6 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
                         }                        
                         break;
                     }
-                case ClickAction.MakeCave:
-                    {
-                        
-                        break;
-                    }
                 case ClickAction.AddLifepower:
                     {
                         Plane p = b.FORCED_GetPlane(bh.faceIndex);
@@ -204,12 +204,60 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
                 case ClickAction.TakeLifepower:
                     {
                         Plane p = b.FORCED_GetPlane(bh.faceIndex);
-                        if (p != null && p.haveGrassland) p.GetGrassland()?.Dry();
+                        if (p != null)
+                        {
+                            var pts = p.GetPlants();
+                            int length = pts?.Length ?? 0;
+                            if (length > 0)
+                            {
+                                pts[Random.Range(0, length)].Annihilate(true, true, false);
+                            }
+                            else p.GetGrassland()?.Dry();
+                        }
                         break;
                     }
                 case ClickAction.CreateLifesource:
                     {
-                        
+                        Plane p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
+                        if (p != null && p.isQuad )
+                        {
+                            p.CreateStructure(p.pos.y > Chunk.chunkSize / 2 ? Structure.TREE_OF_LIFE_ID : Structure.LIFESTONE_ID);
+                        }
+                        break;
+                    }
+                case ClickAction.AddMineral:
+                    {
+                        Plane p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
+                        if (p != null && p.isQuad)
+                        {
+                            GameMaster.geologyModule.SpreadMinerals(p);
+                        }
+                        break;
+                    }
+                case ClickAction.DeleteMineral:
+                    {
+                        Plane p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
+                        if (p != null && p.ContainStructures())
+                        {
+                            if (p.mainStructure != null)
+                            {
+                                p.mainStructure.Annihilate(true, false, false);
+                                return;
+                            }
+                            else
+                            {
+                                var slist = p.GetStructuresList();
+                                int sid = Structure.CONTAINER_ID;
+                                foreach (var s in slist)
+                                {
+                                    if (s.ID == sid)
+                                    {
+                                        s.Annihilate(true, false, false);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                         break;
                     }
             }
@@ -226,14 +274,14 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
         }
     }
 
-    public void ChangeClickAction(int x)
+    public void ChangeClickAction(ClickAction ca)
     {
-        int lastAction = (int)currentAction;
-        if (lastAction == x) return;
-        currentAction = (ClickAction)x;
-        currentActionIcon.uvRect = new Rect((x % 4) * 0.25f, (x / 4) * 0.25f, 0.25f, 0.25f);
-        buttonsImages[lastAction].overrideSprite = null;
-        buttonsImages[x].overrideSprite = PoolMaster.gui_overridingSprite;
+        if (ca == currentAction) return;
+        int lastActionIndex = (int)currentAction;
+        currentAction = ca;
+        currentActionIcon.uvRect = new Rect((lastActionIndex % 4) * 0.25f, (lastActionIndex / 4) * 0.25f, 0.25f, 0.25f);
+        buttonsImages[lastActionIndex].overrideSprite = null;
+        buttonsImages[(int)currentAction].overrideSprite = PoolMaster.gui_overridingSprite;
         listPanel.SetActive(false);
     }
 
@@ -305,10 +353,18 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
         GameMaster.realMaster.SaveTerrain("lastCreatedTerrain");
         GameMaster.realMaster.ChangeModeToPlay();
     }
-
+    public void GenerateNewTerrain()
+    {
+        byte size = Chunk.chunkSize;
+        var data = new int[size, size, size];
+        Constructor.GenerateSpiralsData(size, ref data);
+        var chunk = GameMaster.realMaster.mainChunk;
+        chunk.Rebuild(data);
+        chunk.GetNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
+    }
     
 
-
+    // MENU SECTION
     public void MenuPanelToggle()
     {
         if (!menuPanel.activeSelf)
@@ -353,11 +409,13 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
     {
         GameMaster.ReturnToMainMenu();
     }
-
+    //
     public void LocalizeTitles()
     {
         transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
-        actionsPanel.transform.GetChild(11).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Play);
+        actionsPanel.transform.GetChild(10).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Play);
+
+        generateAnewButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.GenerateNewTerrain);
 
         Transform t = menuPanel.transform;
         t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);

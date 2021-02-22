@@ -185,7 +185,7 @@ public sealed partial class Chunk : MonoBehaviour
 
     #region operating blocks data
 
-    public void CreateNewChunk(int[,,] newData)
+    public void Rebuild(int[,,] newData)
     {
         int size = newData.GetLength(0);
         chunkSize = (byte)size;
@@ -211,10 +211,6 @@ public sealed partial class Chunk : MonoBehaviour
         PreparePlanes();
         RenderDataFullRecalculation();
         RecalculateSurfacesList();
-        if (surfaces != null && GameMaster.realMaster.gameMode != GameMode.Editor)
-        {
-            GameMaster.geologyModule.SpreadMinerals(surfaces);
-        }
 
         FollowingCamera.main.WeNeedUpdate();
     }

@@ -16,7 +16,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2584,6 +2584,8 @@ public static class Localization
                         case LocalizedPhrase.AwaitingShip: return "Ожидается прибытие";
                         case LocalizedPhrase.AwaitingDocking: return "Ожидается стыковка";
                         case LocalizedPhrase.ShipServicing: return "Обслуживание корабля";
+
+                        case LocalizedPhrase.GenerateNewTerrain: return "Сгенерировать заново";
                         default: return "<...>";
                     }
                 }
@@ -2690,6 +2692,8 @@ public static class Localization
                         case LocalizedPhrase.AwaitingShip: return "Awaiting arrival";
                         case LocalizedPhrase.AwaitingDocking: return "Awaiting docking";
                         case LocalizedPhrase.ShipServicing: return "Ship servicing";
+
+                        case LocalizedPhrase.GenerateNewTerrain: return "Generate anew";
                         default: return "<...>";
                     }
                 }

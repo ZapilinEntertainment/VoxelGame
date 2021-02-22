@@ -302,7 +302,7 @@ public sealed class SaveSystemUI : MonoBehaviour
         {// ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ТЕРРЕЙНА
             if (deleteSubmit)
             {
-                File.Delete(saveNames[lastSelectedIndex]);
+                File.Delete(GetTerrainSaveFullpath(saveNames[lastSelectedIndex]));
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;
@@ -321,10 +321,7 @@ public sealed class SaveSystemUI : MonoBehaviour
         {   // ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ИГРЫ
             if (deleteSubmit)
             {
-                File.Delete(terrainsLoading ?
-                    GetTerrainSaveFullpath(saveNames[lastSelectedIndex])
-                    :
-                    GetGameSaveFullpath(saveNames[lastSelectedIndex]));
+                File.Delete( GetGameSaveFullpath(saveNames[lastSelectedIndex]));
                 Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
                 t.GetComponent<Image>().color = Color.white;
                 t.GetChild(0).GetComponent<Text>().color = Color.white;

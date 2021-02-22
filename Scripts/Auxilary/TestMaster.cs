@@ -36,6 +36,20 @@ public class TestMaster : MonoBehaviour
         {
             //GameMaster.realMaster.globalMap.TEST_MakeNewPoint(MapMarkerType.Star);
         }
+        if (Input.GetKeyDown("x"))
+        {
+            //TEST_AddCitizens(1000);
+            //TEST_PrepareForExpeditions();
+            GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
+        }
+        if (Input.GetKeyDown("c"))
+        {
+            GivePuzzleParts(50);
+        }
+        if (Input.GetKeyDown("n"))
+        {
+            AddPopulation(5000);
+        }
     }
 
     private void ReplaceMaterials(GameObject g)
@@ -182,6 +196,138 @@ public class TestMaster : MonoBehaviour
             var pos = Vector3.up * facingObj.position.y;
             facingObj.LookAt(pos);
         }
+    }
+
+    public static void CreateCubeFromVertices(Vector3 pos, Material mat)
+    {
+        var m = new Mesh();
+        m.vertices = new Vector3[] { Vector3.zero, Vector3.forward, new Vector3(1, 0, 1), Vector3.right, new Vector3(1, 1, 0), Vector3.one, new Vector3(0, 1, 1), Vector3.up };
+        m.triangles = new int[] { 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 7, 4, 0, 1, 6, 0, 6, 7, 1, 5, 6, 1, 2, 5, 2, 4, 5, 2, 3, 4, 7, 6, 5, 7, 5, 4 };
+        var g = new GameObject();
+        var mf = g.AddComponent<MeshFilter>();
+        mf.sharedMesh = m;
+        var mr = g.AddComponent<MeshRenderer>();
+        mr.sharedMaterial = mat;
+        g.transform.position = pos;
+    }
+    public static void CreateCubePrimitive(Vector3 pos)
+    {
+        var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        g.transform.position = pos;
+    }
+    public static void RepairGameMaster()
+    {
+        if (GameMaster.realMaster == null)
+        {
+            var g = new GameObject("gameMaster");
+            g.AddComponent<GameMaster>();
+        }
+    }
+
+    public static void GivePuzzleParts(int count)
+    {
+        var k = Knowledge.GetCurrent();
+        k.AddPuzzlePart(Knowledge.GREENCOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.BLUECOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.REDCOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.WHITECOLOR_CODE, count);
+        k.AddPuzzlePart(Knowledge.CYANCOLOR_CODE, count);
+    }
+    public static void AddCitizens(int count)
+    {
+        var cc = GameMaster.realMaster.colonyController;
+        if (cc != null)
+        {
+            cc.storage.AddResource(ResourceType.Food, 3000);
+            cc.AddCitizens(count);
+        }
+    }
+    public static void PrepareForExpeditions()
+    {
+        var rm = GameMaster.realMaster;
+        var colonyController = rm.colonyController;
+        var mainChunk = rm.mainChunk;
+        if (colonyController == null) return;
+        var planes = mainChunk.GetUnoccupiedSurfaces(8);
+        planes[0]?.CreateStructure(Structure.RECRUITING_CENTER_4_ID);
+        var c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Mony Mony");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Black Rabbit");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Bonemaker");
+        c = Crew.CreateNewCrew(colonyController, Crew.MAX_CREWS_COUNT); c.Rename("Eiffiel Dungeon");
+        planes[1]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[2]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[3]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[4]?.CreateStructure(Structure.QUANTUM_TRANSMITTER_4_ID);
+        planes[5]?.CreateStructure(Structure.EXPEDITION_CORPUS_4_ID);
+        planes[6]?.CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
+        planes[7]?.CreateStructure(Structure.STORAGE_BLOCK_ID);
+        colonyController.storage.AddResource(ResourceType.Fuel, 25000);
+        colonyController.storage.AddResource(ResourceType.Supplies, 2000);
+
+        var pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        var p = pf.plane;
+        Structure s;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        pf = mainChunk.GetUnoccupiedEdgePosition(false, false);
+        p = pf.plane;
+        if (p != null)
+        {
+            s = p.CreateStructure(Structure.SHUTTLE_HANGAR_4_ID);
+            if (s != null)
+            {
+                s.SetModelRotation(pf.faceIndex * 2);
+                (s as Hangar).FORCED_MakeShuttle();
+            }
+        }
+        var globalMap = rm.globalMap;
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+        globalMap.FORCED_CreatePointOfInterest();
+    }
+    public static void GiveRoutePoints(Knowledge.ResearchRoute rr, int count)
+    {
+        Knowledge.GetCurrent()?.AddResearchPoints(rr, count);
+    }
+    public static void AddPopulation(int count)
+    {
+        GameMaster.realMaster?.colonyController?.AddCitizens(count);
     }
 }
 
