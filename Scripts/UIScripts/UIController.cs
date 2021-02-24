@@ -27,6 +27,7 @@ public class UIController : MonoBehaviour
     private KnowledgeTabUI knowledgeTabUI;
     private EditorUI editorCanvasController;
     private EndPanelController endPanelController;
+    private GameObject specialElementsHolder;
 
     public UIMode currentMode { get; private set; }
     private UIMode previousMode = UIMode.Standart;
@@ -93,6 +94,17 @@ public class UIController : MonoBehaviour
             endPanelController = Instantiate(Resources.Load<GameObject>("UIPrefs/endPanel"), transform).GetComponent<EndPanelController>();
         }
         return endPanelController;
+    }
+
+    public void AddToSpecialCanvas(Transform t)
+    {
+        if (specialElementsHolder == null)
+        {
+            specialElementsHolder = new GameObject("special canvas holder");
+            specialElementsHolder.AddComponent<RectTransform>();
+            specialElementsHolder.transform.parent = GetMainCanvasController().GetMainCanvasTransform();
+        }
+        t.parent = specialElementsHolder.transform;
     }
 
     private void Update()

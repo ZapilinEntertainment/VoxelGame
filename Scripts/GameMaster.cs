@@ -298,7 +298,22 @@ public sealed class GameMaster : MonoBehaviour
             case GameMode.Scenario:
                 {
                     uicontroller.ChangeUIMode(UIMode.Standart, true);
-                    LoadTerrain(SaveSystemUI.GetTerrainSaveFullpath(startSettings.GetSavename()));
+                    switch (startSettings.GetScenarioType())
+                    {
+                        case ScenarioType.Embedded:
+                            {
+                                switch ((EmbeddedScenarioType)startSettings.GetSecondSubIndex())
+                                {
+                                    case EmbeddedScenarioType.Tutorial:
+                                        {
+                                            LoadTerrain(SaveSystemUI.GetTerrainSaveFullpath(startSettings.GetSavename()));
+                                            TutorialUI.Initialize();
+                                            break;
+                                        }
+                                }
+                                break;
+                            }
+                    }                    
                     activateEventTracker = true;
                     break;
                 }

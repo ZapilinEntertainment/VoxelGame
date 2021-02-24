@@ -809,6 +809,11 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         leftPanel.SetActive(false);
         storagePanel.SetActive(false);
     }
+    public RectTransform SYSTEM_GetQuestButton()
+    {
+        return leftPanel.transform.GetChild(2).GetComponent<RectTransform>();
+    }
+
     public void ActivateLeftPanel()
     {
         leftPanel.SetActive(true);
@@ -931,7 +936,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
             storagePositionsPrepared = true;
         }
         Storage st = colony.storage;
-        if (st.totalVolume == 0)
+        if (st == null || st.totalVolume == 0)
         {
             //empty storage
             for (i = 0; i < storagePanelContent.childCount + 1; i++)

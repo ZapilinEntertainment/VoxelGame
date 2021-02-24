@@ -3380,6 +3380,7 @@ MonoBehaviour:
   - {fileID: 224670865043791670}
   questInfoPanel: {fileID: 1142217719260726}
   closeButton: {fileID: 1228239165436778}
+  questDropButton: {fileID: 1207849282091542}
   stepsContainer: {fileID: 224409284522739284}
   questName: {fileID: 114189860773178356}
   questDescription: {fileID: 114167918329487060}

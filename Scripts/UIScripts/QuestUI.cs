@@ -9,7 +9,7 @@ public sealed class QuestUI : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
-    [SerializeField] GameObject questInfoPanel, closeButton; // fiti
+    [SerializeField] GameObject questInfoPanel, closeButton, questDropButton; // fiti
     [SerializeField] RectTransform stepsContainer;
     [SerializeField] Text questName, questDescription, rewardText; // fiti  
     [SerializeField] RawImage newQuestMarker;
@@ -209,6 +209,7 @@ public sealed class QuestUI : MonoBehaviour
         questDescription.text = q.description;
         (questDescription.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, questDescription.rectTransform.rect.height);
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
+        questDropButton.SetActive(q.type != QuestType.Tutorial);
         PrepareStepsList(q);
     }
     private void PrepareStepsList(Quest q)
@@ -421,7 +422,27 @@ public sealed class QuestUI : MonoBehaviour
         {
             AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.AlreadyHaveEndquest));
         }
+        if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
     }
+
+    private QuestSection INLINE_GetSectionForTutorial() { return QuestSection.Endgame; }
+    public void SYSTEM_NewTutorialQuest(byte subID)
+    {
+        int endIndex = (int)INLINE_GetSectionForTutorial();
+        activeQuests[endIndex] = new Quest(QuestType.Tutorial, subID);
+        questAccessMap[endIndex] = true;
+        if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
+    }
+    public Button SYSTEM_GetCloseButton()
+    {
+        return closeButton.GetComponent<Button>();
+    }
+    public Quest GetActiveQuest()
+    {
+        if (openedQuest == (sbyte)INLINE_GetSectionForTutorial()) return activeQuests[openedQuest];
+        else return Quest.NoQuest;
+    }
+
     private void ReturnToQuestList()
     {
         if (openedQuest != -1)

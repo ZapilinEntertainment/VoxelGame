@@ -113,6 +113,11 @@ public sealed class GameStartSettings : MyObject
         }
     }
     public ChunkGenerationSettings GetChunkGenerationSettings() { return chunkGenerationSettings ?? ChunkGenerationSettings.GetDefaultSettings(); }
+    public ScenarioType GetScenarioType()
+    {
+        return subIndex0 == 255 ? ScenarioType.Unrecognised : (ScenarioType)subIndex0;
+    }
+    public byte GetSecondSubIndex() { return subIndex1; }
 
     protected override bool IsEqualNoCheck(object obj)
     {

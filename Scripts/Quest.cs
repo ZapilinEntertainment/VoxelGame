@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Total
+    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Tutorial, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte
@@ -149,6 +149,19 @@ public class Quest : MyObject
                 break;
             case QuestType.Pollen:
                 break;
+            case QuestType.Tutorial:
+                {
+                    switch ((TutorialUI.TutorialStep)subIndex)
+                    {
+                        case TutorialUI.TutorialStep.QuestShown:
+                            {
+                                reward = 0f;
+                                stepsCount = 1;
+                                break;
+                            }
+                    }
+                    break;
+                }
         }
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
@@ -1009,7 +1022,7 @@ public class Quest : MyObject
     public void MakeQuestCompleted()
     {
         if (completed) return;
-        AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
+        if (type != QuestType.Tutorial) AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
         if (type == QuestType.Endgame)
