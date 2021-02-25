@@ -654,6 +654,10 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         }
     }
     // =====================  AUXILIARY METHODS
+    public static Texture GetMapMarkersTexture()
+    {
+        return Resources.Load<Texture>("Textures/mapMarkers");
+    }
     public static Rect GetMarkerRect(MapMarkerType mtype)
     {
         float p = 0.25f;

@@ -52,7 +52,7 @@ public class Quest : MyObject
     protected override bool IsEqualNoCheck(object obj)
     {
         var q = (Quest)obj;
-        return type == q.type & subIndex == q.subIndex;
+        return type == q.type && subIndex == q.subIndex && completed == q.completed && stepsFinished == q.stepsFinished;
     }
 
     public static void SetCompletenessMask(uint[] m)
@@ -154,6 +154,12 @@ public class Quest : MyObject
                     switch ((TutorialUI.TutorialStep)subIndex)
                     {
                         case TutorialUI.TutorialStep.QuestShown:
+                            {
+                                reward = 0f;
+                                stepsCount = 1;
+                                break;
+                            }
+                        case TutorialUI.TutorialStep.CameraMovement:
                             {
                                 reward = 0f;
                                 stepsCount = 1;
@@ -1063,7 +1069,8 @@ public class Quest : MyObject
         if (complementQuests.Count > 0)
         {
             ColonyController colony = GameMaster.realMaster.colonyController;
-            int lvl = colony.hq.level;
+            int lvl = colony.hq?.level ?? -1;
+            if (lvl == -1) return Quest.NoQuest;
             List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
             var resources = colony.storage.standartResources;
 
@@ -1267,7 +1274,14 @@ public class Quest : MyObject
                 icon = UIController.iconsTexture;
                 iconRect = UIController.GetIconUVRect(Icons.PollenRoute);
                 break;
-            default: return;
+            case QuestType.Tutorial:
+                icon = GlobalMapCanvasController.GetMapMarkersTexture();
+                iconRect = GlobalMapCanvasController.GetMarkerRect(MapMarkerType.QuestMark);
+                break;
+            default:
+                icon = UIController.GetCurrent()?.GetMainCanvasController()?.buildingsIcons;
+                iconRect = Structure.GetTextureRect(Structure.UNKNOWN_ID);
+                break;
         }
         if (icon != null)
         {

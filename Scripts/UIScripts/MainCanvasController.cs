@@ -813,6 +813,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     {
         return leftPanel.transform.GetChild(2).GetComponent<RectTransform>();
     }
+    public RectTransform SYSTEM_GetLayerCutButton()
+    {
+        return layerCutToggleButton.rectTransform;
+    }
 
     public void ActivateLeftPanel()
     {

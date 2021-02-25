@@ -19,7 +19,7 @@ public sealed class UISurfacePanelController : UIObserver {
 
     private int selectedBuildingButton = -1, lastStorageStatus = -1;
     private Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
-    private int selectedStructureID = Structure.EMPTY_ID;
+    private int selectedStructureID = Structure.UNKNOWN_ID;
 	private byte constructingLevel = 1;
 
     private SurfacePanelMode mode;
@@ -171,7 +171,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 }
             case SurfacePanelMode.Build:
                 {
-                    if (selectedStructureID != Structure.EMPTY_ID)
+                    if (selectedStructureID != Structure.UNKNOWN_ID)
                     {
                         switch (buildingCreateMode)
                         {
@@ -575,7 +575,7 @@ public sealed class UISurfacePanelController : UIObserver {
             if (selectedBuildingButton != -1) {
                 buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
 				selectedBuildingButton = -1;
-                selectedStructureID = Structure.EMPTY_ID;
+                selectedStructureID = Structure.UNKNOWN_ID;
 			}
             mycanvas.DropActiveWindow(ActiveWindowMode.BuildPanel);
 		}
@@ -674,7 +674,7 @@ public sealed class UISurfacePanelController : UIObserver {
         constructingPlaneMaterial.SetTexture("_MainTex", observingSurface.FORCED_GetExtension().GetMapTexture());
         mycanvas.interceptingConstructPlaneID = constructionPlane.GetInstanceID();
         constructionPlane.SetActive(true);
-        if (selectedStructureID != Structure.EMPTY_ID) FollowingCamera.main.CameraRotationBlock(false);
+        if (selectedStructureID != Structure.UNKNOWN_ID) FollowingCamera.main.CameraRotationBlock(false);
     }
 
     public void ReturnButton()
@@ -788,7 +788,7 @@ public sealed class UISurfacePanelController : UIObserver {
 	}
     void DeselectBuildingButton()
     {
-        selectedStructureID = Structure.EMPTY_ID;
+        selectedStructureID = Structure.UNKNOWN_ID;
         if (selectedBuildingButton >= 0) buildingButtonsContainer.GetChild(selectedBuildingButton).GetComponent<Image>().overrideSprite = null;
         selectedBuildingButton = -1;
         infoPanel.SetActive(false);
@@ -883,7 +883,7 @@ public sealed class UISurfacePanelController : UIObserver {
     // public void IntersectionSubmit_No() - just deactivate the panel 
     public void ConstructingPlaneTouch(Vector3 pos)
     {
-        if (buildIntersectionSubmit.activeSelf | selectedStructureID == Structure.EMPTY_ID | observingSurface == null) return;
+        if (buildIntersectionSubmit.activeSelf | selectedStructureID == Structure.UNKNOWN_ID | observingSurface == null) return;
         Vector2 mappos = observingSurface.WorldToMapPosition(pos);
         CreateSelectedBuilding((byte)(mappos.x * PlaneExtension.INNER_RESOLUTION), (byte)(mappos.y * PlaneExtension.INNER_RESOLUTION), true);
     }

@@ -3005,17 +3005,6 @@ public static class Localization
     #region questsData
     public static void FillQuestData(Quest q)
     {
-        if (q.type == QuestType.Tutorial)
-        {
-            var empty = string.Empty;
-            string label = empty, description = empty;
-            GetTutorialInfo((TutorialUI.TutorialStep)q.subIndex, ref label, ref description);
-            q.name = label;
-            q.description = description;
-            q.steps[0] = empty;
-        }
-        else
-        {
             switch (currentLanguage)
             {
                 case Language.Russian:
@@ -3824,11 +3813,52 @@ public static class Localization
                                     }
                                     break;
                                 }
-                            default: return;
+                            case QuestType.Tutorial:
+                            {
+                                switch ((TutorialUI.TutorialStep)q.subIndex)
+                                {
+                                    case TutorialUI.TutorialStep.QuestShown:
+                                        {
+                                            q.name = "Quest System";
+                                            q.description = "Yes, right there! When you will play, you can see other quests here. Now close this window to proceed - click the small cross in the right upper corner first time to close" +
+                            " this quest description and second time to close the quests window.";
+                                            q.steps[0] = "Close quests window to proceed";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.CameraMovement:
+                                        {
+                                            q.name = "Camera movement";
+                                            q.description = "If you have keyboard: /n" +
+                                                "Use WASD to move, Ctrl to down, Space to up./n" +
+                                                "If you use touchscreen: /n" +
+                                                "Use Control Cross in the bottom left corner to move, double-arrow buttons nearby to up and down.";
+                                            q.steps[0] = "Try camera controls and then press Proceed button.";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.CameraRotation:
+                                        {
+                                            q.name = "Camera rotation";
+                                            q.description = "If you have keyboard: /n" +
+                                                "Hold middle mouse button and move the mouse/n" +
+                                                "If you use touchscreen: /n" +
+                                                "Slide through screen to rotate horizontally and vertically";
+                                            q.steps[0] = "Try camera controls and then press Proceed button.";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.CameraSlicing:
+                                        {
+                                            q.name = "Slicing";
+                                            q.description = "Use the Slice button to look through blocks. Click it second time to return to normal state.";
+                                            q.steps[0] = "Try slicing and then press Proceed button.";
+                                            break;
+                                        }
+                                }
+                                break;
+                            }
+                        default: return;
                         }
                     }
                     break;
-            }
         }
     }
     public static void GetTutorialInfo(TutorialUI.TutorialStep step, ref string label, ref string description)
@@ -3842,10 +3872,38 @@ public static class Localization
                         "advices and goals will be doubled in the quests menu for your convenience. Click on quests button after this window closes!";
                     return;
                 }
-            case TutorialUI.TutorialStep.QuestShown:
+            case TutorialUI.TutorialStep.CameraMovement:
                 {
-                    label = "Quest system";
-                    description = "Yes, right there! When you will play, you can see other quests here. Now close this window to proceed.";
+                    label = "Camera controls";
+                    if (FollowingCamera.touchscreen)
+                    {
+                        description = "Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input." +
+                            "At this moment works touchscreen input - note the controlling cross in the left bottom corner. It is using for shift camera. To up and down use the double-arrow buttons nearby. Press the Proceed butoon when you'll be ready to continue.";
+                    }
+                    else
+                    {
+                        description = "Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input." +
+                          "At this moment works keyboard input. Use standart WASD controls to shift camera, Ctrl to down and Space to up. Press the Proceed butoon when you'll be ready to continue.";
+                    }
+                    return;
+                }
+            case TutorialUI.TutorialStep.CameraRotation:
+                {
+                    label = "Camera controls";
+                    if (FollowingCamera.touchscreen)
+                    {
+                        description = "You can rotate camera just sliding your finger across the screen horizontally and vertically.";
+                    }
+                    else
+                    {
+                        description = "Rotate camera by holding middle mouse button and move the mouse itself.";
+                    }
+                    return;
+                }
+            case TutorialUI.TutorialStep.CameraSlicing:
+                {
+                    label = "Camera controls";
+                    description = "You may also need to look through blocks. You can slice terrain by using specified button. A number displays the height of current block. Click the button second time to off the slicing mode.";
                     return;
                 }
         }

@@ -108,8 +108,8 @@ public sealed class QuestUI : MonoBehaviour
             for (sbyte i = 0; i < activeQuests.Length; i++)
             {
                 Quest q = activeQuests[i];
-                if (q == Quest.NoQuest | q == Quest.AwaitingQuest) continue;
-                q.CheckQuestConditions();
+                if (q == Quest.NoQuest || q == Quest.AwaitingQuest ) continue;
+                if (q.type != QuestType.Tutorial) q.CheckQuestConditions();
                 if (openedQuest == i)
                 {
                     PrepareStepsList(q);
@@ -155,7 +155,7 @@ public sealed class QuestUI : MonoBehaviour
             if (questAccessMap[i] == true)
             {
                 Quest q = activeQuests[i];
-                if (q != Quest.NoQuest & q!= Quest.AwaitingQuest)
+                if (q != Quest.NoQuest && q!= Quest.AwaitingQuest)
                 {
                     btn.GetComponent<Button>().interactable = true;
                     Quest.SetQuestTexture(q, btn.GetComponent<Image>(), rt.GetChild(0).GetComponent<RawImage>());                    
@@ -185,7 +185,7 @@ public sealed class QuestUI : MonoBehaviour
     public void QuestButton_OpenQuest(sbyte index)
     {
         Quest q = activeQuests[index];
-        if (q == Quest.NoQuest | q == Quest.AwaitingQuest) return; // вообще-то, лишняя проверка
+        if (q == Quest.NoQuest || q == Quest.AwaitingQuest) return; // вообще-то, лишняя проверка
         openedQuest = index;
         transformingRect = questButtons[index];
         transformingRectInProgress = true;
@@ -426,22 +426,30 @@ public sealed class QuestUI : MonoBehaviour
     }
 
     private QuestSection INLINE_GetSectionForTutorial() { return QuestSection.Endgame; }
-    public void SYSTEM_NewTutorialQuest(byte subID)
+    public Quest SYSTEM_NewTutorialQuest(byte subID)
     {
         int endIndex = (int)INLINE_GetSectionForTutorial();
-        activeQuests[endIndex] = new Quest(QuestType.Tutorial, subID);
+        var q = new Quest(QuestType.Tutorial, subID);
+        activeQuests[endIndex] = q;
         questAccessMap[endIndex] = true;
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
+        return q;
+    }
+    public Button SYSTEM_GetTutorialQuestButton()
+    {
+        return questButtons[(int)INLINE_GetSectionForTutorial()].GetComponent<Button>();
     }
     public Button SYSTEM_GetCloseButton()
     {
         return closeButton.GetComponent<Button>();
     }
+
     public Quest GetActiveQuest()
     {
         if (openedQuest == (sbyte)INLINE_GetSectionForTutorial()) return activeQuests[openedQuest];
         else return Quest.NoQuest;
     }
+    public bool IsEnabled() { return GetComponent<Image>().enabled; }
 
     private void ReturnToQuestList()
     {

@@ -966,7 +966,8 @@ public sealed class Knowledge
 
     public Quest GetHelpingQuest()
     {
-        byte lvl = GameMaster.realMaster.colonyController.hq.level;
+        byte lvl = GameMaster.realMaster.colonyController.hq?.level ?? 255;
+        if (lvl == 255) return Quest.NoQuest;
         var rlist = new List<ResearchRoute>();
         for (int i =0; i < ROUTES_COUNT; i++)
         {
