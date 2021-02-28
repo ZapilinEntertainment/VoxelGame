@@ -5,8 +5,9 @@ using UnityEngine.UI;
 
 public sealed class TutorialUI : MonoBehaviour
 {
-    public enum TutorialStep: byte { Intro, QuestClicked, QuestShown, QuestsClosed, CameraMovement, CameraRotation, CameraSlicing, Landing, Interface_People, Interface_Electricity,
-    BuildWindmill, GatherLumber, BuildFarm, StoneDigging, SmelteryBuilding, RecipeExplaining, DockBuilding,
+    public enum TutorialStep: byte { Intro, QuestClicked, QuestShown, QuestsClosed, CameraMovement, CameraRotation, CameraSlicing,
+        Landing, Interface_People, Interface_Electricity,  BuildWindmill_0, BuildWindmill_1, GatherLumber, BuildFarm,
+        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining, DockBuilding,
     ImmigrationExplaining, TradeExplaining_Crystals, TradeExplaining_TradePanel, TradeExplaining_FoodBuying,
     HQ_Upgrade, OreEnrichment, CitizensNeeds, SettlementCenter_Build, SettlementCenter_Explain, Finish}
     [SerializeField] private Text hugeLabel, mainText;
@@ -18,10 +19,14 @@ public sealed class TutorialUI : MonoBehaviour
     private GraphicRaycaster grcaster;
     private Quest currentTutorialQuest;
     private float timer;
+    private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
+    public const int LUMBER_QUEST_COUNT = 100, FARM_QUEST_WORKERS_COUNT = 20, STONE_QUEST_COUNT = 250;
+    public static TutorialUI current { get; private set; }
 
     public static void Initialize()
     {
         var g = Instantiate(Resources.Load<GameObject>("UIPrefs/tutorialCanvas"));
+        current = g.GetComponent<TutorialUI>();
         UIController.GetCurrent().AddToSpecialCanvas(g.transform);
     }
 
@@ -40,7 +45,7 @@ public sealed class TutorialUI : MonoBehaviour
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
         grcaster.enabled = false;
         SetShowframe(mcc.SYSTEM_GetQuestButton());
-        ShowarrowToShowframe();
+        ShowarrowToShowframe_Left();
     }
     private void Update()
     {
@@ -50,7 +55,7 @@ public sealed class TutorialUI : MonoBehaviour
             if (timer <= 0f)
             {
                 timer = 0f;
-                if (currentStep == TutorialStep.CameraMovement | currentStep == TutorialStep.CameraRotation | currentStep == TutorialStep.CameraSlicing) outerProceedButton.SetActive(true);                
+                if (activateOuterProceedAfterTimer == true) outerProceedButton.SetActive(true);                
             }
         }
     }
@@ -61,17 +66,23 @@ public sealed class TutorialUI : MonoBehaviour
         showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
         if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
     }
-    private void ShowarrowToShowframe()
+    private void ShowarrowToShowframe_Left()
     {
+        if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
         showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
         showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
         showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
         if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
     }
-
-    public void ProceedButton()
+    private void ShowarrowToShowframe_Up()
     {
-        Debug.Log(currentStep);
+        showArrow.Rotate(Vector3.up * 90f);
+        showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
+        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
+    }
+
+    public void OKButton()
+    {
         if (adviceWindow.activeSelf) adviceWindow.SetActive(false);
         switch (currentStep)
         {
@@ -83,6 +94,45 @@ public sealed class TutorialUI : MonoBehaviour
                     currentStep++;
                     break;
                 }
+            case TutorialStep.CameraMovement:
+            case TutorialStep.CameraRotation:
+            case TutorialStep.CameraSlicing:            
+                activateOuterProceedAfterTimer = true;
+                timer = 5f;                
+                break;
+            case TutorialStep.Interface_People:
+            case TutorialStep.Interface_Electricity:
+            case TutorialStep.BuildWindmill_1:
+                ProceedButton();
+                break;
+            case TutorialStep.Landing:
+                Zeppelin.CreateNew();
+                break;
+            case TutorialStep.StoneDigging:
+                if (nextStepReady)
+                {
+                    ProceedButton();
+                }
+                break;
+        }
+        grcaster.enabled = true;
+    }
+
+    public void ProceedButton()
+    {
+        //Debug.Log(currentStep);   
+        void PrepareTutorialInfo(TutorialStep step)
+        {
+            string label = string.Empty, description = label;
+            Localization.GetTutorialInfo(step, ref label, ref description);
+            hugeLabel.text = label;
+            mainText.text = description;
+            adviceWindow.SetActive(true);
+            grcaster.enabled = false;
+            currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)step);
+        }
+        switch (currentStep)
+        {           
             case TutorialStep.QuestClicked:
                 {
                     showArrow.gameObject.SetActive(false);
@@ -114,52 +164,175 @@ public sealed class TutorialUI : MonoBehaviour
                         qui.SYSTEM_GetCloseButton().onClick.RemoveListener(this.ProceedButton);
                         currentStep++;
                         //
-                        string label = string.Empty, description = label;
-                        Localization.GetTutorialInfo(TutorialStep.CameraMovement, ref label, ref description);
-                        hugeLabel.text = label;
-                        mainText.text = description;
+                        PrepareTutorialInfo(TutorialStep.CameraMovement);
                         currentTutorialQuest = qui.SYSTEM_NewTutorialQuest((byte)TutorialStep.CameraMovement);
-                        timer = 5f;
-                        adviceWindow.SetActive(true);
                     }
                     break;
                 }
             case TutorialStep.CameraMovement:
                 {
                     currentStep++;
-                    string label = string.Empty, description = label;
-                    Localization.GetTutorialInfo(TutorialStep.CameraRotation, ref label, ref description);
-                    hugeLabel.text = label;
-                    mainText.text = description;
+                    PrepareTutorialInfo(TutorialStep.CameraRotation);
                     currentTutorialQuest.MakeQuestCompleted();
                     currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.CameraRotation);
-                    timer = 5f;
-                    adviceWindow.SetActive(true);
+                    outerProceedButton.SetActive(false);
                     break;
                 }
             case TutorialStep.CameraRotation:
                 {
                     currentStep++;
-                    string label = string.Empty, description = label;
-                    Localization.GetTutorialInfo(TutorialStep.CameraSlicing, ref label, ref description);
-                    hugeLabel.text = label;
-                    mainText.text = description;
+                    PrepareTutorialInfo(TutorialStep.CameraSlicing);
                     currentTutorialQuest.MakeQuestCompleted();
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.CameraSlicing);
+
                     outerProceedButton.SetActive(false);
-                    timer = 0f;
                     SetShowframe(mcc.SYSTEM_GetLayerCutButton());
-                    ShowarrowToShowframe();
-                    adviceWindow.SetActive(true);
+                    ShowarrowToShowframe_Left();                       
                     break;
                 }
             case TutorialStep.CameraSlicing:
-                {
-                    currentStep++;
+                {                    
                     showframe.gameObject.SetActive(false);
                     showArrow.gameObject.SetActive(false);
+                    outerProceedButton.SetActive(false);
+                    currentTutorialQuest.MakeQuestCompleted();
+                    timer = 0f;
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.Landing);
+                    GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.StructureCheck;
                     break;
                 }
+            case TutorialStep.Landing:
+                {
+                    currentStep++;
+                    currentTutorialQuest.MakeQuestCompleted();
+                    currentTutorialQuest = null;
+                    //
+                    PrepareTutorialInfo(TutorialStep.Interface_People);
+                    SetShowframe(mcc.SYSTEM_GetCitizenString());
+                    ShowarrowToShowframe_Up();                    
+                    break;
+                }
+            case TutorialStep.Interface_People:
+                {
+                    currentStep++;
+                    PrepareTutorialInfo(TutorialStep.Interface_Electricity);
+                    SetShowframe(mcc.SYSTEM_GetEnergyString());
+                    ShowarrowToShowframe_Up();
+                    break;
+                }
+            case TutorialStep.Interface_Electricity:
+                {                    
+                    showframe.gameObject.SetActive(false);
+                    showArrow.gameObject.SetActive(false);
+                    outerProceedButton.SetActive(false);
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.BuildWindmill_0);
+                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.BuildWindmill_0);
+                    break;
+                }
+            case TutorialStep.BuildWindmill_0:
+                {
+                    currentTutorialQuest.MakeQuestCompleted();
+                    currentTutorialQuest = null;
+                    currentStep++;
+                    PrepareTutorialInfo(TutorialStep.BuildWindmill_1);
+                    break;
+                }
+            case TutorialStep.BuildWindmill_1:
+                {
+                    currentStep++;
+                    //
+                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.GatherLumber);
+                    PrepareTutorialInfo(TutorialStep.GatherLumber);
+                    break;
+                }
+            case TutorialStep.GatherLumber:
+                {
+                    currentStep++;
+                    currentTutorialQuest = null;
+                    //
+                    PrepareTutorialInfo(TutorialStep.BuildFarm);
+                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.BuildFarm);
+                    break;
+                }
+            case TutorialStep.BuildFarm:
+                {
+                    currentStep++;
+                    currentTutorialQuest = null;
+                    //
+                    PrepareTutorialInfo(TutorialStep.StoneDigging);
+                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.StoneDigging);
+                    break;
+                }
+            case TutorialStep.StoneDigging:
+                {
+                    currentStep++;
+                    currentTutorialQuest = null;
+                    //
+                    PrepareTutorialInfo(TutorialStep.StorageLook);
+                    if (!mcc.IsStorageUIActive())
+                    {
+                        var sb = mcc.SYSTEM_GetStorageButton();
+                        SetShowframe(sb);
+                        ShowarrowToShowframe_Left();
+                        sb.GetComponent<Button>().onClick.AddListener(this.ProceedButton);
+                        nextStepReady = false;
+                    }
+                    else nextStepReady = true;
+                    break;
+                }
+            case TutorialStep.StorageLook:
+                {
+                    showArrow.gameObject.SetActive(false);
+                    showframe.gameObject.SetActive(false);
+                    if (!nextStepReady)
+                    {
+                        mcc.SYSTEM_GetStorageButton().GetComponent<Button>().onClick.RemoveListener(this.ProceedButton);
+                    }
+                    else nextStepReady = false;
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.SmelteryBuilding);
+                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.SmelteryBuilding);
+                    break;
+                }
+        }
+    }
+
+    private void StructureCheck(Structure s)
+    {
+        switch (currentStep)
+        {
+            case TutorialStep.Landing:
+                if (s is HeadQuarters)
+                {
+                    ProceedButton();
+                    return;
+                }
+                break;
+            case TutorialStep.BuildWindmill_0:
+                {
+                    if (s is WindGenerator)
+                    {
+                        ProceedButton();
+                        return;
+                    }
+                    break;
+                }
+        }
+    }
+    public void QuestCompleted(byte subIndex)
+    {
+        var ts = (TutorialStep)subIndex;
+        switch (ts)
+        {
+            case TutorialStep.GatherLumber:
+            case TutorialStep.BuildFarm:
+            case TutorialStep.StoneDigging:
+                ProceedButton();
+                break;
         }
     }
 }

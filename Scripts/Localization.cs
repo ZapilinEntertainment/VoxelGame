@@ -3821,16 +3821,16 @@ public static class Localization
                                         {
                                             q.name = "Quest System";
                                             q.description = "Yes, right there! When you will play, you can see other quests here. Now close this window to proceed - click the small cross in the right upper corner first time to close" +
-                            " this quest description and second time to close the quests window.";
+                            " this quest description and second time to close the quests window. You can return here anytime in this tutorial to read the current step instruction again.";
                                             q.steps[0] = "Close quests window to proceed";
                                             break;
                                         }
                                     case TutorialUI.TutorialStep.CameraMovement:
                                         {
                                             q.name = "Camera movement";
-                                            q.description = "If you have keyboard: /n" +
-                                                "Use WASD to move, Ctrl to down, Space to up./n" +
-                                                "If you use touchscreen: /n" +
+                                            q.description = "If you have keyboard: \n" +
+                                                "Use WASD to move, Ctrl to down, Space to up.\n" +
+                                                "If you use touchscreen: \n" +
                                                 "Use Control Cross in the bottom left corner to move, double-arrow buttons nearby to up and down.";
                                             q.steps[0] = "Try camera controls and then press Proceed button.";
                                             break;
@@ -3838,9 +3838,9 @@ public static class Localization
                                     case TutorialUI.TutorialStep.CameraRotation:
                                         {
                                             q.name = "Camera rotation";
-                                            q.description = "If you have keyboard: /n" +
-                                                "Hold middle mouse button and move the mouse/n" +
-                                                "If you use touchscreen: /n" +
+                                            q.description = "If you have keyboard: \n" +
+                                                "Hold middle mouse button and move the mouse\n" +
+                                                "If you use touchscreen: \n" +
                                                 "Slide through screen to rotate horizontally and vertically";
                                             q.steps[0] = "Try camera controls and then press Proceed button.";
                                             break;
@@ -3850,6 +3850,50 @@ public static class Localization
                                             q.name = "Slicing";
                                             q.description = "Use the Slice button to look through blocks. Click it second time to return to normal state.";
                                             q.steps[0] = "Try slicing and then press Proceed button.";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.Landing:
+                                        {
+                                            q.name = "Landing";
+                                            q.description = "Select a three-blocks surface and then click on Land button.";
+                                            q.steps[0] = "Colony founded";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.BuildWindmill_0:
+                                        {
+                                            q.name = "Build Stream generator";
+                                            q.description = "Select highest surface possible, then click on BUILD button at right panel. In the list find " +
+                                                 "Stream Generator and build it.";
+                                            q.steps[0] = "Stream generator built ";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.GatherLumber:
+                                        {
+                                            q.name = "Gather lumber";
+                                            q.description = "Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the " +
+                        "plus buttons in the right part of the appeared worksite window.";
+                                            q.steps[0] = "Lumber collected ";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.BuildFarm:
+                                        {
+                                            q.name = "Build farm";
+                                            q.description = "Build farm and assign no less than " + TutorialUI.FARM_QUEST_WORKERS_COUNT.ToString() +" workers.";
+                                            q.steps[0] = "Farm built";
+                                            q.steps[1] = "Workers assigned";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.StoneDigging:
+                                        {
+                                            q.name = "Stone digging";
+                                            q.description = "Click on any side of a stone block and the press the DIG button";
+                                            q.steps[0] = "Stone collected";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.SmelteryBuilding:
+                                        {
+                                            q.name = "Smeltery building";
+                                            q.description = "Build a Smeltery. ";
                                             break;
                                         }
                                 }
@@ -3883,7 +3927,7 @@ public static class Localization
                     else
                     {
                         description = "Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input." +
-                          "At this moment works keyboard input. Use standart WASD controls to shift camera, Ctrl to down and Space to up. Press the Proceed butoon when you'll be ready to continue.";
+                          "At this moment works keyboard input. Use standart WASD controls to shift camera, Ctrl to down and Space to up. Press the Proceed button when you'll be ready to continue.";
                     }
                     return;
                 }
@@ -3905,6 +3949,73 @@ public static class Localization
                     label = "Camera controls";
                     description = "You may also need to look through blocks. You can slice terrain by using specified button. A number displays the height of current block. Click the button second time to off the slicing mode.";
                     return;
+                }
+            case TutorialUI.TutorialStep.Landing:
+                {
+                    label = "First landing";
+                    description = "And now we will found a new colony on this island. At first, you shall select a place to land your colony's zeppelin. " +
+                        "Where it lands will be a main colony building, a storage building, and a residential area. Click on selected surface and then press Land button.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.Interface_People:
+                {
+                    label = "Interface";
+                    description = "Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: " +
+                        "free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.Interface_Electricity:
+                {
+                    label = "Interface";
+                    description = "This values displays Power situation. They are power stored / power capacity / power surplus. All buildings require power supply, and it will be not enough, some of your structures go malfunction." +
+                        " Power generators and power capacitors marked in buildings list with a small lighting icon.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.BuildWindmill_0:
+                {
+                    label = "Electricity producing";
+                    description = "So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. In the list find " +
+                        "Stream Generator and build it.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.BuildWindmill_1:
+                {
+                    label = "Electricity producing";
+                    description = "Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as" +
+                        " high as possible.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.GatherLumber:
+                {
+                    label = "Gather resources";
+                    description = "After had constructed the power generator, you shall build a food source for colonists. But start resources as for Stream Generator not contain enough raw materials, " +
+                        "because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the " +
+                        "plus buttons in the right part of the appeared worksite window.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.BuildFarm:
+                {
+                    label = "Farm construction";
+                    description = "Now, using collected lumber, build a farm and assign at least " + TutorialUI.FARM_QUEST_WORKERS_COUNT.ToString() + " workers on it. Note that farm cannot be built on stone surfaces.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.StoneDigging:
+                {
+                    label = "Farm construction completed";
+                    description = "Good, the farm is now working! After lumber and food we shall develop underground deposits. Select any side of a stone blocks and click the DIG button.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.StorageLook:
+                {
+                    label = "Storage system";
+                    description = "Rocks, drilled by your colonist, consist not only of stone, but a different ores too. Click on the Storage Button to see all of your colony's resources. Click again to close it after." ;
+                    break;
+                }
+            case TutorialUI.TutorialStep.SmelteryBuilding:
+                {
+                    label = "Ores";
+                    description = "Not all resources, with an Ores word. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!";
+                    break;
                 }
         }
     }

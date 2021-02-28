@@ -109,7 +109,7 @@ public sealed class QuestUI : MonoBehaviour
             {
                 Quest q = activeQuests[i];
                 if (q == Quest.NoQuest || q == Quest.AwaitingQuest ) continue;
-                if (q.type != QuestType.Tutorial) q.CheckQuestConditions();
+                q.CheckQuestConditions();
                 if (openedQuest == i)
                 {
                     PrepareStepsList(q);

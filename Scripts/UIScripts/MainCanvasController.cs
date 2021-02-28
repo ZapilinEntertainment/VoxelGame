@@ -817,6 +817,22 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     {
         return layerCutToggleButton.rectTransform;
     }
+    public RectTransform SYSTEM_GetCitizenString()
+    {
+        return citizenString.rectTransform;
+    }
+    public RectTransform SYSTEM_GetEnergyString()
+    {
+        return energyString.rectTransform;
+    }
+    public RectTransform SYSTEM_GetStorageButton()
+    {
+        return storageToggleButton.rectTransform;
+    }
+    public bool IsStorageUIActive()
+    {
+        return storagePanel.activeSelf;
+    }
 
     public void ActivateLeftPanel()
     {

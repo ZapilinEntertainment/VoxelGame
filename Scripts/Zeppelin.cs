@@ -20,6 +20,11 @@ public sealed class Zeppelin : MonoBehaviour {
     private LineRenderer lineDrawer;
     private MainCanvasController mainCanvas;
 
+    public static void CreateNew()
+    {
+        Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
+    }
+
     void Start() {
         float x = Random.value * 360;
         float cs = Chunk.chunkSize / 2;
@@ -64,26 +69,30 @@ public sealed class Zeppelin : MonoBehaviour {
                 {
                     destroyed = true;
                     //hq
-                    Structure hq = HeadQuarters.GetHQ(1);
+                    Structure hq = HeadQuarters.GetHQ(1), storage = null, setCenter = null;
                     //storage
                     if (landingByZAxis == true)
                     {
                         hq.SetModelRotation(0);
                         hq.SetBasement(landingSurface, PixelPosByte.zero);
                         var p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockForward());
-                        p2.CreateStructure(Structure.STORAGE_0_ID);
+                        storage = p2.CreateStructure(Structure.STORAGE_0_ID);
                         p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockBack());
-                        p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
+                        setCenter = p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
                     }
                     else
                     {
                         hq.SetModelRotation(2);
                         hq.SetBasement(landingSurface, PixelPosByte.zero);
                         var p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockRight());
-                        p2.CreateStructure(Structure.STORAGE_0_ID);
+                        storage = p2.CreateStructure(Structure.STORAGE_0_ID);
                         p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockLeft());
-                        p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
+                        setCenter = p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
                     }
+                    var et = GameMaster.realMaster.eventTracker;
+                    et.BuildingConstructed(hq);
+                    if (storage != null) et.BuildingConstructed(storage);
+                    if (setCenter != null) et.BuildingConstructed(setCenter);
                     
                     GameMaster.realMaster.SetStartResources();
                     PoolMaster.current.BuildSplash(transform.position);

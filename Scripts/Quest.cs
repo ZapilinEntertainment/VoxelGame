@@ -65,6 +65,7 @@ public class Quest : MyObject
         type = i_type;
         subIndex = subID;
         byte stepsCount = 1;
+        reward = 0f;
         switch (i_type)
         {
             case QuestType.Progress:
@@ -153,18 +154,9 @@ public class Quest : MyObject
                 {
                     switch ((TutorialUI.TutorialStep)subIndex)
                     {
-                        case TutorialUI.TutorialStep.QuestShown:
-                            {
-                                reward = 0f;
-                                stepsCount = 1;
-                                break;
-                            }
-                        case TutorialUI.TutorialStep.CameraMovement:
-                            {
-                                reward = 0f;
-                                stepsCount = 1;
-                                break;
-                            }
+                        case TutorialUI.TutorialStep.BuildFarm:
+                            stepsCount = 2;
+                            break;
                     }
                     break;
                 }
@@ -1022,6 +1014,54 @@ public class Quest : MyObject
                     }
                         break;
                 }
+            case QuestType.Tutorial:
+                {
+                    switch ((TutorialUI.TutorialStep)subIndex)
+                    {
+                        case TutorialUI.TutorialStep.GatherLumber:
+                            {
+                                int stCount = (int)colony.storage.standartResources[ResourceType.LUMBER_ID];
+                                stepsAddInfo[0] = stCount.ToString() + " / " + TutorialUI.LUMBER_QUEST_COUNT.ToString();
+                                if (stCount >= TutorialUI.LUMBER_QUEST_COUNT) MakeQuestCompleted();
+                                break;
+                            }
+                        case TutorialUI.TutorialStep.BuildFarm:
+                            {
+                                var farms = colony.GetBuildings<Farm>();
+                                if (farms.Count > 0)
+                                {
+                                    stepsFinished[0] = true;
+                                    int maxWorkers = 0;
+                                    foreach (var f in farms)
+                                    {
+                                        if (f.workersCount > maxWorkers) maxWorkers = f.workersCount;
+                                    }
+                                    stepsAddInfo[1] = maxWorkers.ToString() + " / " + TutorialUI.FARM_QUEST_WORKERS_COUNT.ToString();
+                                    if (maxWorkers >= TutorialUI.FARM_QUEST_WORKERS_COUNT)
+                                    {
+                                        stepsFinished[1] = true;
+                                        MakeQuestCompleted();
+                                    }
+                                    else stepsFinished[1] = false;
+                                }
+                                else
+                                {
+                                    stepsFinished[0] = false;
+                                    stepsFinished[1] = false;
+                                    stepsAddInfo[1] = "-";
+                                }
+                                break;
+                            }
+                        case TutorialUI.TutorialStep.StoneDigging:
+                            {
+                                int stCount = (int)colony.storage.standartResources[ResourceType.STONE_ID];
+                                stepsAddInfo[0] = stCount.ToString() + " / " + TutorialUI.STONE_QUEST_COUNT.ToString();
+                                if (stCount >= TutorialUI.STONE_QUEST_COUNT) MakeQuestCompleted();
+                                break;
+                            }
+                    }
+                    break;
+                }
         }
     }   
 
@@ -1029,6 +1069,10 @@ public class Quest : MyObject
     {
         if (completed) return;
         if (type != QuestType.Tutorial) AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
+        else
+        {
+            TutorialUI.current.QuestCompleted(subIndex);
+        }
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
         if (type == QuestType.Endgame)

@@ -247,7 +247,7 @@ public sealed class GameMaster : MonoBehaviour
                     {
                         case StartFoundingType.Zeppelin:
                             {
-                                Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));
+                                Zeppelin.CreateNew();
                                 AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SetLandingPoint));
                                 break;
                             }
