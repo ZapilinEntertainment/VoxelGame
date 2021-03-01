@@ -275,6 +275,11 @@ public sealed class UISurfacePanelController : UIObserver {
 
     void CheckGatherButton()
     {
+        if (observingSurface == null)
+        {
+            SelfShutOff();
+            return;
+        }
         Worksite w = colony.GetWorksite(observingSurface) as GatherSite;
         if ( w is GatherSite )
         {
@@ -586,6 +591,11 @@ public sealed class UISurfacePanelController : UIObserver {
         }
 	}
 	void SetActionPanelStatus ( bool working ) {
+        if (observingSurface == null)
+        {
+            SelfShutOff();
+            return;
+        }
 		buildButton.gameObject.SetActive( working  );
 		digButton.gameObject.SetActive( working  );
         gatherButton.gameObject.SetActive(working);
@@ -846,7 +856,7 @@ public sealed class UISurfacePanelController : UIObserver {
                 //if (!(s is Dock) & !(s is Hangar)) s.SetModelRotation(rt);
                 PoolMaster.current.BuildSplash(s.transform.position);
                 GameMaster.realMaster.eventTracker?.BuildingConstructed(s);
-                if (observingSurface.fulfillStatus != FullfillStatus.Empty)
+                if (observingSurface != null && observingSurface.fulfillStatus != FullfillStatus.Empty)
                 {
                     if (constructionPlane.activeSelf)
                     {
@@ -971,6 +981,12 @@ public sealed class UISurfacePanelController : UIObserver {
 
         innerBuildButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Build);
         returnButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Return);
+    }
+
+    protected override void OnDisable()
+    {
+        observingSurface = null;
+        base.OnDisable();
     }
 
     new private void OnDestroy()

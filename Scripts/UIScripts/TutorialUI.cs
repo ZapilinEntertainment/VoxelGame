@@ -7,9 +7,7 @@ public sealed class TutorialUI : MonoBehaviour
 {
     public enum TutorialStep: byte { Intro, QuestClicked, QuestShown, QuestsClosed, CameraMovement, CameraRotation, CameraSlicing,
         Landing, Interface_People, Interface_Electricity,  BuildWindmill_0, BuildWindmill_1, GatherLumber, BuildFarm,
-        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining, DockBuilding,
-    ImmigrationExplaining, TradeExplaining_Crystals, TradeExplaining_TradePanel, TradeExplaining_FoodBuying,
-    HQ_Upgrade, OreEnrichment, CitizensNeeds, SettlementCenter_Build, SettlementCenter_Explain, Finish}
+        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining_A, RecipeExplaining_B, DockBuilding}
     [SerializeField] private Text hugeLabel, mainText;
     [SerializeField] private GameObject adviceWindow, outerProceedButton;
     [SerializeField] private RectTransform showframe, showArrow;
@@ -18,10 +16,12 @@ public sealed class TutorialUI : MonoBehaviour
     private MainCanvasController mcc;
     private GraphicRaycaster grcaster;
     private Quest currentTutorialQuest;
+    private Factory observingFactory;
     private float timer;
     private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
-    public const int LUMBER_QUEST_COUNT = 100, FARM_QUEST_WORKERS_COUNT = 20, STONE_QUEST_COUNT = 250;
+    public const int LUMBER_QUEST_COUNT = 200, FARM_QUEST_WORKERS_COUNT = 20, STONE_QUEST_COUNT = 250;
     public static TutorialUI current { get; private set; }
+
 
     public static void Initialize()
     {
@@ -41,7 +41,7 @@ public sealed class TutorialUI : MonoBehaviour
         GameMaster.realMaster.PrepareColonyController(true);
         uicontroller = UIController.GetCurrent();
         mcc = uicontroller.GetMainCanvasController();
-        //
+        // 
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
         grcaster.enabled = false;
         SetShowframe(mcc.SYSTEM_GetQuestButton());
@@ -98,7 +98,7 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.CameraRotation:
             case TutorialStep.CameraSlicing:            
                 activateOuterProceedAfterTimer = true;
-                timer = 5f;                
+                timer = 1f;                
                 break;
             case TutorialStep.Interface_People:
             case TutorialStep.Interface_Electricity:
@@ -114,6 +114,16 @@ public sealed class TutorialUI : MonoBehaviour
                     ProceedButton();
                 }
                 break;
+            case TutorialStep.RecipeExplaining_A:
+                {
+                    observingFactory = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
+                    mcc.Select(observingFactory);
+                    var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
+                    SetShowframe(dd.GetComponent<RectTransform>());
+                    dd.onValueChanged.AddListener(this.RecipeChanged);
+                    break;
+                }
+               
         }
         grcaster.enabled = true;
     }
@@ -131,6 +141,11 @@ public sealed class TutorialUI : MonoBehaviour
             grcaster.enabled = false;
             currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)step);
         }
+        Quest StartQuest(TutorialStep ts)
+        {
+            return mcc.questUI.SYSTEM_NewTutorialQuest((byte)ts);
+        }
+
         switch (currentStep)
         {           
             case TutorialStep.QuestClicked:
@@ -165,7 +180,7 @@ public sealed class TutorialUI : MonoBehaviour
                         currentStep++;
                         //
                         PrepareTutorialInfo(TutorialStep.CameraMovement);
-                        currentTutorialQuest = qui.SYSTEM_NewTutorialQuest((byte)TutorialStep.CameraMovement);
+                        currentTutorialQuest = StartQuest(TutorialStep.CameraMovement) ;
                     }
                     break;
                 }
@@ -174,7 +189,7 @@ public sealed class TutorialUI : MonoBehaviour
                     currentStep++;
                     PrepareTutorialInfo(TutorialStep.CameraRotation);
                     currentTutorialQuest.MakeQuestCompleted();
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.CameraRotation);
+                    currentTutorialQuest = StartQuest(TutorialStep.CameraRotation);
                     outerProceedButton.SetActive(false);
                     break;
                 }
@@ -229,7 +244,7 @@ public sealed class TutorialUI : MonoBehaviour
                     currentStep++;
                     //
                     PrepareTutorialInfo(TutorialStep.BuildWindmill_0);
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.BuildWindmill_0);
+                    currentTutorialQuest = StartQuest(TutorialStep.BuildWindmill_0);
                     break;
                 }
             case TutorialStep.BuildWindmill_0:
@@ -237,12 +252,14 @@ public sealed class TutorialUI : MonoBehaviour
                     currentTutorialQuest.MakeQuestCompleted();
                     currentTutorialQuest = null;
                     currentStep++;
+                    mcc.SelectedObjectLost();
                     PrepareTutorialInfo(TutorialStep.BuildWindmill_1);
                     break;
                 }
             case TutorialStep.BuildWindmill_1:
                 {
                     currentStep++;
+                    mcc.SelectedObjectLost();
                     //
                     currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.GatherLumber);
                     PrepareTutorialInfo(TutorialStep.GatherLumber);
@@ -252,6 +269,7 @@ public sealed class TutorialUI : MonoBehaviour
                 {
                     currentStep++;
                     currentTutorialQuest = null;
+                    mcc.SelectedObjectLost();
                     //
                     PrepareTutorialInfo(TutorialStep.BuildFarm);
                     currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.BuildFarm);
@@ -261,15 +279,17 @@ public sealed class TutorialUI : MonoBehaviour
                 {
                     currentStep++;
                     currentTutorialQuest = null;
+                    mcc.ChangeChosenObject(ChosenObjectType.None);
                     //
                     PrepareTutorialInfo(TutorialStep.StoneDigging);
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.StoneDigging);
+                    currentTutorialQuest = StartQuest(TutorialStep.StoneDigging); ;
                     break;
                 }
             case TutorialStep.StoneDigging:
                 {
                     currentStep++;
                     currentTutorialQuest = null;
+                    mcc.ChangeChosenObject(ChosenObjectType.None);
                     //
                     PrepareTutorialInfo(TutorialStep.StorageLook);
                     if (!mcc.IsStorageUIActive())
@@ -295,7 +315,48 @@ public sealed class TutorialUI : MonoBehaviour
                     currentStep++;
                     //
                     PrepareTutorialInfo(TutorialStep.SmelteryBuilding);
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.SmelteryBuilding);
+                    currentTutorialQuest = StartQuest(TutorialStep.SmelteryBuilding);
+                    break;
+                }
+            case TutorialStep.SmelteryBuilding:
+                {
+                    mcc.ChangeChosenObject(ChosenObjectType.None);
+                    currentStep++;
+                    //                   
+                    PrepareTutorialInfo(TutorialStep.RecipeExplaining_A);
+                    currentTutorialQuest = StartQuest(TutorialStep.RecipeExplaining_A);
+                    break;
+                }
+            case TutorialStep.RecipeExplaining_A:
+                {
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.RecipeExplaining_B);
+                    var eb = Building.buildingObserver.SYSTEM_GetEnergyButton();
+                    SetShowframe(eb.GetComponent<RectTransform>());
+                    eb.onClick.AddListener(this.ProceedButton);
+                    currentTutorialQuest.CompleteStep(0);
+                    break;
+                }
+            case TutorialStep.RecipeExplaining_B:
+                {
+                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.ProceedButton);
+                    showframe.gameObject.SetActive(false);
+                    currentStep++;
+                    mcc.ChangeChosenObject(ChosenObjectType.None);
+                    currentTutorialQuest.CompleteStep(1);
+                    currentTutorialQuest.MakeQuestCompleted();
+                    observingFactory = null;
+                    //
+                    PrepareTutorialInfo(TutorialStep.DockBuilding);
+                    currentTutorialQuest = StartQuest(TutorialStep.DockBuilding);
+                    break;
+                }
+            case TutorialStep.DockBuilding:
+                {
+                    currentTutorialQuest.MakeQuestCompleted();
+                    currentTutorialQuest = null;
+                    currentStep++;
                     break;
                 }
         }
@@ -321,6 +382,15 @@ public sealed class TutorialUI : MonoBehaviour
                     }
                     break;
                 }
+            case TutorialStep.DockBuilding:
+                {
+                    if (s is Dock)
+                    {
+                        ProceedButton();
+                        return;
+                    }
+                    break;
+                }
         }
     }
     public void QuestCompleted(byte subIndex)
@@ -331,8 +401,20 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.GatherLumber:
             case TutorialStep.BuildFarm:
             case TutorialStep.StoneDigging:
+            case TutorialStep.SmelteryBuilding:
                 ProceedButton();
                 break;
+        }
+    }
+    private void RecipeChanged(int i)
+    {
+        if (currentStep == TutorialStep.RecipeExplaining_A)
+        {
+            if (observingFactory != null && observingFactory.GetRecipe() == Recipe.StoneToConcrete)
+            {
+                Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
+                ProceedButton();
+            }
         }
     }
 }

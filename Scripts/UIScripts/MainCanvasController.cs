@@ -551,7 +551,6 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
 
     public void ChangeChosenObject(ChosenObjectType newChosenType)
     {
-
         if (hospitalPanel.activeSelf) DeactivateHospitalPanel();
 
         //отключение предыдущего observer

@@ -3880,20 +3880,38 @@ public static class Localization
                                             q.name = "Build farm";
                                             q.description = "Build farm and assign no less than " + TutorialUI.FARM_QUEST_WORKERS_COUNT.ToString() +" workers.";
                                             q.steps[0] = "Farm built";
-                                            q.steps[1] = "Workers assigned";
+                                            q.steps[1] = "Workers assigned ";
                                             break;
                                         }
                                     case TutorialUI.TutorialStep.StoneDigging:
                                         {
                                             q.name = "Stone digging";
                                             q.description = "Click on any side of a stone block and the press the DIG button";
-                                            q.steps[0] = "Stone collected";
+                                            q.steps[0] = "Stone collected ";
                                             break;
                                         }
                                     case TutorialUI.TutorialStep.SmelteryBuilding:
                                         {
                                             q.name = "Smeltery building";
-                                            q.description = "Build a Smeltery. ";
+                                            q.description = "Build a Smeltery for an access to crafting recipes. Also you can build second Stream generator for proper smeltery function.";
+                                            q.steps[0] = "Smeltery built ";
+                                            q.steps[1] = "(Additional) Stream generator built";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.RecipeExplaining_A:
+                                        {
+                                            q.name = "Resource producing";
+                                            q.description = "Set in newfound Smeltery Stone-to-Lconcrete recipe and then power it up";
+                                            q.steps[0] = "Recipe set ";
+                                            q.steps[1] = "Powered up ";
+                                            break;
+                                        }
+                                    case TutorialUI.TutorialStep.DockBuilding:
+                                        {
+                                            q.name = "Dock building";
+                                            q.description = "Collect enough l-concrete and build a dock. Advice: increase smeltery's workers count and sure that there is enough power to operate.";
+                                            q.steps[0] = "Concrete collected ";
+                                            q.steps[1] = "Dock built ";
                                             break;
                                         }
                                 }
@@ -4014,7 +4032,26 @@ public static class Localization
             case TutorialUI.TutorialStep.SmelteryBuilding:
                 {
                     label = "Ores";
-                    description = "Not all resources, with an Ores word. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!";
+                    description = "Note all resources with an Ores word. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!";
+                    break;
+                }
+            case TutorialUI.TutorialStep.RecipeExplaining_A:
+                {
+                    label = "Crafting";
+                    description = "Now open the factory window and at the lower part of right window click the No Recipe button and change it to Stone - L-Concrete.";
+                    break;
+                }
+            case TutorialUI.TutorialStep.RecipeExplaining_B:
+                {
+                    label = "Crafting II";
+                    description = "Now press the small lightning icon on the top of the right panel to start processing!;";
+                    break;
+                }
+            case TutorialUI.TutorialStep.DockBuilding:
+                {
+                    label = "Dock";
+                    description = "Concrete production is first need for building a dock. It is very important building, allows you to trade, increase population and upgrade to tier 2. " +
+                        "Collect enough L-concrete and build it!";
                     break;
                 }
         }

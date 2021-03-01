@@ -221,6 +221,11 @@ public sealed class UIFactoryObserver : UIObserver
         else workflowString.text = string.Empty;        
     }
 
+    public Dropdown SYSTEM_GetRecipesDropdown()
+    {
+        return recipesDropdown;
+    }
+
     override public void SelfShutOff()
     {
         isObserving = false;

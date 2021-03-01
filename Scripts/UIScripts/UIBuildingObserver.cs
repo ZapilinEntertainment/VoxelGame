@@ -342,6 +342,10 @@ public class UIBuildingObserver : UIObserver {
         upgradeInfoPanel.SetActive(false);
         infoPanel_InUpgradeMode = true;
     }
+    public Button SYSTEM_GetEnergyButton()
+    {
+        return energyButton;
+    }
 
     void RefreshResourcesData() {
         if (infoPanel_InUpgradeMode)

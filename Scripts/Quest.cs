@@ -14,11 +14,12 @@ public enum ProgressQuestID : byte
     Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, Progress_FoodStocks, LASTONE
 }
 
-public class Quest : MyObject
+public sealed class Quest : MyObject
 {
     public string name;
     public string description;
     public float reward { get; private set; }
+    public bool needToCheckConditions { get; private set; }
 
     public string[] steps { get; private set; }
     public string[] stepsAddInfo { get; private set; }
@@ -29,7 +30,7 @@ public class Quest : MyObject
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
     public static readonly Quest NoQuest, AwaitingQuest;
 
-    private bool completed = false;
+    private bool completed = false, subscribedToStructuresCheck = false;
     private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
@@ -64,6 +65,7 @@ public class Quest : MyObject
     {
         type = i_type;
         subIndex = subID;
+        needToCheckConditions = true;
         byte stepsCount = 1;
         reward = 0f;
         switch (i_type)
@@ -152,11 +154,29 @@ public class Quest : MyObject
                 break;
             case QuestType.Tutorial:
                 {
-                    switch ((TutorialUI.TutorialStep)subIndex)
+                    var step = (TutorialUI.TutorialStep)subIndex;
+                    needToCheckConditions = false;
+                    switch (step)
                     {
+                        case TutorialUI.TutorialStep.GatherLumber:
+                        case TutorialUI.TutorialStep.StoneDigging:
+                            needToCheckConditions = true;
+                            break;
                         case TutorialUI.TutorialStep.BuildFarm:
+                        case TutorialUI.TutorialStep.DockBuilding:
+                            needToCheckConditions = true;
                             stepsCount = 2;
                             break;
+                        case TutorialUI.TutorialStep.SmelteryBuilding:
+                            stepsCount = 2;
+                            GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.StructureCheck;
+                            subscribedToStructuresCheck = true;
+                            break;
+                        case TutorialUI.TutorialStep.RecipeExplaining_A:
+                            {
+                                stepsCount = 2;
+                                break;
+                            }
                     }
                     break;
                 }
@@ -221,6 +241,10 @@ public class Quest : MyObject
         GameMaster.realMaster.globalMap.pointsExploringEvent -= this.PointEventCheck;
     }
 
+    public void CompleteStep(int index)
+    {
+        if (index < stepsFinished.Length) stepsFinished[index] = true;
+    }
     public void CheckQuestConditions()
     {        
         ColonyController colony = GameMaster.realMaster.colonyController;
@@ -1028,7 +1052,7 @@ public class Quest : MyObject
                         case TutorialUI.TutorialStep.BuildFarm:
                             {
                                 var farms = colony.GetBuildings<Farm>();
-                                if (farms.Count > 0)
+                                if (farms != null && farms.Count > 0)
                                 {
                                     stepsFinished[0] = true;
                                     int maxWorkers = 0;
@@ -1059,11 +1083,40 @@ public class Quest : MyObject
                                 if (stCount >= TutorialUI.STONE_QUEST_COUNT) MakeQuestCompleted();
                                 break;
                             }
+                        case TutorialUI.TutorialStep.DockBuilding:
+                            {
+                                int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
+                                stepsAddInfo[0] = stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString();
+                                stepsFinished[0] = stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME;
+                                stepsFinished[1] = colony.HaveBuilding(Structure.DOCK_ID);
+                                break;
+                            }
+                    }
+                    break;
+                }
+
+        }
+    }   
+    private void StructureCheck(Structure s)
+    {
+        switch (type)
+        {
+            case QuestType.Tutorial:
+                {
+                    switch((TutorialUI.TutorialStep)subIndex)
+                    {
+                        case TutorialUI.TutorialStep.SmelteryBuilding:
+                            if (s.ID == Structure.SMELTERY_1_ID) MakeQuestCompleted();
+                            else
+                            {
+                                if (s.ID == Structure.WIND_GENERATOR_1_ID) stepsFinished[1] = true;
+                            }
+                            break;
                     }
                     break;
                 }
         }
-    }   
+    }
 
     public void MakeQuestCompleted()
     {
@@ -1087,6 +1140,7 @@ public class Quest : MyObject
         QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
         completed = true;
+        if (subscribedToStructuresCheck) GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.StructureCheck;
     }
     public static void ResetHousingQuest() // if hq lvl up
     {

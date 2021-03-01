@@ -1,6 +1,8 @@
 ﻿public static class ResourcesCost
 {
-    public const int SHUTTLE_BUILD_COST_ID = -2, HQ_LVL2_COST_ID = -3, HQ_LVL3_COST_ID = -4, HQ_LVL4_COST_ID = -5, HQ_LVL5_COST_ID = -6, HQ_LVL6_COST_ID = -7 ;
+    public const int SHUTTLE_BUILD_COST_ID = -2, HQ_LVL2_COST_ID = -3, HQ_LVL3_COST_ID = -4, HQ_LVL4_COST_ID = -5, HQ_LVL5_COST_ID = -6, HQ_LVL6_COST_ID = -7,
+        DOCK_CONCRETE_COSTVOLUME = 300;
+    
 
     public static ResourceContainer[] GetCost(int id)
     {
@@ -99,7 +101,7 @@
             case Structure.DOCK_3_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 10), 
-                new ResourceContainer(ResourceType.Concrete, 300)
+                new ResourceContainer(ResourceType.Concrete, DOCK_CONCRETE_COSTVOLUME)
             };
                 break;
             case Structure.STORAGE_1_ID:
