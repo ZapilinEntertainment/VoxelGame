@@ -7,7 +7,8 @@ public sealed class TutorialUI : MonoBehaviour
 {
     public enum TutorialStep: byte { Intro, QuestClicked, QuestShown, QuestsClosed, CameraMovement, CameraRotation, CameraSlicing,
         Landing, Interface_People, Interface_Electricity,  BuildWindmill_0, BuildWindmill_1, GatherLumber, BuildFarm,
-        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining_A, RecipeExplaining_B, DockBuilding}
+        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining_A, RecipeExplaining_B, CollectConcrete, BuildDock, BuildDock_Error,
+        Immigration, Trade, Finish}
     [SerializeField] private Text hugeLabel, mainText;
     [SerializeField] private GameObject adviceWindow, outerProceedButton;
     [SerializeField] private RectTransform showframe, showArrow;
@@ -16,7 +17,7 @@ public sealed class TutorialUI : MonoBehaviour
     private MainCanvasController mcc;
     private GraphicRaycaster grcaster;
     private Quest currentTutorialQuest;
-    private Factory observingFactory;
+    private Building observingBuilding;
     private float timer;
     private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
     public const int LUMBER_QUEST_COUNT = 200, FARM_QUEST_WORKERS_COUNT = 20, STONE_QUEST_COUNT = 250;
@@ -103,6 +104,8 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.Interface_People:
             case TutorialStep.Interface_Electricity:
             case TutorialStep.BuildWindmill_1:
+            case TutorialStep.Immigration:
+            case TutorialStep.Trade:
                 ProceedButton();
                 break;
             case TutorialStep.Landing:
@@ -116,8 +119,8 @@ public sealed class TutorialUI : MonoBehaviour
                 break;
             case TutorialStep.RecipeExplaining_A:
                 {
-                    observingFactory = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
-                    mcc.Select(observingFactory);
+                    observingBuilding = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
+                    mcc.Select(observingBuilding);
                     var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
                     SetShowframe(dd.GetComponent<RectTransform>());
                     dd.onValueChanged.AddListener(this.RecipeChanged);
@@ -335,7 +338,7 @@ public sealed class TutorialUI : MonoBehaviour
                     var eb = Building.buildingObserver.SYSTEM_GetEnergyButton();
                     SetShowframe(eb.GetComponent<RectTransform>());
                     eb.onClick.AddListener(this.ProceedButton);
-                    currentTutorialQuest.CompleteStep(0);
+                    currentTutorialQuest.SetStepCompleteness(0, true);
                     break;
                 }
             case TutorialStep.RecipeExplaining_B:
@@ -344,19 +347,55 @@ public sealed class TutorialUI : MonoBehaviour
                     showframe.gameObject.SetActive(false);
                     currentStep++;
                     mcc.ChangeChosenObject(ChosenObjectType.None);
-                    currentTutorialQuest.CompleteStep(1);
+                    currentTutorialQuest.SetStepCompleteness(1, true);
                     currentTutorialQuest.MakeQuestCompleted();
-                    observingFactory = null;
+                    observingBuilding = null;
                     //
-                    PrepareTutorialInfo(TutorialStep.DockBuilding);
-                    currentTutorialQuest = StartQuest(TutorialStep.DockBuilding);
+                    PrepareTutorialInfo(TutorialStep.CollectConcrete);
+                    currentTutorialQuest = StartQuest(TutorialStep.CollectConcrete);
                     break;
                 }
-            case TutorialStep.DockBuilding:
+            case TutorialStep.CollectConcrete:
                 {
-                    currentTutorialQuest.MakeQuestCompleted();
                     currentTutorialQuest = null;
                     currentStep++;
+                    //
+                    mcc.ChangeChosenObject(ChosenObjectType.None);
+                    PrepareTutorialInfo(TutorialStep.BuildDock);
+                    currentTutorialQuest = StartQuest(TutorialStep.BuildDock);
+                    break;
+                }
+            case TutorialStep.BuildDock_Error:
+                {
+                    PrepareTutorialInfo(TutorialStep.BuildDock_Error);
+                    break;
+                }
+            case TutorialStep.BuildDock:
+                {
+                    currentStep = TutorialStep.Immigration;
+                    if (!currentTutorialQuest.completed) currentTutorialQuest.MakeQuestCompleted();
+                    currentTutorialQuest = null;
+                    //
+                    mcc.Select(observingBuilding);
+                    var obs = Dock.dockObserver;
+                    obs.PrepareImmigrationPanel();
+                    SetShowframe(obs.SYSTEM_GetImmigrationPanel());
+                    PrepareTutorialInfo(currentStep);                   
+                    break;
+                }
+            case TutorialStep.Immigration:
+                {
+                    showframe.gameObject.SetActive(false);
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.Trade);
+                    break;
+                }
+            case TutorialStep.Trade:
+                {
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.Finish);
                     break;
                 }
         }
@@ -382,12 +421,23 @@ public sealed class TutorialUI : MonoBehaviour
                     }
                     break;
                 }
-            case TutorialStep.DockBuilding:
+            case TutorialStep.BuildDock:
+            case TutorialStep.BuildDock_Error:
                 {
                     if (s is Dock)
-                    {
-                        ProceedButton();
-                        return;
+                    {                        
+                        var d = s as Dock;
+                        if (!d.isCorrectLocated)
+                        {
+                            currentStep = TutorialStep.BuildDock_Error;
+                            ProceedButton();
+                        }
+                        else
+                        {
+                            observingBuilding = d;
+                            currentStep = TutorialStep.BuildDock;
+                            ProceedButton();
+                        }
                     }
                     break;
                 }
@@ -402,6 +452,8 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.BuildFarm:
             case TutorialStep.StoneDigging:
             case TutorialStep.SmelteryBuilding:
+            case TutorialStep.CollectConcrete:
+            case TutorialStep.BuildDock:
                 ProceedButton();
                 break;
         }
@@ -410,10 +462,13 @@ public sealed class TutorialUI : MonoBehaviour
     {
         if (currentStep == TutorialStep.RecipeExplaining_A)
         {
-            if (observingFactory != null && observingFactory.GetRecipe() == Recipe.StoneToConcrete)
+            if (observingBuilding != null)
             {
-                Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
-                ProceedButton();
+                var of = observingBuilding as Factory;
+                if (of != null && of.GetRecipe() == Recipe.StoneToConcrete) {
+                    Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
+                    ProceedButton();
+                }                
             }
         }
     }

@@ -20,6 +20,7 @@ public sealed class Quest : MyObject
     public string description;
     public float reward { get; private set; }
     public bool needToCheckConditions { get; private set; }
+    public bool completed { get; private set; }
 
     public string[] steps { get; private set; }
     public string[] stepsAddInfo { get; private set; }
@@ -30,7 +31,7 @@ public sealed class Quest : MyObject
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
     public static readonly Quest NoQuest, AwaitingQuest;
 
-    private bool completed = false, subscribedToStructuresCheck = false;
+    private bool subscribedToStructuresCheck = false;
     private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
@@ -160,10 +161,11 @@ public sealed class Quest : MyObject
                     {
                         case TutorialUI.TutorialStep.GatherLumber:
                         case TutorialUI.TutorialStep.StoneDigging:
+                        case TutorialUI.TutorialStep.CollectConcrete:
                             needToCheckConditions = true;
                             break;
                         case TutorialUI.TutorialStep.BuildFarm:
-                        case TutorialUI.TutorialStep.DockBuilding:
+                        case TutorialUI.TutorialStep.BuildDock:
                             needToCheckConditions = true;
                             stepsCount = 2;
                             break;
@@ -184,6 +186,7 @@ public sealed class Quest : MyObject
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
+        completed = false;
         Localization.FillQuestData(this);
     }
     public Quest(Knowledge.ResearchRoute rr, byte subID) : this(RouteToQuestType(rr), subID) { }
@@ -241,9 +244,9 @@ public sealed class Quest : MyObject
         GameMaster.realMaster.globalMap.pointsExploringEvent -= this.PointEventCheck;
     }
 
-    public void CompleteStep(int index)
+    public void SetStepCompleteness(int index, bool x)
     {
-        if (index < stepsFinished.Length) stepsFinished[index] = true;
+        if (index < stepsFinished.Length) stepsFinished[index] = x;
     }
     public void CheckQuestConditions()
     {        
@@ -1083,12 +1086,42 @@ public sealed class Quest : MyObject
                                 if (stCount >= TutorialUI.STONE_QUEST_COUNT) MakeQuestCompleted();
                                 break;
                             }
-                        case TutorialUI.TutorialStep.DockBuilding:
+                        case TutorialUI.TutorialStep.CollectConcrete:
                             {
                                 int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
                                 stepsAddInfo[0] = stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString();
-                                stepsFinished[0] = stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME;
-                                stepsFinished[1] = colony.HaveBuilding(Structure.DOCK_ID);
+                                bool x = stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME;
+                                stepsFinished[0] = x;
+                                if (x) MakeQuestCompleted();
+                                break;
+                            }
+                        case TutorialUI.TutorialStep.BuildDock:
+                            {
+                                var docks = colony.docks;
+                                if (docks != null && docks.Count > 0)
+                                {
+                                    stepsFinished[0] = true;
+                                    bool x = false;
+                                    foreach (var d in docks)
+                                    {
+                                        if (d.isCorrectLocated)
+                                        {
+                                            x = true;
+                                            break;
+                                        }
+                                    }
+                                    if (x)
+                                    {
+                                        stepsFinished[1] = true;
+                                        MakeQuestCompleted();
+                                    }
+                                    else stepsFinished[1] = false;
+                                }
+                                else
+                                {
+                                    stepsFinished[0] = false;
+                                    stepsFinished[1] = false;
+                                }
                                 break;
                             }
                     }

@@ -70,6 +70,7 @@ public sealed class GameStartSettings : MyObject
         gss.subIndex1 = (byte)EmbeddedScenarioType.Tutorial;
         gss.loadTerrain = true;
         gss.savename = "tutorialTerrain";
+        gss.difficulty = Difficulty.Utopia;
         return gss;
     }
 

@@ -147,7 +147,10 @@ public sealed class UIDockObserver : UIObserver
             dockSystem.SetImmigrationStatus(true, showingImmigrationLimit);
         }
     }
-
+    public RectTransform SYSTEM_GetImmigrationPanel()
+    {
+        return immigrationPanel.GetComponent<RectTransform>();
+    }
 
     #region trade operations list    
     public void LimitChangeButton(int resourceID, bool plus)

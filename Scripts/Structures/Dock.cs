@@ -8,7 +8,7 @@ public sealed class Dock : WorkBuilding {
     private static DockSystem dockSystem;
 
 	public bool maintainingShip{get; private set;}
-    public bool correctLocation { get; private set; }
+    public bool isCorrectLocated { get; private set; }
     public float shipArrivingTimer { get; private set; }
 
     private bool subscribedToRestoreBlockersEvent = false;
@@ -84,7 +84,7 @@ public sealed class Dock : WorkBuilding {
         {
             basement.ChangeMaterial(ResourceType.CONCRETE_ID, true);
             CheckPositionCorrectness();
-            if (correctLocation) shipArrivingTimer = shipArrivingTime;
+            if (isCorrectLocated) shipArrivingTimer = shipArrivingTime;
         }
         else
         {
@@ -100,7 +100,7 @@ public sealed class Dock : WorkBuilding {
     public void RestoreBlockers()
     {
         // установка блокираторов после загрузки
-        if (subscribedToRestoreBlockersEvent & correctLocation)
+        if (subscribedToRestoreBlockersEvent & isCorrectLocated)
         {
             CheckPositionCorrectness();
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
@@ -132,7 +132,7 @@ public sealed class Dock : WorkBuilding {
             }
 		}
 		else {            // ship arriving            
-            if (shipArrivingTimer >= 0 & correctLocation) { 
+            if (shipArrivingTimer >= 0 & isCorrectLocated) { 
 				shipArrivingTimer -= GameMaster.LABOUR_TICK;
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
@@ -211,7 +211,7 @@ public sealed class Dock : WorkBuilding {
     {
         if (isActive & isEnergySupplied)
         {
-            if (correctLocation)
+            if (isCorrectLocated)
             {
                 if (!maintainingShip)
                     return Localization.GetPhrase(LocalizedPhrase.AwaitingShip) + ": " + shipArrivingTimer.ToString();
@@ -252,20 +252,20 @@ public sealed class Dock : WorkBuilding {
         {
             switch (modelRotation)
             {
-                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
-                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
-                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
-                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 0: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 2: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 4: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 6: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2, true, corridorWidth, this, ref dependentBlocksList); break;
             }
         }
         else
         {
             switch (modelRotation)
             {
-                case 0: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
-                case 2: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
-                case 4: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
-                case 6: correctLocation = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 0: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z + 1, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 2: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x + 1, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
+                case 4: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.z - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, false, corridorWidth, this, ref dependentBlocksList); break;
+                case 6: isCorrectLocated = basement.myChunk.BlockShipCorridorIfPossible(basement.pos.x - corridorWidth, basement.pos.y - corridorWidth / 2 + 1, true, corridorWidth, this, ref dependentBlocksList); break;
             }
         }
         if (!subscribedToChunkUpdate)
@@ -275,7 +275,7 @@ public sealed class Dock : WorkBuilding {
         }
         if (showOnGUI)
         {
-            if (!correctLocation)
+            if (!isCorrectLocated)
             {
                 //#incorrectLocationDisplaying
                 switch (modelRotation)
@@ -314,7 +314,7 @@ public sealed class Dock : WorkBuilding {
             }
             else PoolMaster.current.DisableFlightZone();
         }
-        if (!correctLocation)
+        if (!isCorrectLocated)
         {
             maintainingShip = false;
             servicingShip = null;
@@ -323,14 +323,14 @@ public sealed class Dock : WorkBuilding {
     }
     override public void ChunkUpdated()
     {
-        if (correctLocation) return;
+        if (isCorrectLocated) return;
         else CheckPositionCorrectness();
     }
     public override void SectionDeleted(ChunkPos pos)
     {
-        if (correctLocation)
+        if (isCorrectLocated)
         {
-            correctLocation = false;
+            isCorrectLocated = false;
             if (showOnGUI)
             {
                 //#incorrectLocationDisplaying
@@ -491,7 +491,7 @@ public sealed class Dock : WorkBuilding {
         else dockObserver.gameObject.SetActive(true);
         dockObserver.SetObservingDock(this);
         showOnGUI = true;
-        if (!correctLocation)
+        if (!isCorrectLocated)
         {   //#incorrectLocationDisplaying
             int corridorWidth = SMALL_SHIPS_PATH_WIDTH;
             if (level > 1)
@@ -554,7 +554,7 @@ public sealed class Dock : WorkBuilding {
             basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
             dependentBlocksList.Clear();            
         }
-        if (showOnGUI & correctLocation) PoolMaster.current.DisableFlightZone();
+        if (showOnGUI & isCorrectLocated) PoolMaster.current.DisableFlightZone();
         if (!clearFromSurface) { basement = null; }
         PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
         colony.RemoveDock(this);
@@ -576,7 +576,7 @@ public sealed class Dock : WorkBuilding {
         data.AddRange(SaveWorkbuildingData());
         //dock data
         byte zero = 0, one = 1;
-        data.Add(correctLocation ? one : zero);
+        data.Add(isCorrectLocated ? one : zero);
 
         if (maintainingShip & servicingShip != null)
         {
@@ -598,7 +598,7 @@ public sealed class Dock : WorkBuilding {
         LoadWorkBuildingData(data, STRUCTURE_SERIALIZER_LENGTH + BUILDING_SERIALIZER_LENGTH);
         SetModelRotation(modelRotation);
         // load dock data
-        correctLocation = fs.ReadByte() == 1;
+        isCorrectLocated = fs.ReadByte() == 1;
         maintainingShip = fs.ReadByte() == 1;
         if (maintainingShip)
         {
