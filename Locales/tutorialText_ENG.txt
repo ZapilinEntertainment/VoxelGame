@@ -22,54 +22,73 @@
 [018]Use the Slice button to look through blocks. Click it second time to return to normal state.
 [019]Try slicing and then press Proceed button
 -/-
-[013]Landing!
-[014]And now we will found a new colony on this island. At first, you shall select a place to land your colony's zeppelin. Where it lands will be a main colony building, a storage building, and a residential area. Click on selected surface and then press Land button.
-[015]Select a three-blocks surface and then click on Land button.
-[016]Colony founded
+[020]Landing!
+[021]And now we will found a new colony on this island. At first, you shall select a place to land your colony's zeppelin. Where it lands will be a main colony building, a storage building, and a residential area. Click on selected surface and then press Land button.
+[022]Select a three-blocks surface and then click on Land button.
+[023]Colony founded
 -/-
-[015]Interface
-[016]Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.
-[017]This values displays Power situation. They are power stored / power capacity / power surplus. All buildings require power supply, and it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
+[024]Interface
+[025]Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.
+[026]This values displays Power situation. They are power stored / power capacity / power surplus. All buildings require power supply, and it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
 -/-
-[018]Electricity production
-[019]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
-[020]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
-[021]Build Stream generator
-[022]Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
-[023]Stream generator built 
+[027]Electricity production
+[028]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
+[029]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
+[030]Build Stream generator
+[031]Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
+[032]Stream generator built 
 -/-
-[21]Gather resources
-[22]After had constructed the power generator, you shall build a food source for colonists. But start resources as for Stream Generator not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.";
+[033]Gather resources
+[034]After had constructed the power generator, you shall build a food source for colonists. But start resources as for Stream Generator not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
+[035]Gather lumber
+[036]Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
+[037]Lumber collected 
 -/-
-[23]Farm construction
-[24]Now, using collected lumber, build a farm and assign at least
-[25] workers on it. Note that farm cannot be built on stone surfaces.
+[038]Farm construction
+[039]Now, using collected lumber, build a farm and assign at least
+[040] workers on it. Note that farm cannot be built on stone surfaces.
+[041]Build farm and assign no less than
+[042]Farm built
+[043]Workers assigned 
 -/-
-[26]Farm construction completed
-[27]Good, the farm is now working! After lumber and food we shall develop underground deposits. Select any side of a stone blocks and click the DIG button.
+[044]Farm construction completed
+[045]Good, the farm is now working! After lumber and food we shall develop underground deposits. Select any side of a stone blocks and click the DIG button.
+[046]Stone digging
+[047]Click on any side of a stone block and the press the DIG button.
+[048]Stone collected
 -/-
-[28]Storage system
-[29]Rocks, drilled by your colonists, consist not only of stone, but a different ores too. Click on the Storage Button to see all of your colony's resources. Click again to close it after.
+[049]Storage system
+[050]Rocks, drilled by your colonists, consist not only of stone, but a different ores too. Click on the Storage Button to see all of your colony's resources. Click again to close it after.
+[051]Ores
+[052]Note all resources with an (ore) addition. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!
 -/-
-[30]Ores
-[31]Note all resources with an (ore) addition. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!
+[053]Resource processing
+[054]Your main building for creating new resources is Smeltery. Select any surface and construct it. You also may want to construct another Stream generator if your energy supply is less than Smeltery needs (you can see this parameter in construction info).
+[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that use the small lightning icon in the observer panel and switch the building to active mode. Build a Stream generator if energy supply is not enough.
+[056]Smeltery built
+[057]Recipe set
+[058]Power supply enabled
+[059](Optional) Stream Generator built
+[060]How to set a Recipe
+[061]In the newfound Smeltery click the "No Recipe" dropdown and set it to "Stone -> L-Concrete". Also note the small dropdown at the bottom: there are production modes. "No limit" means that the smeltery will work, until the resources exhaust, "Iterations" means exact count of operations and the "Limit" mode means that factory will produce, until the final product count wont reach the limit.
+[062]Powering up!
+[063]Now press the small lightning icon at the top of the observer panel to power the smeltery up. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted.
+
 -/-
-[32]Crafting
-[33]Now open the factory window and at the lower part of right window click the No Recipe button and change it to Stone - L-Concrete.
+[064]Building dock
+[065]Concrete production is first need for building a dock. It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
+[066] L-concrete to build a new dock!
+[067]Collect enough concrete, digging stone and convert it into Concrete in Smeltery, and then build a dock at the island shore. Use rotation arrows in the observer if dock is looking in wrong direction. If rotation not helps, use demolition button at the top-right corner.
+[068]Concrete collected
+[069]Dock built
+[070]Dock placed right
 -/-
-[34]Crafting II
-[35]Now press the small lightning icon on the top of the right panel to start processing!;
+[071]Dock building conditions
+[072]For proper functionality your dock must be build on the edge to be able to serve ships. For first level ships it needs
+[073] corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is rotated wrongly, you can rotate it manually, use small arrows at the top of right panel.
 -/-
-[36]Prepare to build a dock
-[37]Concrete production is first need for building a dock. It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
-[38] L-concrete to build a new dock!
--/-
-[39]Dock building conditions
-[40]For proper functionality your dock must be build on the edge to be able to serve ships. For first level ships it needs
-[41] corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is rotated wrongly, you can rotate it manually, use small arrows at the top of right panel.
--/-
-[42]Dock is not working yet
-[43]Rotate dock using small arrows at the top of the right panel, if this position is suitable. If not, demolish it using button at the top-right corner
+[074]Dock is not working yet
+[075]Rotate dock using small arrows at the top of the right panel, if this position is suitable. If not, demolish it using button at the top-right corner.
 -/-
 [44]Immigration
 [45]Functional dock allows you to bring new colonists to your island. Use input field at the immigration tab to set how many colonists you want to invite. However, new people wont come, if your colony haven't got enough houses or have low morale.

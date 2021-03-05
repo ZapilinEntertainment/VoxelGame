@@ -1,8 +1,8 @@
 ﻿public abstract class Scenario : MyObject
 {
     protected byte _scenarioIndex;
-    protected Quest scenarioQuest;
-    protected bool completed = false;
+    protected ScenarioQuest scenarioQuest;
+    protected bool completed = false, useSpecialQuestFilling = false;
 
     protected override bool IsEqualNoCheck(object obj)
     {
@@ -11,5 +11,6 @@
 
     virtual public void StartScenario() { }
     virtual public void EndScenario() { }
-    virtual public void FillQuestData(Quest q) { }
+    virtual public void CheckConditions() { }
+    virtual public void SpecialQuestFilling() { } // for combined strings
 }

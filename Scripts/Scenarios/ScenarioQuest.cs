@@ -6,4 +6,13 @@
     {
         myScenario = i_scenario;
     }
+
+    public override void CheckQuestConditions()
+    {
+        myScenario.CheckConditions();
+    }
+    public void ChangeAddInfo(int index, string s)
+    {
+        stepsAddInfo[index] = s;
+    }
 }

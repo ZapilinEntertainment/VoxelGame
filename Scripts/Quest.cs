@@ -255,7 +255,11 @@ public class Quest : MyObject
     {
         if (index < stepsFinished.Length) stepsFinished[index] = x;
     }
-    public void CheckQuestConditions()
+    public void ChangeConditionsCheckStatus(bool x)
+    {
+        needToCheckConditions = x;
+    }
+    virtual public void CheckQuestConditions()
     {        
         ColonyController colony = GameMaster.realMaster.colonyController;
         switch (type)
@@ -1054,36 +1058,12 @@ public class Quest : MyObject
                     {
                         case TutorialUI.TutorialStep.GatherLumber:
                             {
-                                int stCount = (int)colony.storage.standartResources[ResourceType.LUMBER_ID];
-                                stepsAddInfo[0] = stCount.ToString() + " / " + TutorialUI.LUMBER_QUEST_COUNT.ToString();
-                                if (stCount >= TutorialUI.LUMBER_QUEST_COUNT) MakeQuestCompleted();
+                               
                                 break;
                             }
                         case TutorialUI.TutorialStep.BuildFarm:
                             {
-                                var farms = colony.GetBuildings<Farm>();
-                                if (farms != null && farms.Count > 0)
-                                {
-                                    stepsFinished[0] = true;
-                                    int maxWorkers = 0;
-                                    foreach (var f in farms)
-                                    {
-                                        if (f.workersCount > maxWorkers) maxWorkers = f.workersCount;
-                                    }
-                                    stepsAddInfo[1] = maxWorkers.ToString() + " / " + TutorialUI.FARM_QUEST_WORKERS_COUNT.ToString();
-                                    if (maxWorkers >= TutorialUI.FARM_QUEST_WORKERS_COUNT)
-                                    {
-                                        stepsFinished[1] = true;
-                                        MakeQuestCompleted();
-                                    }
-                                    else stepsFinished[1] = false;
-                                }
-                                else
-                                {
-                                    stepsFinished[0] = false;
-                                    stepsFinished[1] = false;
-                                    stepsAddInfo[1] = "-";
-                                }
+                               
                                 break;
                             }
                         case TutorialUI.TutorialStep.StoneDigging:
@@ -1194,7 +1174,7 @@ public class Quest : MyObject
         if ((m & v) != 0) m -= v;
     }
 
-    public void FillText(string[] s)
+    virtual public void FillText(string[] s)
     {
         name = s[0];
         description = s[1];
