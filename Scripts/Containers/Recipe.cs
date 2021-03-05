@@ -27,22 +27,33 @@ public class Recipe {
 	METAL_S_REFINING_ID = 15, MINERAL_F_REFINING_ID = 16, MINERAL_L_REFINING_ID = 17, FUEL_FROM_NMETAL_ID = 18, FUEL_FROM_NMETAL_ORE_ID = 19,
 	FUEL_FROM_MINERAL_F_ID = 20, GRAPHONIUM_FROM_NMETAL_ID = 21, GRAPHONIUM_FRON_NMETAL_ORE_ID = 22, FUEL_FROM_GRAPHONIUM = 23, FOOD_AND_METALP_TO_SUPPLIES_ID = 24, COMPOSTERING_ID = 25;
 
+
     public override bool Equals(object obj)
     {
         if (obj == null ) return false;
-        if (this == NoRecipe && obj == AdvancedRecipe.NoRecipe) return true;
-        else
+        var tp = obj.GetType();
+        if (tp == typeof(Recipe) || tp == typeof(AdvancedRecipe))
         {
-            if (GetType() != obj.GetType()) return false;
+            var r = (Recipe)obj;
+            return ID == r.ID;
         }
-        var r = (Recipe)obj;
-        if (ID != r.ID || input != r.input || output != r.output || inputValue != r.inputValue || outputValue != r.outputValue || workComplexity != r.workComplexity)
-            return false;
-        else return true;
+        else return false;
     }
     public override int GetHashCode()
     {
-        return base.GetHashCode() + input.ID + ID + output.ID;
+        return input.ID * 17 + ID * 3 + output.ID * 5;
+    }
+    public static bool operator ==(Recipe A, Recipe B)
+    {
+        if (ReferenceEquals(A, null))
+        {
+            return ReferenceEquals(B, null);
+        }
+        return A.Equals(B);
+    }
+    public static bool operator !=(Recipe A, Recipe B)
+    {
+        return !(A == B);
     }
 
     static Recipe() {

@@ -139,13 +139,11 @@ public sealed class GameMaster : MonoBehaviour
         if (realMaster != null) ResetComponentsStaticValues();
         sceneClearing = false;
     }
-    public void ChangeModeToPlay()
+    public void ChangePlayMode(GameStartSettings gss)
     {
-        if (gameMode != GameMode.Editor) return;
         startSettings = null;
-        _applyingGameStartSettings = GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Normal, StartFoundingType.Zeppelin);
+        _applyingGameStartSettings = gss;
         startSettings = null;
-        uicontroller.ChangeUIMode(UIMode.Standart, true);
         sessionPrepared = false;
 
         Awake();

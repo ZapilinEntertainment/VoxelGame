@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TutorialScenarioNS;
 
 public sealed class TutorialUI : MonoBehaviour
 {
-    public enum TutorialStep: byte { Intro, QuestClicked, QuestShown, QuestsClosed, CameraMovement, CameraRotation, CameraSlicing,
-        Landing, Interface_People, Interface_Electricity,  BuildWindmill_0, BuildWindmill_1, GatherLumber, BuildFarm,
-        StoneDigging, StorageLook, SmelteryBuilding, RecipeExplaining_A, RecipeExplaining_B, CollectConcrete, BuildDock, BuildDock_Error,
-        Immigration, Trade, Finish}
+    
     [SerializeField] private Text hugeLabel, mainText;
     [SerializeField] private GameObject adviceWindow, outerProceedButton;
     [SerializeField] private RectTransform showframe, showArrow;
@@ -18,6 +16,7 @@ public sealed class TutorialUI : MonoBehaviour
     private GraphicRaycaster grcaster;
     private Quest currentTutorialQuest;
     private Building observingBuilding;
+    private TutorialScenario currentScenario;
     private float timer;
     private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
     public const int LUMBER_QUEST_COUNT = 200, FARM_QUEST_WORKERS_COUNT = 20, STONE_QUEST_COUNT = 250;
@@ -33,20 +32,19 @@ public sealed class TutorialUI : MonoBehaviour
 
     private void Start()
     {
-        string label = string.Empty, description = string.Empty;
-        Localization.GetTutorialInfo(currentStep, ref label, ref description);
-        hugeLabel.text = label;
-        mainText.text = description;
+        string[] strs = new string[2];
+        currentScenario.GetText()
+        hugeLabel.text = strs[0];
+        mainText.text = strs[1];
         if (!adviceWindow.activeSelf) adviceWindow.SetActive(true);
         if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
         GameMaster.realMaster.PrepareColonyController(true);
         uicontroller = UIController.GetCurrent();
         mcc = uicontroller.GetMainCanvasController();
-        // 
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
-        grcaster.enabled = false;
-        SetShowframe(mcc.SYSTEM_GetQuestButton());
-        ShowarrowToShowframe_Left();
+        //
+        currentStep = TutorialStep.Intro;
+        PrepareStep();
     }
     private void Update()
     {
@@ -56,31 +54,11 @@ public sealed class TutorialUI : MonoBehaviour
             if (timer <= 0f)
             {
                 timer = 0f;
-                if (activateOuterProceedAfterTimer == true) outerProceedButton.SetActive(true);                
+                if (activateOuterProceedAfterTimer == true && currentScenario != null) outerProceedButton.SetActive(true);                
             }
         }
     }
-    private void SetShowframe(RectTransform target)
-    {
-        showframe.position = target.position;
-        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, target.rect.width);
-        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
-        if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
-    }
-    private void ShowarrowToShowframe_Left()
-    {
-        if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
-        showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
-        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
-        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
-        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
-    }
-    private void ShowarrowToShowframe_Up()
-    {
-        showArrow.Rotate(Vector3.up * 90f);
-        showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
-        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
-    }
+  
 
     public void OKButton()
     {
@@ -117,134 +95,105 @@ public sealed class TutorialUI : MonoBehaviour
                     ProceedButton();
                 }
                 break;
-            case TutorialStep.RecipeExplaining_A:
+            case TutorialStep.End:
                 {
-                    observingBuilding = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
-                    mcc.Select(observingBuilding);
-                    var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
-                    SetShowframe(dd.GetComponent<RectTransform>());
-                    dd.onValueChanged.AddListener(this.RecipeChanged);
+                    Destroy(gameObject);
+                    GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Normal, StartFoundingType.Nothing));
                     break;
                 }
                
         }
         grcaster.enabled = true;
     }
+    private void StartStep(TutorialStep step)
+    {        
+        switch (step)
+        {
+            case TutorialStep.Intro:
+                {
+                    PrepareTutorialInfo(step);
+                    StartQuest(TutorialStep.QuestShown);
+                    SetShowframe(mcc.SYSTEM_GetQuestButton());
+                    ShowarrowToShowframe_Left();
+                    break;
+                }
+        }
+        currentStep = step;
+    }
+    private void EndStep(TutorialStep step)
+    {        
+        switch (step)
+        {
+            case TutorialStep.Intro:
+                break;
+        }
+    }
 
-    public void ProceedButton()
+    //
+    public void OpenTextWindow(string label, string description)
     {
+        hugeLabel.text = label;
+        mainText.text = description;
+        adviceWindow.SetActive(true);
+        grcaster.enabled = false;
+    }
+    public void SetShowframe(RectTransform target)
+    {
+        showframe.position = target.position;
+        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, target.rect.width);
+        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
+        if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
+    }
+    public void ShowarrowToShowframe_Left()
+    {
+        if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
+        showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
+        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
+        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
+        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
+    }
+    public void ShowarrowToShowframe_Up()
+    {
+        showArrow.Rotate(Vector3.up * 90f);
+        showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
+        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
+    }
+    public void DisableShowArrow() { showArrow.gameObject.SetActive(false); }
+    public void DisableShowframe() { showframe.gameObject.SetActive(false); }
+    public void ActivateProceedTimer(float t)
+    {
+        if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
+        timer = t;
+        activateOuterProceedAfterTimer = true;
+    }
+    //
+    public void NextScenario()
+    {
+        //endscenario
+        if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
+        timer = 0f;
+        if (showframe.gameObject.activeSelf) showframe.gameObject.SetActive(false);
+        if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
+        if (!grcaster.enabled) grcaster.enabled = true;
+        //
+    }
+    //
+
+    private void StartQuest(TutorialStep step)
+    {
+        currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)step);
+    }
+
+    private void PrepareStep()
+    {
+        currentStep = newStep;
         //Debug.Log(currentStep);   
-        void PrepareTutorialInfo(TutorialStep step)
-        {
-            string label = string.Empty, description = label;
-            Localization.GetTutorialInfo(step, ref label, ref description);
-            hugeLabel.text = label;
-            mainText.text = description;
-            adviceWindow.SetActive(true);
-            grcaster.enabled = false;
-            currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)step);
-        }
-        Quest StartQuest(TutorialStep ts)
-        {
-            return mcc.questUI.SYSTEM_NewTutorialQuest((byte)ts);
-        }
 
         switch (currentStep)
-        {           
-            case TutorialStep.QuestClicked:
-                {
-                    showArrow.gameObject.SetActive(false);
-                    showframe.gameObject.SetActive(false);
-                    mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.RemoveListener(this.ProceedButton);
-                    mcc.questUI.SYSTEM_GetTutorialQuestButton().onClick.AddListener(this.ProceedButton);
-                    currentStep++;
-                    break;
-                }
-            case TutorialStep.QuestShown:
-                {
-                    var qui = mcc.questUI;
-                    var q = qui.GetActiveQuest();
-                    if (q != null && q.type == QuestType.Tutorial && q.subIndex == (byte)TutorialStep.QuestShown)
-                    {
-                        qui.SYSTEM_GetTutorialQuestButton().onClick.RemoveListener(this.ProceedButton);
-                        //
-                        currentStep++;
-                        qui.SYSTEM_GetCloseButton().onClick.AddListener(this.ProceedButton);
-                    }
-                    break;
-                }
-            case TutorialStep.QuestsClosed:
-                {
-                    var qui = mcc.questUI;
-                    if (qui.GetActiveQuest() == Quest.NoQuest && !qui.IsEnabled())
-                    {
-                        currentTutorialQuest.MakeQuestCompleted();
-                        qui.SYSTEM_GetCloseButton().onClick.RemoveListener(this.ProceedButton);
-                        currentStep++;
-                        //
-                        PrepareTutorialInfo(TutorialStep.CameraMovement);
-                        currentTutorialQuest = StartQuest(TutorialStep.CameraMovement) ;
-                    }
-                    break;
-                }
-            case TutorialStep.CameraMovement:
-                {
-                    currentStep++;
-                    PrepareTutorialInfo(TutorialStep.CameraRotation);
-                    currentTutorialQuest.MakeQuestCompleted();
-                    currentTutorialQuest = StartQuest(TutorialStep.CameraRotation);
-                    outerProceedButton.SetActive(false);
-                    break;
-                }
-            case TutorialStep.CameraRotation:
-                {
-                    currentStep++;
-                    PrepareTutorialInfo(TutorialStep.CameraSlicing);
-                    currentTutorialQuest.MakeQuestCompleted();
+        {
 
-                    outerProceedButton.SetActive(false);
-                    SetShowframe(mcc.SYSTEM_GetLayerCutButton());
-                    ShowarrowToShowframe_Left();                       
-                    break;
-                }
-            case TutorialStep.CameraSlicing:
-                {                    
-                    showframe.gameObject.SetActive(false);
-                    showArrow.gameObject.SetActive(false);
-                    outerProceedButton.SetActive(false);
-                    currentTutorialQuest.MakeQuestCompleted();
-                    timer = 0f;
-                    currentStep++;
-                    //
-                    PrepareTutorialInfo(TutorialStep.Landing);
-                    GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.StructureCheck;
-                    break;
-                }
-            case TutorialStep.Landing:
-                {
-                    currentStep++;
-                    currentTutorialQuest.MakeQuestCompleted();
-                    currentTutorialQuest = null;
-                    //
-                    PrepareTutorialInfo(TutorialStep.Interface_People);
-                    SetShowframe(mcc.SYSTEM_GetCitizenString());
-                    ShowarrowToShowframe_Up();                    
-                    break;
-                }
-            case TutorialStep.Interface_People:
-                {
-                    currentStep++;
-                    PrepareTutorialInfo(TutorialStep.Interface_Electricity);
-                    SetShowframe(mcc.SYSTEM_GetEnergyString());
-                    ShowarrowToShowframe_Up();
-                    break;
-                }
-            case TutorialStep.Interface_Electricity:
-                {                    
-                    showframe.gameObject.SetActive(false);
-                    showArrow.gameObject.SetActive(false);
-                    outerProceedButton.SetActive(false);
-                    currentStep++;
+
+ 
                     //
                     PrepareTutorialInfo(TutorialStep.BuildWindmill_0);
                     currentTutorialQuest = StartQuest(TutorialStep.BuildWindmill_0);
@@ -324,10 +273,15 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.SmelteryBuilding:
                 {
                     mcc.ChangeChosenObject(ChosenObjectType.None);
-                    currentStep++;
+                    currentStep = TutorialStep.RecipeExplaining_A;
                     //                   
-                    PrepareTutorialInfo(TutorialStep.RecipeExplaining_A);
-                    currentTutorialQuest = StartQuest(TutorialStep.RecipeExplaining_A);
+                    PrepareTutorialInfo(currentStep);
+                    currentTutorialQuest = StartQuest(currentStep);
+                    observingBuilding = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
+                    mcc.Select(observingBuilding);
+                    var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
+                    SetShowframe(dd.GetComponent<RectTransform>());
+                    dd.onValueChanged.AddListener(this.RecipeChanged);
                     break;
                 }
             case TutorialStep.RecipeExplaining_A:
@@ -395,7 +349,16 @@ public sealed class TutorialUI : MonoBehaviour
                 {
                     currentStep++;
                     //
-                    PrepareTutorialInfo(TutorialStep.Finish);
+                    PrepareTutorialInfo(TutorialStep.HQUpgrade);
+                    currentTutorialQuest = StartQuest(TutorialStep.HQUpgrade);
+                    break;
+                }
+            case TutorialStep.HQUpgrade:
+                {
+                    currentTutorialQuest = null;
+                    currentStep++;
+                    //
+                    PrepareTutorialInfo(TutorialStep.End);
                     break;
                 }
         }
@@ -406,11 +369,7 @@ public sealed class TutorialUI : MonoBehaviour
         switch (currentStep)
         {
             case TutorialStep.Landing:
-                if (s is HeadQuarters)
-                {
-                    ProceedButton();
-                    return;
-                }
+                
                 break;
             case TutorialStep.BuildWindmill_0:
                 {
@@ -454,6 +413,7 @@ public sealed class TutorialUI : MonoBehaviour
             case TutorialStep.SmelteryBuilding:
             case TutorialStep.CollectConcrete:
             case TutorialStep.BuildDock:
+            case TutorialStep.HQUpgrade:
                 ProceedButton();
                 break;
         }

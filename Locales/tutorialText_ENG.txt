@@ -1,0 +1,84 @@
+3
+[001]Welcome to Limited Worlds!
+[002]Glad to see you in my real-time city building game. Here will be a short instruction how it is works. In this tutorial mode advices and goals will be doubled in the quests menu for your convenience. Click on quests button after this window closes!
+[003]Click me
+[004]Yes, right there! When you will play, you can see other quests here. Now close this window to proceed - click the small cross in the right upper corner first time to close this quest description and second time to close the quests window. You can return here anytime in this tutorial to read the current step instruction again.
+[005]Close quests window to proceed
+-/-
+[006]Camera movement
+[007]Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input. At this moment works touchscreen input - note the controlling cross in the left bottom corner. It is using for shift camera. To up and down use the double-arrow buttons nearby. Press the Proceed butoon when you'll be ready to continue.
+[008]Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input. At this moment works keyboard input. Use standart WASD controls to shift camera, Ctrl to down and Space to up. Press the Proceed button when you'll be ready to continue.
+[009]If you have keyboard: \nUse WASD to move, Ctrl to down, Space to up.\nIf you use touchscreen: \nUse Control Cross in the bottom left corner to move, double-arrow buttons nearby to up and down.
+[010]Try camera controls and then press Proceed button
+-/-
+[011]Camera controls
+[012]You can rotate camera just sliding your finger across the screen horizontally and vertically.
+[013]Rotate camera by holding middle mouse button and move the mouse itself.
+[014]If you have keyboard: \nHold middle mouse button and move the mouse\nIf you use touchscreen: \nSlide through screen to rotate horizontally and vertically
+[015]Try camera controls and then press Proceed button
+-/-
+[016]Slicing
+[017]You may also need to look through blocks. You can slice terrain by using specified button. A number displays the height of current block. Click the button second time to off the slicing mode.
+[018]Use the Slice button to look through blocks. Click it second time to return to normal state.
+[019]Try slicing and then press Proceed button
+-/-
+[013]Landing!
+[014]And now we will found a new colony on this island. At first, you shall select a place to land your colony's zeppelin. Where it lands will be a main colony building, a storage building, and a residential area. Click on selected surface and then press Land button.
+[015]Select a three-blocks surface and then click on Land button.
+[016]Colony founded
+-/-
+[015]Interface
+[016]Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.
+[017]This values displays Power situation. They are power stored / power capacity / power surplus. All buildings require power supply, and it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
+-/-
+[018]Electricity production
+[019]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
+[020]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
+[021]Build Stream generator
+[022]Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
+[023]Stream generator built 
+-/-
+[21]Gather resources
+[22]After had constructed the power generator, you shall build a food source for colonists. But start resources as for Stream Generator not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.";
+-/-
+[23]Farm construction
+[24]Now, using collected lumber, build a farm and assign at least
+[25] workers on it. Note that farm cannot be built on stone surfaces.
+-/-
+[26]Farm construction completed
+[27]Good, the farm is now working! After lumber and food we shall develop underground deposits. Select any side of a stone blocks and click the DIG button.
+-/-
+[28]Storage system
+[29]Rocks, drilled by your colonists, consist not only of stone, but a different ores too. Click on the Storage Button to see all of your colony's resources. Click again to close it after.
+-/-
+[30]Ores
+[31]Note all resources with an (ore) addition. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!
+-/-
+[32]Crafting
+[33]Now open the factory window and at the lower part of right window click the No Recipe button and change it to Stone - L-Concrete.
+-/-
+[34]Crafting II
+[35]Now press the small lightning icon on the top of the right panel to start processing!;
+-/-
+[36]Prepare to build a dock
+[37]Concrete production is first need for building a dock. It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
+[38] L-concrete to build a new dock!
+-/-
+[39]Dock building conditions
+[40]For proper functionality your dock must be build on the edge to be able to serve ships. For first level ships it needs
+[41] corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is rotated wrongly, you can rotate it manually, use small arrows at the top of right panel.
+-/-
+[42]Dock is not working yet
+[43]Rotate dock using small arrows at the top of the right panel, if this position is suitable. If not, demolish it using button at the top-right corner
+-/-
+[44]Immigration
+[45]Functional dock allows you to bring new colonists to your island. Use input field at the immigration tab to set how many colonists you want to invite. However, new people wont come, if your colony haven't got enough houses or have low morale.
+-/-
+[46]Trading
+[47]And this is a trading tab. You can select any of available resources and set its trade status - no action, sell (arrow down), buy (arrow up). The number means limit for buy and sell operations - dock will buy/sell until resources count wont reach it
+-/-
+[48]Tier 2
+[49]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button
+-/-
+[50]End of tutorial
+[51]More game aspects information you can see in Advices section of the game - click Menu button and then Advices. Thank you for playing and enjoy)

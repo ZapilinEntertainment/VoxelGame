@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Tutorial, Total
+    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Scenario, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte
@@ -14,17 +14,17 @@ public enum ProgressQuestID : byte
     Progress_Tier5, Progress_FactoryComplex, Progress_SecondFloor, Progress_FoodStocks, LASTONE
 }
 
-public sealed class Quest : MyObject
+public class Quest : MyObject
 {
-    public string name;
-    public string description;
-    public float reward { get; private set; }
-    public bool needToCheckConditions { get; private set; }
-    public bool completed { get; private set; }
+    public string name { get; protected set; }
+    public string description { get; protected set; }
+    public float reward { get; protected set; }
+    public bool needToCheckConditions { get; protected set; }
+    public bool completed { get; protected set; }
 
-    public string[] steps { get; private set; }
-    public string[] stepsAddInfo { get; private set; }
-    public bool[] stepsFinished { get; private set; }
+    public string[] steps { get; protected set; }
+    public string[] stepsAddInfo { get; protected set; }
+    public bool[] stepsFinished { get; protected set; }
     public readonly QuestType type;
     public readonly byte subIndex;
 
@@ -69,7 +69,8 @@ public sealed class Quest : MyObject
         needToCheckConditions = true;
         byte stepsCount = 1;
         reward = 0f;
-        switch (i_type)
+        bool scenario = type == QuestType.Scenario;
+        if (!scenario) switch (i_type)
         {
             case QuestType.Progress:
                 {
@@ -179,6 +180,12 @@ public sealed class Quest : MyObject
                                 stepsCount = 2;
                                 break;
                             }
+                        case TutorialUI.TutorialStep.HQUpgrade:
+                            {
+                                GameMaster.realMaster.eventTracker.buildingUpgradeEvent += this.StructureCheck;
+                                subscribedToStructuresCheck = true;
+                                break;
+                            }
                     }
                     break;
                 }
@@ -187,7 +194,7 @@ public sealed class Quest : MyObject
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
         completed = false;
-        Localization.FillQuestData(this);
+        if (!scenario) Localization.FillQuestData(this);
     }
     public Quest(Knowledge.ResearchRoute rr, byte subID) : this(RouteToQuestType(rr), subID) { }
     private static QuestType RouteToQuestType(Knowledge.ResearchRoute rr)
@@ -1145,9 +1152,14 @@ public sealed class Quest : MyObject
                                 if (s.ID == Structure.WIND_GENERATOR_1_ID) stepsFinished[1] = true;
                             }
                             break;
+                        case TutorialUI.TutorialStep.HQUpgrade:
+                            {//upgrade check!
+                                if (s.ID == Structure.HEADQUARTERS_ID) MakeQuestCompleted();
+                                break;
+                            }
                     }
                     break;
-                }
+                }                
         }
     }
 
@@ -1180,6 +1192,20 @@ public sealed class Quest : MyObject
         uint m = questsCompletenessMask[(int)QuestType.Progress],
             v = (uint)Mathf.Pow(2, (byte)ProgressQuestID.Progress_HousesToMax);
         if ((m & v) != 0) m -= v;
+    }
+
+    public void FillText(string[] s)
+    {
+        name = s[0];
+        description = s[1];
+        if (steps.Length == 1) { steps[0] = s[2]; }
+        else
+        {
+            for (int i = 0; i < steps.Length; i++)
+            {
+                steps[i] = s[i + 2];
+            }
+        }
     }
 
     #region allQuestList

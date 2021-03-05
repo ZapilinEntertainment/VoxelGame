@@ -351,7 +351,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
     {
         if (visualBorderDrawn) GameMaster.realMaster.mainChunk.HideBorderLine();
         GameMaster.realMaster.SaveTerrain("lastCreatedTerrain");
-        GameMaster.realMaster.ChangeModeToPlay();
+        GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Normal, StartFoundingType.Zeppelin));
     }
     public void GenerateNewTerrain()
     {
