@@ -1,4 +1,4 @@
-3
+3 87
 [001]Welcome to Limited Worlds!
 [002]Glad to see you in my real-time city building game. Here will be a short instruction how it is works. In this tutorial mode advices and goals will be doubled in the quests menu for your convenience. Click on quests button after this window closes!
 [003]Click me
@@ -90,14 +90,16 @@
 [074]Dock is not working yet
 [075]Rotate dock using small arrows at the top of the right panel, if this position is suitable. If not, demolish it using button at the top-right corner.
 -/-
-[44]Immigration
-[45]Functional dock allows you to bring new colonists to your island. Use input field at the immigration tab to set how many colonists you want to invite. However, new people wont come, if your colony haven't got enough houses or have low morale.
+[076]Immigration
+[077]Functional dock allows you to bring new colonists to your island. Use input field at the immigration tab to set how many colonists you want to invite. However, new people wont come, if your colony haven't got enough houses or have low morale.
 -/-
-[46]Trading
-[47]And this is a trading tab. You can select any of available resources and set its trade status - no action, sell (arrow down), buy (arrow up). The number means limit for buy and sell operations - dock will buy/sell until resources count wont reach it
+[078]Trading
+[079]And this is a trading tab. You can select any of available resources and set its trade status - no action, sell (arrow down), buy (arrow up). The number means limit for buy and sell operations - dock will buy/sell until resources count wont reach it
 -/-
-[48]Tier 2
-[49]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button
--/-
-[50]End of tutorial
-[51]More game aspects information you can see in Advices section of the game - click Menu button and then Advices. Thank you for playing and enjoy)
+[080]Tier 2
+[081]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button
+[082]HQ Upgrade
+[083]Select your main building and press the UPGRADE botton at the upper part of the observer. In dropped window you will see the resources list. Gain enough and press accept button to upgrade HQ and start Tier 2.
+[084]HQ Upgraded
+[085]End of tutorial
+[086]More game aspects information you can see in Advices section of the game - click Menu button and then Advices. Thank you for playing and enjoy)

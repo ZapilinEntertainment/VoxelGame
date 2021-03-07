@@ -13,4 +13,5 @@
     virtual public void EndScenario() { }
     virtual public void CheckConditions() { }
     virtual public void SpecialQuestFilling() { } // for combined strings
+    virtual public bool QuestMustCheckConditions() { return true; }
 }

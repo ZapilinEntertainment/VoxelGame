@@ -7,432 +7,14 @@ namespace TutorialScenarioNS
     public enum TutorialStep : byte
     {
         QuestSystem, CameraBasics, Landing, ColonyInterfaceExplaining, BuildWindmill, GatherLumber, BuildFarm,
-        StoneDigging, StorageLook, SmelteryBuilding, BuildDock
+        StoneDigging, StorageLook, SmelteryBuilding, BuildDock, DockObserving, UpgradeHQ
     }   
 
-    #region steps
-    sealed class IntroSCN : TutorialScenario
-    {
-        private IntroSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base (i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.QuestSystem;
-        }
-        public override void StartScenario()
-        {
-            tutorialUI.SetShowframe(mcc.SYSTEM_GetQuestButton());
-            tutorialUI.ShowarrowToShowframe_Left();
-            mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.AddListener(this.DisableQuestButtonSelection);
-            base.StartScenario();
-        }
-        private void DisableQuestButtonSelection()
-        {
-            mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.RemoveListener(this.DisableQuestButtonSelection);
-            tutorialUI.DisableShowArrow();
-            tutorialUI.DisableShowframe();
-            mcc.questUI.SYSTEM_GetCloseButton().onClick.AddListener(this.EndScenario);
-        }
-        public override void EndScenario()
-        {
-            if (completed) return;
-            var qui = mcc.questUI;
-            var q = qui.GetActiveQuest();
-            if (q == scenarioQuest)
-            {
-                mcc.questUI.SYSTEM_GetCloseButton().onClick.RemoveListener(this.EndScenario);
-                base.EndScenario();
-            }
-        }
-    }
-    sealed class CameraStudySCN : TutorialScenario
-    {
-        private byte stage = 0;
-        private CameraStudySCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            blockCanvasRaycaster = true;
-            step = TutorialStep.CameraBasics;
-            tutorialUI.SetCanvasRaycasterStatus(true);
-        }
-        public override void OKButton()
-        {
-            tutorialUI.ActivateProceedTimer(1f);
-        }
-        public override void Proceed()
-        {
-            if (completed) return;
-            stage++;
-            switch (stage)
-            {
-                case 2: // rotating
-                    {
-                        var s = localizer.GetText(step, WINDOW_INFO_1);
-                        tutorialUI.OpenTextWindow(s[0], s[1]);
-                        tutorialUI.ActivateProceedTimer(1f);
-                        s = localizer.GetText(TutorialStep.CameraBasics, QUEST_INFO_1);
-                        scenarioQuest.FillText(s);
-                        tutorialUI.ActivateProceedTimer(1f);
-                        break;
-                    }
-                case 3: // slicing
-                    {
-                        var s = localizer.GetText(step, WINDOW_INFO_2);
-                        tutorialUI.OpenTextWindow(s[0], s[1]);
-                        tutorialUI.ActivateProceedTimer(1f);
-                        s = localizer.GetText(TutorialStep.CameraBasics, QUEST_INFO_2);
-                        scenarioQuest.FillText(s);
-                        tutorialUI.SetShowframe(mcc.SYSTEM_GetLayerCutButton());
-                        tutorialUI.ShowarrowToShowframe_Left();
-                        tutorialUI.ActivateProceedTimer(1f);
-                        break;
-                    }
-                case 4: // end
-                    EndScenario();
-                    return;
-            }
-        }
-    }
-    sealed class LandingSCN : TutorialScenario
-    {
-        private LandingSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.Landing;
-        }
-        public override void OKButton()
-        {
-            GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
-        }
-        private void BuildingCheck(Structure s)
-        {
-            if (s is HeadQuarters)
-            {
-                GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
-                base.EndScenario();
-            }
-        }
-    }
-    sealed class ColonyInterfaceExplainingSCN : TutorialScenario
-    {
-        private byte stage = 0;
-        private ColonyInterfaceExplainingSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            blockCanvasRaycaster = true;
-            step = TutorialStep.ColonyInterfaceExplaining;
-            useQuest = false;
-        }
-        public override void StartScenario()
-        {
-            base.StartScenario();
-            tutorialUI.SetShowframe(mcc.SYSTEM_GetCitizenString());
-            tutorialUI.ShowarrowToShowframe_Up();
-        }
-        public override void OKButton()
-        {
-            stage++;
-            if (stage == 1)
-            {
-                var s = localizer.GetText(step, WINDOW_INFO_1);
-                tutorialUI.OpenTextWindow(s[0], s[1]);
-            }
-            else EndScenario();
-        }
-    }
-    sealed class BuildWindmillSCN : TutorialScenario
-    {
-        private byte stage = 0;
-        private BuildWindmillSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.BuildWindmill;
-        }
-        public override void OKButton()
-        {
-            if (stage == 0) GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
-            else EndScenario();
-        }
-        private void BuildingCheck(Structure s)
-        {
-            if (s.ID == Structure.WIND_GENERATOR_1_ID)
-            {
-                GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
-                stage++;
-                var str = localizer.GetText(step, WINDOW_INFO_1);
-                tutorialUI.OpenTextWindow(str[0], str[1]);
-            }
-        }
-    }
-    sealed class GatherLumberSCN : TutorialScenario
-    {
-        private Storage storage;
-        private const int LUMBER_COUNT = 200;
-
-        private GatherLumberSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.GatherLumber;
-            storage = GameMaster.realMaster.colonyController.storage;
-        }
-        public override void CheckConditions()
-        {
-            int stCount = (int)storage.standartResources[ResourceType.LUMBER_ID];
-            scenarioQuest.ChangeAddInfo(0,stCount.ToString() + " / " + LUMBER_COUNT.ToString());
-            if (stCount >= LUMBER_COUNT) EndScenario();
-        }
-    }
-    sealed class BuildFarmSCN : TutorialScenario
-    {
-        private ColonyController colony;
-        private const int WORKERS_COUNT = 20;
-
-        private BuildFarmSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.BuildFarm;
-            colony = GameMaster.realMaster.colonyController;
-            useSpecialQuestFilling = true;
-        }
-        public override void CheckConditions()
-        {
-            var farms = colony.GetBuildings<Farm>();
-            if (farms != null && farms.Count > 0)
-            {
-                scenarioQuest.SetStepCompleteness(0, true);
-                int maxWorkers = 0;
-                foreach (var f in farms)
-                {
-                    if (f.workersCount > maxWorkers) maxWorkers = f.workersCount;
-                }
-                scenarioQuest.ChangeAddInfo(1, maxWorkers.ToString() + " / " + WORKERS_COUNT.ToString());
-                if (maxWorkers >= WORKERS_COUNT)
-                {
-                    scenarioQuest.SetStepCompleteness(1,true);
-                    EndScenario();
-                    return;
-                }
-                else scenarioQuest.SetStepCompleteness(1, false);
-            }
-            else
-            {
-                scenarioQuest.SetStepCompleteness(0, false);
-                scenarioQuest.SetStepCompleteness(1, false);
-                scenarioQuest.ChangeAddInfo(1, string.Empty);
-            }
-        }
-        public override void SpecialQuestFilling()
-        {
-            var s = localizer.GetText(step, QUEST_INFO_0);
-            var ns = new string[4];
-            ns[0] = s[0];
-            ns[1] = s[1] + ' ' + WORKERS_COUNT.ToString() + ' ' + s[2];
-            ns[2] = s[2];
-            ns[3] = s[3];
-            scenarioQuest.FillText(ns);
-        }
-    }
-    sealed class StoneDiggingSCN : TutorialScenario
-    {
-        private Storage storage;
-        private const int STONE_COUNT = 250;
-
-        private StoneDiggingSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.StoneDigging;
-            storage = GameMaster.realMaster.colonyController.storage;
-        }
-        public override void CheckConditions()
-        {
-            int stCount = (int)storage.standartResources[ResourceType.STONE_ID];
-            scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + STONE_COUNT.ToString());
-            if (stCount >= STONE_COUNT) EndScenario();
-        }
-    }
-    sealed class StorageLookingSCN : TutorialScenario
-    {
-        private bool storageHighlightActive = false;
-        private byte stage = 0;
-
-        private StorageLookingSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.StorageLook;
-            useQuest = false;
-        }
-        public override void StartScenario()
-        {
-            if (!mcc.IsStorageUIActive())
-            {
-                var sb = mcc.SYSTEM_GetStorageButton();
-                tutorialUI.SetShowframe(sb);
-                tutorialUI.ShowarrowToShowframe_Left();
-                sb.GetComponent<Button>().onClick.AddListener(this.Proceed);
-                storageHighlightActive = true;
-            }
-            else Proceed();
-            
-        }
-        override public void Proceed()
-        {
-            if (storageHighlightActive)
-            {
-                mcc.SYSTEM_GetStorageButton().GetComponent<Button>().onClick.RemoveListener(this.Proceed);
-                tutorialUI.DisableShowframe();
-                tutorialUI.DisableShowArrow();
-                storageHighlightActive = false;
-            }
-            var s = localizer.GetText(step, WINDOW_INFO_1);
-            tutorialUI.OpenTextWindow(s[0], s[1]);
-            stage++;
-        }
-        public override void OKButton()
-        {
-            if (stage == 1) EndScenario();
-        }
-    }
-    sealed class SmelteryBuildingSCN : TutorialScenario
-    {
-        private byte stage = 0;
-        private Factory observingFactory;
-
-        private SmelteryBuildingSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.SmelteryBuilding;
-        }
-        public override void OKButton()
-        {
-            switch (stage) {
-                case 0: // beginning
-                    GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
-                    break;
-                case 2: // recipe set
-                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.AddListener(this.PowerSupplyCheck);
-                    break;
-            }   
-        }
-        private void BuildingCheck(Structure s)
-        {
-            if (s.ID == Structure.SMELTERY_1_ID)
-            {
-                observingFactory = s as Factory;
-                scenarioQuest.SetStepCompleteness(0, true);
-                stage++;
-                mcc.Select(observingFactory);
-                tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_1));
-                var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
-                tutorialUI.SetShowframe(dd.GetComponent<RectTransform>());
-                dd.onValueChanged.AddListener(this.RecipeChanged);
-            }
-            else
-            {
-                if (s.ID == Structure.WIND_GENERATOR_1_ID)
-                {
-                    scenarioQuest.SetStepCompleteness(3, true);
-                }
-            }
-        }
-        private void RecipeChanged(int i)
-        {
-            if (observingFactory != null && observingFactory.GetRecipe() == Recipe.StoneToConcrete)
-            {
-                stage++;
-                Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
-                tutorialUI.DisableShowframe();
-                tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_2));
-                scenarioQuest.SetStepCompleteness(1, true);
-                //
-            }
-        }
-        private void PowerSupplyCheck()
-        {
-            if (observingFactory.isActive)
-            {
-                stage++;
-                scenarioQuest.SetStepCompleteness(2, true);
-                Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.PowerSupplyCheck);
-                EndScenario();
-            }
-        }
-        public override void EndScenario()
-        {
-            GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
-            base.EndScenario();
-        }
-    }
-    sealed class BuildDockSCN :TutorialScenario
-    {
-        private ColonyController colony;
-        
-        private BuildDockSCN(TutorialUI i_tutorialUI, MainCanvasController i_mcc) : base(i_tutorialUI, i_mcc)
-        {
-            step = TutorialStep.BuildDock;
-            colony = GameMaster.realMaster.colonyController;
-            useSpecialQuestFilling = true;
-        }
-        public override void SpecialQuestFilling()
-        {
-            var s = localizer.GetText(step, QUEST_INFO_0);
-            var ns = new string[2];
-            ns[0] = s[0];
-            ns[1] = s[1] + ' ' + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString() + ' ' + s[2];
-            scenarioQuest.FillText(ns);
-        }
-
-        public override void CheckConditions()
-        {            
-            //
-            bool haveDocks = false;
-            if (colony.docks != null )
-            {
-                int count = colony.docks.Count;
-                if (count != 0)
-                {
-                    haveDocks = true;
-                    bool success = false;
-                    if (count == 1)
-                    {
-                        if (colony.docks[0].isCorrectLocated) success = true;
-                    }
-                    else
-                    {
-                        foreach (var d in colony.docks) {
-                            if (d.isCorrectLocated) {
-                                success = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (success)
-                    {
-                        scenarioQuest.SetStepCompleteness(2, true);
-                        EndScenario();
-                        return;
-                    }
-                    else
-                    {
-                        tutorialUI.OpenTextWindow(localizer.GetText(step, SPECIAL_0));
-                        scenarioQuest.SetStepCompleteness(2, false);
-                    }
-                }
-            }
-            scenarioQuest.SetStepCompleteness(1, haveDocks);
-            //
-            int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
-            scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString());
-            if (stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME)
-            {
-                var s = localizer.GetText(step, WINDOW_INFO_1);
-                tutorialUI.OpenTextWindow(
-                    s[0], 
-                    s[1] + ' ' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + 'x' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + ' ' + s[2]);
-                scenarioQuest.SetStepCompleteness(0, true);
-            }
-            else
-            {
-                if (!haveDocks) scenarioQuest.SetStepCompleteness(0, false);
-            }
-        }
-    }
-
-
-    #endregion
 
     abstract class TutorialScenario : Scenario
     {
-        protected TutorialUI tutorialUI;
-        protected MainCanvasController mcc;
+        protected static TutorialUI tutorialUI;
+        protected static MainCanvasController mcc;
         public bool blockCanvasRaycaster { get; protected set; }
         protected bool useQuest = true;
         public TutorialStep step
@@ -442,16 +24,40 @@ namespace TutorialScenarioNS
         }
         protected const byte WINDOW_INFO_0 = 0, QUEST_INFO_0 = 1, WINDOW_INFO_1 = 2, QUEST_INFO_1 = 3, WINDOW_INFO_2 = 4, QUEST_INFO_2 = 5, SPECIAL_0 = 6;
         protected static Localizer localizer { get; private set; }
-
+        
         static TutorialScenario()
         {
             localizer = new Localizer();
         }
-
-        public TutorialScenario(TutorialUI i_tutorialUI, MainCanvasController i_mcc)
+        public static void Initialize(TutorialUI i_tutorialUI, MainCanvasController i_mcc)
         {
             tutorialUI = i_tutorialUI;
-            mcc = i_mcc;            
+            mcc = i_mcc;
+        }
+        public static TutorialScenario GetScenario(TutorialStep step)
+        {
+            switch (step)
+            {
+                case TutorialStep.QuestSystem: return new IntroSCN();
+                case TutorialStep.CameraBasics: return new CameraStudySCN();
+                case TutorialStep.Landing: return new LandingSCN();
+                case TutorialStep.ColonyInterfaceExplaining: return new ColonyInterfaceExplainingSCN();
+                case TutorialStep.BuildWindmill: return new BuildWindmillSCN();
+                case TutorialStep.GatherLumber: return new GatherLumberSCN();
+                case TutorialStep.BuildFarm: return new BuildFarmSCN();
+                case TutorialStep.StoneDigging: return new StoneDiggingSCN();
+                case TutorialStep.StorageLook: return new StorageLookingSCN();
+                case TutorialStep.SmelteryBuilding: return new SmelteryBuildingSCN();
+                case TutorialStep.BuildDock: return new DockObservingSCN();
+                case TutorialStep.DockObserving: return new DockObservingSCN();
+                case TutorialStep.UpgradeHQ: return new UpgradeHQSCN();
+                default: return null;
+            }
+        }
+
+
+        protected TutorialScenario()
+        {         
             blockCanvasRaycaster = false;
         }
 
@@ -460,7 +66,7 @@ namespace TutorialScenarioNS
             tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_0));
             if (useQuest)
             {
-                scenarioQuest = mcc.questUI.SYSTEM_NewTutorialQuest(_scenarioIndex);
+                scenarioQuest = mcc.questUI.SYSTEM_NewScenarioQuest(this);
                 if (useSpecialQuestFilling) SpecialQuestFilling();
                 else
                 {
@@ -480,6 +86,487 @@ namespace TutorialScenarioNS
             }
             tutorialUI.NextScenario();
         }
+
+        public override bool QuestMustCheckConditions()
+        {
+            return false;
+        }
+
+
+        #region steps
+        sealed class IntroSCN : TutorialScenario
+        {
+            public IntroSCN() : base()
+            {
+                step = TutorialStep.QuestSystem;
+            }
+            public override void StartScenario()
+            {
+                tutorialUI.SetShowframe(mcc.SYSTEM_GetQuestButton());
+                tutorialUI.ShowarrowToShowframe_Left();
+                mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.AddListener(this.DisableQuestButtonSelection);
+                base.StartScenario();
+            }
+            private void DisableQuestButtonSelection()
+            {
+                mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.RemoveListener(this.DisableQuestButtonSelection);
+                tutorialUI.DisableShowArrow();
+                tutorialUI.DisableShowframe();
+                mcc.questUI.SYSTEM_GetCloseButton().onClick.AddListener(this.EndScenario);
+            }
+            public override void EndScenario()
+            {
+                if (completed) return;
+                var qui = mcc.questUI;
+                var q = qui.GetActiveQuest();
+                if (q == scenarioQuest)
+                {
+                    mcc.questUI.SYSTEM_GetCloseButton().onClick.RemoveListener(this.EndScenario);
+                    base.EndScenario();
+                }
+            }
+        }
+        sealed class CameraStudySCN : TutorialScenario
+        {
+            private byte stage = 0;
+            public CameraStudySCN() : base()
+            {
+                step = TutorialStep.CameraBasics;
+            }
+            public override void OKButton()
+            {
+                tutorialUI.ActivateProceedTimer(1f);
+            }
+            public override void Proceed()
+            {
+                if (completed) return;
+                stage++;
+                switch (stage)
+                {
+                    case 2: // rotating
+                        {
+                            var s = localizer.GetText(step, WINDOW_INFO_1);
+                            tutorialUI.OpenTextWindow(s[0], s[1]);
+                            tutorialUI.ActivateProceedTimer(1f);
+                            s = localizer.GetText(TutorialStep.CameraBasics, QUEST_INFO_1);
+                            scenarioQuest.FillText(s);
+                            tutorialUI.ActivateProceedTimer(1f);
+                            break;
+                        }
+                    case 3: // slicing
+                        {
+                            var s = localizer.GetText(step, WINDOW_INFO_2);
+                            tutorialUI.OpenTextWindow(s[0], s[1]);
+                            tutorialUI.ActivateProceedTimer(1f);
+                            s = localizer.GetText(TutorialStep.CameraBasics, QUEST_INFO_2);
+                            scenarioQuest.FillText(s);
+                            tutorialUI.SetShowframe(mcc.SYSTEM_GetLayerCutButton());
+                            tutorialUI.ShowarrowToShowframe_Left();
+                            tutorialUI.ActivateProceedTimer(1f);
+                            break;
+                        }
+                    case 4: // end
+                        EndScenario();
+                        return;
+                }
+            }
+        }
+        sealed class LandingSCN : TutorialScenario
+        {
+            public LandingSCN() : base()
+            {
+                step = TutorialStep.Landing;
+            }
+            public override void OKButton()
+            {
+                GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
+            }
+            private void BuildingCheck(Structure s)
+            {
+                if (s is HeadQuarters)
+                {
+                    GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
+                    base.EndScenario();
+                }
+            }
+        }
+        sealed class ColonyInterfaceExplainingSCN : TutorialScenario
+        {
+            private byte stage = 0;
+            public ColonyInterfaceExplainingSCN() : base()
+            {
+                blockCanvasRaycaster = true;
+                step = TutorialStep.ColonyInterfaceExplaining;
+                useQuest = false;
+            }
+            public override void StartScenario()
+            {
+                base.StartScenario();
+                tutorialUI.SetShowframe(mcc.SYSTEM_GetCitizenString());
+                tutorialUI.ShowarrowToShowframe_Up();
+            }
+            public override void OKButton()
+            {
+                stage++;
+                if (stage == 1)
+                {
+                    var s = localizer.GetText(step, WINDOW_INFO_1);
+                    tutorialUI.OpenTextWindow(s[0], s[1]);
+                }
+                else EndScenario();
+            }
+        }
+        sealed class BuildWindmillSCN : TutorialScenario
+        {
+            private byte stage = 0;
+            public BuildWindmillSCN() : base()
+            {
+                step = TutorialStep.BuildWindmill;
+            }
+            public override void OKButton()
+            {
+                if (stage == 0) GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
+                else EndScenario();
+            }
+            private void BuildingCheck(Structure s)
+            {
+                if (s.ID == Structure.WIND_GENERATOR_1_ID)
+                {
+                    GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
+                    stage++;
+                    var str = localizer.GetText(step, WINDOW_INFO_1);
+                    tutorialUI.OpenTextWindow(str[0], str[1]);
+                }
+            }
+        }
+        sealed class GatherLumberSCN : TutorialScenario
+        {
+            private Storage storage;
+            private const int LUMBER_COUNT = 200;
+
+            public GatherLumberSCN() : base()
+            {
+                step = TutorialStep.GatherLumber;
+                storage = GameMaster.realMaster.colonyController.storage;
+            }
+            public override void CheckConditions()
+            {
+                int stCount = (int)storage.standartResources[ResourceType.LUMBER_ID];
+                scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + LUMBER_COUNT.ToString());
+                if (stCount >= LUMBER_COUNT) EndScenario();
+            }
+            public override bool QuestMustCheckConditions() { return true; }
+        }
+        sealed class BuildFarmSCN : TutorialScenario
+        {
+            private ColonyController colony;
+            private const int WORKERS_COUNT = 20;
+
+            public BuildFarmSCN() : base()
+            {
+                step = TutorialStep.BuildFarm;
+                colony = GameMaster.realMaster.colonyController;
+                useSpecialQuestFilling = true;
+            }
+            public override void CheckConditions()
+            {
+                var farms = colony.GetBuildings<Farm>();
+                if (farms != null && farms.Count > 0)
+                {
+                    scenarioQuest.SetStepCompleteness(0, true);
+                    int maxWorkers = 0;
+                    foreach (var f in farms)
+                    {
+                        if (f.workersCount > maxWorkers) maxWorkers = f.workersCount;
+                    }
+                    scenarioQuest.ChangeAddInfo(1, maxWorkers.ToString() + " / " + WORKERS_COUNT.ToString());
+                    if (maxWorkers >= WORKERS_COUNT)
+                    {
+                        scenarioQuest.SetStepCompleteness(1, true);
+                        EndScenario();
+                        return;
+                    }
+                    else scenarioQuest.SetStepCompleteness(1, false);
+                }
+                else
+                {
+                    scenarioQuest.SetStepCompleteness(0, false);
+                    scenarioQuest.SetStepCompleteness(1, false);
+                    scenarioQuest.ChangeAddInfo(1, string.Empty);
+                }
+            }
+            public override bool QuestMustCheckConditions() { return true; }
+            public override void SpecialQuestFilling()
+            {
+                var s = localizer.GetText(step, QUEST_INFO_0);
+                var ns = new string[4];
+                ns[0] = s[0];
+                ns[1] = s[1] + ' ' + WORKERS_COUNT.ToString() + ' ' + s[2];
+                ns[2] = s[2];
+                ns[3] = s[3];
+                scenarioQuest.FillText(ns);
+            }
+        }
+        sealed class StoneDiggingSCN : TutorialScenario
+        {
+            private Storage storage;
+            private const int STONE_COUNT = 250;
+
+            public StoneDiggingSCN() : base()
+            {
+                step = TutorialStep.StoneDigging;
+                storage = GameMaster.realMaster.colonyController.storage;
+            }
+            public override void CheckConditions()
+            {
+                int stCount = (int)storage.standartResources[ResourceType.STONE_ID];
+                scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + STONE_COUNT.ToString());
+                if (stCount >= STONE_COUNT) EndScenario();
+            }
+            public override bool QuestMustCheckConditions() { return true; }
+        }
+        sealed class StorageLookingSCN : TutorialScenario
+        {
+            private bool storageHighlightActive = false;
+            private byte stage = 0;
+
+            public StorageLookingSCN() : base()
+            {
+                step = TutorialStep.StorageLook;
+                useQuest = false;
+            }
+            public override void StartScenario()
+            {
+                if (!mcc.IsStorageUIActive())
+                {
+                    var sb = mcc.SYSTEM_GetStorageButton();
+                    tutorialUI.SetShowframe(sb);
+                    tutorialUI.ShowarrowToShowframe_Left();
+                    sb.GetComponent<Button>().onClick.AddListener(this.Proceed);
+                    storageHighlightActive = true;
+                }
+                else Proceed();
+
+            }
+            override public void Proceed()
+            {
+                if (storageHighlightActive)
+                {
+                    mcc.SYSTEM_GetStorageButton().GetComponent<Button>().onClick.RemoveListener(this.Proceed);
+                    tutorialUI.DisableShowframe();
+                    tutorialUI.DisableShowArrow();
+                    storageHighlightActive = false;
+                }
+                var s = localizer.GetText(step, WINDOW_INFO_1);
+                tutorialUI.OpenTextWindow(s[0], s[1]);
+                stage++;
+            }
+            public override void OKButton()
+            {
+                if (stage == 1) EndScenario();
+            }
+        }
+        sealed class SmelteryBuildingSCN : TutorialScenario
+        {
+            private byte stage = 0;
+            private Factory observingFactory;
+
+            public SmelteryBuildingSCN() : base()
+            {
+                step = TutorialStep.SmelteryBuilding;
+            }
+            public override void OKButton()
+            {
+                switch (stage)
+                {
+                    case 0: // beginning
+                        GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
+                        break;
+                    case 2: // recipe set
+                        Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.AddListener(this.PowerSupplyCheck);
+                        break;
+                }
+            }
+            private void BuildingCheck(Structure s)
+            {
+                if (s.ID == Structure.SMELTERY_1_ID)
+                {
+                    observingFactory = s as Factory;
+                    scenarioQuest.SetStepCompleteness(0, true);
+                    stage++;
+                    mcc.Select(observingFactory);
+                    tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_1));
+                    var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
+                    tutorialUI.SetShowframe(dd.GetComponent<RectTransform>());
+                    dd.onValueChanged.AddListener(this.RecipeChanged);
+                }
+                else
+                {
+                    if (s.ID == Structure.WIND_GENERATOR_1_ID)
+                    {
+                        scenarioQuest.SetStepCompleteness(3, true);
+                    }
+                }
+            }
+            private void RecipeChanged(int i)
+            {
+                if (observingFactory != null && observingFactory.GetRecipe() == Recipe.StoneToConcrete)
+                {
+                    stage++;
+                    Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
+                    tutorialUI.DisableShowframe();
+                    tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_2));
+                    scenarioQuest.SetStepCompleteness(1, true);
+                    //
+                }
+            }
+            private void PowerSupplyCheck()
+            {
+                if (observingFactory.isActive)
+                {
+                    stage++;
+                    scenarioQuest.SetStepCompleteness(2, true);
+                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.PowerSupplyCheck);
+                    EndScenario();
+                }
+            }
+            public override void EndScenario()
+            {
+                GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
+                base.EndScenario();
+            }
+        }
+        sealed class BuildDockSCN : TutorialScenario
+        {
+            private ColonyController colony;
+
+            public BuildDockSCN() : base()
+            {
+                step = TutorialStep.BuildDock;
+                colony = GameMaster.realMaster.colonyController;
+                useSpecialQuestFilling = true;
+            }
+            public override void SpecialQuestFilling()
+            {
+                var s = localizer.GetText(step, QUEST_INFO_0);
+                var ns = new string[2];
+                ns[0] = s[0];
+                ns[1] = s[1] + ' ' + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString() + ' ' + s[2];
+                scenarioQuest.FillText(ns);
+            }
+            public override void CheckConditions()
+            {
+                //
+                bool haveDocks = false;
+                if (colony.docks != null)
+                {
+                    int count = colony.docks.Count;
+                    if (count != 0)
+                    {
+                        haveDocks = true;
+                        bool success = false;
+                        if (count == 1)
+                        {
+                            if (colony.docks[0].isCorrectLocated) success = true;
+                        }
+                        else
+                        {
+                            foreach (var d in colony.docks)
+                            {
+                                if (d.isCorrectLocated)
+                                {
+                                    success = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (success)
+                        {
+                            scenarioQuest.SetStepCompleteness(2, true);
+                            EndScenario();
+                            return;
+                        }
+                        else
+                        {
+                            tutorialUI.OpenTextWindow(localizer.GetText(step, SPECIAL_0));
+                            scenarioQuest.SetStepCompleteness(2, false);
+                        }
+                    }
+                }
+                scenarioQuest.SetStepCompleteness(1, haveDocks);
+                //
+                int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
+                scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString());
+                if (stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME)
+                {
+                    var s = localizer.GetText(step, WINDOW_INFO_1);
+                    tutorialUI.OpenTextWindow(
+                        s[0],
+                        s[1] + ' ' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + 'x' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + ' ' + s[2]);
+                    scenarioQuest.SetStepCompleteness(0, true);
+                }
+                else
+                {
+                    if (!haveDocks) scenarioQuest.SetStepCompleteness(0, false);
+                }
+            }
+            public override bool QuestMustCheckConditions() { return true; }
+        }
+        sealed class DockObservingSCN : TutorialScenario
+        {
+            private byte stage = 0;
+            public DockObservingSCN() : base()
+            {
+                blockCanvasRaycaster = true;
+                step = TutorialStep.DockObserving;
+                useQuest = false;
+            }
+            public override void StartScenario()
+            {
+                base.StartScenario();
+                var obs = Dock.dockObserver;
+                obs.PrepareImmigrationPanel();
+                tutorialUI.SetShowframe(obs.SYSTEM_GetImmigrationPanel());
+            }
+            public override void OKButton()
+            {
+                stage++;
+                if (stage == 1)
+                {
+                    Dock.dockObserver.PrepareTradingPanel();
+                    var s = localizer.GetText(step, WINDOW_INFO_1);
+                    tutorialUI.OpenTextWindow(s[0], s[1]);
+                }
+                else EndScenario();
+            }
+        }
+        sealed class UpgradeHQSCN : TutorialScenario
+        {
+            private byte stage = 0;
+            public UpgradeHQSCN() : base()
+            {
+                step = TutorialStep.UpgradeHQ;
+            }
+            public override void StartScenario()
+            {
+                base.StartScenario();
+                GameMaster.realMaster.eventTracker.buildingUpgradeEvent += this.BuildingUpgrade;
+            }
+            private void BuildingUpgrade(Building b)
+            {
+                if (b.ID == Structure.HEADQUARTERS_ID)
+                {
+                    stage++;
+                    GameMaster.realMaster.eventTracker.buildingUpgradeEvent -= this.BuildingUpgrade;
+                    tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_1));
+                }
+            }
+            public override void OKButton()
+            {
+                if (stage == 1) EndScenario();
+            }
+        }
+        #endregion
 
         #region localization
         public class Localizer
@@ -625,32 +712,31 @@ namespace TutorialScenarioNS
                             }
                             break;
                         }
+                    case TutorialStep.DockObserving:
+                        {
+                            switch (subIndex)
+                            {
+                                case WINDOW_INFO_0: return new string[2] { lines[76], lines[77] };
+                                case WINDOW_INFO_1: return new string[2] { lines[78], lines[79] };
+                            }
+                            break;
+                        }
+                    case TutorialStep.UpgradeHQ:
+                        {
+                            switch (subIndex)
+                            {
+                                case WINDOW_INFO_0: return new string[2] { lines[080], lines[081] };
+                                case WINDOW_INFO_1: return new string[2] { lines[085], lines[086] };
+                                case QUEST_INFO_0: return new string[3] { lines[082], lines[083], lines[084] };
+                            }
+                            break;
+                        }
                 }
                 return null;
             }
-        }
-
-       
+        }       
         #endregion
     }
 }
-}
 
-                                    case TutorialUI.TutorialStep.CollectConcrete:
-                                        {
-                                            q.name = "Collect concrete";
-                                            q.description = "Collect enough l-concrete for dock building. Advice: increase smeltery's workers count and sure that there is enough power to operate.";
-                                            q.steps[0] = "Concrete collected ";
-                                            break;
-                                        }
-                                    case TutorialUI.TutorialStep.BuildDock:
-                                        {
-                                            q.name = "Dock building";
-                                            q.description = "Find a place on a island shore with " + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + 'x' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() +
-                                                " space to allow trade ships to dock. Rotate dock manually if it faces wrong, using small arrows at the top of its observer panel. /n" +
-                                                "If you placed dock wrong, use button in top-right corner to demolish it - in this scenario your resources will be returned.";
-                                            q.steps[0] = "Dock built ";
-                                            q.steps[1] = "Dock is working ";
-                                            break;
-                                        }
-                                }
+

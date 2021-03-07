@@ -10,12 +10,9 @@ public sealed class TutorialUI : MonoBehaviour
     [SerializeField] private Text hugeLabel, mainText;
     [SerializeField] private GameObject adviceWindow, outerProceedButton;
     [SerializeField] private RectTransform showframe, showArrow;
-    private TutorialStep currentStep = 0;
     private UIController uicontroller;
     private MainCanvasController mcc;
     private GraphicRaycaster grcaster;
-    private Quest currentTutorialQuest;
-    private Building observingBuilding;
     private TutorialScenario currentScenario;
     private float timer;
     private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
@@ -31,19 +28,14 @@ public sealed class TutorialUI : MonoBehaviour
 
     private void Start()
     {
-        string[] strs = new string[2];
-        currentScenario.GetText()
-        hugeLabel.text = strs[0];
-        mainText.text = strs[1];
-        if (!adviceWindow.activeSelf) adviceWindow.SetActive(true);
-        if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
         GameMaster.realMaster.PrepareColonyController(true);
         uicontroller = UIController.GetCurrent();
         mcc = uicontroller.GetMainCanvasController();
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
         //
-        currentStep = TutorialStep.Intro;
-        PrepareStep();
+        TutorialScenario.Initialize(this, mcc);
+        currentScenario = TutorialScenario.GetScenario(TutorialStep.QuestSystem);
+        currentScenario.StartScenario();
     }
     private void Update()
     {
@@ -62,70 +54,8 @@ public sealed class TutorialUI : MonoBehaviour
     public void OKButton()
     {
         if (adviceWindow.activeSelf) adviceWindow.SetActive(false);
-        switch (currentStep)
-        {
-            case TutorialStep.Intro:
-                {
-                    grcaster.enabled = true;
-                    currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)TutorialStep.QuestShown);
-                    mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.AddListener(this.ProceedButton);
-                    currentStep++;
-                    break;
-                }
-            case TutorialStep.CameraMovement:
-            case TutorialStep.CameraRotation:
-            case TutorialStep.CameraSlicing:            
-                activateOuterProceedAfterTimer = true;
-                timer = 1f;                
-                break;
-            case TutorialStep.Interface_People:
-            case TutorialStep.Interface_Electricity:
-            case TutorialStep.BuildWindmill_1:
-            case TutorialStep.Immigration:
-            case TutorialStep.Trade:
-                ProceedButton();
-                break;
-            case TutorialStep.Landing:
-                Zeppelin.CreateNew();
-                break;
-            case TutorialStep.StoneDigging:
-                if (nextStepReady)
-                {
-                    ProceedButton();
-                }
-                break;
-            case TutorialStep.End:
-                {
-                    Destroy(gameObject);
-                    GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Normal, StartFoundingType.Nothing));
-                    break;
-                }
-               
-        }
+        currentScenario.OKButton();
         grcaster.enabled = true;
-    }
-    private void StartStep(TutorialStep step)
-    {        
-        switch (step)
-        {
-            case TutorialStep.Intro:
-                {
-                    PrepareTutorialInfo(step);
-                    StartQuest(TutorialStep.QuestShown);
-                    SetShowframe(mcc.SYSTEM_GetQuestButton());
-                    ShowarrowToShowframe_Left();
-                    break;
-                }
-        }
-        currentStep = step;
-    }
-    private void EndStep(TutorialStep step)
-    {        
-        switch (step)
-        {
-            case TutorialStep.Intro:
-                break;
-        }
     }
 
     //
@@ -191,182 +121,12 @@ public sealed class TutorialUI : MonoBehaviour
         if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
         if (!grcaster.enabled) grcaster.enabled = true;
         //
+        if (currentScenario.step != TutorialStep.UpgradeHQ)
+        {
+            var nextStep = currentScenario.step + 1;
+            currentScenario = TutorialScenario.GetScenario(nextStep);
+            currentScenario.StartScenario();
+        }
     }
     //
-
-    private void StartQuest(TutorialStep step)
-    {
-        currentTutorialQuest = mcc.questUI.SYSTEM_NewTutorialQuest((byte)step);
-    }
-
-    private void PrepareStep()
-    {
-        currentStep = newStep;
-        //Debug.Log(currentStep);   
-
-        switch (currentStep)
-        {
-
-
-
-            case TutorialStep.SmelteryBuilding:
-                {
-                    mcc.ChangeChosenObject(ChosenObjectType.None);
-                    currentStep = TutorialStep.RecipeExplaining_A;
-                    //                   
-                    PrepareTutorialInfo(currentStep);
-                    currentTutorialQuest = StartQuest(currentStep);
-                    observingBuilding = GameMaster.realMaster.colonyController.GetBuildings<Factory>()[0];
-                    mcc.Select(observingBuilding);
-                   
-                    break;
-                }
-            case TutorialStep.RecipeExplaining_A:
-                {
-                    currentStep++;
-                    //
-                    PrepareTutorialInfo(TutorialStep.RecipeExplaining_B);
-                    var eb = Building.buildingObserver.SYSTEM_GetEnergyButton();
-                    SetShowframe(eb.GetComponent<RectTransform>());
-                    eb.onClick.AddListener(this.ProceedButton);
-                    currentTutorialQuest.SetStepCompleteness(0, true);
-                    break;
-                }
-            case TutorialStep.RecipeExplaining_B:
-                {
-                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.ProceedButton);
-                    showframe.gameObject.SetActive(false);
-                    currentStep++;
-                    mcc.ChangeChosenObject(ChosenObjectType.None);
-                    currentTutorialQuest.SetStepCompleteness(1, true);
-                    currentTutorialQuest.MakeQuestCompleted();
-                    observingBuilding = null;
-                    //
-                    PrepareTutorialInfo(TutorialStep.CollectConcrete);
-                    currentTutorialQuest = StartQuest(TutorialStep.CollectConcrete);
-                    break;
-                }
-            case TutorialStep.CollectConcrete:
-                {
-                    currentTutorialQuest = null;
-                    currentStep++;
-                    //
-                    mcc.ChangeChosenObject(ChosenObjectType.None);
-                    PrepareTutorialInfo(TutorialStep.BuildDock);
-                    currentTutorialQuest = StartQuest(TutorialStep.BuildDock);
-                    break;
-                }
-            case TutorialStep.BuildDock_Error:
-                {
-                    PrepareTutorialInfo(TutorialStep.BuildDock_Error);
-                    break;
-                }
-            case TutorialStep.BuildDock:
-                {
-                    currentStep = TutorialStep.Immigration;
-                    if (!currentTutorialQuest.completed) currentTutorialQuest.MakeQuestCompleted();
-                    currentTutorialQuest = null;
-                    //
-                    mcc.Select(observingBuilding);
-                    var obs = Dock.dockObserver;
-                    obs.PrepareImmigrationPanel();
-                    SetShowframe(obs.SYSTEM_GetImmigrationPanel());
-                    PrepareTutorialInfo(currentStep);                   
-                    break;
-                }
-            case TutorialStep.Immigration:
-                {
-                    showframe.gameObject.SetActive(false);
-                    currentStep++;
-                    //
-                    PrepareTutorialInfo(TutorialStep.Trade);
-                    break;
-                }
-            case TutorialStep.Trade:
-                {
-                    currentStep++;
-                    //
-                    PrepareTutorialInfo(TutorialStep.HQUpgrade);
-                    currentTutorialQuest = StartQuest(TutorialStep.HQUpgrade);
-                    break;
-                }
-            case TutorialStep.HQUpgrade:
-                {
-                    currentTutorialQuest = null;
-                    currentStep++;
-                    //
-                    PrepareTutorialInfo(TutorialStep.End);
-                    break;
-                }
-        }
-    }
-
-    private void StructureCheck(Structure s)
-    {
-        switch (currentStep)
-        {
-            case TutorialStep.Landing:
-                
-                break;
-            case TutorialStep.BuildWindmill_0:
-                {
-                    if (s is WindGenerator)
-                    {
-                        ProceedButton();
-                        return;
-                    }
-                    break;
-                }
-            case TutorialStep.BuildDock:
-            case TutorialStep.BuildDock_Error:
-                {
-                    if (s is Dock)
-                    {                        
-                        var d = s as Dock;
-                        if (!d.isCorrectLocated)
-                        {
-                            currentStep = TutorialStep.BuildDock_Error;
-                            ProceedButton();
-                        }
-                        else
-                        {
-                            observingBuilding = d;
-                            currentStep = TutorialStep.BuildDock;
-                            ProceedButton();
-                        }
-                    }
-                    break;
-                }
-        }
-    }
-    public void QuestCompleted(byte subIndex)
-    {
-        var ts = (TutorialStep)subIndex;
-        switch (ts)
-        {
-            case TutorialStep.GatherLumber:
-            case TutorialStep.BuildFarm:
-            case TutorialStep.StoneDigging:
-            case TutorialStep.SmelteryBuilding:
-            case TutorialStep.CollectConcrete:
-            case TutorialStep.BuildDock:
-            case TutorialStep.HQUpgrade:
-                ProceedButton();
-                break;
-        }
-    }
-    private void RecipeChanged(int i)
-    {
-        if (currentStep == TutorialStep.RecipeExplaining_A)
-        {
-            if (observingBuilding != null)
-            {
-                var of = observingBuilding as Factory;
-                if (of != null && of.GetRecipe() == Recipe.StoneToConcrete) {
-                    Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
-                    ProceedButton();
-                }                
-            }
-        }
-    }
 }

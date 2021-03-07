@@ -15,4 +15,9 @@
     {
         stepsAddInfo[index] = s;
     }
+
+    public QuestSection DefineQuestSection()
+    {
+        return QuestSection.Endgame;
+    }
 }

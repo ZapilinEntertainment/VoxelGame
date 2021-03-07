@@ -209,7 +209,7 @@ public sealed class QuestUI : MonoBehaviour
         questDescription.text = q.description;
         (questDescription.transform.parent as RectTransform).SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, 0, questDescription.rectTransform.rect.height);
         rewardText.text = Localization.GetWord(LocalizedWord.Reward) + " : " + ((int)q.reward).ToString();
-        questDropButton.SetActive(q.type != QuestType.Tutorial);
+        questDropButton.SetActive(q.type != QuestType.Scenario);
         PrepareStepsList(q);
     }
     private void PrepareStepsList(Quest q)
@@ -425,19 +425,18 @@ public sealed class QuestUI : MonoBehaviour
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
     }
 
-    private QuestSection INLINE_GetSectionForTutorial() { return QuestSection.Endgame; }
-    public Quest SYSTEM_NewTutorialQuest(byte subID)
+    public ScenarioQuest SYSTEM_NewScenarioQuest(Scenario s)
     {
-        int endIndex = (int)INLINE_GetSectionForTutorial();
-        var q = new Quest(QuestType.Tutorial, subID);
-        activeQuests[endIndex] = q;
-        questAccessMap[endIndex] = true;
+        var q = new ScenarioQuest(s);
+        int sectionIndex = (int)q.DefineQuestSection();
+        activeQuests[sectionIndex] = q;
+        questAccessMap[sectionIndex] = true;
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         return q;
     }
-    public Button SYSTEM_GetTutorialQuestButton()
+    public Button SYSTEM_QuestButton(int i)
     {
-        return questButtons[(int)INLINE_GetSectionForTutorial()].GetComponent<Button>();
+        return questButtons[i].GetComponent<Button>();
     }
     public Button SYSTEM_GetCloseButton()
     {
@@ -446,7 +445,7 @@ public sealed class QuestUI : MonoBehaviour
 
     public Quest GetActiveQuest()
     {
-        if (openedQuest == (sbyte)INLINE_GetSectionForTutorial()) return activeQuests[openedQuest];
+        if (openedQuest != -1) return activeQuests[openedQuest];
         else return Quest.NoQuest;
     }
     public bool IsEnabled() { return GetComponent<Image>().enabled; }
