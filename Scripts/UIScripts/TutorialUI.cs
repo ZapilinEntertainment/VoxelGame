@@ -36,7 +36,8 @@ public sealed class TutorialUI : MonoBehaviour
         TestMaster.CreateColony();
         GameMaster.realMaster.SYSTEM_SetNoResourcesCheat(true);
         TutorialScenario.Initialize(this, mcc);
-        StartScenario(TutorialScenario.GetScenario(TutorialStep.SmelteryBuilding));
+        StartScenario(TutorialScenario.GetScenario(TutorialStep.BuildDock));
+        GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Concrete, 500);
     }
     private void StartScenario(TutorialScenario s)
     {

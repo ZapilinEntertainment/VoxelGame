@@ -21,8 +21,8 @@ public sealed class UIDockObserver : UIObserver
     public static UIDockObserver InitializeDockObserverScript()
     {
         UIDockObserver udo = Instantiate(Resources.Load<GameObject>("UIPrefs/dockObserver"), mycanvas.rightPanel.transform).GetComponent<UIDockObserver>();
-        Dock.dockObserver = udo;
         udo.LocalizeTitles();
+        udo.gameObject.SetActive(false);
         return udo;
     }
 

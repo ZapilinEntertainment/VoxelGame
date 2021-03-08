@@ -328,12 +328,13 @@ public class TestMaster : MonoBehaviour
 
     public static void CreateColony()
     {
-        var chunk = GameMaster.realMaster.mainChunk;
+        var rm = GameMaster.realMaster;
+        var chunk = rm.mainChunk;
         chunk.GetRandomSurface().CreateStructure(Structure.HEADQUARTERS_ID);
         chunk.GetRandomSurface().CreateStructure(Structure.STORAGE_0_ID);
         chunk.GetRandomSurface().CreateStructure(Structure.SETTLEMENT_CENTER_ID);
         chunk.GetRandomSurface().CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
-        GameMaster.realMaster.SetStartResources();        
+        rm.SetStartResources();        
     }
 }
 

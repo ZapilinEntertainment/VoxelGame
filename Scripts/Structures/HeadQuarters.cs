@@ -56,7 +56,8 @@ public sealed class HeadQuarters : Building
     public override void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        GameMaster.realMaster.PrepareColonyController(true)?.SetHQ(this);
+        colony = GameMaster.realMaster.PrepareColonyController(true);
+        colony.SetHQ(this);
 
         SetBuildingData(b, pos);
         maxHp = 1000 * level;

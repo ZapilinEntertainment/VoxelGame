@@ -49,7 +49,7 @@ namespace TutorialScenarioNS
                 case TutorialStep.StoneDigging: return new StoneDiggingSCN();
                 case TutorialStep.StorageLook: return new StorageLookingSCN();
                 case TutorialStep.SmelteryBuilding: return new SmelteryBuildingSCN();
-                case TutorialStep.BuildDock: return new DockObservingSCN();
+                case TutorialStep.BuildDock: return new BuildDockSCN();
                 case TutorialStep.DockObserving: return new DockObservingSCN();
                 case TutorialStep.UpgradeHQ: return new UpgradeHQSCN();
                 default: return null;
@@ -521,6 +521,7 @@ namespace TutorialScenarioNS
         }
         sealed class BuildDockSCN : TutorialScenario
         {
+            private bool buildDockAnnounceShown = false, rotateAdviceShown = false;
             private ColonyController colony;
             public override byte GetStepsCount() { return 3; }
 
@@ -528,18 +529,21 @@ namespace TutorialScenarioNS
             {
                 step = TutorialStep.BuildDock;
                 colony = GameMaster.realMaster.colonyController;
-                useSpecialQuestFilling = true;
+                useSpecialWindowFilling = true;
             }
-            public override void SpecialQuestFilling()
+            public override void SpecialWindowFilling()
             {
-                var s = localizer.GetText(step, QUEST_INFO_0);
-                var ns = new string[2];
-                ns[0] = s[0];
-                ns[1] = s[1] + ' ' + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString() + ' ' + s[2];
-                scenarioQuest.FillText(ns);
+                var s = localizer.GetText(step, WINDOW_INFO_0);
+                tutorialUI.OpenTextWindow(s[0], s[1] + ' ' + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString() + ' ' + s[2]);
             }
+
+            private void StructureCheck()
+            {
+
+            }
+
             public override void CheckConditions()
-            {
+            {             
                 //
                 bool haveDocks = false;
                 if (colony.docks != null)
@@ -572,21 +576,29 @@ namespace TutorialScenarioNS
                         }
                         else
                         {
-                            tutorialUI.OpenTextWindow(localizer.GetText(step, SPECIAL_0));
-                            scenarioQuest.SetStepCompleteness(2, false);
+                            if (!rotateAdviceShown)
+                            {
+                                tutorialUI.OpenTextWindow(localizer.GetText(step, SPECIAL_0));
+                                scenarioQuest.SetStepCompleteness(2, false);
+                                rotateAdviceShown = true;
+                            }
                         }
                     }
                 }
                 scenarioQuest.SetStepCompleteness(1, haveDocks);
                 //
                 int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
-                scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString());
+                scenarioQuest.ChangeAddInfo(0, ' ' + stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString());
                 if (stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME)
                 {
-                    var s = localizer.GetText(step, WINDOW_INFO_1);
-                    tutorialUI.OpenTextWindow(
-                        s[0],
-                        s[1] + ' ' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + 'x' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + ' ' + s[2]);
+                    if (!buildDockAnnounceShown)
+                    {
+                        var s = localizer.GetText(step, WINDOW_INFO_1);
+                        tutorialUI.OpenTextWindow(
+                            s[0],
+                            s[1] + ' ' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + 'x' + Dock.SMALL_SHIPS_PATH_WIDTH.ToString() + ' ' + s[2]);
+                        buildDockAnnounceShown = true;
+                    }
                     scenarioQuest.SetStepCompleteness(0, true);
                 }
                 else
@@ -610,7 +622,8 @@ namespace TutorialScenarioNS
             public override void StartScenario()
             {
                 base.StartScenario();
-                var obs = Dock.dockObserver;
+                mcc.Select(GameMaster.realMaster.colonyController.docks[0]);
+                var obs = Dock.GetDockObserver();
                 obs.PrepareImmigrationPanel();
                 tutorialUI.SetShowframe(obs.SYSTEM_GetImmigrationPanel());
             }
@@ -619,7 +632,8 @@ namespace TutorialScenarioNS
                 stage++;
                 if (stage == 1)
                 {
-                    Dock.dockObserver.PrepareTradingPanel();
+                    tutorialUI.DisableShowframe();
+                    Dock.GetDockObserver().PrepareTradingPanel();
                     var s = localizer.GetText(step, WINDOW_INFO_1);
                     tutorialUI.OpenTextWindow(s[0], s[1]);
                 }

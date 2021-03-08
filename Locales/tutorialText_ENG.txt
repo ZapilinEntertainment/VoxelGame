@@ -90,7 +90,7 @@
 -/-
 [071]Dock building conditions
 [072]For proper functionality your dock must be build on the edge to be able to serve ships. For first level ships it needs
-[073] corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is rotated wrongly, you can rotate it manually, use small arrows at the top of right panel.
+[073]corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is rotated wrong, you can rotate it manually, use small arrows at the top of right panel.
 -/-
 [074]Dock is not working yet
 [075]Rotate dock using small arrows at the top of the right panel, if this position is suitable. If not, demolish it using button at the top-right corner.

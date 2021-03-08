@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class Dock : WorkBuilding {
-    public static UIDockObserver dockObserver;
+    private static UIDockObserver dockObserver;    
     private static bool announceNewShips = false;
     private static DockSystem dockSystem;
 
@@ -32,6 +32,16 @@ public sealed class Dock : WorkBuilding {
 		PrepareWorkbuilding();
         if (dockSystem == null) dockSystem = DockSystem.GetCurrent();
 	}
+
+    public static UIDockObserver GetDockObserver()
+    {
+        if (dockObserver == null) dockObserver = UIDockObserver.InitializeDockObserverScript();
+        return dockObserver;
+    }
+    public static UIDockObserver TryGetDockObserver()
+    {
+        return dockObserver;
+    }
 
     override public void SetModelRotation(int r)
     {
@@ -487,8 +497,8 @@ public sealed class Dock : WorkBuilding {
 
     public override UIObserver ShowOnGUI()
     {
-        if (dockObserver == null) dockObserver = UIDockObserver.InitializeDockObserverScript();
-        else dockObserver.gameObject.SetActive(true);
+        dockObserver = GetDockObserver();
+        if (!dockObserver.gameObject.activeSelf) dockObserver.gameObject.SetActive(true);
         dockObserver.SetObservingDock(this);
         showOnGUI = true;
         if (!isCorrectLocated)

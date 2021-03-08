@@ -1006,6 +1006,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     #endregion
 
     #region right panel
+    public void CloseButton()
+    {
+        ChangeChosenObject(ChosenObjectType.None);
+    }
     public void SelectedObjectLost(ChosenObjectType cot)
     {
         if (selectedObjectType == ChosenObjectType.None) return;
