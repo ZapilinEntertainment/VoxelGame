@@ -107,7 +107,7 @@ public class UIStructureObserver : UIObserver {
     override public void SelfShutOff() { // публичный, потому что на кнопках
         if (observingStructure != null) observingStructure.DisabledOnGUI();
         isObserving = false;
-		mycanvas.SelectedObjectLost();
+		mycanvas.SelectedObjectLost(ChosenObjectType.Structure);
 		gameObject.SetActive(false);
 	}
 

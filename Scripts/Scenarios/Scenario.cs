@@ -2,7 +2,7 @@
 {
     protected byte _scenarioIndex;
     protected ScenarioQuest scenarioQuest;
-    protected bool completed = false, useSpecialQuestFilling = false;
+    protected bool completed = false, useSpecialQuestFilling = false, useSpecialWindowFilling = false;
 
     protected override bool IsEqualNoCheck(object obj)
     {
@@ -11,7 +11,11 @@
 
     virtual public void StartScenario() { }
     virtual public void EndScenario() { }
-    virtual public void CheckConditions() { }
+    
     virtual public void SpecialQuestFilling() { } // for combined strings
+    virtual public void SpecialWindowFilling() { }
+    //quest:
+    virtual public void CheckConditions() { }
     virtual public bool QuestMustCheckConditions() { return true; }
+    virtual public byte GetStepsCount() { return 1; }
 }

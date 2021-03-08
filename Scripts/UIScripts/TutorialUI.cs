@@ -33,10 +33,18 @@ public sealed class TutorialUI : MonoBehaviour
         mcc = uicontroller.GetMainCanvasController();
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
         //
+        TestMaster.CreateColony();
+        GameMaster.realMaster.SYSTEM_SetNoResourcesCheat(true);
         TutorialScenario.Initialize(this, mcc);
-        currentScenario = TutorialScenario.GetScenario(TutorialStep.QuestSystem);
+        StartScenario(TutorialScenario.GetScenario(TutorialStep.SmelteryBuilding));
+    }
+    private void StartScenario(TutorialScenario s)
+    {
+        currentScenario = s;
+        grcaster.enabled = !s.blockCanvasRaycaster;
         currentScenario.StartScenario();
     }
+
     private void Update()
     {
         if (timer > 0f)
@@ -54,8 +62,15 @@ public sealed class TutorialUI : MonoBehaviour
     public void OKButton()
     {
         if (adviceWindow.activeSelf) adviceWindow.SetActive(false);
+        timer = 0f;
         currentScenario.OKButton();
         grcaster.enabled = true;
+    }
+    public void ProceedButton()
+    {
+        currentScenario?.Proceed();
+        timer = 0f;
+        outerProceedButton.SetActive(false);
     }
 
     //
@@ -73,7 +88,7 @@ public sealed class TutorialUI : MonoBehaviour
     }
     private void INLINE_OpenTextWindow()
     {
-        mcc.SelectedObjectLost();
+        if (currentScenario.DropAnySelectionWhenWindowOpens()) mcc.ChangeChosenObject(ChosenObjectType.None);
         adviceWindow.SetActive(true);
         grcaster.enabled = false;
     }
@@ -120,13 +135,14 @@ public sealed class TutorialUI : MonoBehaviour
         if (showframe.gameObject.activeSelf) showframe.gameObject.SetActive(false);
         if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
         if (!grcaster.enabled) grcaster.enabled = true;
+        mcc.ChangeChosenObject(ChosenObjectType.None);
         //
         if (currentScenario.step != TutorialStep.UpgradeHQ)
         {
             var nextStep = currentScenario.step + 1;
-            currentScenario = TutorialScenario.GetScenario(nextStep);
-            currentScenario.StartScenario();
+            StartScenario(TutorialScenario.GetScenario(nextStep));
         }
+        Debug.Log(currentScenario.step);
     }
     //
 }

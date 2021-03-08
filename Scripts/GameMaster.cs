@@ -51,8 +51,7 @@ public sealed class GameMaster : MonoBehaviour
     private static byte pauseRequests = 0;
 
     public Chunk mainChunk { get; private set; }
-    public ColonyController colonyController { get { return _colonyController; } }
-    private ColonyController _colonyController;
+    public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
     public EventChecker eventTracker { get; private set; }
     public GameMode gameMode { get; private set; }
@@ -327,13 +326,13 @@ public sealed class GameMaster : MonoBehaviour
     }
     public ColonyController PrepareColonyController(bool assignNewGameID)
     {
-        if (_colonyController == null)
+        if (colonyController == null)
         {
-            _colonyController = GetComponent<ColonyController>();
-            if (_colonyController == null) _colonyController = gameObject.AddComponent<ColonyController>();
-            _colonyController.Prepare();
+            colonyController = GetComponent<ColonyController>();
+            if (colonyController == null) colonyController = gameObject.AddComponent<ColonyController>();
+            colonyController.Prepare();
         }
-        environmentMaster.LinkColonyController(_colonyController);
+        environmentMaster.LinkColonyController(colonyController);
         uicontroller.GetMainCanvasController()?.LinkColonyController();
         if (gameID == -1)
         {
@@ -348,7 +347,7 @@ public sealed class GameMaster : MonoBehaviour
                 PlayerPrefs.Save();
             }
         }
-        return _colonyController;
+        return colonyController;
     }
 
     private void SetDefaultValues()
@@ -583,6 +582,7 @@ public sealed class GameMaster : MonoBehaviour
         weNeedNoResources = GUI.Toggle(r, weNeedNoResources, "unlimited resources");
         //if (GUILayout.Button("testMethod")) TestMethod();
     }
+    public void SYSTEM_SetNoResourcesCheat(bool x) { weNeedNoResources = x;}
     //
     public void GameOver(GameEndingType endType)
     {

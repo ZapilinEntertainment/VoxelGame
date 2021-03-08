@@ -22,7 +22,8 @@ namespace TutorialScenarioNS
             get { return (TutorialStep)_scenarioIndex; }
             set { _scenarioIndex = (byte)value; }
         }
-        protected const byte WINDOW_INFO_0 = 0, QUEST_INFO_0 = 1, WINDOW_INFO_1 = 2, QUEST_INFO_1 = 3, WINDOW_INFO_2 = 4, QUEST_INFO_2 = 5, SPECIAL_0 = 6;
+        protected const byte WINDOW_INFO_0 = 0, QUEST_INFO_0 = 1, WINDOW_INFO_1 = 2, QUEST_INFO_1 = 3, WINDOW_INFO_2 = 4,
+            QUEST_INFO_2 = 5, SPECIAL_0 = 6, WINDOW_INFO_3 = 7;
         protected static Localizer localizer { get; private set; }
         
         static TutorialScenario()
@@ -62,8 +63,9 @@ namespace TutorialScenarioNS
         }
 
         override public void StartScenario()
-        {            
-            tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_0));
+        {
+            if (!useSpecialWindowFilling) tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_0));
+            else SpecialWindowFilling();
             if (useQuest)
             {
                 scenarioQuest = mcc.questUI.SYSTEM_NewScenarioQuest(this);
@@ -87,15 +89,14 @@ namespace TutorialScenarioNS
             tutorialUI.NextScenario();
         }
 
-        public override bool QuestMustCheckConditions()
-        {
-            return false;
-        }
+        public override bool QuestMustCheckConditions() { return false; }
+        virtual public bool DropAnySelectionWhenWindowOpens() { return true; }
 
 
         #region steps
         sealed class IntroSCN : TutorialScenario
         {
+            Button closeButtonHolder;
             public IntroSCN() : base()
             {
                 step = TutorialStep.QuestSystem;
@@ -112,16 +113,25 @@ namespace TutorialScenarioNS
                 mcc.SYSTEM_GetQuestButton().GetComponent<Button>().onClick.RemoveListener(this.DisableQuestButtonSelection);
                 tutorialUI.DisableShowArrow();
                 tutorialUI.DisableShowframe();
-                mcc.questUI.SYSTEM_GetCloseButton().onClick.AddListener(this.EndScenario);
+                closeButtonHolder = mcc.questUI.SYSTEM_GetQuestButton((int)scenarioQuest.DefineQuestSection());
+                closeButtonHolder.onClick.AddListener(this.OpenedQuestCheck);
+            }
+            private void OpenedQuestCheck()
+            {
+                var q = mcc.questUI.GetActiveQuest();
+                if (q == scenarioQuest)
+                {
+                    mcc.questUI.SYSTEM_GetCloseButton().onClick.AddListener(this.EndScenario);
+                    closeButtonHolder.onClick.RemoveListener(this.OpenedQuestCheck);
+                }
             }
             public override void EndScenario()
             {
                 if (completed) return;
                 var qui = mcc.questUI;
-                var q = qui.GetActiveQuest();
-                if (q == scenarioQuest)
+                if (qui.GetActiveQuest() == Quest.NoQuest && !qui.IsEnabled())
                 {
-                    mcc.questUI.SYSTEM_GetCloseButton().onClick.RemoveListener(this.EndScenario);
+                    qui.SYSTEM_GetCloseButton().onClick.RemoveListener(this.EndScenario);
                     base.EndScenario();
                 }
             }
@@ -143,17 +153,16 @@ namespace TutorialScenarioNS
                 stage++;
                 switch (stage)
                 {
-                    case 2: // rotating
+                    case 1: // rotating
                         {
                             var s = localizer.GetText(step, WINDOW_INFO_1);
                             tutorialUI.OpenTextWindow(s[0], s[1]);
                             tutorialUI.ActivateProceedTimer(1f);
                             s = localizer.GetText(TutorialStep.CameraBasics, QUEST_INFO_1);
                             scenarioQuest.FillText(s);
-                            tutorialUI.ActivateProceedTimer(1f);
                             break;
                         }
-                    case 3: // slicing
+                    case 2: // slicing
                         {
                             var s = localizer.GetText(step, WINDOW_INFO_2);
                             tutorialUI.OpenTextWindow(s[0], s[1]);
@@ -162,10 +171,9 @@ namespace TutorialScenarioNS
                             scenarioQuest.FillText(s);
                             tutorialUI.SetShowframe(mcc.SYSTEM_GetLayerCutButton());
                             tutorialUI.ShowarrowToShowframe_Left();
-                            tutorialUI.ActivateProceedTimer(1f);
                             break;
                         }
-                    case 4: // end
+                    case 3: // end
                         EndScenario();
                         return;
                 }
@@ -180,6 +188,7 @@ namespace TutorialScenarioNS
             public override void OKButton()
             {
                 GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
+                Zeppelin.CreateNew();
             }
             private void BuildingCheck(Structure s)
             {
@@ -267,6 +276,7 @@ namespace TutorialScenarioNS
                 step = TutorialStep.BuildFarm;
                 colony = GameMaster.realMaster.colonyController;
                 useSpecialQuestFilling = true;
+                useSpecialWindowFilling = true;
             }
             public override void CheckConditions()
             {
@@ -302,10 +312,16 @@ namespace TutorialScenarioNS
                 var ns = new string[4];
                 ns[0] = s[0];
                 ns[1] = s[1] + ' ' + WORKERS_COUNT.ToString() + ' ' + s[2];
-                ns[2] = s[2];
-                ns[3] = s[3];
+                ns[2] = s[3];
+                ns[3] = s[4];
                 scenarioQuest.FillText(ns);
             }
+            public override void SpecialWindowFilling()
+            {
+                var s = localizer.GetText(step, WINDOW_INFO_0);
+                tutorialUI.OpenTextWindow(s[0], s[1] + ' ' + WORKERS_COUNT.ToString() + ' ' + s[2]);
+            }
+            public override byte GetStepsCount() { return 2; }
         }
         sealed class StoneDiggingSCN : TutorialScenario
         {
@@ -320,7 +336,7 @@ namespace TutorialScenarioNS
             public override void CheckConditions()
             {
                 int stCount = (int)storage.standartResources[ResourceType.STONE_ID];
-                scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + STONE_COUNT.ToString());
+                scenarioQuest.ChangeAddInfo(0, ' ' + stCount.ToString() + " / " + STONE_COUNT.ToString());
                 if (stCount >= STONE_COUNT) EndScenario();
             }
             public override bool QuestMustCheckConditions() { return true; }
@@ -344,8 +360,13 @@ namespace TutorialScenarioNS
                     tutorialUI.ShowarrowToShowframe_Left();
                     sb.GetComponent<Button>().onClick.AddListener(this.Proceed);
                     storageHighlightActive = true;
+                    tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_0));
                 }
-                else Proceed();
+                else
+                {
+                    storageHighlightActive = false;
+                    Proceed();
+                }
 
             }
             override public void Proceed()
@@ -369,12 +390,17 @@ namespace TutorialScenarioNS
         sealed class SmelteryBuildingSCN : TutorialScenario
         {
             private byte stage = 0;
+            private bool subscribedToPowerButton = false;
             private Factory observingFactory;
+            public override byte GetStepsCount() { return 3; }
+            public override bool DropAnySelectionWhenWindowOpens() { return stage == 0; }
+            public override bool QuestMustCheckConditions() { return true; }
 
             public SmelteryBuildingSCN() : base()
             {
                 step = TutorialStep.SmelteryBuilding;
             }
+
             public override void OKButton()
             {
                 switch (stage)
@@ -383,7 +409,14 @@ namespace TutorialScenarioNS
                         GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.BuildingCheck;
                         break;
                     case 2: // recipe set
-                        Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.AddListener(this.PowerSupplyCheck);
+                        if (!subscribedToPowerButton)
+                        {
+                            Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.AddListener(this.PowerSupplyCheck);
+                            subscribedToPowerButton = true;
+                        }
+                        break;
+                    case 4: // end comment
+                        EndScenario();
                         break;
                 }
             }
@@ -394,11 +427,12 @@ namespace TutorialScenarioNS
                     observingFactory = s as Factory;
                     scenarioQuest.SetStepCompleteness(0, true);
                     stage++;
-                    mcc.Select(observingFactory);
+                    
                     tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_1));
-                    var dd = Factory.factoryObserver.SYSTEM_GetRecipesDropdown();
+                    var dd = Factory.GetFactoryObserver().SYSTEM_GetRecipesDropdown();
                     tutorialUI.SetShowframe(dd.GetComponent<RectTransform>());
                     dd.onValueChanged.AddListener(this.RecipeChanged);
+                    mcc.Select(observingFactory);
                 }
                 else
                 {
@@ -413,10 +447,10 @@ namespace TutorialScenarioNS
                 if (observingFactory != null && observingFactory.GetRecipe() == Recipe.StoneToConcrete)
                 {
                     stage++;
-                    Factory.factoryObserver.SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
+                    Factory.GetFactoryObserver().SYSTEM_GetRecipesDropdown().onValueChanged.RemoveListener(this.RecipeChanged);
                     tutorialUI.DisableShowframe();
                     tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_2));
-                    scenarioQuest.SetStepCompleteness(1, true);
+                    ObservingFactoryCheck();
                     //
                 }
             }
@@ -425,20 +459,70 @@ namespace TutorialScenarioNS
                 if (observingFactory.isActive)
                 {
                     stage++;
-                    scenarioQuest.SetStepCompleteness(2, true);
-                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.PowerSupplyCheck);
-                    EndScenario();
+                    if (observingFactory.workersCount == 0)
+                    {
+                        tutorialUI.OpenTextWindow(localizer.GetText(step, SPECIAL_0));
+                        return;
+                    }
+                    else INLINE_UnsubscribeFromPowerButton();
                 }
             }
+            private void INLINE_UnsubscribeFromPowerButton()
+            {
+                if (subscribedToPowerButton)
+                {
+                    Building.buildingObserver.SYSTEM_GetEnergyButton().onClick.RemoveListener(this.PowerSupplyCheck);
+                    subscribedToPowerButton = false;
+                }
+            }
+
+            public override void CheckConditions()
+            {
+                if (stage < 4)
+                {
+                    observingFactory = Factory.TryGetFactoryObserver()?.observingFactory;
+                    if (observingFactory != null) ObservingFactoryCheck();
+                }
+            }
+            private void ObservingFactoryCheck()
+            {
+                byte conditionsMet = 0;
+                if (observingFactory.GetRecipe() == Recipe.StoneToConcrete)
+                {
+                    conditionsMet++;
+                    scenarioQuest.SetStepCompleteness(1, true);
+                }
+                else scenarioQuest.SetStepCompleteness(1, false);
+                if (observingFactory.workersCount != 0)
+                {
+                    conditionsMet++;
+                    scenarioQuest.SetStepCompleteness(2, true);
+                }
+                else scenarioQuest.SetStepCompleteness(2, false);
+                if (observingFactory.isActive )
+                {
+                    conditionsMet++;
+                    scenarioQuest.SetStepCompleteness(3, true);
+                }
+                else scenarioQuest.SetStepCompleteness(3, false);
+                if (conditionsMet == 3 && stage == 3) {
+                    stage++;
+                    INLINE_UnsubscribeFromPowerButton();
+                    tutorialUI.OpenTextWindow(localizer.GetText(step, WINDOW_INFO_3));
+                }
+            }
+
             public override void EndScenario()
             {
                 GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
+                INLINE_UnsubscribeFromPowerButton();
                 base.EndScenario();
             }
         }
         sealed class BuildDockSCN : TutorialScenario
         {
             private ColonyController colony;
+            public override byte GetStepsCount() { return 3; }
 
             public BuildDockSCN() : base()
             {
@@ -515,6 +599,8 @@ namespace TutorialScenarioNS
         sealed class DockObservingSCN : TutorialScenario
         {
             private byte stage = 0;
+            public override bool DropAnySelectionWhenWindowOpens() { return false; }
+
             public DockObservingSCN() : base()
             {
                 blockCanvasRaycaster = true;
@@ -583,18 +669,18 @@ namespace TutorialScenarioNS
                     while (i < count && !sr.EndOfStream)
                     {
                         s = sr.ReadLine();
-                        if (s[0] == '-') continue;
+                        length = s.Length;
+                        if (length == 0 || s[0] == '-') continue;
                         else
-                        {
-                            length = s.Length;
-                            if (s[0] == '[' && s[indexLength] == ']')
+                        {                            
+                            if (s[0] == '[' && s[indexLength + 1] == ']')
                             {
                                 index = int.Parse(s.Substring(1, indexLength));
                                 if (lines[index] != null) UnityEngine.Debug.Log("string " + index.ToString() + " was rewrited");
-                                lines[index] = s.Substring(indexLength + 1, length - indexLength - 1);
+                                lines[index] = s.Substring(indexLength + 2, length - indexLength - 2);
                                 i++;
                             }
-                            else UnityEngine.Debug.Log("error in line " + i.ToString());
+                            else Debug.Log("error in line " + i.ToString() + ": " + s[0] + s[indexLength]);
                         }
                     }
                 }
@@ -698,6 +784,8 @@ namespace TutorialScenarioNS
                                 case QUEST_INFO_0: return new string[6] { lines[53], lines[55], lines[56], lines[57], lines[58], lines[59] };
                                 case WINDOW_INFO_1: return new string[2] { lines[60], lines[61], };
                                 case WINDOW_INFO_2: return new string[2] { lines[62], lines[63], };
+                                case SPECIAL_0: return new string[2] { lines[87], lines[88] };
+                                case WINDOW_INFO_3: return new string[2] { lines[90], lines[91] };
                             }
                             break;
                         }

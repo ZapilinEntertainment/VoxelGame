@@ -31,7 +31,7 @@ public class Quest : MyObject
     public static uint[] questsCompletenessMask { get; private set; } // до 32-х квестов на ветку
     public static readonly Quest NoQuest, AwaitingQuest;
 
-    private bool subscribedToStructuresCheck = false;
+    protected bool subscribedToStructuresCheck = false;
     private const byte NO_QUEST_SUBINDEX = 0, AWAITING_QUEST_SUBINDEX = 1;
 
     //при добавлении квеста дополнить:
@@ -67,134 +67,106 @@ public class Quest : MyObject
         type = i_type;
         subIndex = subID;
         needToCheckConditions = true;
-        byte stepsCount = 1;
         reward = 0f;
+        completed = false;
         bool scenario = type == QuestType.Scenario;
-        if (!scenario) switch (i_type)
+        if (!scenario)
         {
-            case QuestType.Progress:
-                {
-                    bool defaultSettings = true;
-                    switch ((ProgressQuestID)subIndex)
+            byte stepsCount = 1;
+            switch (i_type)
+            {
+                case QuestType.Progress:
                     {
-                        case ProgressQuestID.Progress_HousesToMax:
-                            reward = 250;
-                            break;
-                        case ProgressQuestID.Progress_2Docks: reward = 500; break;
-                        case ProgressQuestID.Progress_2Storages: reward = 200; break;
-                        case ProgressQuestID.Progress_Tier2: reward = 120; break;
-                        case ProgressQuestID.Progress_300Population: reward = 200; break;
-                        case ProgressQuestID.Progress_OreRefiner: reward = 200; break;
-                        case ProgressQuestID.Progress_HospitalCoverage: reward = 240; break;
-                        case ProgressQuestID.Progress_Tier3: reward = 240; break;
-                        case ProgressQuestID.Progress_4MiniReactors: reward = 800; break;
-                        case ProgressQuestID.Progress_100Fuel: reward = 200; break;
-                        case ProgressQuestID.Progress_XStation: reward = 120; break;
-                        case ProgressQuestID.Progress_Tier4: reward = 480; break;
-                        case ProgressQuestID.Progress_CoveredFarm: reward = 200; break;
-                        case ProgressQuestID.Progress_CoveredLumbermill: reward = 200; break;
-                        case ProgressQuestID.Progress_Reactor: reward = 220; break;
-                        case ProgressQuestID.Progress_FoodStocks: reward = 120; break;
-                        case ProgressQuestID.Progress_FirstExpedition:
-                            defaultSettings = false;
-                            stepsCount = 6;
-                            reward = 4000;
-                            break;
-                        case ProgressQuestID.Progress_Tier5: reward = 960; break;
-                        case ProgressQuestID.Progress_FactoryComplex:
-                            defaultSettings = false;
-                            stepsCount = 2;
-                            reward = 960;
-                            break;
-                        case ProgressQuestID.Progress_SecondFloor:
-                            defaultSettings = false;
-                            stepsCount = 2;
-                            reward = 420;
-                            break;
-                    }
-
-                    if (defaultSettings)
-                    {
-                        stepsCount = 1;
-                    }
-                    break;
-                }
-            case QuestType.Endgame:
-                //switch ((Knowledge.ResearchRoute)subID) { }
-                reward = 10000;
-                break;
-            case QuestType.System:
-                if (subID == NO_QUEST_SUBINDEX) name = "no quest";
-                else name = "awaiting quest";
-                break;
-            case QuestType.Foundation:
-                break;
-            case QuestType.CloudWhale:
-                if (subIndex == (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost) GameMaster.realMaster.globalMap.pointsExploringEvent += PointEventCheck;
-                break;
-            case QuestType.Engine:
-                break;
-            case QuestType.Pipes:
-                switch ((Knowledge.PipesRouteBoosters)subID)
-                {
-                    case Knowledge.PipesRouteBoosters.FarmsBoost: stepsCount = 2; break;
-                    case Knowledge.PipesRouteBoosters.BiomesBoost: stepsCount = 4; break;
-                    case Knowledge.PipesRouteBoosters.SizeBoost: stepsCount = 3; break;
-                }
-                break;
-            case QuestType.Crystal:
-                break;
-            case QuestType.Monument:
-                switch ((Knowledge.MonumentRouteBoosters)subID)
-                {
-                    case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost: stepsCount = 2; break;
-                }
-                break;
-            case QuestType.Blossom:
-                break;
-            case QuestType.Pollen:
-                break;
-            case QuestType.Tutorial:
-                {
-                    var step = (TutorialUI.TutorialStep)subIndex;
-                    needToCheckConditions = false;
-                    switch (step)
-                    {
-                        case TutorialUI.TutorialStep.GatherLumber:
-                        case TutorialUI.TutorialStep.StoneDigging:
-                        case TutorialUI.TutorialStep.CollectConcrete:
-                            needToCheckConditions = true;
-                            break;
-                        case TutorialUI.TutorialStep.BuildFarm:
-                        case TutorialUI.TutorialStep.BuildDock:
-                            needToCheckConditions = true;
-                            stepsCount = 2;
-                            break;
-                        case TutorialUI.TutorialStep.SmelteryBuilding:
-                            stepsCount = 2;
-                            GameMaster.realMaster.eventTracker.buildingConstructionEvent += this.StructureCheck;
-                            subscribedToStructuresCheck = true;
-                            break;
-                        case TutorialUI.TutorialStep.RecipeExplaining_A:
-                            {
+                        bool defaultSettings = true;
+                        switch ((ProgressQuestID)subIndex)
+                        {
+                            case ProgressQuestID.Progress_HousesToMax:
+                                reward = 250;
+                                break;
+                            case ProgressQuestID.Progress_2Docks: reward = 500; break;
+                            case ProgressQuestID.Progress_2Storages: reward = 200; break;
+                            case ProgressQuestID.Progress_Tier2: reward = 120; break;
+                            case ProgressQuestID.Progress_300Population: reward = 200; break;
+                            case ProgressQuestID.Progress_OreRefiner: reward = 200; break;
+                            case ProgressQuestID.Progress_HospitalCoverage: reward = 240; break;
+                            case ProgressQuestID.Progress_Tier3: reward = 240; break;
+                            case ProgressQuestID.Progress_4MiniReactors: reward = 800; break;
+                            case ProgressQuestID.Progress_100Fuel: reward = 200; break;
+                            case ProgressQuestID.Progress_XStation: reward = 120; break;
+                            case ProgressQuestID.Progress_Tier4: reward = 480; break;
+                            case ProgressQuestID.Progress_CoveredFarm: reward = 200; break;
+                            case ProgressQuestID.Progress_CoveredLumbermill: reward = 200; break;
+                            case ProgressQuestID.Progress_Reactor: reward = 220; break;
+                            case ProgressQuestID.Progress_FoodStocks: reward = 120; break;
+                            case ProgressQuestID.Progress_FirstExpedition:
+                                defaultSettings = false;
+                                stepsCount = 6;
+                                reward = 4000;
+                                break;
+                            case ProgressQuestID.Progress_Tier5: reward = 960; break;
+                            case ProgressQuestID.Progress_FactoryComplex:
+                                defaultSettings = false;
                                 stepsCount = 2;
+                                reward = 960;
                                 break;
-                            }
-                        case TutorialUI.TutorialStep.HQUpgrade:
-                            {
-                                GameMaster.realMaster.eventTracker.buildingUpgradeEvent += this.StructureCheck;
-                                subscribedToStructuresCheck = true;
+                            case ProgressQuestID.Progress_SecondFloor:
+                                defaultSettings = false;
+                                stepsCount = 2;
+                                reward = 420;
                                 break;
-                            }
+                        }
+
+                        if (defaultSettings)
+                        {
+                            stepsCount = 1;
+                        }
+                        break;
+                    }
+                case QuestType.Endgame:
+                    //switch ((Knowledge.ResearchRoute)subID) { }
+                    reward = 10000;
+                    break;
+                case QuestType.System:
+                    if (subID == NO_QUEST_SUBINDEX) name = "no quest";
+                    else name = "awaiting quest";
+                    break;
+                case QuestType.Foundation:
+                    break;
+                case QuestType.CloudWhale:
+                    if (subIndex == (byte)Knowledge.CloudWhaleRouteBoosters.PointBoost) GameMaster.realMaster.globalMap.pointsExploringEvent += PointEventCheck;
+                    break;
+                case QuestType.Engine:
+                    break;
+                case QuestType.Pipes:
+                    switch ((Knowledge.PipesRouteBoosters)subID)
+                    {
+                        case Knowledge.PipesRouteBoosters.FarmsBoost: stepsCount = 2; break;
+                        case Knowledge.PipesRouteBoosters.BiomesBoost: stepsCount = 4; break;
+                        case Knowledge.PipesRouteBoosters.SizeBoost: stepsCount = 3; break;
                     }
                     break;
-                }
-        }
+                case QuestType.Crystal:
+                    break;
+                case QuestType.Monument:
+                    switch ((Knowledge.MonumentRouteBoosters)subID)
+                    {
+                        case Knowledge.MonumentRouteBoosters.MonumentAffectionBoost: stepsCount = 2; break;
+                    }
+                    break;
+                case QuestType.Blossom:
+                    break;
+                case QuestType.Pollen:
+                    break;
+            }
+            INLINE_PrepareSteps(stepsCount);
+            Localization.FillQuestData(this);
+        }        
+    }
+    protected void INLINE_PrepareSteps(byte stepsCount)
+    {
         steps = new string[stepsCount];
         stepsAddInfo = new string[stepsCount];
         stepsFinished = new bool[stepsCount];
-        completed = false;
-        if (!scenario) Localization.FillQuestData(this);
     }
     public Quest(Knowledge.ResearchRoute rr, byte subID) : this(RouteToQuestType(rr), subID) { }
     private static QuestType RouteToQuestType(Knowledge.ResearchRoute rr)
@@ -1052,105 +1024,21 @@ public class Quest : MyObject
                     }
                         break;
                 }
-            case QuestType.Tutorial:
-                {
-                    switch ((TutorialUI.TutorialStep)subIndex)
-                    {
-                        case TutorialUI.TutorialStep.GatherLumber:
-                            {
-                               
-                                break;
-                            }
-                        case TutorialUI.TutorialStep.BuildFarm:
-                            {
-                               
-                                break;
-                            }
-                        case TutorialUI.TutorialStep.StoneDigging:
-                            {
-                                int stCount = (int)colony.storage.standartResources[ResourceType.STONE_ID];
-                                stepsAddInfo[0] = stCount.ToString() + " / " + TutorialUI.STONE_QUEST_COUNT.ToString();
-                                if (stCount >= TutorialUI.STONE_QUEST_COUNT) MakeQuestCompleted();
-                                break;
-                            }
-                        case TutorialUI.TutorialStep.CollectConcrete:
-                            {
-                                int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
-                                stepsAddInfo[0] = stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString();
-                                bool x = stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME;
-                                stepsFinished[0] = x;
-                                if (x) MakeQuestCompleted();
-                                break;
-                            }
-                        case TutorialUI.TutorialStep.BuildDock:
-                            {
-                                var docks = colony.docks;
-                                if (docks != null && docks.Count > 0)
-                                {
-                                    stepsFinished[0] = true;
-                                    bool x = false;
-                                    foreach (var d in docks)
-                                    {
-                                        if (d.isCorrectLocated)
-                                        {
-                                            x = true;
-                                            break;
-                                        }
-                                    }
-                                    if (x)
-                                    {
-                                        stepsFinished[1] = true;
-                                        MakeQuestCompleted();
-                                    }
-                                    else stepsFinished[1] = false;
-                                }
-                                else
-                                {
-                                    stepsFinished[0] = false;
-                                    stepsFinished[1] = false;
-                                }
-                                break;
-                            }
-                    }
-                    break;
-                }
 
         }
     }   
-    private void StructureCheck(Structure s)
+    protected void StructureCheck(Structure s)
     {
         switch (type)
         {
-            case QuestType.Tutorial:
-                {
-                    switch((TutorialUI.TutorialStep)subIndex)
-                    {
-                        case TutorialUI.TutorialStep.SmelteryBuilding:
-                            if (s.ID == Structure.SMELTERY_1_ID) MakeQuestCompleted();
-                            else
-                            {
-                                if (s.ID == Structure.WIND_GENERATOR_1_ID) stepsFinished[1] = true;
-                            }
-                            break;
-                        case TutorialUI.TutorialStep.HQUpgrade:
-                            {//upgrade check!
-                                if (s.ID == Structure.HEADQUARTERS_ID) MakeQuestCompleted();
-                                break;
-                            }
-                    }
-                    break;
-                }                
+                          
         }
     }
 
-    public void MakeQuestCompleted()
+    virtual public void MakeQuestCompleted()
     {
         if (completed) return;
-        if (type != QuestType.Tutorial) AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
-        else
-        {
-            TutorialUI.current.QuestCompleted(subIndex);
-        }
+        if (type != QuestType.Scenario) AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
         uint x = (uint)Mathf.Pow(2, subIndex);
         if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
         if (type == QuestType.Endgame)
@@ -1186,6 +1074,11 @@ public class Quest : MyObject
                 steps[i] = s[i + 2];
             }
         }
+    }
+    virtual public void FillText(string i_name, string i_descr)
+    {
+        name = i_name;
+        description = i_descr;
     }
 
     #region allQuestList
@@ -1411,9 +1304,8 @@ public class Quest : MyObject
                 icon = UIController.iconsTexture;
                 iconRect = UIController.GetIconUVRect(Icons.PollenRoute);
                 break;
-            case QuestType.Tutorial:
-                icon = GlobalMapCanvasController.GetMapMarkersTexture();
-                iconRect = GlobalMapCanvasController.GetMarkerRect(MapMarkerType.QuestMark);
+            case QuestType.Scenario:
+                (q as ScenarioQuest).GetIconInfo(ref icon, ref iconRect);
                 break;
             default:
                 icon = UIController.GetCurrent()?.GetMainCanvasController()?.buildingsIcons;

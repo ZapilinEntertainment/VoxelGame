@@ -12,14 +12,13 @@ public sealed class UIFactoryObserver : UIObserver
     [SerializeField] Dropdown recipesDropdown, modesDropdown;
     [SerializeField] InputField limitInputField;
 #pragma warning restore 0649
-    private Factory observingFactory;
+    public Factory observingFactory { get; private set; }
     private int showingProductionValue;
     private bool advancedFactoryMode = false;
 
     public static UIFactoryObserver InitializeFactoryObserverScript()
     {
         UIFactoryObserver ufo = Instantiate(Resources.Load<GameObject>("UIPrefs/factoryObserver"), mycanvas.rightPanel.transform).GetComponent<UIFactoryObserver>();
-        Factory.factoryObserver = ufo;
         ufo.LocalizeTitles();
         return ufo;
     }
@@ -238,7 +237,12 @@ public sealed class UIFactoryObserver : UIObserver
         observingFactory = null;
         WorkBuilding.workbuildingObserver.ShutOff();
         gameObject.SetActive(false);
-    }    
+    }
+
+    //public void OnDisable()
+    //{
+    //    Debug.Log(StackTraceUtility.ExtractStackTrace());
+   // }
 
     public override void LocalizeTitles()
     {

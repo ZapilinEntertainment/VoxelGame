@@ -48,7 +48,7 @@ public class TestMaster : MonoBehaviour
         }
         if (Input.GetKeyDown("n"))
         {
-            AddPopulation(5000);
+            AddCitizens(5000, 30000f);
         }
     }
 
@@ -102,7 +102,7 @@ public class TestMaster : MonoBehaviour
             r.gameObject.layer = layerIndex;
         }
     }
-    private void InstantiateHouses()
+    private void InstantiateDecorativeHouses()
     {
        
         GameObject[] prefs = new GameObject[12];
@@ -233,12 +233,12 @@ public class TestMaster : MonoBehaviour
         k.AddPuzzlePart(Knowledge.WHITECOLOR_CODE, count);
         k.AddPuzzlePart(Knowledge.CYANCOLOR_CODE, count);
     }
-    public static void AddCitizens(int count)
+    public static void AddCitizens(int count, float foodCount)
     {
         var cc = GameMaster.realMaster.colonyController;
         if (cc != null)
         {
-            cc.storage.AddResource(ResourceType.Food, 3000);
+            if (foodCount != 0f) cc.storage.AddResource(ResourceType.Food, foodCount);
             cc.AddCitizens(count);
         }
     }
@@ -325,9 +325,15 @@ public class TestMaster : MonoBehaviour
     {
         Knowledge.GetCurrent()?.AddResearchPoints(rr, count);
     }
-    public static void AddPopulation(int count)
+
+    public static void CreateColony()
     {
-        GameMaster.realMaster?.colonyController?.AddCitizens(count);
+        var chunk = GameMaster.realMaster.mainChunk;
+        chunk.GetRandomSurface().CreateStructure(Structure.HEADQUARTERS_ID);
+        chunk.GetRandomSurface().CreateStructure(Structure.STORAGE_0_ID);
+        chunk.GetRandomSurface().CreateStructure(Structure.SETTLEMENT_CENTER_ID);
+        chunk.GetRandomSurface().CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
+        GameMaster.realMaster.SetStartResources();        
     }
 }
 

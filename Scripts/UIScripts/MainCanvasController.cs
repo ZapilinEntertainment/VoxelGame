@@ -518,7 +518,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                     break;
             }
         }
-        else SelectedObjectLost();
+        else ChangeChosenObject(ChosenObjectType.None);
     }
 
     public void Select(Structure s) // то же самое что рейкаст, только вызывается снаружи
@@ -1006,10 +1006,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     #endregion
 
     #region right panel
-    public void SelectedObjectLost()
+    public void SelectedObjectLost(ChosenObjectType cot)
     {
         if (selectedObjectType == ChosenObjectType.None) return;
-        ChangeChosenObject(ChosenObjectType.None);
+        if (cot == selectedObjectType) ChangeChosenObject(ChosenObjectType.None);
     }
     public void EnableTextfield(int id)
     {

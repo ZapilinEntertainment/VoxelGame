@@ -1,4 +1,4 @@
-3 87
+3 92
 [001]Welcome to Limited Worlds!
 [002]Glad to see you in my real-time city building game. Here will be a short instruction how it is works. In this tutorial mode advices and goals will be doubled in the quests menu for your convenience. Click on quests button after this window closes!
 [003]Click me
@@ -46,7 +46,7 @@
 -/-
 [038]Farm construction
 [039]Now, using collected lumber, build a farm and assign at least
-[040] workers on it. Note that farm cannot be built on stone surfaces.
+[040]workers on it. Note that farm cannot be built on stone surfaces.
 [041]Build farm and assign no less than
 [042]Farm built
 [043]Workers assigned 
@@ -63,20 +63,25 @@
 [052]Note all resources with an (ore) addition. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!
 -/-
 [053]Resource processing
-[054]Your main building for creating new resources is Smeltery. Select any surface and construct it. You also may want to construct another Stream generator if your energy supply is less than Smeltery needs (you can see this parameter in construction info).
-[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that use the small lightning icon in the observer panel and switch the building to active mode. Build a Stream generator if energy supply is not enough.
+[054]Smeltery is your main resource processing unit. Select any surface and construct it. You also may want to construct another Stream generator if your energy supply is less than Smeltery needs (you can see this parameter in construction info).
+[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that add some workers and use the power up button at the observer panel to switch the building to active mode. Build a Stream generator if energy supply is not enough.
 [056]Smeltery built
 [057]Recipe set
+[089]Workers added
 [058]Power supply enabled
 [059](Optional) Stream Generator built
 [060]How to set a Recipe
 [061]In the newfound Smeltery click the "No Recipe" dropdown and set it to "Stone -> L-Concrete". Also note the small dropdown at the bottom: there are production modes. "No limit" means that the smeltery will work, until the resources exhaust, "Iterations" means exact count of operations and the "Limit" mode means that factory will produce, until the final product count wont reach the limit.
-[062]Powering up!
-[063]Now press the small lightning icon at the top of the observer panel to power the smeltery up. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted.
+[062]Start processing!
+[063]Now add some workers and press the power button at the top of the observer panel to start processing. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted.
+[087]No workers added
+[088]Click the slider or press plus buttons to add workers to the factory!
+[090]Factory is working!
+[091]Good job, your Smeltery will now produce concrete using collected stone. You may ask why we need Concrete?
 
 -/-
 [064]Building dock
-[065]Concrete production is first need for building a dock. It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
+[065]Concrete production is first need for building a dock! It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
 [066] L-concrete to build a new dock!
 [067]Collect enough concrete, digging stone and convert it into Concrete in Smeltery, and then build a dock at the island shore. Use rotation arrows in the observer if dock is looking in wrong direction. If rotation not helps, use demolition button at the top-right corner.
 [068]Concrete collected

@@ -434,7 +434,7 @@ public sealed class QuestUI : MonoBehaviour
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
         return q;
     }
-    public Button SYSTEM_QuestButton(int i)
+    public Button SYSTEM_GetQuestButton(int i)
     {
         return questButtons[i].GetComponent<Button>();
     }

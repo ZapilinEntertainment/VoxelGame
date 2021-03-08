@@ -17,8 +17,16 @@ public class Factory : WorkBuilding
     public const float BUFFER_LIMIT = 10;
     virtual protected int FACTORY_SERIALIZER_LENGTH { get{return 17;} }//dependence: AdvancedFactory
 
-    public static UIFactoryObserver factoryObserver;
-
+    private static UIFactoryObserver _factoryObserver;
+    public static UIFactoryObserver GetFactoryObserver()
+    {
+        if (_factoryObserver == null) _factoryObserver = UIFactoryObserver.InitializeFactoryObserverScript();
+        return _factoryObserver;
+    }
+    public static UIFactoryObserver TryGetFactoryObserver()
+    {
+        return _factoryObserver;
+    }
 
     override public void Prepare()
     {
@@ -300,11 +308,11 @@ public class Factory : WorkBuilding
 
     public override UIObserver ShowOnGUI()
     {
-        if (factoryObserver == null) factoryObserver = UIFactoryObserver.InitializeFactoryObserverScript();
-        else factoryObserver.gameObject.SetActive(true);
-        factoryObserver.SetObservingFactory(this);
+        var fo = GetFactoryObserver();
+        if (!fo.gameObject.activeSelf) fo.gameObject.SetActive(true);
+        fo.SetObservingFactory(this);
         showOnGUI = true;
-        return factoryObserver;
+        return fo;
     }
     override public string UI_GetInfo()
     {

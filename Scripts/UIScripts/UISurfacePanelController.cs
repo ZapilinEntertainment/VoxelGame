@@ -962,7 +962,7 @@ public sealed class UISurfacePanelController : UIObserver {
         isObserving = false;
         if (constructionPlane.activeSelf) constructionPlane.SetActive(false);
         gameObject.SetActive(false);
-        mycanvas.SelectedObjectLost();
+        mycanvas.SelectedObjectLost(ChosenObjectType.Plane);
     }
 
     void LocalizeButtonTitles()
