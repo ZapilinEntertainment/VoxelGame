@@ -19,6 +19,8 @@ public sealed class Zeppelin : MonoBehaviour {
     private GameObject landingMarkObject;
     private LineRenderer lineDrawer;
     private MainCanvasController mainCanvas;
+    private readonly Rect landingButtonRect = new Rect(Screen.width * 0.4f, 0f, 200f, Screen.width * 0.2f);
+    private readonly string landingButtonText = Localization.GetWord(LocalizedWord.Land_verb);
 
     public static void CreateNew()
     {
@@ -49,7 +51,6 @@ public sealed class Zeppelin : MonoBehaviour {
         if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(gameObject);
 
         mainCanvas = UIController.GetCurrent().GetMainCanvasController();
-        mainCanvas.BindLandButton(this);
     }
 
 	void Update() {
@@ -228,7 +229,6 @@ public sealed class Zeppelin : MonoBehaviour {
                     lineDrawer.enabled = true;
                     landingMarkObject.transform.position = lpos + Vector3.down * Block.QUAD_SIZE * 0.45f;
                     landingMarkObject.SetActive(true);
-                    mainCanvas.ActivateLandButton();
                 }
             }
         }
@@ -236,7 +236,6 @@ public sealed class Zeppelin : MonoBehaviour {
     public void DropSelectedSurface()
     {
         lineDrawer.enabled = false;
-        mainCanvas.DeactivateLandButton();
         landingMarkObject.SetActive(false);
     }
 
@@ -256,20 +255,17 @@ public sealed class Zeppelin : MonoBehaviour {
                 lineDrawer.enabled = false;
                 Destroy(landingMarkObject);
                 destructionTimer = 3;
-                mainCanvas.DeactivateLandButton();
-                mainCanvas.UnbindLandButton(this);
             }
         }
     }
-    private void OnDestroy()
+
+    private void OnGUI()
     {
-        if (GameMaster.sceneClearing) return;
-        else
+        if (landingSurface != null && !landPointSet)
         {
-            if (mainCanvas != null)
+            if (GUI.Button(landingButtonRect, landingButtonText))
             {
-                mainCanvas.UnbindLandButton(this);
-                mainCanvas.DeactivateLandButton();
+                LandActionAccepted();
             }
         }
     }

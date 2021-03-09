@@ -56,13 +56,17 @@ public sealed class AnnouncementCanvasController : MonoBehaviour {
         if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.NotEnoughMoney);
     }
 
-    public static void EnableDecisionWindow(Action monoaction, string text)
+    public static void EnableDecisionWindow(Action monoaction, string text, bool ignorePause)
     {
-        GetCurrent().PrepareDecisionWindow(monoaction,text);
+        var c = GetCurrent();
+        c.PrepareDecisionWindow(monoaction,text);
+        if (ignorePause && !c.gameObject.activeSelf) c.gameObject.SetActive(true);
     }
-    public static void EnableDecisionWindow(string question, Action leftDecision, string leftChoice, System.Action rightDecision, string rightChoice )
+    public static void EnableDecisionWindow(string question, Action leftDecision, string leftChoice, System.Action rightDecision, string rightChoice, bool ignorePause )
     {
-        GetCurrent().PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
+        var c = GetCurrent();
+        c.PrepareDecisionWindow(question, leftDecision, leftChoice, rightDecision, rightChoice);
+        if (ignorePause && !c.gameObject.activeSelf) c.gameObject.SetActive(true);
     }
     
     public static void DeactivateLogWindow()

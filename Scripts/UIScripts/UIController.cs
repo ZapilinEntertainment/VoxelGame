@@ -20,6 +20,7 @@ public class UIController : MonoBehaviour
     public static Texture iconsTexture { get; private set; }
 
     public System.Action updateEvent;
+    private bool specialCanvasWaitingForReactivation = false;
     private float updateTimer;
     private MainCanvasController mainCanvasController;
     private ExploringMinigameUI exploringMinigameController;
@@ -96,15 +97,40 @@ public class UIController : MonoBehaviour
         return endPanelController;
     }
 
-    public void AddToSpecialCanvas(Transform t)
+    public void AddSpecialCanvasToHolder(Transform t)
     {
         if (specialElementsHolder == null)
         {
             specialElementsHolder = new GameObject("special canvas holder");
-            specialElementsHolder.AddComponent<RectTransform>();
-            specialElementsHolder.transform.parent = GetMainCanvasController().GetMainCanvasTransform();
+            specialElementsHolder.transform.parent = transform;
+            specialElementsHolder.transform.localPosition = Vector3.zero;
         }
         t.parent = specialElementsHolder.transform;
+        specialElementsHolder.transform.SetAsLastSibling();
+    }
+    public void SpecialCanvasUpwards()
+    {
+        specialElementsHolder?.transform.SetAsLastSibling();
+    }
+    public void DisableSpecialCanvas()
+    {
+        if (specialElementsHolder != null)
+        {
+            specialElementsHolder.SetActive(false);
+            specialCanvasWaitingForReactivation = true;
+        }
+    }
+    public void ReactivateSpecialCanvas()
+    {
+        if (specialCanvasWaitingForReactivation)
+        {
+            if (specialElementsHolder != null)
+            {
+                specialElementsHolder.SetActive(true);
+                SpecialCanvasUpwards();
+            }
+            specialCanvasWaitingForReactivation = false;
+        }
     }
 
     private void Update()
@@ -222,6 +248,7 @@ public class UIController : MonoBehaviour
         
     }
     
+
     public void GameOver( GameEndingType endType, ulong score )
     {        
         GetEndPanelController().Prepare(endType, score);

@@ -573,6 +573,15 @@ public sealed class GameMaster : MonoBehaviour
             default: return 0.5f;
         }
     }
+    public bool UseQuestAutoCreating()
+    {
+        return gameMode == GameMode.Survival;
+    }
+    public bool CanWeSaveTheGame()
+    {
+        if (gameMode == GameMode.Survival) return colonyController != null;
+        else return false;
+    }
     #endregion
     //test
     public void OnGUI()
@@ -653,7 +662,12 @@ public sealed class GameMaster : MonoBehaviour
         #endregion
 
         DockSystem.SaveDockSystem(fs);
-        globalMap.Save(fs);
+        if (globalMap != null)
+        {
+            fs.WriteByte(1);
+            globalMap.Save(fs);
+        }
+        else fs.WriteByte(0);
         environmentMaster.Save(fs);
         Artifact.SaveStaticData(fs);
         Crew.SaveStaticData(fs);
@@ -724,7 +738,8 @@ public sealed class GameMaster : MonoBehaviour
             #endregion
 
             DockSystem.LoadDockSystem(fs);
-            globalMap.Load(fs);            
+            var b = fs.ReadByte();
+            if (b == 1) globalMap.Load(fs);            
             if (loadingFailed)
             {
                 errorReason = "global map error";

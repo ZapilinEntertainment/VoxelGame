@@ -445,7 +445,9 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
                                 this.Redraw();
                                 // + Эффект
                             }, Localization.GetWord(LocalizedWord.Yes),
-                            AnnouncementCanvasController.DisableDecisionPanel, Localization.GetWord(LocalizedWord.No)
+                            AnnouncementCanvasController.DisableDecisionPanel, 
+                            Localization.GetWord(LocalizedWord.No),
+                            false
                             );
                     }
                         );

@@ -23,7 +23,7 @@ public sealed class TutorialUI : MonoBehaviour
     {
         var g = Instantiate(Resources.Load<GameObject>("UIPrefs/tutorialCanvas"));
         current = g.GetComponent<TutorialUI>();
-        UIController.GetCurrent().AddToSpecialCanvas(g.transform);
+        UIController.GetCurrent().AddSpecialCanvasToHolder(g.transform);
     }
 
     private void Start()
@@ -58,6 +58,7 @@ public sealed class TutorialUI : MonoBehaviour
             }
         }
     }
+
   
 
     public void OKButton()
@@ -91,7 +92,7 @@ public sealed class TutorialUI : MonoBehaviour
     {
         if (currentScenario.DropAnySelectionWhenWindowOpens()) mcc.ChangeChosenObject(ChosenObjectType.None);
         adviceWindow.SetActive(true);
-        grcaster.enabled = false;
+        grcaster.enabled = currentScenario.blockCanvasRaycaster;
     }
 
     public void SetShowframe(RectTransform target)
@@ -127,6 +128,17 @@ public sealed class TutorialUI : MonoBehaviour
     {
         grcaster.enabled = active;
     }
+
+    public RectTransform GetAdviceWindow() {
+        return adviceWindow.GetComponent<RectTransform>();        
+    }
+    public void AdviceWindowToStartPosition()
+    {
+        var rt = adviceWindow.GetComponent<RectTransform>();
+        rt.anchorMax = Vector2.one * 0.5f;
+        rt.anchorMin = Vector2.one * 0.5f;
+        rt.localPosition = Vector2.zero;
+    }
     //
     public void NextScenario()
     {
@@ -143,7 +155,11 @@ public sealed class TutorialUI : MonoBehaviour
             var nextStep = currentScenario.step + 1;
             StartScenario(TutorialScenario.GetScenario(nextStep));
         }
-        Debug.Log(currentScenario.step);
+        else
+        {
+            GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Easy, StartFoundingType.Nothing));
+            Destroy(gameObject);
+        }
     }
     //
 }

@@ -626,6 +626,9 @@ namespace TutorialScenarioNS
                 var obs = Dock.GetDockObserver();
                 obs.PrepareImmigrationPanel();
                 tutorialUI.SetShowframe(obs.SYSTEM_GetImmigrationPanel());
+                var aw = tutorialUI.GetAdviceWindow();
+                aw.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0, aw.rect.width);
+                UIController.GetCurrent().SpecialCanvasUpwards();                
             }
             public override void OKButton()
             {
@@ -636,8 +639,15 @@ namespace TutorialScenarioNS
                     Dock.GetDockObserver().PrepareTradingPanel();
                     var s = localizer.GetText(step, WINDOW_INFO_1);
                     tutorialUI.OpenTextWindow(s[0], s[1]);
+                    var aw = tutorialUI.GetAdviceWindow();
+                    aw.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 0, aw.rect.width);
+                    UIController.GetCurrent().SpecialCanvasUpwards();
                 }
-                else EndScenario();
+                else
+                {
+                    tutorialUI.AdviceWindowToStartPosition();
+                    EndScenario();
+                }
             }
         }
         sealed class UpgradeHQSCN : TutorialScenario

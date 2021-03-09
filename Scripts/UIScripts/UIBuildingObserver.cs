@@ -442,7 +442,7 @@ public class UIBuildingObserver : UIObserver {
             {
                 observingBuilding.LevelUp(true);
                 upgradeInfoPanel.SetActive(false);
-                if (observingBuilding.upgradedIndex < 0)
+                if (observingBuilding != null &&  observingBuilding.upgradedIndex < 0)
                 {
                     CheckUpgradeAvailability();
                 }                

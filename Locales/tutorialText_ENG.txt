@@ -102,9 +102,9 @@
 [079]And this is a trading tab. You can select any of available resources and set its trade status - no action, sell (arrow down), buy (arrow up). The number means limit for buy and sell operations - dock will buy/sell until resources count wont reach it
 -/-
 [080]Tier 2
-[081]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button
+[081]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button.
 [082]HQ Upgrade
-[083]Select your main building and press the UPGRADE botton at the upper part of the observer. In dropped window you will see the resources list. Gain enough and press accept button to upgrade HQ and start Tier 2.
+[083]Select your main building and press the UPGRADE button at the upper part of the observer. In dropped window you will see the resources list. Gain enough and press accept button to upgrade HQ and start Tier 2.
 [084]HQ Upgraded
 [085]End of tutorial
 [086]More game aspects information you can see in Advices section of the game - click Menu button and then Advices. Thank you for playing and enjoy)

@@ -588,7 +588,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
         {
             AnnouncementCanvasController.EnableDecisionWindow(null,
             Localization.GetPhrase(challenge ? LocalizedPhrase.CannotAcceptChallenge : LocalizedPhrase.CannotMove ) 
-            + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughStamina) + '!');
+            + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughStamina) + '!', false);
             return false;
         }
         else
@@ -600,7 +600,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
                 {
                     AnnouncementCanvasController.EnableDecisionWindow(null,
                     Localization.GetPhrase(LocalizedPhrase.CannotMove)
-                    + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughSupplies) + '!');
+                    + " - " + Localization.GetPhrase(LocalizedPhrase.NotEnoughSupplies) + '!', false);
                     return false;
                 }
                 else return true;

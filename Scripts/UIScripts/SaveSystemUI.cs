@@ -46,6 +46,7 @@ public sealed class SaveSystemUI : MonoBehaviour
     private void Awake()
     {
         LocalizeTitles();
+        gameObject.SetActive(false);
     }
 
 

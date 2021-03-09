@@ -10,7 +10,6 @@ public sealed class GameSettingsUI : MonoBehaviour
 #pragma warning disable 0649
     [SerializeField] Dropdown qualityDropdown;
     [SerializeField] GameObject graphicsApplyButton;
-    [SerializeField] Image settingsButton;
     [SerializeField] Slider lodDistanceSlider;
     [SerializeField] Toggle touchscreenToggle;
 #pragma warning restore 0649
@@ -18,7 +17,6 @@ public sealed class GameSettingsUI : MonoBehaviour
 
     void OnEnable()
     {
-        settingsButton.overrideSprite = PoolMaster.gui_overridingSprite;
         Transform t = transform;
         ignoreDistanceSliderChanging = true;
         lodDistanceSlider.minValue = 0;
@@ -33,10 +31,6 @@ public sealed class GameSettingsUI : MonoBehaviour
         ignoreTouchscreenToggle = false;
     }
 
-    private void OnDisable()
-    {
-        settingsButton.overrideSprite = null;
-    }
 
     public void Options_LODdistChanged()
     {

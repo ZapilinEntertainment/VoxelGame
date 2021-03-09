@@ -16,8 +16,8 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, optionsPanel, leftPanel, 
-        colonyRenameButton, landingButton, rightFastPanel, housingNotEnoughMarker, gearsProblemMarker; // fiti
+    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, leftPanel, 
+        colonyRenameButton, rightFastPanel, housingNotEnoughMarker, gearsProblemMarker; // fiti
     [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] private Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
     [SerializeField] private Transform storagePanelContent, gameCanvas;
@@ -40,9 +40,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
 
     private Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
-    private enum MenuSection { NoSelection, Save, Load, Options }
-    private MenuSection selectedMenuSection = MenuSection.NoSelection;
-    private SaveSystemUI saveSystem;
+  
 
     private const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
     public int interceptingConstructPlaneID = -1;
@@ -67,7 +65,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     ChosenObjectType selectedObjectType;
     Transform selectionFrame; Material selectionFrameMaterial;
 
-    private const int MENUPANEL_SAVE_BUTTON_INDEX = 0, MENUPANEL_LOAD_BUTTON_INDEX = 1, MENUPANEL_OPTIONS_BUTTON_INDEX = 2, RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
+    private const int RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
     private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
 
     public void Initialize( UIController uic)
@@ -85,13 +83,8 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         questUI.enabled = colony != null;
         if (flyingMoneyOriginalPoint == Vector3.zero) flyingMoneyOriginalPoint = moneyFlyingText.rectTransform.position;
         activeFastButtons = new List<int>();
-
-        if (landingButton.activeSelf)
-        {
-            landingButton.SetActive(false);
-        }
-        if (saveSystem == null) saveSystem = SaveSystemUI.Initialize(transform.GetChild(1));
         if (!localized) LocalizeTitles();
+        if (menuPanel.activeSelf) menuPanel.SetActive(false);
     }
     public Transform GetMainCanvasTransform() 
     {
@@ -691,7 +684,6 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                     break;
                 case ActiveWindowMode.GameMenu:                    
                     menuPanel.SetActive(false);
-                    SetMenuPanelSelection(MenuSection.NoSelection);
                     menuButton.GetComponent<Image>().overrideSprite = null;
                     menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
 
@@ -720,19 +712,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                 if (leftPanel.activeSelf) leftPanel.SetActive(false);                
                 //if (Plane.surfaceObserver != null) Plane.surfaceObserver.ShutOff();
                 if (showColonyInfo) ColonyButton();
-                if (landingButton.activeSelf)
-                {
-                    if (Zeppelin.current != null) Zeppelin.current.DropSelectedSurface();
-                    else landingButton.SetActive(false);
-                }
                 AnnouncementCanvasController.ChangeVisibility(false);
                 var ep = ExplorationPanelUI.current;
                 if (ep != null && ep.isActiveAndEnabled) ep.gameObject.SetActive(false);
-
-                menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Button>().interactable = (GameMaster.realMaster.colonyController != null);
-                menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
-                SetMenuPanelSelection(MenuSection.NoSelection);
-                //menuButton.transform.SetAsLastSibling(); 
+                
                 menuPanel.SetActive(true);                                  
             }
         }
@@ -1095,90 +1078,29 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     }
     #endregion
 
-    #region menu
-    public void MenuButton()
+   public void MenuButton()
     {
-        showMenuWindow = !showMenuWindow;
-        if (showMenuWindow)
-        { // on            
+        if (menuPanel.activeSelf) // SWITCH OFF
+        {
+            menuPanel.SetActive(false);
+            ChangeActiveWindow(ActiveWindowMode.NoWindow);
+            uicontroller.ReactivateSpecialCanvas();
+            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
+        }
+        else // SWITCH ON
+        {
             if (GameMaster.realMaster == null)
             {
                 var g = new GameObject();
                 g.AddComponent<GameMaster>();
                 AnnouncementCanvasController.MakeImportantAnnounce("GameMaster reloaded");
             }
-            ChangeActiveWindow(ActiveWindowMode.GameMenu);            
-        }
-        else
-        { //off                       
-            ChangeActiveWindow(ActiveWindowMode.NoWindow);
-        }
-    }
-    public void SaveButton()
-    {
-        saveSystem.Activate(true, false);
-        SetMenuPanelSelection(MenuSection.Save);
-    }
-    public void LoadButton()
-    {
-        saveSystem.Activate(false, false);
-        SetMenuPanelSelection(MenuSection.Load);
-    }
-    public void OptionsButton()
-    {
-        optionsPanel.SetActive(true);
-        SetMenuPanelSelection(MenuSection.Options);
-    }
-    public void ToMainMenu()
-    {
-        if (GameMaster.realMaster.colonyController != null) GameMaster.realMaster.SaveGame("autosave");
-        SetMenuPanelSelection(MenuSection.NoSelection);
-        GameMaster.ReturnToMainMenu();
-    }
-    public void ExitButton()
-    {
-        SetMenuPanelSelection(MenuSection.NoSelection);
-        // запрос на сохранение?
-        Application.Quit();
-    }
-
-    void SetMenuPanelSelection(MenuSection ms)
-    {
-        if (ms == selectedMenuSection) return;
-        else
-        {
-            switch (selectedMenuSection)
-            {
-                case MenuSection.Save:
-                    menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    saveSystem.CloseButton();
-                    break;
-                case MenuSection.Load:
-                    menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    saveSystem.CloseButton();
-                    break;
-                case MenuSection.Options:
-                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = null;
-                    optionsPanel.SetActive(false);                    
-                    break;
-            }
-            selectedMenuSection = ms;
-            switch (selectedMenuSection)
-            {
-                case MenuSection.Save: menuPanel.transform.GetChild(MENUPANEL_SAVE_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
-                case MenuSection.Load: menuPanel.transform.GetChild(MENUPANEL_LOAD_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
-                case MenuSection.Options:
-                    menuPanel.transform.GetChild(MENUPANEL_OPTIONS_BUTTON_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
-                    landingButton.SetActive(false);
-                    break;
-                case MenuSection.NoSelection:
-                    if (Zeppelin.current != null && Zeppelin.current.landingSurface != null) landingButton.SetActive(true);
-                    break;
-            }
+            ChangeActiveWindow(ActiveWindowMode.GameMenu);
+            uicontroller.DisableSpecialCanvas();
+            menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetAnnouncementString(GameAnnouncements.GamePaused);
+            menuPanel.SetActive(true);
         }
     }
-
-    #endregion
 
     #region auxiliary panels
     public void ActivateProgressPanel(ProgressPanelMode mode)
@@ -1352,30 +1274,6 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
     }
     #endregion
 
-    public void BindLandButton(Zeppelin z)
-    {
-        touchzone.GetComponent<Button>().onClick.AddListener(z.Raycasting); // touchzone
-    }
-    public void UnbindLandButton(Zeppelin z)
-    {
-        touchzone.GetComponent<Button>().onClick.RemoveListener(z.Raycasting); // touchzone
-    }
-    public void ActivateLandButton()
-    {
-        if (!landingButton.activeSelf) landingButton.SetActive(true);        
-    }
-    public void DeactivateLandButton()
-    {
-        if (landingButton.activeSelf) landingButton.SetActive(false);
-    }
-    public void LandButton()
-    {
-        if (Zeppelin.current != null)
-        {
-            Zeppelin.current.LandActionAccepted();
-        }
-    }
-
     public void LocalizeTitles()
     {
         Transform t = hospitalPanel.transform;
@@ -1384,15 +1282,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", ColonyController.IMPROVED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", ColonyController.LOWERED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
 
-        menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
-        t = menuPanel.transform;
-        t.GetChild(0).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
-        t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
-        t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
-        t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-        t.GetChild(4).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
-
-        optionsPanel.GetComponent<GameSettingsUI>().LocalizeTitles();
+        menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);        
 
         t = rightPanel.transform;
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);
@@ -1401,8 +1291,6 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.AddPlatform);
 
         localized = true;
-
-        landingButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
     }  
 
 }
