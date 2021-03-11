@@ -18,4 +18,5 @@
     virtual public void CheckConditions() { }
     virtual public bool QuestMustCheckConditions() { return true; }
     virtual public byte GetStepsCount() { return 1; }
+    virtual public QuestSection DefineQuestSection() { return QuestSection.Endgame; }
 }

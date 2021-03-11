@@ -1,4 +1,6 @@
-﻿public enum FullfillStatus : byte { Unknown, Full, Empty};
+﻿using UnityEngine;
+
+public enum FullfillStatus : byte { Unknown, Full, Empty};
 public enum WorkType : byte { Default, Digging, Pouring, Factory, Clearing, Gathering, BlockBuilding,
 OpenFarming, HydroponicsFarming, OpenLumbering, HydroponicsLumbering, Mining, GearsUpgrading, Recruiting,
     ShuttleConstructing, ObservatoryFindCycle }
@@ -38,6 +40,8 @@ public abstract class GameConstants {
     // int key - 32 values
     // 0 - lang
     // 1 - (0 -> first launch, 1 - not first)
+    // 2 - tutorial first note available ( 0 - need not, 1 - no need)
+
     public const uint SAVE_SYSTEM_VERSION = 4;
     // 1 - 9.3.1 public alpha
     // 3 - 13    
@@ -82,5 +86,24 @@ public abstract class GameConstants {
     public static int GetEnvironmentLayerMask()
     {
         return UnityEngine.LayerMask.NameToLayer("Environment");
+    }
+
+    public static bool NeedTutorialNote()
+    {
+        int i = 0;
+        if (PlayerPrefs.HasKey(PP_BASE_SETTINGS_PROPERTY)) { i = PlayerPrefs.GetInt(PP_BASE_SETTINGS_PROPERTY); }
+        else PlayerPrefs.SetInt(PP_BASE_SETTINGS_PROPERTY, 0);
+        return ((i & 4) == 0);
+    }
+    public static void DisableTutorialNote()
+    {
+        int i = 0;
+        if (PlayerPrefs.HasKey(PP_BASE_SETTINGS_PROPERTY))
+        {
+            i = PlayerPrefs.GetInt(PP_BASE_SETTINGS_PROPERTY);
+            if ((i & 4) == 0) { i += 4; PlayerPrefs.SetInt(PP_BASE_SETTINGS_PROPERTY, i); }
+        }
+        else PlayerPrefs.SetInt(PP_BASE_SETTINGS_PROPERTY, 4);
+        
     }
 }

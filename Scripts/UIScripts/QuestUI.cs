@@ -231,6 +231,13 @@ public sealed class QuestUI : MonoBehaviour
         }
     }
 
+    public void BlockQuestPosition(QuestSection qs)
+    {
+        if (qs == QuestSection.TotalCount) return;
+        int index = (int)qs;
+        questAccessMap[index] = false;
+        if (GetComponent<Image>().enabled & openedQuest == -1) PrepareBasicQuestWindow();
+    }
     public void UnblockQuestPosition(QuestSection qs, bool prepareQuestIfNone)
     {
         if (qs == QuestSection.TotalCount) return;

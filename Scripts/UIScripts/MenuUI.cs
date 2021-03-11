@@ -9,17 +9,18 @@ public sealed class MenuUI : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton, authorsButton;
-    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, generationPanel, terrainPresetsPanel, editorSettingPanel, 
-        highscoresPanel, authorsPanel, loadingLabel;
+    [SerializeField] private GameObject newGamePanel, optionsPanel, graphicsApplyButton, terrainPanel,scenariosPanel, generationPanel, terrainPresetsPanel, editorSettingPanel, 
+        highscoresPanel, authorsPanel, loadingLabel, askWindow;
     [SerializeField] private Slider sizeSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
-    [SerializeField] private Text sizeSliderVal;
+    [SerializeField] private Text sizeSliderVal, askWindowText, askWindow_left, askWindow_right;
     [SerializeField] private Button gameStartButton;
     [SerializeField] private InputField editorSizeInputField;
 #pragma warning restore 0649
 
     private bool optionsPrepared = false;
+    private bool? survivalModeEnabled, terrainGenerationEnabled;
 
     enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores, Authors }
     private byte editor_chunkSizeValue = 16;
@@ -32,6 +33,7 @@ public sealed class MenuUI : MonoBehaviour
     private ChunkPreparingAction chunkPrepareAction = ChunkPreparingAction.Generate;
     private ChunkGenerationMode chunkGenerationMode = ChunkGenerationMode.Standart;
     private string selectedSaveName = string.Empty;
+    private System.Action askWindow_leftAction, askWindow_rightAction;
 
     private void Awake()
     {
@@ -78,14 +80,38 @@ public sealed class MenuUI : MonoBehaviour
             case ChunkPreparingAction.Load: cgs = ChunkGenerationSettings.GetLoadingSettings(selectedSaveName); break;
             default: cgs = ChunkGenerationSettings.GetNoActionSettings(); break;
         }
+        //
+        if (GameConstants.NeedTutorialNote())
+        {
+            askWindowText.text = Localization.GetPhrase(LocalizedPhrase.AskNeedTutorial);
+            askWindow_left.text = Localization.GetWord(LocalizedWord.Tutorial);
+            askWindow_leftAction = () => {
+                GameMaster.StartNewGame(GameStartSettings.GetTutorialSettings());
+                askWindow.SetActive(false);
+            };
+            askWindow_right.text = Localization.GetWord(LocalizedWord.Cancel);
+            askWindow_rightAction = () =>
+            {
+                GameConstants.DisableTutorialNote();
+                this.StartGame();
+                askWindow.SetActive(false);
+            };
+            askWindow.SetActive(true);
+            return;
+        }
+        //
         GameMaster.StartNewGame(
             GameStartSettings.GetStartSettings(selectedGameMode, cgs, (Difficulty)difficultyDropdown.value, StartFoundingType.Zeppelin)
             );            
     }
+
     public void NewGameButton()
     {
-        if (currentSection == MenuSection.NewGame)    SwitchVisualSelection(MenuSection.NoSelection);
-        else SwitchVisualSelection(MenuSection.NewGame);
+        if (currentSection == MenuSection.NewGame) SwitchVisualSelection(MenuSection.NoSelection);
+        else
+        {
+            SwitchVisualSelection(MenuSection.NewGame);
+        }
     }
     public void OptionsButton()
     {
@@ -122,6 +148,21 @@ public sealed class MenuUI : MonoBehaviour
         loadingLabel.SetActive(true);
         Destroy(gameObject);
     }
+    //
+    public void NG_SurvivalButton()
+    {
+        terrainPanel.SetActive(true);
+        scenariosPanel.SetActive(false);
+        survivalModeEnabled = true;
+        if (terrainGenerationEnabled == null) NG_GenerateButton();
+    }
+    public void NG_ScenarioButton()
+    {
+        terrainPanel.SetActive(false);
+        scenariosPanel.SetActive(true);
+        survivalModeEnabled = false;
+        NG_PrepareScenarioList();
+    }
 
     public void NG_GenerateButton()
     {
@@ -134,8 +175,8 @@ public sealed class MenuUI : MonoBehaviour
         usePresetsButtonImage.overrideSprite = null;
         generationPanel.SetActive(true);
         generateButtonImage.overrideSprite = overridingSprite;
-        gameStartButton.interactable = true;        
-
+        gameStartButton.interactable = true;
+        terrainGenerationEnabled = true;
     }
     public void NG_UsePresetButton()
     {
@@ -214,6 +255,7 @@ public sealed class MenuUI : MonoBehaviour
         }
         terrainPresetsPanel.SetActive(true);
         usePresetsButtonImage.overrideSprite = overridingSprite;
+        terrainGenerationEnabled = false;
     }
     public void NG_SelectTerrain(int index)
     {
@@ -238,6 +280,10 @@ public sealed class MenuUI : MonoBehaviour
     public void NG_SetGenMode()
     {
         chunkGenerationMode = availableGenerationModes[generationTypeDropdown.value];
+    }
+    private void NG_PrepareScenarioList()
+    {
+
     }
 
     public void Editor_InputFieldValueChanged()
@@ -295,6 +341,10 @@ public sealed class MenuUI : MonoBehaviour
         transform.root.BroadcastMessage("LocalizeTitles", SendMessageOptions.DontRequireReceiver);
     }
 
+
+    public void AskWindow_LeftButton() { askWindow_leftAction?.Invoke(); }
+    public void AskWindow_RightButton() { askWindow_rightAction?.Invoke(); }
+
     public void SizeValueChanged(float f)
     {
         sizeSliderVal.text = ((int)f).ToString();
@@ -340,7 +390,7 @@ public sealed class MenuUI : MonoBehaviour
             case MenuSection.NewGame:
                 newGameButton.overrideSprite = overridingSprite;
                 newGamePanel.SetActive(true);
-                NG_GenerateButton();
+                if (survivalModeEnabled == null) NG_SurvivalButton();
                 break;
             case MenuSection.Loading:
                 loadButton.overrideSprite = overridingSprite;

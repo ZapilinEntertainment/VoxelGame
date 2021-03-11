@@ -70,21 +70,28 @@ public sealed class FollowingCamera : MonoBehaviour {
         SetTouchControl(Input.touchSupported);
     }
 
-    void Start()
-    {		
-		camTransform.position = transform.position + transform.TransformDirection(camPoint);
-		camTransform.LookAt(transform.position);
-        Vector3 castPoint = camTransform.position - camTransform.forward * MAX_FAR;
-        RaycastHit rh;
-        if (Physics.SphereCast(castPoint, 0.173f, camTransform.forward, out rh, MAX_FAR))
-        {
-            transform.position = rh.point;
-        }
-
+    private void Start()
+    {
+        CameraToStartPosition();
+        //        
         controllerStickOriginalPos = new Vector2(controllerBack.position.y, controllerBack.position.y); // ?
         camMoveVector = Vector2.zero;
 
         if (initializeEnvCameraOnStart) EnableEnvironmentalCamera();
+    }
+    public void CameraToStartPosition()
+    {
+        var cpos = GameMaster.sceneCenter;
+        float csize = Chunk.chunkSize / 2f;
+        float angle = Random.value * 360f;
+        transform.position = cpos + Quaternion.AngleAxis(angle, Vector3.up) * Vector3.back * csize + Vector3.up * 4f;
+        INLINE_SetInnerCamera(angle);
+    }
+    private void INLINE_SetInnerCamera(float yrotation)
+    {
+        if (yrotation == 0f) camTransform.position = transform.position + transform.TransformDirection(camPoint);
+        else camTransform.position = transform.position + transform.TransformDirection(Quaternion.AngleAxis(yrotation, Vector3.up) * camPoint);
+        camTransform.LookAt(transform.position);
     }
 
     void Update()

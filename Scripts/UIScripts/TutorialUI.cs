@@ -33,11 +33,10 @@ public sealed class TutorialUI : MonoBehaviour
         mcc = uicontroller.GetMainCanvasController();
         grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
         //
-        TestMaster.CreateColony();
-        GameMaster.realMaster.SYSTEM_SetNoResourcesCheat(true);
+        GameConstants.DisableTutorialNote();
         TutorialScenario.Initialize(this, mcc);
-        StartScenario(TutorialScenario.GetScenario(TutorialStep.BuildDock));
-        GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Concrete, 500);
+        //TestMaster.CreateColony();
+        StartScenario(TutorialScenario.GetScenario(0));
     }
     private void StartScenario(TutorialScenario s)
     {
@@ -158,6 +157,8 @@ public sealed class TutorialUI : MonoBehaviour
         else
         {
             GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Easy, StartFoundingType.Nothing));
+            var qs = currentScenario.DefineQuestSection();
+            if (qs == QuestSection.Endgame) mcc.questUI.BlockQuestPosition(qs);            
             Destroy(gameObject);
         }
     }

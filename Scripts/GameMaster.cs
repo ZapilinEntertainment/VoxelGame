@@ -95,7 +95,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private static GameStartSettings test_gameStartSettings = GameStartSettings.GetTutorialSettings();
+    private static GameStartSettings test_gameStartSettings = null;
     //
   
    // SCENERY CHANGING
@@ -235,8 +235,10 @@ public sealed class GameMaster : MonoBehaviour
                         }
                     }
                     //
-                    FollowingCamera.main.ResetTouchRightBorder();
-                    FollowingCamera.main.CameraRotationBlock(false);
+                    var fcm = FollowingCamera.main;
+                    fcm.CameraToStartPosition();
+                    fcm.ResetTouchRightBorder();
+                    fcm.CameraRotationBlock(false);
                     warProximity = 0.01f;
                     layerCutHeight = Chunk.chunkSize; prevCutHeight = layerCutHeight;
                     //
@@ -277,7 +279,7 @@ public sealed class GameMaster : MonoBehaviour
                                 break;
                             }
                     }
-                    FollowingCamera.main.WeNeedUpdate();
+                    fcm.WeNeedUpdate();
                     activateEventTracker = true;
                     break;
                 }
@@ -290,6 +292,7 @@ public sealed class GameMaster : MonoBehaviour
                     size /= 2;
                     blocksArray[size, size, size] = ResourceType.STONE_ID;
                     mainChunk.Rebuild(blocksArray);
+                    FollowingCamera.main.CameraToStartPosition();
                     break;
                 }
             case GameMode.Scenario:
@@ -312,13 +315,11 @@ public sealed class GameMaster : MonoBehaviour
                             }
                     }                    
                     activateEventTracker = true;
+                    FollowingCamera.main.CameraToStartPosition();
                     break;
                 }
         }
         if (activateEventTracker) eventTracker = new EventChecker();
-
-        // set look point
-        FollowingCamera.camBasisTransform.position = sceneCenter;
 
         startSettings = null;
         sessionPrepared = true;

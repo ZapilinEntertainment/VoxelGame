@@ -211,7 +211,7 @@ public sealed partial class Chunk : MonoBehaviour
         PreparePlanes();
         RenderDataFullRecalculation();
         RecalculateSurfacesList();
-
+        
         FollowingCamera.main.WeNeedUpdate();
     }
     private void PreparePlanes()

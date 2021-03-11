@@ -5,7 +5,7 @@ public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return,
+    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial,
     Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice
 };
 
@@ -16,7 +16,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2371,6 +2371,7 @@ public static partial class Localization
                         case LocalizedWord.Effectiveness: return "Эффективность";
                         case LocalizedWord.HospitalsCoverage: return "Медицинское обеспечение";
                         case LocalizedWord.Advice: return "Советы";
+                        case LocalizedWord.Tutorial: return "Обучение";
                         default: return "...";
                     }
                 }
@@ -2462,6 +2463,7 @@ public static partial class Localization
                         case LocalizedWord.Effectiveness: return "Effectiveness";
                         case LocalizedWord.HospitalsCoverage: return "Hospitals coverage";
                         case LocalizedWord.Advice: return "Advice";
+                        case LocalizedWord.Tutorial: return "Tutorial";
                         default: return "...";
                     }
                 }
@@ -2579,6 +2581,7 @@ public static partial class Localization
                         case LocalizedPhrase.GenerateNewTerrain: return "Сгенерировать заново";
                         case LocalizedPhrase.AskReturnToMainMenu: return "Выйти в главное меню?";
                         case LocalizedPhrase.AskExit: return "Выйти из игры?";
+                        case LocalizedPhrase.AskNeedTutorial: return "Не желаете сначала пройти обучение?";
                         default: return "<...>";
                     }
                 }
@@ -2689,6 +2692,7 @@ public static partial class Localization
                         case LocalizedPhrase.GenerateNewTerrain: return "Generate anew";
                         case LocalizedPhrase.AskReturnToMainMenu: return "Return to main menu?";
                         case LocalizedPhrase.AskExit: return "Exit game?";
+                        case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
                         default: return "<...>";
                     }
                 }

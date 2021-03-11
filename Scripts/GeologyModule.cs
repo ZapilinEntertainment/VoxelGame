@@ -309,59 +309,36 @@ public class GeologyModule : MonoBehaviour {
         ColonyController colony = GameMaster.realMaster.colonyController;
         int materialID = workObject.materialID;
         if (workObject.GetFossilsVolume() > 0) {            
-			float v = Random.value - GameMaster.LUCK_COEFFICIENT; 
 			float m = 0;            
 			switch (materialID) {
 			case ResourceType.STONE_ID :
-				if (metalK_abundance >= v) {
 					m= metalK_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_K_ore, m); production -= m;
-				}
-				if (metalM_abundance >= v) {
 					m= metalM_abundance * production * (Random.value +1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_M_ore, m); production -= m;
-				}
-				if (metalE_abundance >= v) {
 					m= metalE_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_E_ore, m); production -= m;
-				}
-				if (metalN_abundance >= v) {
 					m= metalN_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_N_ore, m); production -= m;
-				}
-				if (metalP_abundance >= v) {
 					m= metalP_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_P_ore, m); production -= m;
-				}
-				if (metalS_abundance >= v) {
 					m= metalS_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.metal_S_ore, m); production -= m;
-				}
-				if (mineralF_abundance >= v) {
 					m= mineralF_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.mineral_F, m); production -= m;
-				}
-				if (mineralL_abundance >= v) {
 					m= mineralL_abundance * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
 					storage.AddResource(ResourceType.mineral_L, m); production -= m;
-				}
 				if (production > 0) {
 					colony.storage.AddResource(ResourceType.Stone, production); 
 				}
 				break;
 			case ResourceType.DIRT_ID:
-				if (metalK_abundance >= v) {
 					m= metalK_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
                         colony.storage.AddResource(ResourceType.metal_K_ore, m); production -= m;
-				}
-				if (metalP_abundance >= v) {
 					m= metalP_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
                         colony.storage.AddResource(ResourceType.metal_P, m); production -= m;
-				}
-				if (mineralL_abundance >= v) {
 					m= mineralL_abundance/2f * production * (Random.value + 1 + GameMaster.LUCK_COEFFICIENT);
                         colony.storage.AddResource(ResourceType.mineral_L, m); production -= m;
-				}
 				if (production > 0) {
                         colony.storage.AddResource(ResourceType.Dirt, production); 
 				}

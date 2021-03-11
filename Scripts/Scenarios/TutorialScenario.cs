@@ -212,7 +212,6 @@ namespace TutorialScenarioNS
             {
                 base.StartScenario();
                 tutorialUI.SetShowframe(mcc.SYSTEM_GetCitizenString());
-                tutorialUI.ShowarrowToShowframe_Up();
             }
             public override void OKButton()
             {
@@ -221,6 +220,7 @@ namespace TutorialScenarioNS
                 {
                     var s = localizer.GetText(step, WINDOW_INFO_1);
                     tutorialUI.OpenTextWindow(s[0], s[1]);
+                    tutorialUI.SetShowframe(mcc.SYSTEM_GetEnergyString());
                 }
                 else EndScenario();
             }
