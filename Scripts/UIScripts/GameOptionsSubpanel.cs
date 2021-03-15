@@ -34,7 +34,6 @@ public class GameOptionsSubpanel : MonoBehaviour
 
     public void SaveButton()
     {
-        Debug.Log("save button");
         saveSystem.Activate(true, false);
         SetMenuPanelSelection(MenuSection.Save);
     }
@@ -65,7 +64,7 @@ public class GameOptionsSubpanel : MonoBehaviour
     }
     private void ReturnToMainMenu()
     {
-        if (GameMaster.realMaster.colonyController != null) GameMaster.realMaster.SaveGame("autosave");
+        if (GameMaster.realMaster.colonyController != null && GameMaster.realMaster.CanWeSaveTheGame()) GameMaster.realMaster.SaveGame("autosave");
         SetMenuPanelSelection(MenuSection.NoSelection);
         GameMaster.ReturnToMainMenu();
     }

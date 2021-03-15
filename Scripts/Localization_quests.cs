@@ -403,7 +403,7 @@
                                     break;
                                 case ProgressQuestID.Progress_CoveredLumbermill:
                                     name = "Covered forest";
-                                    description = "Suddenly hydroponics lumbermill! Stabilizaes lumber supply and reduces lifepower consumption.";
+                                    description = "Suddenly hydroponics lumbermill! Stabilizes lumber supply and reduces lifepower consumption.";
                                     q.steps[0] = "Build " + GetStructureName(Structure.COVERED_LUMBERMILL); ;
                                     break;
                                 case ProgressQuestID.Progress_Reactor:

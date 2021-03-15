@@ -81,17 +81,14 @@ public sealed class FollowingCamera : MonoBehaviour {
     }
     public void CameraToStartPosition()
     {
+        camTransform.position = transform.position + transform.TransformDirection(camPoint);
+        camTransform.LookAt(transform.position);
+
         var cpos = GameMaster.sceneCenter;
         float csize = Chunk.chunkSize / 2f;
         float angle = Random.value * 360f;
-        transform.position = cpos + Quaternion.AngleAxis(angle, Vector3.up) * Vector3.back * csize + Vector3.up * 4f;
-        INLINE_SetInnerCamera(angle);
-    }
-    private void INLINE_SetInnerCamera(float yrotation)
-    {
-        if (yrotation == 0f) camTransform.position = transform.position + transform.TransformDirection(camPoint);
-        else camTransform.position = transform.position + transform.TransformDirection(Quaternion.AngleAxis(yrotation, Vector3.up) * camPoint);
-        camTransform.LookAt(transform.position);
+        transform.position = cpos + Quaternion.AngleAxis(angle, Vector3.up) * Vector3.forward * csize + Vector3.up * 4f;
+        transform.LookAt(new Vector3(cpos.x, transform.position.y, cpos.z), Vector3.up);
     }
 
     void Update()

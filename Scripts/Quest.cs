@@ -280,16 +280,7 @@ public class Quest : MyObject
                         break;
                     case ProgressQuestID.Progress_4MiniReactors:
                         {
-                            List<Building> powerGrid = colony.powerGrid;
-                            byte mrc = 0;
-                            foreach (Building b in powerGrid)
-                            {
-                                if (b == null) continue;
-                                else
-                                {
-                                    if (b.ID == Structure.MINI_GRPH_REACTOR_3_ID) mrc++;
-                                }
-                            }
+                            int mrc = colony.GetBuildingsCount(Structure.MINI_GRPH_REACTOR_3_ID);
                             stepsAddInfo[0] = mrc.ToString() + "/4";
                             if (mrc >= 4) MakeQuestCompleted();
                         }

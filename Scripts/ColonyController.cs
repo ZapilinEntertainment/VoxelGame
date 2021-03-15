@@ -314,24 +314,33 @@ public sealed class ColonyController : MonoBehaviour
     }
     public void EverydayUpdate()
     {
-        if (!GameMaster.realMaster.weNeedNoResources)
+        var rm = GameMaster.realMaster;
+        if (!rm.weNeedNoResources)
         {
-            float foodConsumption = GameConstants.FOOD_CONSUMPTION * citizenCount;
-            float foodDemand = foodConsumption - storage.GetResources(ResourceType.Food, foodConsumption);
-            if (foodDemand > 0)
+            var f = rm.gameRules.foodSpendRate;
+            if (f != 0f)
             {
-                foodDemand -= storage.GetResources(ResourceType.Supplies, foodDemand);
+                float foodConsumption = GameConstants.FOOD_CONSUMPTION * citizenCount;
+                float foodDemand = foodConsumption - storage.GetResources(ResourceType.Food, foodConsumption);
                 if (foodDemand > 0)
                 {
-                    if (!starvation)
+                    foodDemand -= storage.GetResources(ResourceType.Supplies, foodDemand);
+                    if (foodDemand > 0)
                     {
-                        starvation = true;
-                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
+                        if (!starvation)
+                        {
+                            starvation = true;
+                            AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.NotEnoughFood), Color.red);
+                        }
                     }
+                    else starvation = false;
                 }
                 else starvation = false;
             }
-            else starvation = false;
+            else
+            {
+                if (starvation) starvation = false;
+            }
         }
         RecalculateHospitals();
     }

@@ -257,7 +257,12 @@ public sealed class Dock : WorkBuilding {
             else corridorWidth = HEAVY_SHIPS_PATH_WIDTH;
         }
 
-        if (basement == null) { Annihilate(false, true, false); return; }
+        if (basement == null) {
+            Debug.Log("error in dock position!");
+            Annihilate(false, true, false);
+            return;
+            // why this is even here?
+        }
         if (basement.faceIndex == Block.SURFACE_FACE_INDEX)
         {
             switch (modelRotation)

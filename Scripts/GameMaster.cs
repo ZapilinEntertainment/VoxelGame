@@ -58,6 +58,7 @@ public sealed class GameMaster : MonoBehaviour
     public GlobalMap globalMap { get; private set; }
     private UIController uicontroller;
     private GameStartSettings startSettings;
+    public GameRules gameRules { get; private set; }
 
     public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate,
         afterloadRecalculationEvent;
@@ -96,6 +97,7 @@ public sealed class GameMaster : MonoBehaviour
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
     private static GameStartSettings test_gameStartSettings = null;
+        //GameStartSettings.GetLoadingSettings(GameMode.Survival,"Electrastar5");
     //
   
    // SCENERY CHANGING
@@ -152,6 +154,7 @@ public sealed class GameMaster : MonoBehaviour
 
     private void Awake()
     {
+        gameRules = GameRules.defaultRules;
         if (testMode && test_gameStartSettings != null)
         {
             _applyingGameStartSettings = test_gameStartSettings;
@@ -306,6 +309,7 @@ public sealed class GameMaster : MonoBehaviour
                                 {
                                     case EmbeddedScenarioType.Tutorial:
                                         {
+                                            gameRules = GameRules.GetTutorialRules();
                                             LoadTerrain(SaveSystemUI.GetTerrainSaveFullpath(startSettings.GetSavename()));
                                             TutorialUI.Initialize();
                                             break;
@@ -573,15 +577,14 @@ public sealed class GameMaster : MonoBehaviour
             case Difficulty.Torture: return 1f;
             default: return 0.5f;
         }
+    } 
+    public bool CanWeSaveTheGame()
+    {
+        return gameRules.gameCanBeSaved;
     }
     public bool UseQuestAutoCreating()
     {
-        return gameMode == GameMode.Survival;
-    }
-    public bool CanWeSaveTheGame()
-    {
-        if (gameMode == GameMode.Survival) return colonyController != null;
-        else return false;
+        return gameRules.createNewQuests;
     }
     #endregion
     //test
@@ -637,6 +640,7 @@ public sealed class GameMaster : MonoBehaviour
         //сразу передавать файловый поток для записи, чтобы не забивать озу
         #region gms mainPartFilling
         fs.Write(System.BitConverter.GetBytes(GameConstants.SAVE_SYSTEM_VERSION),0,4);
+        fs.WriteByte((byte)gameMode);
         // start writing
         fs.Write(System.BitConverter.GetBytes(gameSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(lifeGrowCoefficient), 0, 4);
@@ -700,16 +704,20 @@ public sealed class GameMaster : MonoBehaviour
             fs.Position = 0;
             SetPause(true);
             loading = true;
-
-            if (sessionPrepared) ClearPreviousSessionData();
-            else SetDefaultValues();
-
+           
 
             // НАЧАЛО ЗАГРУЗКИ   
             #region gms mainPartLoading            
-            data = new byte[4];
-            fs.Read(data, 0, 4);
+            data = new byte[5];
+            fs.Read(data, 0, data.Length);
             uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
+            gameMode = (GameMode)data[4];
+            //
+            if (sessionPrepared)
+            {
+                ClearPreviousSessionData();
+            }
+            else PrepareSession();
             //start reading
             data = new byte[68]; 
             fs.Read(data, 0, data.Length);
@@ -725,12 +733,12 @@ public sealed class GameMaster : MonoBehaviour
             warProximity = System.BitConverter.ToSingle(data, 36);
 
             difficulty = (Difficulty)data[40];
-            int i = 40;
+            int i = 41;
             prevCutHeight = data[i++];
             day = data[i++];
             month = data[i++];
 
-            year = System.BitConverter.ToUInt32(data, i); i += 4;
+            year = System.BitConverter.ToUInt32(data, i); i += 4;            
             timeGone = System.BitConverter.ToSingle(data, i); i += 4;
             gearsDegradeSpeed = System.BitConverter.ToSingle(data, i); i += 4;
             labourTimer = System.BitConverter.ToSingle(data, i); i += 4;
@@ -819,14 +827,18 @@ public sealed class GameMaster : MonoBehaviour
             loading = false;
             currentSavename = fullname;
 
+            //Debug.Log("recalculation event");
             if (afterloadRecalculationEvent != null)
             {
                 afterloadRecalculationEvent();
                 afterloadRecalculationEvent = null;
             }            
             SetPause(false);
+            //Debug.Log("power grid");
             colonyController.FORCED_PowerGridRecalculation();
+            //Debug.Log("docks");
             colonyController.SYSTEM_DocksRecalculation();
+            //Debug.Log("end");
             return true;
         }
         else
@@ -901,4 +913,26 @@ public sealed class GameMaster : MonoBehaviour
     }
     #endregion
 }
-  
+
+public sealed class GameRules
+{
+    public bool createNewQuests { get; private set; }
+    public bool gameCanBeSaved { get; private set; }
+    public float foodSpendRate { get; private set; }
+    public static GameRules defaultRules { get { return new GameRules(); } }
+
+    private GameRules()
+    {
+        createNewQuests = true;
+        gameCanBeSaved = true;
+        foodSpendRate = 1f;
+    }   
+    public static GameRules GetTutorialRules()
+    {
+        var gr = new GameRules();
+        gr.createNewQuests = false;
+        gr.gameCanBeSaved = false;
+        gr.foodSpendRate = 0f;
+        return gr;
+    }
+}  

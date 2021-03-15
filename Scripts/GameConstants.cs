@@ -60,7 +60,7 @@ public abstract class GameConstants {
             case WorkType.HydroponicsLumbering: return 120f;
             case WorkType.HydroponicsFarming: return 100f;
             
-            case WorkType.GearsUpgrading: return 2000f;
+            case WorkType.GearsUpgrading: return 1600f;
             case WorkType.Digging: return 30f;
             case WorkType.Pouring: return 28f;
             case WorkType.Mining: return 25f;

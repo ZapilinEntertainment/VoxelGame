@@ -224,7 +224,7 @@ public sealed class SaveSystemUI : MonoBehaviour
         if (File.Exists(fullPath))
         {
             saveDateString.enabled = true;
-            saveDateString.text = File.GetCreationTime(fullPath).ToString();
+            saveDateString.text = File.GetLastWriteTime(fullPath).ToString();
         }
         else
         {

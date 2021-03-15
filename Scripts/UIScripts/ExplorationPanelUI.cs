@@ -372,6 +372,9 @@ public sealed class ExplorationPanelUI : MonoBehaviour
 
     private interface IListable
     {
+        /// <summary>
+        /// using for representing a list of crews,expeditions and artifacts
+        /// </summary>
         string GetSelectedName();
         int GetSelectedID();
         int GetListLength();

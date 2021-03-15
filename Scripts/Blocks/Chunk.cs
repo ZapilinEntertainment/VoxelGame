@@ -989,9 +989,15 @@ public sealed partial class Chunk : MonoBehaviour
     }
     public void ClearChunk()
     {
-        if (blocks.Count > 0)
+        int count = blocks.Count;
+        if (count > 0)
         {
-            foreach (var b in blocks) { b.Value.Annihilate(false); }
+            var bcl = new Block[count];
+            blocks.Values.CopyTo(bcl, 0);
+            for (int i = 0; i< count; i++)
+            {
+                bcl[i].Annihilate(false);
+            }
         }
         blocks = new Dictionary<ChunkPos, Block>();
         surfaces = null;

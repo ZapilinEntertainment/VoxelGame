@@ -188,7 +188,7 @@ public abstract class WorkBuilding : Building, ILabourable
             case WORKSHOP_ID:
                 {
                     workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.GearsUpgrading);
-                    maxWorkers = 80;
+                    maxWorkers = 200;
                     gearsDamage = 0f;
                 }
                 break;

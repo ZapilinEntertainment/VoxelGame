@@ -45,6 +45,11 @@ public sealed class RecruitingCenter : WorkBuilding {
     }
    public static void SetHireCost(float f)
     {
+        if (f < 1f)
+        {
+            f = START_CREW_COST;
+            Debug.Log("Recruiting cost was wrong and been corrected");
+        }
         hireCost = f;
     }
 

@@ -132,17 +132,28 @@ public sealed class DockSystem
 		case ShipType.Passenger:
                 {
                     float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
-                    if (immigrationPlan > 0 | (immigrationEnabled && Random.value < colony.happiness_coefficient))
-                    {                        
-                        if (vol > immigrationPlan) {
+                    if (immigrationEnabled && immigrationPlan > 0)
+                    {
+                        if (vol > immigrationPlan)
+                        {
                             colony.AddCitizens(immigrationPlan);
                             immigrationPlan = 0;
                             vol -= immigrationPlan;
                         }
-                        else {
+                        else
+                        {
                             int x = (int)vol;
                             colony.AddCitizens(x); immigrationPlan -= x;
                             vol = 0;
+                        }
+                    }
+                    else
+                    {
+                        vol = 0f;
+                        if (Random.value < colony.happiness_coefficient * 0.25f)
+                        {
+                            int x = (int)(Random.value * colony.hq.level);
+                            if (x != 0) colony.AddCitizens(x);
                         }
                     }
                     if (vol > 0)

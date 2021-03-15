@@ -14,9 +14,11 @@ public sealed class MenuUI : MonoBehaviour
     [SerializeField] private Slider sizeSlider;
     [SerializeField] private Dropdown difficultyDropdown, qualityDropdown, generationTypeDropdown, languageDropdown;
     [SerializeField] private Sprite overridingSprite;
-    [SerializeField] private Text sizeSliderVal, askWindowText, askWindow_left, askWindow_right;
+    [SerializeField] private Text sizeSliderVal, askWindowText, askWindow_left, askWindow_right, scenarioName, scenarioDescription;
     [SerializeField] private Button gameStartButton;
     [SerializeField] private InputField editorSizeInputField;
+    [SerializeField] private Transform scenarioHoster;
+    [SerializeField] private Scrollbar scenarioScroll;
 #pragma warning restore 0649
 
     private bool optionsPrepared = false;
@@ -24,10 +26,12 @@ public sealed class MenuUI : MonoBehaviour
 
     enum MenuSection { NoSelection, NewGame, Loading, Options, Editor, Highscores, Authors }
     private byte editor_chunkSizeValue = 16;
+    private int ng_selectedScenarioIndex = -1;
     private MenuSection currentSection = MenuSection.NoSelection;    
     private SaveSystemUI saveSystem;
     private ChunkGenerationMode[] availableGenerationModes;    
     private string[] terrainSavenames;
+    private Scenario.ScenarioRepresentator[] scenariosRepresentators;
 
     private GameMode selectedGameMode = GameMode.Survival;
     private ChunkPreparingAction chunkPrepareAction = ChunkPreparingAction.Generate;
@@ -81,28 +85,56 @@ public sealed class MenuUI : MonoBehaviour
             default: cgs = ChunkGenerationSettings.GetNoActionSettings(); break;
         }
         //
-        if (GameConstants.NeedTutorialNote())
-        {
-            askWindowText.text = Localization.GetPhrase(LocalizedPhrase.AskNeedTutorial);
-            askWindow_left.text = Localization.GetWord(LocalizedWord.Tutorial);
-            askWindow_leftAction = () => {
-                GameMaster.StartNewGame(GameStartSettings.GetTutorialSettings());
-                askWindow.SetActive(false);
-            };
-            askWindow_right.text = Localization.GetWord(LocalizedWord.Cancel);
-            askWindow_rightAction = () =>
-            {
-                GameConstants.DisableTutorialNote();
-                this.StartGame();
-                askWindow.SetActive(false);
-            };
-            askWindow.SetActive(true);
-            return;
-        }
+        
         //
-        GameMaster.StartNewGame(
-            GameStartSettings.GetStartSettings(selectedGameMode, cgs, (Difficulty)difficultyDropdown.value, StartFoundingType.Zeppelin)
-            );            
+        switch (selectedGameMode)
+        {
+            case GameMode.Survival:
+                {
+                    if (GameConstants.NeedTutorialNote())
+                    {
+                        askWindowText.text = Localization.GetPhrase(LocalizedPhrase.AskNeedTutorial);
+                        askWindow_left.text = Localization.GetWord(LocalizedWord.Tutorial);
+                        askWindow_leftAction = () => {
+                            GameMaster.StartNewGame(GameStartSettings.GetTutorialSettings());
+                            askWindow.SetActive(false);
+                        };
+                        askWindow_right.text = Localization.GetWord(LocalizedWord.Cancel);
+                        askWindow_rightAction = () =>
+                        {
+                            GameConstants.DisableTutorialNote();
+                            this.StartGame();
+                            askWindow.SetActive(false);
+                        };
+                        askWindow.SetActive(true);
+                        return;
+                    }
+                    //
+                    GameMaster.StartNewGame(
+                        GameStartSettings.GetStartSettings(GameMode.Survival, cgs, (Difficulty)difficultyDropdown.value, StartFoundingType.Zeppelin)
+                    );
+                    break;
+                }
+            case GameMode.Editor:
+                {
+                    GameMaster.StartNewGame(
+                        GameStartSettings.GetStartSettings(GameMode.Editor, cgs, (Difficulty)difficultyDropdown.value, StartFoundingType.Zeppelin)
+                    );
+                    break;
+                }
+            case GameMode.Scenario:
+                {
+                    if (ng_selectedScenarioIndex != -1)
+                    {
+                        GameMaster.StartNewGame(
+                           scenariosRepresentators[ng_selectedScenarioIndex].GetStartSettings()
+                        );
+                    }
+                    break;
+                }
+        }
+
+                  
     }
 
     public void NewGameButton()
@@ -283,7 +315,77 @@ public sealed class MenuUI : MonoBehaviour
     }
     private void NG_PrepareScenarioList()
     {
+        selectedGameMode = GameMode.Scenario;
+        int scenarioTotalCount = Scenario.GetAllScenariosCount();
+        int buttonsCount = scenarioHoster.childCount;
+        // сценариев всегда больше 1 - так как туториал
 
+        if (scenarioTotalCount > buttonsCount)
+        { // не все сценарии влезли в список
+            float scrollValue = scenarioScroll.value;
+            int position = (int)(scenarioTotalCount * scrollValue);
+            if (position + buttonsCount > scenarioTotalCount) position = scenarioTotalCount - buttonsCount;
+            scenariosRepresentators = Scenario.GetRepresentators(position, buttonsCount);
+            Transform t;
+            for (int i = 0; i < buttonsCount; i++)
+            {
+                t = scenarioHoster.GetChild(i);
+                t.GetChild(0).GetComponent<Text>().text = scenariosRepresentators[i].name;
+                t.gameObject.SetActive(true);
+            }
+            scenarioScroll.gameObject.SetActive(true);
+        }
+        else
+        {
+            scenariosRepresentators = Scenario.GetRepresentators();
+            int i = 0;
+            Transform t;
+            for (; i < scenarioTotalCount; i++) {
+                t = scenarioHoster.GetChild(i);
+                t.GetChild(0).GetComponent<Text>().text = scenariosRepresentators[i].name;
+                t.gameObject.SetActive(true);
+            }
+            for (; i< buttonsCount; i++) { scenarioHoster.GetChild(i).gameObject.SetActive(false); }
+            scenarioScroll.gameObject.SetActive(false);
+        }
+
+        INLINE_RedrawScenarioWindow();
+    }
+    public void SelectScenario(int i)
+    {
+        if (ng_selectedScenarioIndex != -1 && ng_selectedScenarioIndex != i)
+        {
+            scenarioHoster.GetChild(ng_selectedScenarioIndex).GetComponent<Image>().overrideSprite = null;
+        }
+        if (i >= scenariosRepresentators.Length)
+        {
+            if (ng_selectedScenarioIndex != -1) scenarioHoster.GetChild(ng_selectedScenarioIndex).GetComponent<Image>().overrideSprite = null;
+            ng_selectedScenarioIndex = -1;
+        }
+        else
+        {
+            ng_selectedScenarioIndex = i;
+            scenarioHoster.GetChild(ng_selectedScenarioIndex).GetComponent<Image>().overrideSprite = overridingSprite;
+        }
+        INLINE_RedrawScenarioWindow();
+    }
+    private void INLINE_RedrawScenarioWindow()
+    {
+        if (ng_selectedScenarioIndex == -1)
+        {
+            scenarioName.enabled = false;
+            scenarioDescription.enabled = false;
+        }
+        else
+        {
+            scenarioName.text = scenariosRepresentators[ng_selectedScenarioIndex].name;
+            scenarioDescription.text = scenariosRepresentators[ng_selectedScenarioIndex].description;
+            if (!scenarioName.enabled)
+            {
+                scenarioName.enabled = true;
+                scenarioDescription.enabled = true;
+            }
+        }
     }
 
     public void Editor_InputFieldValueChanged()
@@ -507,5 +609,13 @@ public sealed class MenuUI : MonoBehaviour
         highscoresButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Highscores);
         authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Info);
         transform.GetChild(0).GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
+    }
+
+    /// <summary>
+    /// clears loaded buffers
+    /// </summary>
+    private void Flush()
+    {
+        
     }
 }
