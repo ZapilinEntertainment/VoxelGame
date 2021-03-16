@@ -42,7 +42,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
         reachableIconColor = Color.white, unreachableIconColor = Color.gray;
 
     private const float MARKER_MOVE_SPEED = 5f, CHALLENGE_PANEL_CLOSING_TIME = 3f, ROLL_RINGS_OUTER_SPEED = 6f, ROLL_RINGS_INNER_SPEED = 2f, ROLL_RINGS_DISAPPEAR_SPEED = 5f,
-        STAMINA_PER_STEP = 0.01f;
+        STAMINA_PER_STEP = 0.01f, BASIC_EXP_REWARD = 30f;
     private const byte MAX_DIFFICULTY = 25;
 
     private void Awake()
@@ -620,6 +620,95 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
             }            
         }
     }
+    private void AfterRoll()
+    {
+        if (selectedField < 0 | selectedField > buttons.Length)
+        {
+            challengePanel.SetActive(false);
+            return;
+        }
+        else
+        {
+
+            var cf = observingPoint.GetChallengeField(selectedField);
+            float result = 0f;
+            switch (cf.challengeType)
+            {
+                case ChallengeType.PersistenceTest:
+                    {
+                        result = observingCrew.PersistenceRoll();
+                        break;
+                    }
+                case ChallengeType.SurvivalSkillsTest:
+                    {
+                        result = observingCrew.SurvivalSkillsRoll();
+                        break;
+                    }
+                case ChallengeType.PerceptionTest:
+                    {
+                        result = observingCrew.PerceptionRoll();
+                        break;
+                    }
+                case ChallengeType.SecretKnowledgeTest:
+                    {
+                        result = observingCrew.SecretKnowledgeRoll();
+                        break;
+                    }
+                case ChallengeType.IntelligenceTest:
+                    {
+                        result = observingCrew.IntelligenceRoll();
+                        break;
+                    }
+                case ChallengeType.TechSkillsTest:
+                    {
+                        result = observingCrew.TechSkillsRoll();
+                        break;
+                    }
+                case ChallengeType.ExitTest:
+                    {
+                        switch (observingCrew.exploringPath)
+                        {
+                            case Path.TechPath: result = (observingCrew.IntelligenceRoll() + observingCrew.TechSkillsRoll()) / 2f; break;
+                            case Path.SecretPath: result = (observingCrew.SecretKnowledgeRoll() + observingCrew.PerceptionRoll()) / 2f; break;
+                            default: result = (observingCrew.SurvivalSkillsRoll() + observingCrew.PersistenceRoll()) / 2f; break;
+                        }
+                        break;
+                    }
+            }
+
+            if (result >= cf.difficultyClass)
+            {
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
+                if (cf.challengeType != ChallengeType.ExitTest) cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
+                observingCrew.RaiseAdaptability(0.5f);
+                observingCrew.AddExperience(BASIC_EXP_REWARD * observingPoint.difficulty);
+                passText.text = Localization.GetWord(LocalizedWord.Pass);
+                canPassThrough = true;
+
+                playerResultLabel.text = ((int)result).ToString();
+                playerResultLabel.enabled = true;
+            }
+            else
+            {
+                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.RollFail);
+                observingCrew.RaiseAdaptability(0.25f);
+                observingCrew.AddExperience(0.5f);
+                passText.text = Localization.GetWord(LocalizedWord.Return);
+                canPassThrough = false;
+
+                outerRollRing.fillAmount = 1f;
+                innerRollRing.fillAmount = 1f;
+                rollText.text = ((int)result).ToString();
+                rollButton.SetActive(true);
+            }
+
+            observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / (0.5f + 0.5f * result) * 4f);
+            passButton.SetActive(true);
+            needInfoRefreshing = true;
+
+            if (!INLINE_TryToAction(true)) challengePanel.SetActive(false);
+        }
+    }
     public void Pass()
     {
         if (canPassThrough)
@@ -634,7 +723,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
                     needInfoRefreshing = true;
                     break;
                 case ChallengeType.Treasure:
-                    observingExpedition.AddCrystals(cf.difficultyClass);
+                    observingExpedition.AddCrystals(cf.difficultyClass * 20);
                     needInfoRefreshing = true;
                     break;
                 case ChallengeType.PuzzlePart:
@@ -688,94 +777,7 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
         else passButton.SetActive(false);
         challengePanel.SetActive(false);
     }
-    private void AfterRoll()
-    {
-        if (selectedField < 0 | selectedField > buttons.Length)
-        {
-            challengePanel.SetActive(false);
-            return;
-        }
-        else
-        {            
-
-            var cf = observingPoint.GetChallengeField(selectedField);
-            float result = 0f;
-            switch (cf.challengeType)
-            {
-                case ChallengeType.PersistenceTest:
-                    {
-                        result = observingCrew.PersistenceRoll();
-                        break;
-                    }
-                case ChallengeType.SurvivalSkillsTest:
-                    {
-                        result = observingCrew.SurvivalSkillsRoll();
-                        break;
-                    }
-                case ChallengeType.PerceptionTest:
-                    {
-                        result = observingCrew.PerceptionRoll();
-                        break;
-                    }
-                case ChallengeType.SecretKnowledgeTest:
-                    {
-                        result = observingCrew.SecretKnowledgeRoll();
-                        break;
-                    }
-                case ChallengeType.IntelligenceTest:
-                    {
-                        result = observingCrew.IntelligenceRoll();
-                        break;
-                    }
-                case ChallengeType.TechSkillsTest:
-                    {
-                        result = observingCrew.TechSkillsRoll();
-                        break;
-                    }
-                case ChallengeType.ExitTest:
-                    {
-                        switch (observingCrew.exploringPath)
-                        {
-                            case Path.TechPath: result = (observingCrew.IntelligenceRoll() + observingCrew.TechSkillsRoll())/2f; break;
-                            case Path.SecretPath: result = (observingCrew.SecretKnowledgeRoll() + observingCrew.PerceptionRoll()) / 2f; break;
-                            default: result = (observingCrew.SurvivalSkillsRoll() + observingCrew.PersistenceRoll()) / 2f; break;
-                        }
-                        break;
-                    }
-            }
-            
-            if (result >= cf.difficultyClass)
-            {
-                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.SuccessfulRoll);
-                if (cf.challengeType != ChallengeType.ExitTest) cf.ChangeChallengeType(ChallengeType.NoChallenge, 0);
-                observingCrew.RaiseAdaptability(0.5f);
-                observingCrew.AddExperience(5f);
-                passText.text = Localization.GetWord(LocalizedWord.Pass);
-                canPassThrough = true;
-
-                playerResultLabel.text = ((int)result).ToString();
-                playerResultLabel.enabled = true;
-            }
-            else
-            {
-                if (GameMaster.soundEnabled) GameMaster.audiomaster.MakeSoundEffect(SoundEffect.RollFail);
-                observingCrew.RaiseAdaptability(0.25f);
-                passText.text = Localization.GetWord(LocalizedWord.Return);
-                canPassThrough = false;
-
-                outerRollRing.fillAmount = 1f;
-                innerRollRing.fillAmount = 1f;
-                rollText.text = ((int)result).ToString();
-                rollButton.SetActive(true);
-            }
-
-            observingCrew.StaminaDrain(STAMINA_PER_STEP * observingPoint.difficulty * cf.difficultyClass / (0.5f + 0.5f *result) * 4f);
-            passButton.SetActive(true);
-            needInfoRefreshing = true;
-
-            if (!INLINE_TryToAction(true)) challengePanel.SetActive(false);
-        }
-    }
+   
     private void MoveCrewToField(int newIndex)
     {
         fieldSize = deckHolder.GetComponent<RectTransform>().rect.width * 1f / size;

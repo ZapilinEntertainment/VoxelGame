@@ -15,7 +15,7 @@ public class PointOfInterest : MapPoint
     public PointOfInterest(int i_id) : base(i_id) {
         difficulty = RecalculateDifficulty();
     }
-    public PointOfInterest(float i_angle, float i_height, MapMarkerType mtype, Path i_path) : base(i_angle, i_height, mtype)
+    public PointOfInterest(float i_angle, float i_height, MapPointType mtype, Path i_path) : base(i_angle, i_height, mtype)
     {
         difficulty = RecalculateDifficulty();
         path = i_path;
@@ -112,14 +112,14 @@ public class PointOfInterest : MapPoint
         float locationDifficulty = 0f;
         switch (type)
         {
-            case MapMarkerType.Unknown:
+            case MapPointType.Unknown:
                 richness = Random.value;
                 danger = Random.value;
                 mysteria = 1f;
                 friendliness = Random.value;
                 locationDifficulty = Random.value;
                 break;
-            case MapMarkerType.MyCity:
+            case MapPointType.MyCity:
                 richness = 0.05f;
                 danger = 0f;
                 mysteria = 0.01f;
@@ -134,73 +134,73 @@ public class PointOfInterest : MapPoint
             //  friendliness = Random.value;
             // locationDifficulty = 1f;
             //  break;
-            case MapMarkerType.Station:
+            case MapPointType.Station:
                 richness = Random.value * 0.8f + 0.2f;
                 danger = Random.value * 0.2f;
                 mysteria = Random.value * 0.5f;
                 friendliness = Random.value;
                 locationDifficulty = 0.2f + Random.value * 0.2f;
                 break;
-            case MapMarkerType.Wreck:
+            case MapPointType.Wreck:
                 richness = 0.3f + Random.value * 0.5f;
                 danger = 0.3f + Random.value * 0.2f;
                 mysteria = 0.1f * Random.value;
                 friendliness = Random.value * 0.8f;
                 locationDifficulty = 0.7f + Random.value * 0.2f;
                 break;
-            case MapMarkerType.FlyingExpedition:
+            case MapPointType.FlyingExpedition:
                 richness = 0f;
                 danger = 0f;
                 mysteria = 0f;
                 friendliness = 1f;
                 locationDifficulty = 0f;
                 break; // flyingExpedition.expedition.sectorCollapsingTest
-            case MapMarkerType.Island:
+            case MapPointType.Island:
                 richness = 0.2f + Random.value * 0.7f;
                 danger = Random.value * 0.5f;
                 mysteria = 0.2f + Random.value * 0.5f;
                 friendliness = Random.value * 0.7f + 0.3f;
                 locationDifficulty = Random.value * 0.4f + 0.4f * danger;
                 break;
-            case MapMarkerType.SOS:
+            case MapPointType.SOS:
                 richness = 0f;
                 danger = 0.2f + 0.8f * Random.value;
                 mysteria = Random.value * 0.3f;
                 friendliness = Random.value * 0.5f + 0.5f;
                 locationDifficulty = Random.value * 0.5f + 0.25f;
                 break;
-            case MapMarkerType.Portal:
+            case MapPointType.Portal:
                 richness = 0.1f;
                 danger = 0.3f + Random.value;
                 mysteria = 0.3f + Random.value * 0.7f;
                 friendliness = Random.value;
                 locationDifficulty = Random.value * 0.6f + 0.4f;
                 break;
-            case MapMarkerType.QuestMark:
+            case MapPointType.QuestMark:
                 // устанавливается квестом                
                 break;
-            case MapMarkerType.Colony:
+            case MapPointType.Colony:
                 richness = 0.5f + Random.value * 0.5f;
                 danger = 0.1f * Random.value;
                 mysteria = 0.1f * Random.value;
                 friendliness = Random.value * 0.7f + 0.3f;
                 locationDifficulty = 0.3f * Random.value;
                 break;
-            case MapMarkerType.Wiseman:
+            case MapPointType.Wiseman:
                 richness = 0.1f;
                 danger = 0.1f * Random.value;
                 mysteria = Random.value;
                 friendliness = Random.value * 0.3f + 0.7f;
                 locationDifficulty = Random.value * (1 - friendliness);
                 break;
-            case MapMarkerType.Wonder:
+            case MapPointType.Wonder:
                 richness = 0.3f + Random.value * 0.7f;
                 danger = 0.1f * Random.value;
                 mysteria = 0.5f + Random.value * 0.5f;
                 friendliness = Random.value;
                 locationDifficulty = Random.value;
                 break;
-            case MapMarkerType.Resources:
+            case MapPointType.Resources:
                 richness = 0.5f + Random.value * 0.5f;
                 danger = Random.value * 0.3f;
                 mysteria = 0.1f * Random.value;
@@ -485,7 +485,7 @@ public class PointOfInterest : MapPoint
                                         bool moreMystic = mysteria > 0.5f, moreSpecific = false;
                                         switch (type)
                                         {
-                                            case MapMarkerType.Station:
+                                            case MapPointType.Station:
                                                 {
                                                     moreSpecific = friendliness > 0.5f;
                                                     ctypes[0] = ChallengeType.CrystalPts;
@@ -493,7 +493,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.FoundationPts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Wreck:
+                                            case MapPointType.Wreck:
                                                 {
                                                     moreSpecific = difficulty > 0.5f;
                                                     ctypes[0] = ChallengeType.EnginePts;
@@ -501,7 +501,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.CloudWhalePts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Island:
+                                            case MapPointType.Island:
                                                 {
                                                     moreSpecific = richness > 0.5f;
                                                     ctypes[0] = ChallengeType.BlossomPts;
@@ -509,7 +509,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.CloudWhalePts;
                                                     break;
                                                 }
-                                            case MapMarkerType.SOS:
+                                            case MapPointType.SOS:
                                                 {
                                                     moreSpecific = danger > 0.5f;
                                                     ctypes[0] = ChallengeType.CloudWhalePts;
@@ -517,7 +517,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.PipesPts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Portal:
+                                            case MapPointType.Portal:
                                                 {
                                                     moreSpecific = difficulty > 0.5f;
                                                     ctypes[0] = ChallengeType.PipesPts;
@@ -525,7 +525,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.EnginePts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Colony:
+                                            case MapPointType.Colony:
                                                 {
                                                     moreSpecific = richness > 0.5f;
                                                     ctypes[0] = ChallengeType.FoundationPts;
@@ -533,7 +533,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.CrystalPts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Wiseman:
+                                            case MapPointType.Wiseman:
                                                 {
                                                     moreSpecific = friendliness < 0.5f;
                                                     ctypes[0] = ChallengeType.PollenPts;
@@ -541,7 +541,7 @@ public class PointOfInterest : MapPoint
                                                     ctypes[2] = ChallengeType.BlossomPts;
                                                     break;
                                                 }
-                                            case MapMarkerType.Wonder:
+                                            case MapPointType.Wonder:
                                                 {
                                                     moreSpecific = Random.value > 0.5f;
                                                     ctypes[0] = ChallengeType.MonumentPts;
@@ -550,12 +550,12 @@ public class PointOfInterest : MapPoint
                                                     break;
                                                 }
 
-                                            case MapMarkerType.Star:
-                                            case MapMarkerType.QuestMark:
-                                            case MapMarkerType.Resources:
-                                            case MapMarkerType.FlyingExpedition:
-                                            case MapMarkerType.Unknown:
-                                            case MapMarkerType.MyCity:
+                                            case MapPointType.Star:
+                                            case MapPointType.QuestMark:
+                                            case MapPointType.Resources:
+                                            case MapPointType.FlyingExpedition:
+                                            case MapPointType.Unknown:
+                                            case MapPointType.MyCity:
                                                 {
                                                     moreSpecific = true;
                                                     v *= 2f;

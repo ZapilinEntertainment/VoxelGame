@@ -46,7 +46,7 @@
             };
                 break;
             case SHUTTLE_BUILD_COST_ID:
-                cost = new ResourceContainer[] {
+                cost = new ResourceContainer[5] {
                 new ResourceContainer(ResourceType.metal_S, 50), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 20),
                 new ResourceContainer(ResourceType.Plastics, 100), new ResourceContainer(ResourceType.metal_E, 10)
             };

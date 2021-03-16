@@ -6,26 +6,6 @@
     public static readonly AdvancedRecipe Food_and_MetalP_to_Supplies;
     public static readonly Recipe[] supplyFactoryRecipes;
 
-    public override bool Equals(object obj)
-    {
-        if (obj == null) return false;
-        if (this == NoRecipe && obj == Recipe.NoRecipe) return true;
-        else
-        {
-            if (GetType() != obj.GetType()) return false;
-        }
-        if (base.Equals(obj))
-        {
-            var ar = (obj as AdvancedRecipe);
-            if (ar != null)
-            {
-                if (input2 != ar.input2 || inputValue2 != ar.inputValue2) return false;
-                else return true;
-            }
-            else return false;
-        }
-        else return false;
-    }
     public override int GetHashCode()
     {
         return base.GetHashCode() + input2.ID;

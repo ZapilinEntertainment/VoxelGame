@@ -145,7 +145,7 @@ public sealed class RingSector
             }
             else
             {
-                mp = MapPoint.CreatePointOfType(pos.x, pos.y, MapMarkerType.Unknown);
+                mp = MapPoint.CreatePointOfType(pos.x, pos.y, MapPointType.Unknown);
             }
             if (mp != null)
             {

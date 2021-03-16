@@ -164,10 +164,10 @@ public sealed class Expedition
         mapMarker = null;
         GlobalMapCanvasController.needExpeditionsRedraw = true;
     }
-    public MapMarkerType GetDestinationIcon()
+    public MapPointType GetDestinationIcon()
     {
         if (stage == ExpeditionStage.OnMission) return destination.type;
-        else return MapMarkerType.FlyingExpedition;
+        else return MapPointType.FlyingExpedition;
     }
     public void CountMissionAsSuccess()
     {

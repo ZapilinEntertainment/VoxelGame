@@ -3012,47 +3012,47 @@ public static partial class Localization
         }
     }
     #region map points
-    public static string GetMapPointTitle(MapMarkerType mmtype)
+    public static string GetMapPointTitle(MapPointType mmtype)
     {
         switch (currentLanguage)
         {
             case Language.Russian:
                 switch (mmtype)
                 {
-                    case MapMarkerType.MyCity: return "Мой город";
-                    case MapMarkerType.Station: return "Станция";
-                    case MapMarkerType.Wreck: return "Обломки";
-                    case MapMarkerType.FlyingExpedition: return "Челнок";
-                    case MapMarkerType.Island: return "Остров";
-                    case MapMarkerType.SOS: return "Запрос о помощи";
-                    case MapMarkerType.Portal: return "Портал";
-                    case MapMarkerType.QuestMark: return "Отметка задания"; //заменить
-                    case MapMarkerType.Colony: return "Другая колония";
-                    case MapMarkerType.Star: return "Звезда";
-                    case MapMarkerType.Wiseman: return "Источник знания";
-                    case MapMarkerType.Wonder: return "Что-то непостижимое";
-                    case MapMarkerType.Resources: return "Ресурсы";
-                    case MapMarkerType.Unknown:
+                    case MapPointType.MyCity: return "Мой город";
+                    case MapPointType.Station: return "Станция";
+                    case MapPointType.Wreck: return "Обломки";
+                    case MapPointType.FlyingExpedition: return "Челнок";
+                    case MapPointType.Island: return "Остров";
+                    case MapPointType.SOS: return "Запрос о помощи";
+                    case MapPointType.Portal: return "Портал";
+                    case MapPointType.QuestMark: return "Отметка задания"; //заменить
+                    case MapPointType.Colony: return "Другая колония";
+                    case MapPointType.Star: return "Звезда";
+                    case MapPointType.Wiseman: return "Источник знания";
+                    case MapPointType.Wonder: return "Что-то непостижимое";
+                    case MapPointType.Resources: return "Ресурсы";
+                    case MapPointType.Unknown:
                     default: return "Неизвестно";
                 }
             case Language.English:
             default:
                 switch (mmtype)
                 {
-                    case MapMarkerType.MyCity: return "My city";
-                    case MapMarkerType.Station: return "Station";
-                    case MapMarkerType.Wreck: return "Wreck";
-                    case MapMarkerType.FlyingExpedition: return "Shuttle";
-                    case MapMarkerType.Island: return "Island";
-                    case MapMarkerType.SOS: return "Someone needs help";
-                    case MapMarkerType.Portal: return "Portal";
-                    case MapMarkerType.QuestMark: return "Quest mark"; //заменить
-                    case MapMarkerType.Colony: return "Another colony";
-                    case MapMarkerType.Star: return "Star";
-                    case MapMarkerType.Wiseman: return "Source of wisdom";
-                    case MapMarkerType.Wonder: return "Something inconceivable";
-                    case MapMarkerType.Resources: return "Drifting resources";
-                    case MapMarkerType.Unknown:
+                    case MapPointType.MyCity: return "My city";
+                    case MapPointType.Station: return "Station";
+                    case MapPointType.Wreck: return "Wreck";
+                    case MapPointType.FlyingExpedition: return "Shuttle";
+                    case MapPointType.Island: return "Island";
+                    case MapPointType.SOS: return "Someone needs help";
+                    case MapPointType.Portal: return "Portal";
+                    case MapPointType.QuestMark: return "Quest mark"; //заменить
+                    case MapPointType.Colony: return "Another colony";
+                    case MapPointType.Star: return "Star";
+                    case MapPointType.Wiseman: return "Source of wisdom";
+                    case MapPointType.Wonder: return "Something inconceivable";
+                    case MapPointType.Resources: return "Drifting resources";
+                    case MapPointType.Unknown:
                     default: return "Unknown point";
                 }
         }
@@ -3066,23 +3066,23 @@ public static partial class Localization
                 {
                     switch (mp.type)
                     {
-                        case MapMarkerType.MyCity: return "Наш маленький кусочек реального мира.";
-                        case MapMarkerType.Station: return "Одинокая станция, имеющая сообщение с внешним миром.";
-                        case MapMarkerType.Wreck:
+                        case MapPointType.MyCity: return "Наш маленький кусочек реального мира.";
+                        case MapPointType.Station: return "Одинокая станция, имеющая сообщение с внешним миром.";
+                        case MapPointType.Wreck:
                             {
                                 return "Металлические остатки чего-то крупного парят повсюду.";
                             }
-                        case MapMarkerType.FlyingExpedition: return "Челнок из нашей колонии."; // заменить
-                        case MapMarkerType.Island: return "Необитаемый остров.";
-                        case MapMarkerType.SOS: return "Может, нам стоит кого-то туда отправить?";
-                        case MapMarkerType.Portal: return "Временный проход в какой-то другой мир.";
-                        case MapMarkerType.QuestMark: return "Место, обозначенное заданием."; //заменить
-                        case MapMarkerType.Colony: return "Мы здесь не одни!";
-                        case MapMarkerType.Star: return "Сияет.";
-                        case MapMarkerType.Wiseman: return "Наши исследователи могут обрести здесь мудрость.";
-                        case MapMarkerType.Wonder: return "Величественное сооружение, возведённое в неясных целях.";
-                        case MapMarkerType.Resources: return "То, что мы можем подобрать и использовать.";
-                        case MapMarkerType.Unknown:
+                        case MapPointType.FlyingExpedition: return "Челнок из нашей колонии."; // заменить
+                        case MapPointType.Island: return "Необитаемый остров.";
+                        case MapPointType.SOS: return "Может, нам стоит кого-то туда отправить?";
+                        case MapPointType.Portal: return "Временный проход в какой-то другой мир.";
+                        case MapPointType.QuestMark: return "Место, обозначенное заданием."; //заменить
+                        case MapPointType.Colony: return "Мы здесь не одни!";
+                        case MapPointType.Star: return "Сияет.";
+                        case MapPointType.Wiseman: return "Наши исследователи могут обрести здесь мудрость.";
+                        case MapPointType.Wonder: return "Величественное сооружение, возведённое в неясных целях.";
+                        case MapPointType.Resources: return "То, что мы можем подобрать и использовать.";
+                        case MapPointType.Unknown:
                         default:
                             return "Это не описать словами.";
                     }
@@ -3092,23 +3092,23 @@ public static partial class Localization
                 {
                     switch (mp.type)
                     {
-                        case MapMarkerType.MyCity: return "Our stable piece of dream-reality.";
-                        case MapMarkerType.Station: return "Lonely station, which has connection with real space out there.";
-                        case MapMarkerType.Wreck:
+                        case MapPointType.MyCity: return "Our stable piece of dream-reality.";
+                        case MapPointType.Station: return "Lonely station, which has connection with real space out there.";
+                        case MapPointType.Wreck:
                             {
                                 return "Parts of something big and made from metal flying everywhere.";
                             }
-                        case MapMarkerType.FlyingExpedition: return "Our colony's shuttle."; // заменить
-                        case MapMarkerType.Island: return "An uninhabitated island.";
-                        case MapMarkerType.SOS: return "Should we send someone?";
-                        case MapMarkerType.Portal: return "Temporary way to another world.";
-                        case MapMarkerType.QuestMark: return "Your questmission here."; //заменить
-                        case MapMarkerType.Colony: return "We are not alone here!";
-                        case MapMarkerType.Star: return "Shines.";
-                        case MapMarkerType.Wiseman: return "Our explorers can take wisdom here.";
-                        case MapMarkerType.Wonder: return "Mighty construction built for unobvious purpose.";
-                        case MapMarkerType.Resources: return "We can gain it and use.";
-                        case MapMarkerType.Unknown:
+                        case MapPointType.FlyingExpedition: return "Our colony's shuttle."; // заменить
+                        case MapPointType.Island: return "An uninhabitated island.";
+                        case MapPointType.SOS: return "Should we send someone?";
+                        case MapPointType.Portal: return "Temporary way to another world.";
+                        case MapPointType.QuestMark: return "Your questmission here."; //заменить
+                        case MapPointType.Colony: return "We are not alone here!";
+                        case MapPointType.Star: return "Shines.";
+                        case MapPointType.Wiseman: return "Our explorers can take wisdom here.";
+                        case MapPointType.Wonder: return "Mighty construction built for unobvious purpose.";
+                        case MapPointType.Resources: return "We can gain it and use.";
+                        case MapPointType.Unknown:
                         default:
                             return "It can't be described with words";
                     }

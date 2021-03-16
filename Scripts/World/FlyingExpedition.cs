@@ -5,14 +5,14 @@ public sealed class FlyingExpedition : MapPoint {
     public MapPoint destination { get; private set; }
     public float speed { get; private set; }
 
-    public FlyingExpedition(Expedition e, MapPoint startPoint, MapPoint i_destination, float i_speed) : base(startPoint.angle, startPoint.height, MapMarkerType.FlyingExpedition)
+    public FlyingExpedition(Expedition e, MapPoint startPoint, MapPoint i_destination, float i_speed) : base(startPoint.angle, startPoint.height, MapPointType.FlyingExpedition)
     {
         expedition = e;
         destination = i_destination;
         speed = i_speed;
         stability = 1f;
     }
-    public FlyingExpedition(Expedition e, float i_angle, float i_height, MapPoint i_destination, float i_speed) : base(i_angle, i_height, MapMarkerType.FlyingExpedition)
+    public FlyingExpedition(Expedition e, float i_angle, float i_height, MapPoint i_destination, float i_speed) : base(i_angle, i_height, MapPointType.FlyingExpedition)
     {
         expedition = e;
         destination = i_destination;

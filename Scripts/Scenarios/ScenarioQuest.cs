@@ -35,6 +35,6 @@ public sealed class ScenarioQuest : Quest
     {
         //scenario get info
         icon = GlobalMapCanvasController.GetMapMarkersTexture();
-        rect = GlobalMapCanvasController.GetMarkerRect(MapMarkerType.QuestMark);
+        rect = GlobalMapCanvasController.GetMarkerRect(MapPointType.QuestMark);
     }
 }

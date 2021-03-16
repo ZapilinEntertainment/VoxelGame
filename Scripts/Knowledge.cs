@@ -80,8 +80,8 @@ public sealed class Knowledge
         else {
             switch (poi.type)
             {
-                case MapMarkerType.Colony: return ResearchRoute.Foundation;
-                case MapMarkerType.Wiseman:
+                case MapPointType.Colony: return ResearchRoute.Foundation;
+                case MapPointType.Wiseman:
                     {
                         switch (poi.path)
                         {
@@ -90,7 +90,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.CloudWhale;
                         }
                     }
-                case MapMarkerType.SOS:
+                case MapPointType.SOS:
                     {
                         switch (poi.path)
                         {
@@ -99,7 +99,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.Pollen;
                         }
                     }
-                case MapMarkerType.Station:
+                case MapPointType.Station:
                     {
                         switch (poi.path)
                         {
@@ -108,7 +108,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.Pollen;
                         }
                     }
-                case MapMarkerType.Wreck:
+                case MapPointType.Wreck:
                     {
                         switch (poi.path)
                         {
@@ -117,7 +117,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.Pollen;
                         }
                     }
-                case MapMarkerType.Wonder:
+                case MapPointType.Wonder:
                     {
                         switch (poi.path)
                         {
@@ -126,7 +126,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.Blossom;
                         }
                     }
-                case MapMarkerType.Portal:
+                case MapPointType.Portal:
                     {
                         switch (poi.path)
                         {
@@ -135,7 +135,7 @@ public sealed class Knowledge
                             default: return ResearchRoute.Blossom;
                         }
                     }
-                case MapMarkerType.Island:
+                case MapPointType.Island:
                     switch (poi.path)
                     {
                         case Path.TechPath: return ResearchRoute.Monument;

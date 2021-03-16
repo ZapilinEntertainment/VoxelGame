@@ -26,6 +26,7 @@ public sealed class UIExpeditionObserver : UIObserver
     private GameObject expDestinationButton { get { return expNameField.GetChild(1).gameObject; } }
 
     private static bool waitForWorkRestoring = false;
+    private bool ignoreCrewDropdown = false;
     private bool? preparingMode = null;
     private byte lastChangesMarkerValue = 0;
     private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
@@ -311,8 +312,9 @@ public sealed class UIExpeditionObserver : UIObserver
         var opts = new List<Dropdown.OptionData>() { };
         if (observingExpedition == null)
         {
+            //сбор новой экспедиции
             if (selectedCrew != null && !selectedCrew.atHome) selectedCrew = null;
-            crewsIDs = new List<int>() { -1 };
+            crewsIDs = new List<int>() { -1 }; // no crew value
             opts.Add(new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.NoCrew)));
             var clist = Crew.crewsList;
             if (clist != null && clist.Count > 0)
@@ -327,6 +329,7 @@ public sealed class UIExpeditionObserver : UIObserver
                 }
             }
             crewDropdown.options = opts;
+            ignoreCrewDropdown = true;
             if (crewsIDs.Count > 1)
             {
                 crewDropdown.value = 1;
@@ -349,6 +352,7 @@ public sealed class UIExpeditionObserver : UIObserver
                 crewDropdown.interactable = false;
                 selectedCrew = null;
             }
+            ignoreCrewDropdown = false;
         }
         else
         {
@@ -356,7 +360,9 @@ public sealed class UIExpeditionObserver : UIObserver
             opts.Add(new Dropdown.OptionData(quotes + selectedCrew.name + quotes));
             crewsIDs = new List<int>(selectedCrew.ID);
             crewDropdown.options = opts;
+            ignoreCrewDropdown = true;
             crewDropdown.value = 0;
+            ignoreCrewDropdown = false;
             crewDropdown.interactable = false;
         }        
         lastCrewListMarker = Crew.listChangesMarkerValue;
@@ -401,7 +407,7 @@ public sealed class UIExpeditionObserver : UIObserver
 
     public void OnCrewValueChanged(int i)
     {
-        
+        if (ignoreCrewDropdown) return;
         if (i == 0)
         {
             if (crewButton.activeSelf) crewButton.SetActive(false);

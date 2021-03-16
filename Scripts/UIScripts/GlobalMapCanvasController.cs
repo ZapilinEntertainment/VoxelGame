@@ -91,7 +91,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                 {
                     foreach (var p in mapPoints)
                     {
-                        if (p.type == MapMarkerType.FlyingExpedition)
+                        if (p.type == MapPointType.FlyingExpedition)
                         {
                             fe = p as FlyingExpedition;
                             if (fe != null && fe.expedition.ID == ID)
@@ -133,7 +133,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         {
             switch (chosenPoint.type)
             {
-                case MapMarkerType.MyCity:
+                case MapPointType.MyCity:
                     {
                         if (GameMaster.realMaster.colonyController != null) pointLabel.text = GameMaster.realMaster.colonyController.cityName;
                         else pointLabel.text = Localization.GetPhrase(LocalizedPhrase.YouAreHere);
@@ -141,7 +141,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                         if (sendExpeditionButton.activeSelf) sendExpeditionButton.SetActive(false);
                         break;
                     }
-                case MapMarkerType.FlyingExpedition:
+                case MapPointType.FlyingExpedition:
                     {
                         var e = (chosenPoint as FlyingExpedition).expedition;
                         pointLabel.text = Localization.GetExpeditionName(e);
@@ -207,7 +207,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
     {
         if (chosenPoint != null)
         {
-            if (chosenPoint.type == MapMarkerType.FlyingExpedition)
+            if (chosenPoint.type == MapPointType.FlyingExpedition)
             {
                 var e = (chosenPoint as FlyingExpedition).expedition;
                 if (e.stage == Expedition.ExpeditionStage.WayIn) e.EndMission();
@@ -383,7 +383,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                 if (sectorsData[i] != null)
                 {
                     var mp = sectorsData[i].centralPoint;
-                    if (mp.type != MapMarkerType.Star) sectorsImages[i].color = sectorsData[i].environment.GetMapColor();
+                    if (mp.type != MapPointType.Star) sectorsImages[i].color = sectorsData[i].environment.GetMapColor();
                     else sectorsImages[i].color = (mp as SunPoint).color;
                 }
                 else
@@ -658,25 +658,25 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
     {
         return Resources.Load<Texture>("Textures/mapMarkers");
     }
-    public static Rect GetMarkerRect(MapMarkerType mtype)
+    public static Rect GetMarkerRect(MapPointType mtype)
     {
         float p = 0.25f;
         switch (mtype)
         {
-            case MapMarkerType.MyCity: return new Rect(p, 0, p, p);
-            case MapMarkerType.Station: return new Rect(0, p, p, p);
-            case MapMarkerType.Wreck: return new Rect(p, p, p, p);
-            case MapMarkerType.FlyingExpedition: return new Rect(2 * p, p, p, p);
-            case MapMarkerType.Island: return new Rect(3 * p, p, p, p);
-            case MapMarkerType.SOS: return new Rect(0, 2 * p, p, p);
-            case MapMarkerType.Portal: return new Rect(p, 2 * p, p, p);
-            case MapMarkerType.QuestMark: return new Rect(2 * p, 2 * p, p, p);
-            case MapMarkerType.Colony: return new Rect(3 * p, 2 * p, p, p);
-            case MapMarkerType.Star: return new Rect(0, 3 * p, p, p);
-            case MapMarkerType.Wiseman: return new Rect(p, 3 * p, p, p);
-            case MapMarkerType.Wonder: return new Rect(2 * p, 3 * p, p, p);
-            case MapMarkerType.Resources: return new Rect(3 * p, 3 * p, p, p);
-            case MapMarkerType.Unknown:
+            case MapPointType.MyCity: return new Rect(p, 0, p, p);
+            case MapPointType.Station: return new Rect(0, p, p, p);
+            case MapPointType.Wreck: return new Rect(p, p, p, p);
+            case MapPointType.FlyingExpedition: return new Rect(2 * p, p, p, p);
+            case MapPointType.Island: return new Rect(3 * p, p, p, p);
+            case MapPointType.SOS: return new Rect(0, 2 * p, p, p);
+            case MapPointType.Portal: return new Rect(p, 2 * p, p, p);
+            case MapPointType.QuestMark: return new Rect(2 * p, 2 * p, p, p);
+            case MapPointType.Colony: return new Rect(3 * p, 2 * p, p, p);
+            case MapPointType.Star: return new Rect(0, 3 * p, p, p);
+            case MapPointType.Wiseman: return new Rect(p, 3 * p, p, p);
+            case MapPointType.Wonder: return new Rect(2 * p, 3 * p, p, p);
+            case MapPointType.Resources: return new Rect(3 * p, 3 * p, p, p);
+            case MapPointType.Unknown:
             default:
                 return new Rect(0, 0, p, p);
         }

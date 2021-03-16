@@ -43,18 +43,6 @@ public class Recipe {
     {
         return input.ID * 17 + ID * 3 + output.ID * 5;
     }
-    public static bool operator ==(Recipe A, Recipe B)
-    {
-        if (ReferenceEquals(A, null))
-        {
-            return ReferenceEquals(B, null);
-        }
-        return A.Equals(B);
-    }
-    public static bool operator !=(Recipe A, Recipe B)
-    {
-        return !(A == B);
-    }
 
     static Recipe() {
 		NoRecipe = new Recipe(ResourceType.Nothing, ResourceType.Nothing,0, 0,0,  0);

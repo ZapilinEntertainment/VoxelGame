@@ -182,7 +182,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
             // ищем добавившиеся точки
             foreach (var pt in pts)
             {
-                if (pt.type == MapMarkerType.Star && !celestialBodies.ContainsKey(pt)) AddVisibleStar(pt as SunPoint);
+                if (pt.type == MapPointType.Star && !celestialBodies.ContainsKey(pt)) AddVisibleStar(pt as SunPoint);
             }
             lastDrawnMapActionHash = gm.actionsHash;
         }
@@ -193,7 +193,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 celestialBodies = new Dictionary<MapPoint, Transform>();
                 foreach (var pt in pts)
                 {
-                    if (pt.type == MapMarkerType.Star) AddVisibleStar(pt as SunPoint);
+                    if (pt.type == MapPointType.Star) AddVisibleStar(pt as SunPoint);
                 }
             }
             lastDrawnMapActionHash = 0;

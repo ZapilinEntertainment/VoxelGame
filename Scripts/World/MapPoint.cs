@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedition, Island, SOS, Portal,
+public enum MapPointType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedition, Island, SOS, Portal,
     QuestMark, Colony, Star, Wiseman, Wonder, Resources }
 
 // ЗАВИСИМОСТИ :
@@ -18,7 +18,7 @@ public enum MapMarkerType : byte { Unknown, MyCity, Station, Wreck, FlyingExpedi
 
 public class MapPoint
 {
-    public MapMarkerType type { get; protected set; }
+    public MapPointType type { get; protected set; }
     public bool destroyed { get; protected set; }
     public byte ringIndex { get; private set; }
     public float angle // in degrees
@@ -68,43 +68,27 @@ public class MapPoint
     {
         return ID;
     }
-
-    public static List<MapMarkerType> GetAvailablePointsType(float ascension)
-    {
-        var availableTypes = new List<MapMarkerType>() { MapMarkerType.Star };
-        if (ascension < 0.5f)
-        {
-            availableTypes.Add(MapMarkerType.Station);
-            availableTypes.Add(MapMarkerType.Resources);
-        }
-        else availableTypes.Add(MapMarkerType.Wonder);
-        if (ascension < 0.4f) availableTypes.Add(MapMarkerType.Wreck);
-        if (ascension > 0.3f) availableTypes.Add(MapMarkerType.Island);
-        else availableTypes.Add(MapMarkerType.Portal);
-        if (ascension > 0.35f & ascension < 0.75f) availableTypes.Add(MapMarkerType.Colony);
-        return availableTypes;
-    }
-    public static MapPoint CreatePointOfType(float i_angle, float i_height, MapMarkerType mtype)
+    public static MapPoint CreatePointOfType(float i_angle, float i_height, MapPointType mtype)
     {
         switch (mtype)
         {
-            case MapMarkerType.MyCity:           
-            case MapMarkerType.FlyingExpedition:
+            case MapPointType.MyCity:           
+            case MapPointType.FlyingExpedition:
                 return new MapPoint(i_angle, i_height, mtype);
 
-            case MapMarkerType.Star:
+            case MapPointType.Star:
                 return new SunPoint(i_angle, i_height, GameMaster.realMaster.globalMap.ascension);
 
-            case MapMarkerType.Unknown:
-            case MapMarkerType.Station:
-            case MapMarkerType.Wreck:
-            case MapMarkerType.Island:
-            case MapMarkerType.SOS:
-            case MapMarkerType.Portal:
-            case MapMarkerType.Colony:
-            case MapMarkerType.Wiseman:
-            case MapMarkerType.Wonder:
-            case MapMarkerType.Resources:
+            case MapPointType.Unknown:
+            case MapPointType.Station:
+            case MapPointType.Wreck:
+            case MapPointType.Island:
+            case MapPointType.SOS:
+            case MapPointType.Portal:
+            case MapPointType.Colony:
+            case MapPointType.Wiseman:
+            case MapPointType.Wonder:
+            case MapPointType.Resources:
                 float f = Random.value;
                 var p = Path.NoPath;
                 if (f > 0.1f)
@@ -118,7 +102,7 @@ public class MapPoint
                 }
                 return new PointOfInterest(i_angle, i_height, mtype, p);
 
-            case MapMarkerType.QuestMark:
+            case MapPointType.QuestMark:
                 return new MapPoint(i_angle, i_height, mtype);
 
             default:
@@ -139,7 +123,7 @@ public class MapPoint
         ID = i_id;
         destroyed = false;
     }
-    protected MapPoint(float i_angle, float i_height, MapMarkerType mtype)
+    protected MapPoint(float i_angle, float i_height, MapPointType mtype)
     {
         ID = nextID++;
         angle = i_angle;
@@ -149,46 +133,46 @@ public class MapPoint
 
         switch (mtype)
         {
-            case MapMarkerType.Unknown:
+            case MapPointType.Unknown:
                 stability = Random.value * 0.3f;
                 break;
-            case MapMarkerType.MyCity:
+            case MapPointType.MyCity:
                 stability = 1f;
                 break;
-            case MapMarkerType.Star:
+            case MapPointType.Star:
                 stability = 0.5f + Random.value * 0.4f;
                 break;
-            case MapMarkerType.Station:
+            case MapPointType.Station:
                 stability = 0.5f;
                 break;
-            case MapMarkerType.Wreck:
+            case MapPointType.Wreck:
                 stability = 0.1f + 0.23f * Random.value;
                 break;
-            case MapMarkerType.FlyingExpedition:
+            case MapPointType.FlyingExpedition:
                 stability = 1f;
                 break; // flyingExpedition.expedition.sectorCollapsingTest
-            case MapMarkerType.Island:
+            case MapPointType.Island:
                 stability = 0.5f + Random.value * 0.2f;
                 break;
-            case MapMarkerType.SOS:
+            case MapPointType.SOS:
                 stability = Random.value * 0.05f;
                 break;
-            case MapMarkerType.Portal:
+            case MapPointType.Portal:
                 stability = 0.1f + Random.value * 0.3f;
                 break;
-            case MapMarkerType.QuestMark:
+            case MapPointType.QuestMark:
                 stability = 1f;
                 break;
-            case MapMarkerType.Colony:
+            case MapPointType.Colony:
                 stability = 0.4f + Random.value * 0.2f;
                 break;
-            case MapMarkerType.Wiseman:
+            case MapPointType.Wiseman:
                 stability = 0.5f + Random.value * 0.25f;
                 break;
-            case MapMarkerType.Wonder:
+            case MapPointType.Wonder:
                 stability = Random.value;
                 break;
-            case MapMarkerType.Resources:
+            case MapPointType.Resources:
                 stability = 0.2f + Random.value * 0.3f;
                 break;
         }     
@@ -228,23 +212,23 @@ public class MapPoint
             {
                 switch (type)
                 {
-                    case MapMarkerType.Unknown: return (Random.value > 0.7f); // or changing!
-                    case MapMarkerType.MyCity: return true;
-                    case MapMarkerType.Star: // changing!
+                    case MapPointType.Unknown: return (Random.value > 0.7f); // or changing!
+                    case MapPointType.MyCity: return true;
+                    case MapPointType.Star: // changing!
                         return true;
-                    case MapMarkerType.Station:
+                    case MapPointType.Station:
                         return (Random.value < 0.5f);
-                    case MapMarkerType.Wreck: return Random.value < 0.33f;
-                    case MapMarkerType.FlyingExpedition: return false; // flyingExpedition.expedition.sectorCollapsingTest
-                    case MapMarkerType.Island: return Random.value < 0.5f;
-                    case MapMarkerType.SOS: return Random.value < 0.05f;
-                    case MapMarkerType.Portal:
-                    case MapMarkerType.QuestMark: return false;
-                    case MapMarkerType.Colony: return Random.value < 0.65f;
-                    case MapMarkerType.Wiseman: return (Random.value < 0.85f);
-                    case MapMarkerType.Wonder: // changing
+                    case MapPointType.Wreck: return Random.value < 0.33f;
+                    case MapPointType.FlyingExpedition: return false; // flyingExpedition.expedition.sectorCollapsingTest
+                    case MapPointType.Island: return Random.value < 0.5f;
+                    case MapPointType.SOS: return Random.value < 0.05f;
+                    case MapPointType.Portal:
+                    case MapPointType.QuestMark: return false;
+                    case MapPointType.Colony: return Random.value < 0.65f;
+                    case MapPointType.Wiseman: return (Random.value < 0.85f);
+                    case MapPointType.Wonder: // changing
                         return false;
-                    case MapMarkerType.Resources: // or changing!
+                    case MapPointType.Resources: // or changing!
                         return false;
                 }
                 return false;
@@ -294,24 +278,24 @@ public class MapPoint
                 data = new byte[LENGTH];
                 fs.Read(data, 0, LENGTH);
                 int ID = System.BitConverter.ToInt32(data, 0);
-                var mmtype = (MapMarkerType)data[4];
+                var mmtype = (MapPointType)data[4];
                 float angle = System.BitConverter.ToSingle(data, 5);
                 float height = System.BitConverter.ToSingle(data, 9);
                 float stability = System.BitConverter.ToSingle(data, 13);
 
                 switch (mmtype)
                 {
-                    case MapMarkerType.QuestMark: // awaiting
+                    case MapPointType.QuestMark: // awaiting
                         break;
-                    case MapMarkerType.Station:
-                    case MapMarkerType.Wreck:
-                    case MapMarkerType.Island:
-                    case MapMarkerType.SOS:
-                    case MapMarkerType.Portal:
-                    case MapMarkerType.Colony:
-                    case MapMarkerType.Wiseman:
-                    case MapMarkerType.Wonder:
-                    case MapMarkerType.Resources:
+                    case MapPointType.Station:
+                    case MapPointType.Wreck:
+                    case MapPointType.Island:
+                    case MapPointType.SOS:
+                    case MapPointType.Portal:
+                    case MapPointType.Colony:
+                    case MapPointType.Wiseman:
+                    case MapPointType.Wonder:
+                    case MapPointType.Resources:
                         {
                             var poi = new PointOfInterest(ID);
                             // base loading
@@ -326,7 +310,7 @@ public class MapPoint
                             pts.Add(poi);
                             break;
                         }
-                    case MapMarkerType.Star:
+                    case MapPointType.Star:
                         {
                             var sp = new SunPoint(ID);
                             // base loading
@@ -341,8 +325,8 @@ public class MapPoint
                             pts.Add(sp);
                             break;
                         }
-                    case MapMarkerType.MyCity:
-                    case MapMarkerType.Unknown:
+                    case MapPointType.MyCity:
+                    case MapPointType.Unknown:
                     default:
                         {
                             var mpoint = new MapPoint(ID);
@@ -371,12 +355,12 @@ public sealed class SunPoint : MapPoint
 {
     public Color color {get;private set;} // no alpha- channel
 
-    public SunPoint(float i_angle, float i_height,  Color i_color) : base (i_angle, i_height, MapMarkerType.Star)
+    public SunPoint(float i_angle, float i_height,  Color i_color) : base (i_angle, i_height, MapPointType.Star)
     {
         color = i_color;
     }
 
-    public SunPoint (float i_angle, float i_height, float ascension) : base (i_angle, i_height, MapMarkerType.Star)
+    public SunPoint (float i_angle, float i_height, float ascension) : base (i_angle, i_height, MapPointType.Star)
     {
         Color c = new Color((1 - ascension) * (1 - height), ascension * (1 - height), ascension * angle);
         color = Color.Lerp(Color.white, c, Mathf.Abs(0.5f - ascension) * 2 );
@@ -384,7 +368,7 @@ public sealed class SunPoint : MapPoint
     /// <summary>
     /// Loading constructor
     /// </summary>
-    public SunPoint(int i_id) : base (i_id) { type = MapMarkerType.Star; }
+    public SunPoint(int i_id) : base (i_id) { type = MapPointType.Star; }
 
     public override List<byte> Save()
     {

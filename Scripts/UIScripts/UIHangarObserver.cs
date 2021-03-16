@@ -10,6 +10,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
 #pragma warning disable 0649
     [SerializeField] private Button constructButton; // fiti
     [SerializeField] private Transform resourceCostContainer, shuttleLabel;
+    [SerializeField] private GameObject buildWindow;
 #pragma warning restore 0649
     private Vector2[] showingResourcesCount;    
     private int lastStorageDrawnValue = 0;
@@ -23,7 +24,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
 
     private void Awake()
     {
-        showingResourcesCount = new Vector2[resourceCostContainer.childCount - 1];
+        showingResourcesCount = new Vector2[resourceCostContainer.childCount];
     }
 
     public void SetObservingHangar(Hangar h)
@@ -43,13 +44,12 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
 
     public void PrepareHangarWindow()
     {
-        var rcc = resourceCostContainer.gameObject;
         showingStatus = observingHangar.status;
         switch (showingStatus)
         {
             case Hangar.HangarStatus.ShuttleOnMission:
                 {
-                    if (rcc.activeSelf) rcc.SetActive(false);
+                    if (buildWindow.activeSelf) buildWindow.SetActive(false);
                     if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     shuttleLabel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.GuidingStar);
                     shuttleLabel.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttleOnMission);
@@ -58,7 +58,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
                 }
             case Hangar.HangarStatus.ShuttleInside:
                 {
-                    if (rcc.activeSelf) rcc.SetActive(false);
+                    if (buildWindow.activeSelf) buildWindow.SetActive(false);
                     if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     shuttleLabel.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(Icons.ShuttleGoodIcon);
                     shuttleLabel.GetChild(1).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ShuttleReady);
@@ -67,7 +67,7 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
                 }
             case Hangar.HangarStatus.ConstructingShuttle:
                 {
-                    if (rcc.activeSelf) rcc.SetActive(false);
+                    if (buildWindow.activeSelf) buildWindow.SetActive(false);
                     mycanvas.ActivateProgressPanel(ProgressPanelMode.Hangar);
                     if (shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(false);
                     break;
@@ -75,14 +75,14 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
             case Hangar.HangarStatus.NoShuttle:
             default:
                 {
-                    if (!rcc.activeSelf) rcc.SetActive(true);
+                    if (!buildWindow.activeSelf) buildWindow.SetActive(true);
                     if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     if (shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(false);
 
                     ResourceContainer[] rc = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
                     var st = GameMaster.realMaster.colonyController.storage;
                     float[] storageResources = st.standartResources;
-                    for (int i = 1; i < resourceCostContainer.transform.childCount; i++)
+                    for (int i = 0; i < resourceCostContainer.transform.childCount; i++)
                     {
                         Transform t = resourceCostContainer.GetChild(i);
                         if (i < rc.Length)

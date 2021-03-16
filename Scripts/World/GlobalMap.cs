@@ -42,15 +42,17 @@ public sealed class GlobalMap : MonoBehaviour
 
     public const byte RINGS_COUNT = 5; // dependence : Environment.GetEnvironment
     private const byte MAX_OBJECTS_COUNT = 50;
-    private const float MAX_RINGS_ROTATION_SPEED = 1;
+    private const float MAX_RINGS_ROTATION_SPEED = 1, STAR_CREATE_CHANCE = 0.05f;
     private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
     //affection value?
-    private Dictionary<int, float> worldAffectionsList;
-    
+    private Dictionary<int, float> worldAffectionsList;    
     private int nextWAffectionID = 1;
+    //
+    private BitArray starsTypesArray;
+    private bool createNewStars = true;
 
     private void Start()
     {
@@ -97,10 +99,15 @@ public sealed class GlobalMap : MonoBehaviour
         cityPoint = MapPoint.CreatePointOfType(
             xpos, //angle
             ypos,
-             MapMarkerType.MyCity
+             MapPointType.MyCity
         );
         mapPoints.Add(cityPoint); // CITY_POINT_INDEX = 0
-        mapPoints.Add(sunPoint);        
+        mapPoints.Add(sunPoint);
+        //
+        starsTypesArray = new BitArray((int)Environment.EnvironmentPreset.TotalCount, false);
+        starsTypesArray[(int)Environment.EnvironmentPreset.Default] = true;
+        createNewStars = true;
+        //
         actionsHash = 0;
         prepared = true;
         //зависимость : Load()
@@ -108,6 +115,31 @@ public sealed class GlobalMap : MonoBehaviour
     public void LinkEnvironmentMaster(EnvironmentMaster em)
     {
         envMaster = em;
+    }
+    private void RecalculateStarsArray()
+    {
+        int length = (int)Environment.EnvironmentPreset.TotalCount;
+        starsTypesArray = new BitArray(length, false); 
+        foreach (var s in mapSectors)
+        {
+            if (s.centralPoint != null && s.centralPoint.type == MapPointType.Star)
+            {
+                starsTypesArray[(int)s.environment.presetType] = true;
+            }
+        }
+        createNewStars = false;
+        for (int i = 0; i < length; i++)
+        {
+            if ( (Environment.EnvironmentPreset)i == Environment.EnvironmentPreset.Custom) continue;
+            else
+            {
+                if (starsTypesArray[i] == false)
+                {
+                    createNewStars = true;
+                    break;
+                }
+            }
+        }
     }
 
     public bool IsPointCentral(MapPoint mp)
@@ -146,7 +178,7 @@ public sealed class GlobalMap : MonoBehaviour
                 }
             }
             mapPoints.Add(mp);
-            if (mp.type == MapMarkerType.Star) GameMaster.realMaster.environmentMaster.RecalculateCelestialDecorations();
+            if (mp.type == MapPointType.Star) GameMaster.realMaster.environmentMaster.RecalculateCelestialDecorations();
             actionsHash++;
             return true;
         }
@@ -195,16 +227,48 @@ public sealed class GlobalMap : MonoBehaviour
         }
     }
 
+
+
     private RingSector CreateNewSector(int i)
     {
-        var availableTypes = MapPoint.GetAvailablePointsType(ascension);
+        var availableTypes = new List<MapPointType>() { MapPointType.Resources};
+        if (createNewStars && Random.value < STAR_CREATE_CHANCE) availableTypes.Add(MapPointType.Star);
+        bool addStation = false, addColony = false;
+        if (ascension < GameConstants.ASCENSION_MEDIUM)
+        {
+            availableTypes.Add(MapPointType.SOS);
+            availableTypes.Add(MapPointType.Wreck);
+            addStation = true;
+        }
+        else
+        {
+            if (ascension > GameConstants.ASCENSION_HIGH)
+            {
+                availableTypes.Add(MapPointType.Wonder);
+                availableTypes.Add(MapPointType.Wiseman);
+                addColony = true;
+            }
+            else
+            {
+                addStation = true;
+                addColony = true;
+            }
+        }
+        if (ascension > GameConstants.ASCENSION_VERYLOW && ascension < GameConstants.ASCENSION_VERYHIGH)
+        {
+            availableTypes.Add(MapPointType.Island);
+            availableTypes.Add(MapPointType.Colony);
+        }
+        if (addStation) availableTypes.Add(MapPointType.Station);
+        if (addColony) availableTypes.Add(MapPointType.Colony);    
+        //     
 
         var pos = GetSectorPosition(i);
         int x = Random.Range(0, availableTypes.Count);
         var inpos = GetSectorPosition(i);
         byte ring = DefineRing(pos.y);
         RingSector rs;
-        if (availableTypes[x] != MapMarkerType.Star)
+        if (availableTypes[x] != MapPointType.Star)
         {            
             MapPoint centralPoint = MapPoint.CreatePointOfType(
                 pos.x,
@@ -217,19 +281,38 @@ public sealed class GlobalMap : MonoBehaviour
         else
         {
             var e = Environment.GetEnvironment(ascension, pos.y);
-            SunPoint sunpoint = new SunPoint(
-                pos.x,
-                pos.y,
-                e.GetMapColor()
-                );
-            rs = new RingSector(sunpoint, e);
-            AddPoint(sunpoint, true);
+            int presetIndex = (int)e.presetType;
+            if (starsTypesArray[presetIndex]) return null;
+            else
+            {
+                SunPoint sunpoint = new SunPoint(
+                    pos.x,
+                    pos.y,
+                    e.GetMapColor()
+                    );
+                rs = new RingSector(sunpoint, e);
+                AddPoint(sunpoint, true);
+                starsTypesArray[presetIndex] = true;
+                createNewStars = false;
+                for (int j = 0; j< (int)Environment.EnvironmentPreset.TotalCount; j++)
+                {
+                    if ((Environment.EnvironmentPreset)j == Environment.EnvironmentPreset.Custom) continue;
+                    else
+                    {
+                        if (starsTypesArray[j] == false)
+                        {
+                            createNewStars = true;
+                            break;
+                        }
+                    }
+                }
+            }
         }
         mapSectors[i] = rs;
         actionsHash++;
         return rs;
     }
-    private void AddNewSector(byte index, MapMarkerType mtype, Environment e)
+    private void AddNewSector(byte index, MapPointType mtype, Environment e)
     {
         if (mapSectors[index] != null) RemoveSector(index);
         Vector2 spos = GetSectorPosition(index);
@@ -508,7 +591,7 @@ public sealed class GlobalMap : MonoBehaviour
             {
                 MapPoint mp = mapPoints[i];
                 mp.angle += thisCycleRotations[mp.ringIndex];
-                if (mp.type == MapMarkerType.FlyingExpedition)
+                if (mp.type == MapPointType.FlyingExpedition)
                 {
                     FlyingExpedition fe = (mp as FlyingExpedition);
                     MapPoint d = fe.destination;
@@ -663,8 +746,7 @@ public sealed class GlobalMap : MonoBehaviour
         RingSector rs = mapSectors[x];
         if (rs == null)
         {
-            CreateNewSector(x);
-            return true;
+            return CreateNewSector(x) != null;            
         }
         else return UpdateSector(x); 
     }
@@ -680,12 +762,12 @@ public sealed class GlobalMap : MonoBehaviour
         var centralPoint = MapPoint.CreatePointOfType(
         pos.x,
         pos.y,
-        MapMarkerType.Island
+        MapPointType.Island
         );
         mapSectors[x] = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
         AddPoint(centralPoint, true);
     }
-    public void TEST_MakeNewPoint(MapMarkerType mmt)
+    public void TEST_MakeNewPoint(MapPointType mmt)
     {
         int x = Random.Range(0, mapSectors.Length);
         var rs = mapSectors[x];
@@ -716,7 +798,7 @@ public sealed class GlobalMap : MonoBehaviour
         {             
             foreach (MapPoint mp in mapPoints)
             {
-                if (mp.type != MapMarkerType.FlyingExpedition)
+                if (mp.type != MapPointType.FlyingExpedition)
                 {
                     savedata.AddRange(mp.Save());
                     realCount++;
@@ -760,7 +842,7 @@ public sealed class GlobalMap : MonoBehaviour
         mapPoints = MapPoint.LoadPoints(fs);
         foreach (var p in mapPoints)
         {
-            if (p.type == MapMarkerType.MyCity)
+            if (p.type == MapPointType.MyCity)
             {
                 cityPoint = p;
                 break;
@@ -772,7 +854,7 @@ public sealed class GlobalMap : MonoBehaviour
         ascension = System.BitConverter.ToSingle(data, 0);
 
         mapSectors = RingSector.StaticLoad(fs);
-
+        RecalculateStarsArray();
         prepared = true;
     }
     #endregion

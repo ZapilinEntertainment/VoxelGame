@@ -528,83 +528,83 @@ public sealed class Environment
         }
         return EnvironmentPreset.Default;
     }
-    public MapMarkerType PickMainPointType()
+    public MapPointType PickMainPointType()
     {           
-        MapMarkerType[] list = new MapMarkerType[4];
+        MapPointType[] list = new MapPointType[4];
         switch (presetType)
         {           
             case EnvironmentPreset.Ocean:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.SOS;
-                list[2] = MapMarkerType.Island;               
-                list[3] = MapMarkerType.Wonder;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.SOS;
+                list[2] = MapPointType.Island;               
+                list[3] = MapPointType.Wonder;
                 break;
             case EnvironmentPreset.Meadows:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wreck;                
-                list[2] = MapMarkerType.Station;
-                list[3] = MapMarkerType.Colony;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wreck;                
+                list[2] = MapPointType.Station;
+                list[3] = MapPointType.Colony;
                 break;
             case EnvironmentPreset.WhiteSpace:
-                list[0] = MapMarkerType.Star;
-                list[1] = MapMarkerType.Wiseman;
-                list[2] = MapMarkerType.Wonder;
-                list[3] = MapMarkerType.Portal;
+                list[0] = MapPointType.Star;
+                list[1] = MapPointType.Wiseman;
+                list[2] = MapPointType.Wonder;
+                list[3] = MapPointType.Portal;
                 break;
             case EnvironmentPreset.Space:
             case EnvironmentPreset.Ice:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.SOS;
-                list[3] = MapMarkerType.Station;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.SOS;
+                list[3] = MapPointType.Station;
                 break;
             case EnvironmentPreset.Desert:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.SOS;
-                list[3] = MapMarkerType.Island;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.SOS;
+                list[3] = MapPointType.Island;
                 break;
             case EnvironmentPreset.Fire:
-                list[0] = MapMarkerType.Star;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.SOS;
-                list[3] = MapMarkerType.Portal;
+                list[0] = MapPointType.Star;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.SOS;
+                list[3] = MapPointType.Portal;
                 break;
             case EnvironmentPreset.Ruins:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.Wiseman;
-                list[3] = MapMarkerType.Colony;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.Wiseman;
+                list[3] = MapPointType.Colony;
                 break;
             case EnvironmentPreset.Crystal:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wiseman;
-                list[2] = MapMarkerType.Island;
-                list[3] = MapMarkerType.Portal;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wiseman;
+                list[2] = MapPointType.Island;
+                list[3] = MapPointType.Portal;
                 break;
             case EnvironmentPreset.Forest:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Island;
-                list[2] = MapMarkerType.Colony;
-                list[3] = MapMarkerType.Wonder;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Island;
+                list[2] = MapPointType.Colony;
+                list[3] = MapPointType.Wonder;
                 break;
             case EnvironmentPreset.Pollen:
-                list[0] = MapMarkerType.SOS;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.Island;
-                list[3] = MapMarkerType.Portal;
+                list[0] = MapPointType.SOS;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.Island;
+                list[3] = MapPointType.Portal;
                 break;
             case EnvironmentPreset.Pipe:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Wreck;
-                list[2] = MapMarkerType.Star;
-                list[3] = MapMarkerType.Island;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Wreck;
+                list[2] = MapPointType.Star;
+                list[3] = MapPointType.Island;
                 break;
             default:
-                list[0] = MapMarkerType.Resources;
-                list[1] = MapMarkerType.Island;
-                list[2] = MapMarkerType.Station;
-                list[3] = MapMarkerType.Wonder;
+                list[0] = MapPointType.Resources;
+                list[1] = MapPointType.Island;
+                list[2] = MapPointType.Station;
+                list[3] = MapPointType.Wonder;
                 break;
         }
         float x = Random.value;
