@@ -16,7 +16,7 @@ public sealed class ColonyController : MonoBehaviour
     public bool housingRecalculationNeeded = false, powerGridRecalculationNeeded = false, hospitalCoverageRecalculationNeeded; // hot
     public float gears_coefficient; // hot
     public float hospitals_coefficient { get; private set; }
-    public float happiness_coefficient { get; private set; }
+    public float happinessCoefficient { get; private set; }
     public float workers_coefficient { get; private set; }
     public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
 
@@ -121,9 +121,9 @@ public sealed class ColonyController : MonoBehaviour
     void Update()
     {
 
-        if (showingHappiness != happiness_coefficient)
+        if (showingHappiness != happinessCoefficient)
         {
-            showingHappiness = Mathf.Lerp(showingHappiness, happiness_coefficient, Time.deltaTime);
+            showingHappiness = Mathf.Lerp(showingHappiness, happinessCoefficient, Time.deltaTime);
             RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
         }        
         if (GameMaster.gameSpeed == 0f | hq == null | GameMaster.loading) return;
@@ -283,19 +283,19 @@ public sealed class ColonyController : MonoBehaviour
                     if (targetHappiness > housingHappiness) targetHappiness = housingHappiness;
                     break;
             }            
-            if (happiness_coefficient != targetHappiness)
+            if (happinessCoefficient != targetHappiness)
             {
-                if (happiness_coefficient > targetHappiness) happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessDecreaseMultiplier);
-                else happiness_coefficient = Mathf.MoveTowards(happiness_coefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessIncreaseMultiplier);
+                if (happinessCoefficient > targetHappiness) happinessCoefficient = Mathf.MoveTowards(happinessCoefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessDecreaseMultiplier);
+                else happinessCoefficient = Mathf.MoveTowards(happinessCoefficient, targetHappiness, GameConstants.HAPPINESS_CHANGE_SPEED * TICK_TIME * happinessIncreaseMultiplier);
 
-                happinessUpdateEvent?.Invoke(happiness_coefficient);
+                happinessUpdateEvent?.Invoke(happinessCoefficient);
             }            
 
             //  BIRTHRATE
             {
                 if (birthSpeed != 0 & !starvation)
                 {
-                    realBirthrate = birthSpeed *  birthrateCoefficient * happiness_coefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * TICK_TIME;
+                    realBirthrate = birthSpeed *  birthrateCoefficient * happinessCoefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * TICK_TIME;
                     if (peopleSurplus > 1)
                     {
                         int newborns = (int)peopleSurplus;
@@ -307,7 +307,7 @@ public sealed class ColonyController : MonoBehaviour
             }
 
             // WORKSPEED
-            workers_coefficient = starvation ? 0.3f : (0.5f + happiness_coefficient * 0.7f) * gears_coefficient;
+            workers_coefficient = starvation ? 0.3f : (0.5f + happinessCoefficient * 0.7f) * gears_coefficient;
         }
 
         
@@ -891,7 +891,7 @@ public sealed class ColonyController : MonoBehaviour
         {
             if (hq == null)
             {
-                happiness_coefficient = GameConstants.START_HAPPINESS;
+                happinessCoefficient = GameConstants.START_HAPPINESS;
                 birthSpeed = GameConstants.START_BIRTHRATE_COEFFICIENT;
             }
             hq = new_hq;
@@ -917,12 +917,7 @@ public sealed class ColonyController : MonoBehaviour
         else energyCrystalsCount -= v;
         if (v >= 1 && observer != null) observer.MoneyChanging(-v);
         return v;
-    }
-
-    public Path DeterminePath()
-    {
-        return Path.LifePath;
-    }
+    }    
 
     public void SetBirthrateMode(BirthrateMode bm)
     {
@@ -936,6 +931,7 @@ public sealed class ColonyController : MonoBehaviour
         }
     }
 
+    #region parameters
     public float GetLevelCf()
     {
         return 1 - (hq.level - GameConstants.HQ_MAX_LEVEL / 2) / GameConstants.HQ_MAX_LEVEL;
@@ -946,6 +942,37 @@ public sealed class ColonyController : MonoBehaviour
         // 5 - 0.66
         // 6 - 0.5
     }
+    public Path DeterminePath()
+    {
+        return Path.LifePath;
+    }
+    public float GetAscensionCf()
+    {
+        float maxVal = 20f;
+        var lvl = hq.level;
+        if (lvl > 1)
+        {
+            switch (lvl)
+            {
+                case 2: maxVal = 30f; break;
+                case 3: maxVal = 40f; break;
+                case 4: maxVal = 50f;break;
+                case 5:
+                    maxVal = 60f;
+                    break;
+                case 6:
+                    maxVal = 70f;
+                    break;
+            }
+        }
+        if (HaveBuilding(Structure.MONUMENT_ID)) maxVal += 10f;
+        if (HaveBuilding(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID)) maxVal += 10f;
+        //if (HaveBuilding(Structure.ASCENSION_ENGINE)) maxVal += 10f;
+        if (happinessCoefficient > maxVal) return maxVal;
+        else return happinessCoefficient;
+    }
+    #endregion
+
 
     #region save-load system
     public void Save(System.IO.FileStream fs)
@@ -953,7 +980,7 @@ public sealed class ColonyController : MonoBehaviour
         storage.Save(fs);
         
         fs.Write(System.BitConverter.GetBytes(gears_coefficient), 0, 4);
-        fs.Write(System.BitConverter.GetBytes(happiness_coefficient), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(happinessCoefficient), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyStored), 0, 4);
         fs.Write(System.BitConverter.GetBytes(energyCrystalsCount), 0, 4); // 5 x 4, 0 - 19
@@ -1029,8 +1056,8 @@ public sealed class ColonyController : MonoBehaviour
         var data = new byte[24];        
         fs.Read(data, 0, data.Length);
         gears_coefficient = System.BitConverter.ToSingle(data, 0);
-        happiness_coefficient = System.BitConverter.ToSingle(data, 4);
-        showingHappiness = happiness_coefficient;
+        happinessCoefficient = System.BitConverter.ToSingle(data, 4);
+        showingHappiness = happinessCoefficient;
         RenderSettings.skybox.SetFloat("_Saturation", showingHappiness * 0.25f + 0.75f);
         birthSpeed = System.BitConverter.ToSingle(data, 8);
         energyStored = System.BitConverter.ToSingle(data, 12);

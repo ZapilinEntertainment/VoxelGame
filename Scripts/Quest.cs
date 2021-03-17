@@ -544,9 +544,9 @@ public class Quest : MyObject
                     switch ((Knowledge.FoundationRouteBoosters)subIndex)
                     {
                         case Knowledge.FoundationRouteBoosters.HappinessBoost:
-                            stepsAddInfo[0] = string.Format("{0:0.##}", colony.happiness_coefficient * 100) + '%'
+                            stepsAddInfo[0] = string.Format("{0:0.##}", colony.happinessCoefficient * 100) + '%'
                                 + " / " + string.Format("{0:0.##}", Knowledge.R_F_HAPPINESS_COND * 100) + '%';
-                            if (colony.happiness_coefficient >= Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
+                            if (colony.happinessCoefficient >= Knowledge.R_F_HAPPINESS_COND) MakeQuestCompleted();
                             break;
                         case Knowledge.FoundationRouteBoosters.ImmigrantsBoost:
                             {
@@ -602,7 +602,7 @@ public class Quest : MyObject
                                 if (count >= Knowledge.R_CW_STREAMGENS_COUNT_COND) MakeQuestCompleted();
                                 else
                                 {
-                                    steps[0] = count.ToString()+ " /" + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString();
+                                    stepsAddInfo[0] = count.ToString()+ " /" + Knowledge.R_CW_STREAMGENS_COUNT_COND.ToString();
                                 }
                                 break;
                             }
@@ -620,7 +620,7 @@ public class Quest : MyObject
                                 if (count >= Knowledge.R_CW_CREWS_COUNT_COND) MakeQuestCompleted();
                                 else
                                 {
-                                    steps[0] = count.ToString() + " /" + Knowledge.R_CW_CREWS_COUNT_COND.ToString();
+                                    stepsAddInfo[0] = count.ToString() + " /" + Knowledge.R_CW_CREWS_COUNT_COND.ToString();
                                 }
                                 break;
                             }
@@ -867,7 +867,8 @@ public class Quest : MyObject
                             {
                                 var mlist = colony.GetBuildings<Monument>();
                                 int mcount = 0, count = 0;
-                                if (mlist != null && mlist.Count >= Knowledge.R_M_MONUMENTS_COUNT_COND)
+                                byte cond = 0;
+                                if (mlist != null)
                                 {
                                     mcount = mlist.Count;
                                     foreach (var m in mlist)
@@ -877,7 +878,23 @@ public class Quest : MyObject
                                 }
                                 string s = " / " + Knowledge.R_M_MONUMENTS_COUNT_COND.ToString();
                                 stepsAddInfo[0] = mcount.ToString() + s;
+                                if (mcount >= Knowledge.R_M_MONUMENTS_COUNT_COND)
+                                {
+                                    stepsFinished[0] = true;
+                                    cond++;
+                                }
+                                else stepsFinished[0] = false;
                                 stepsAddInfo[1] = count.ToString() + s;
+                                if (count >= Knowledge.R_M_MONUMENTS_COUNT_COND)
+                                {
+                                    stepsFinished[1] = true;
+                                    cond++;
+                                }
+                                else
+                                {
+                                    stepsFinished[1] = false;
+                                }
+                                if (cond == 2) MakeQuestCompleted();
                                 break;
                             }
                         case Knowledge.MonumentRouteBoosters.LifesourceBoost:

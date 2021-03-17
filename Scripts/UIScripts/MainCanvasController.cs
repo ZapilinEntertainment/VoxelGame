@@ -150,9 +150,9 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
                         gearsText.text = string.Format("{0:0.###}", showingGearsCf);
                         gearsText.color = showingGearsCf > GEARS_LOW_VALUE ? Color.white : Color.red;
                     }
-                    if (showingHappinessCf != colony.happiness_coefficient)
+                    if (showingHappinessCf != colony.happinessCoefficient)
                     {
-                        showingHappinessCf = colony.happiness_coefficient;
+                        showingHappinessCf = colony.happinessCoefficient;
                         happinessText.text = string.Format("{0:0.##}", showingHappinessCf * 100) + '%';
                         happinessText.color = showingHappinessCf > HAPPINESS_LOW_VALUE ? (showingHappinessCf > HAPPINESS_HIGH_VALUE ? Color.green : Color.white) : Color.red;
                     }
@@ -834,7 +834,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
             colonyToggleButton.overrideSprite = PoolMaster.gui_overridingSprite;
             if (colony == null) return;
             showingGearsCf = colony.gears_coefficient;
-            showingHappinessCf = colony.happiness_coefficient;
+            showingHappinessCf = colony.happinessCoefficient;
             showingBirthrate = colony.realBirthrate;
             showingHospitalCf = colony.hospitals_coefficient;
             gearsText.text = string.Format("{0:0.###}", showingGearsCf);

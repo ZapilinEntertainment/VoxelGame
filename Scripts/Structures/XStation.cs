@@ -136,8 +136,8 @@ public sealed class XStation : WorkBuilding {
 
     public static string GetInfo()
     {
-       return Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.stability * 100)).ToString() + "%\n"
-
+        return Localization.GetWord(LocalizedWord.Stability) + ": " + ((int)(GameMaster.stability * 100)).ToString() + "%\n" +
+             Localization.GetPhrase(LocalizedPhrase.AscensionLevel) + ": " + ((int)((GameMaster.realMaster.globalMap?.ascension ?? 0f) * 100f)).ToString() + "%";
             ;
     }
 

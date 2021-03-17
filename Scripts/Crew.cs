@@ -227,7 +227,7 @@ public sealed class Crew : MonoBehaviour {
 
         confidence = 0.5f;
         unity = 0.5f;
-        var happiness = c.happiness_coefficient;
+        var happiness = c.happinessCoefficient;
         if (c != null) loyalty = happiness; else loyalty = 0.5f;
         adaptability = 0.5f;
 
@@ -299,7 +299,7 @@ public sealed class Crew : MonoBehaviour {
         stamina = 1f;
         adaptability -= ADAPTABILITY_LOSSES;
         if (adaptability < 0f) adaptability = 0f;
-        if (loyalty < GameMaster.realMaster.colonyController.happiness_coefficient) loyalty += NEUROPARAMETER_STEP;
+        if (loyalty < GameMaster.realMaster.colonyController.happinessCoefficient) loyalty += NEUROPARAMETER_STEP;
     }
     public void StaminaDrain(float f)
     {

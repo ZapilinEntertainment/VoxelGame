@@ -131,7 +131,7 @@ public sealed class DockSystem
         switch (s.type) {
 		case ShipType.Passenger:
                 {
-                    float vol = s.volume * (Random.value * 0.5f * colony.happiness_coefficient + 0.5f);
+                    float vol = s.volume * (Random.value * 0.5f * colony.happinessCoefficient + 0.5f);
                     if (immigrationEnabled && immigrationPlan > 0)
                     {
                         if (vol > immigrationPlan)
@@ -150,15 +150,16 @@ public sealed class DockSystem
                     else
                     {
                         vol = 0f;
-                        if (Random.value < colony.happiness_coefficient * 0.25f)
+                        if (Random.value < colony.happinessCoefficient * 0.25f)
                         {
                             int x = (int)(Random.value * colony.hq.level);
                             if (x != 0) colony.AddCitizens(x);
                         }
                     }
+
                     if (vol > 0)
                     {
-                        vol *= colony.happiness_coefficient;
+                        vol *= colony.happinessCoefficient;
                         if (vol > 1f) Hotel.DistributeLodgers((int)vol);
                         rewardValue += 0.5f;
                     }

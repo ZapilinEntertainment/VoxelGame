@@ -405,6 +405,7 @@ public class Structure : MonoBehaviour
             case GRPH_REACTOR_4_ID:
             case HOSPITAL_2_ID:
             case QUANTUM_ENERGY_TRANSMITTER_5_ID:
+            case MONUMENT_ID:
                 if (p.materialID != PoolMaster.MATERIAL_ADVANCED_COVERING_ID)
                 {
                     refusalReason = Localization.GetRefusalReason(RefusalReason.MustBeBuildedOnFoundationBlock);

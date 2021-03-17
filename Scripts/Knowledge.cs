@@ -805,6 +805,16 @@ public sealed class Knowledge
         }
         else return 0f;
     }
+    public float GetAscension()
+    {
+        int openedCount = 0;
+        foreach (var b in buttonsColorCodesArray)
+        {
+            if (b == NOCOLOR_CODE) openedCount++;
+        }
+        float x = openedCount;
+        return x / (float)PUZZLECOLORS_COUNT;
+    }
 
     public bool UnblockButton(int i)
     {

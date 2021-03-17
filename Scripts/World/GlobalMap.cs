@@ -16,7 +16,7 @@ public sealed class GlobalMap : MonoBehaviour
             }
         }
     }
-    private float _ascension;
+    private float _ascension, ascensionTarget, updateTimer;
     public float[] ringsRotation { get; private set; }
     //при изменении размера - поменять функции save-load
     public int actionsHash { get; private set; }
@@ -42,7 +42,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     public const byte RINGS_COUNT = 5; // dependence : Environment.GetEnvironment
     private const byte MAX_OBJECTS_COUNT = 50;
-    private const float MAX_RINGS_ROTATION_SPEED = 1, STAR_CREATE_CHANCE = 0.05f;
+    private const float MAX_RINGS_ROTATION_SPEED = 1, STAR_CREATE_CHANCE = 0.05f, RING_RESIST_CF = 0.02f, ASCENSION_UPDATE_TIME = 10f;
     private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
@@ -78,7 +78,8 @@ public sealed class GlobalMap : MonoBehaviour
             sectorsCount += (int)(360f / sectorsDegrees[i]);
         }
         mapSectors = new RingSector[sectorsCount];
-        ascension = 0f;
+        ascension = GameConstants.ASCENSION_STARTVALUE;
+        ascensionTarget = ascension;
         //start sector:
         byte ring = RINGS_COUNT / 2;
         sectorsCount = (int)(360f / sectorsDegrees[ring]);
@@ -122,6 +123,7 @@ public sealed class GlobalMap : MonoBehaviour
         starsTypesArray = new BitArray(length, false); 
         foreach (var s in mapSectors)
         {
+            if (s == null) continue;
             if (s.centralPoint != null && s.centralPoint.type == MapPointType.Star)
             {
                 starsTypesArray[(int)s.environment.presetType] = true;
@@ -226,8 +228,6 @@ public sealed class GlobalMap : MonoBehaviour
             return null;
         }
     }
-
-
 
     private RingSector CreateNewSector(int i)
     {
@@ -509,6 +509,22 @@ public sealed class GlobalMap : MonoBehaviour
         }
         else envMaster.positionChanged = true;
     }
+    private float GetGlobalMapAscension()
+    {
+        float ringAscension = 50f;
+        var ringIndex = cityPoint.ringIndex;
+        if (ringIndex != 2)
+        {
+            switch (ringIndex)
+            {
+                case 0: ringAscension = 10f; break;
+                case 1: ringAscension = 30f; break;
+                case 3: ringAscension = 70f; break;
+                case 4: ringAscension = 100f; break;
+            }
+        }
+        return ringAscension;
+    }
 
     /// <summary>
     /// returns true if something has changed
@@ -553,7 +569,7 @@ public sealed class GlobalMap : MonoBehaviour
         if (!prepared) return;
 
         float t = Time.deltaTime * GameMaster.gameSpeed;
-        float f = 0 ,a;
+        float f = 0, a ;
         float[] thisCycleRotations = new float[RINGS_COUNT];
         for (int i = 0; i < RINGS_COUNT; i++)
         {
@@ -572,19 +588,29 @@ public sealed class GlobalMap : MonoBehaviour
             ringsRotation[i] = f;
         }
 
-        float ascensionChange = 0;
+        var prefAsc = ascension;
+        updateTimer -= t;
+        if (updateTimer <= 0f)
+        {
+            updateTimer = ASCENSION_UPDATE_TIME;
+            
+            ascensionTarget = GameMaster.realMaster.colonyController?.GetAscensionCf() ?? 0f;
+            a = GetGlobalMapAscension(); if (ascensionTarget > a) ascensionTarget = a;
+            a = Knowledge.GetCurrent()?.GetAscension() ?? 0f; if (ascensionTarget > a) ascensionTarget = a;
+        }
+        if (ascension != ascensionTarget) ascension = Mathf.MoveTowards(ascension, ascensionTarget, GameConstants.ASCENSION_CHANGE_SPEED * t * (1.5f - GameMaster.stability));
+        float ascensionChange = prefAsc - ascension;
+        //
         float prevX = cityPoint.angle, prevY = cityPoint.height;
         if (mapPoints.Count > 0)
         {
-            if (GameMaster.realMaster.colonyController != null)
+            if (GameMaster.realMaster.colonyController != null && cityPoint.ringIndex != 2)
             {
-                //float s = GameMaster.realMaster.stability;
-                //if (s > 1f) s = 1f;
-                //if (cpoint.height != s)
-                //{
-                //    cpoint.height = 1f - s;
-                //    cpoint.ringIndex = DefineRing(s);
-                //}
+                float speed = RING_RESIST_CF;
+                if (cityPoint.ringIndex == 0 || cityPoint.ringIndex == 4) speed *= speed;
+                a = Mathf.MoveTowards(cityPoint.height, 0.5f, speed * t);
+                ChangeCityPointHeight(a - cityPoint.height);
+                // Использование stability?
             }
             int i = 0;
             while (i < mapPoints.Count)

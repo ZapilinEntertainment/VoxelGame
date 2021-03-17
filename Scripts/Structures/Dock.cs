@@ -147,7 +147,7 @@ public sealed class Dock : WorkBuilding {
 				if (shipArrivingTimer <= 0 ) {
 					bool sendImmigrants = false, sendGoods = false;
 					if ( dockSystem.immigrationEnabled  ) {
-                        if (dockSystem.immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value >= colony.happiness_coefficient / 2f)
+                        if (dockSystem.immigrationPlan > 0 & colony.totalLivespace >= colony.citizenCount | Random.value >= colony.happinessCoefficient / 2f)
 						sendImmigrants = true;
 					}
 					int transitionsCount = 0;
@@ -401,11 +401,12 @@ public sealed class Dock : WorkBuilding {
     /// returns true if need to be upgraded
     /// </summary>
     /// <returns></returns>
-    public bool CheckAddons()
+    public void CheckAddons()
     {
+        if (GameMaster.loading) return;
         var alist = FindObjectsOfType<DockAddon>();
         bool haveAddon1 = false, haveAddon2 = false;
-        if (alist == null) return false;
+        if (alist == null) return;
         else
         {
             ChunkPos cpos = basement.pos, apos;
@@ -443,23 +444,21 @@ public sealed class Dock : WorkBuilding {
                         d.SetModelRotation(modelRotation);
                         d.SetBasement(basement, PixelPosByte.zero);
                         colony.SendWorkers(wCount, d);
-                        return true;
+                        break;
                     case 2:
                         d = GetStructureByID(DOCK_2_ID) as Dock;
                         d.SetBasement(basement, PixelPosByte.zero);
                         d.SetModelRotation(modelRotation);
                         colony.SendWorkers(wCount, d);
-                        return true;
+                        break;
                     case 3:
                         d = GetStructureByID(DOCK_3_ID) as Dock;
                         d.SetBasement(basement, PixelPosByte.zero);
                         d.SetModelRotation(modelRotation);
                         colony.SendWorkers(wCount, d);
-                        return true;
-                    default: return false;
+                        break;
                 }
             }
-            else return false;
         }
     }  
     public void SellResource(ResourceType rt, float volume)

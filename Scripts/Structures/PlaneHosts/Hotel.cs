@@ -13,7 +13,6 @@ public sealed class Hotel : Building, IPlanable
 
     static Hotel()
     {
-        hotels = new List<Hotel>();
         GameMaster.staticResetFunctions += ResetStaticData;
     }
     public static void ResetStaticData()
@@ -22,7 +21,7 @@ public sealed class Hotel : Building, IPlanable
     }
     public static void DistributeLodgers(int x)
     {
-        if (hotels != null )
+        if (hotels != null && hotels.Count > 0)
         {
             int count = hotels.Count;
             if (count == 1)
@@ -86,7 +85,15 @@ public sealed class Hotel : Building, IPlanable
             GameMaster.realMaster.everydayUpdate += EverydayUpdate;
             subscribedToUpdate = true;           
         }
-        if (!hotels.Contains(this)) hotels.Add(this);
+        if (hotels == null)
+        {
+            hotels = new List<Hotel>();
+            hotels.Add(this);
+        }
+        else
+        {
+            if (!hotels.Contains(this)) hotels.Add(this);
+        }
 
         if (!GameMaster.loading) IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, true);
     }
@@ -121,8 +128,8 @@ public sealed class Hotel : Building, IPlanable
         if (lodgersCount > 0)
         {            
             var c = GameMaster.realMaster.colonyController;            
-            c.AddEnergyCrystals(lodgersCount * RENT * c.happiness_coefficient);
-            if (Random.value > c.happiness_coefficient)
+            c.AddEnergyCrystals(lodgersCount * RENT * c.happinessCoefficient);
+            if (Random.value > c.happinessCoefficient)
             {
                 if (lodgersCount == 1) lodgersCount = 0;
                 else
