@@ -22,12 +22,11 @@ public sealed class Knowledge
     public float[] routePoints { get; private set; }
     public byte[] puzzlePartsCount { get; private set; }
     public byte[] buttonsColorCodesArray{get; private set;}
-    public float completeness { get; private set; }
     public int changesMarker { get; private set; }
 
     private byte[] routeBonusesMask = new byte[ROUTES_COUNT]; // учет полученных бонусов
 
-    public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7, PUZZLECOLORS_COUNT = 6,
+    public const byte ROUTES_COUNT = 8, STEPS_COUNT = 7, ROUTE_BUILDING_1 = STEPS_COUNT - 3, ROUTE_BUILDING_0 = STEPS_COUNT - 4, PUZZLECOLORS_COUNT = 6,
        WHITECOLOR_CODE = 0, REDCOLOR_CODE = 1, GREENCOLOR_CODE = 2, BLUECOLOR_CODE = 3, CYANCOLOR_CODE = 4, BLACKCOLOR_CODE = 5, NOCOLOR_CODE = 6;
     public const int PUZZLEPARTS_COUNT = 64, PUZZLE_PINS_COUNT = 112; // 7 * 8 + 8 * 7
 
@@ -648,7 +647,6 @@ public sealed class Knowledge
     public void SYSTEM_ResetBasicData()
     {
         routePoints = new float[ROUTES_COUNT];
-        completeness = 0f;
         puzzlePartsCount = new byte[PUZZLECOLORS_COUNT];
         buttonsColorCodesArray = new byte[PUZZLEPARTS_COUNT]; //filed with 0 - whitecolor
         foreach (byte b in blockedCells)
@@ -665,81 +663,72 @@ public sealed class Knowledge
         {
             case ResearchRoute.Foundation:
                 {
-                    if (step == 1) varieties = new float[] { 3, 3, 3, 1 };
-                    else
-                    {
-                        if (step == 6) varieties = new float[] { 0, 1, 3, 3 };
-                        else varieties = new float[] { 1, 0.9f, 1, 0.1f };
-                    }
+                    if (step < 2) varieties = new float[] { 4f, 3f, 2f, 0f };
+                    else varieties = new float[] { 4f, 3f, 2f, 1f };
                     break;
                 }
             case ResearchRoute.CloudWhale:
                 {
-                    if (step < 4) varieties = new float[] { 1, 3, 6, 2 };
-                    else varieties = new float[] { 0, 2, 6, 4 };
+                    varieties = new float[] { 5f, 1f, 4f, 1f };
                     break;
                 }
             case ResearchRoute.Engine:
                 {
-                    if (step < 3) varieties = new float[] { 0, 0, 1, 0 };
-                    else varieties = new float[] { 1, 2, 12, 8 };
+                    if (step == ROUTE_BUILDING_0 || step == ROUTE_BUILDING_1) return BLUECOLOR_CODE;
+                    else
+                    {
+                        if (step < 5) varieties = new float[] { 3f, 1f, 4f, 3f };
+                        else varieties = new float[] { 5f, 1f, 5f, 5f };
+                    }
                     break;
                 }
             case ResearchRoute.Pipes:
                 {
-                    if (step == 1) varieties = new float[] { 0, 0, 0, 1 };
-                    else
-                    {
-                        if (step < 4) varieties = new float[] { 1, 1, 10, 3 };
-                        else varieties = new float[] { 0, 0, 1, 1 };
-                    }
+                    varieties = new float[] { 1f, 5f, 1f, 5f };
                     break;
                 }
             case ResearchRoute.Crystal:
                 {
-                    if (step == 1) varieties = new float[] { 0, 0, 0, 1 };
+                    if (step < 5) varieties = new float[] { 1f, 1f, 1f, 5f };
                     else
                     {
-                        varieties = new float[] { 0.2f, 0.4f, 5, 5 }; ;
+                        return CYANCOLOR_CODE;
                     }
                     break;
                 }
             case ResearchRoute.Monument:
                 {
-                    if (step < 5) varieties = new float[] { 1, 2, 5, 4 };
-                    else varieties = new float[] { 0, 1, 5, 5 };
+                    varieties = new float[] { 2.2f, 1f, 1.5f, 1.5f };
                     break;
                 }
             case ResearchRoute.Blossom:
                 {
-                    varieties = new float[] { 1, 20, 5, 10 };
+                    if (step < 5) varieties = new float[] { 2f, 5f, 1f, 3f };
+                    else varieties = new float[] { 1f, 20f, 1f, 2f };
                     break;
                 }
             case ResearchRoute.Pollen:
                 {
-                    if (step == 1) varieties = new float[] { 0, 10, 0, 1 };
-                    else
-                    {
-                        varieties = new float[] { 1, 20, 10, 10 };
-                    }
+                    varieties = new float[] { 1f, 5f, 1f, 5f };
                     break;
                 }
-            default: varieties = new float[] { 1, 1, 1, 1 }; break;
+            default: varieties = new float[] { 1f, 1f, 1f, 1f }; break;
         }
 
         float s = varieties[0] + varieties[1] + varieties[2] + varieties[3];
+        float[] borders = new float[3] { varieties[0] / s, (varieties[0] + varieties[1]) / s, (varieties[0] + varieties[1] + varieties[2]) / s };
         float v = Random.value;
-        byte col;
-        if (v < (varieties[0] + varieties[1] + varieties[2]) / s)
+        if (v < borders[1])
         {
-            if (v < varieties[0]) col = REDCOLOR_CODE; else col = GREENCOLOR_CODE;
+            if (v < borders[0]) return REDCOLOR_CODE;
+            else return GREENCOLOR_CODE;
         }
         else
         {
-            if (v > varieties[3]) col = CYANCOLOR_CODE; else col = BLUECOLOR_CODE;
+            if (v < borders[2]) return BLUECOLOR_CODE;
+            else return CYANCOLOR_CODE;
         }
-        return col;
-    }
+    }   
 
     public void AddPuzzlePart(byte colorcode)
     {
@@ -813,7 +802,8 @@ public sealed class Knowledge
             if (b == NOCOLOR_CODE) openedCount++;
         }
         float x = openedCount;
-        return x / (float)PUZZLECOLORS_COUNT;
+        x /= (float)PUZZLEPARTS_COUNT;
+        return x ;
     }
 
     public bool UnblockButton(int i)

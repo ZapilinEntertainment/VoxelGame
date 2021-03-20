@@ -95,40 +95,45 @@ public sealed class UICrewObserver : UIObserver
         staminaBar.fillAmount = observingCrew.stamina;
         //stats
         var t = statsPanel.GetChild(0);
-        bool hasFreePoints = observingCrew.freePoints > 0;
+        bool hasFreePoints = observingCrew.freePoints > 0, notMaximum = observingCrew.persistence < Crew.MAX_ATTRIBUTE_VALUE;
         var b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.persistence.ToString();
 
         t = statsPanel.GetChild(1);
         b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        notMaximum = observingCrew.survivalSkills < Crew.MAX_ATTRIBUTE_VALUE;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.survivalSkills.ToString();
 
         t = statsPanel.GetChild(2);
         b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        notMaximum = observingCrew.perception < Crew.MAX_ATTRIBUTE_VALUE;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.perception.ToString();
 
         t = statsPanel.GetChild(3);
         b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        notMaximum = observingCrew.secretKnowledge < Crew.MAX_ATTRIBUTE_VALUE;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.secretKnowledge.ToString();
 
         t = statsPanel.GetChild(4);
         b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        notMaximum = observingCrew.intelligence < Crew.MAX_ATTRIBUTE_VALUE;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.intelligence.ToString();
 
         t = statsPanel.GetChild(5);
         b = t.GetChild(2);
-        b.GetComponent<Button>().enabled = hasFreePoints;
-        b.GetComponent<Image>().enabled = hasFreePoints;
+        notMaximum = observingCrew.techSkills < Crew.MAX_ATTRIBUTE_VALUE;
+        b.GetComponent<Button>().enabled = hasFreePoints & notMaximum;
+        b.GetComponent<Image>().enabled = hasFreePoints & notMaximum;
         b.GetChild(0).GetComponent<Text>().text = observingCrew.techSkills.ToString();
 
         var fpp = statsPanel.GetChild(6);
@@ -197,6 +202,19 @@ public sealed class UICrewObserver : UIObserver
             observingCrew = null;
             gameObject.SetActive(false);
         }
+    }
+    public void AddPoint(int x)
+    {
+        switch (x)
+        {
+            case 0: observingCrew.ImprovePersistence(); break;
+            case 1:  observingCrew.ImproveSurvivalSkill();break;
+            case 2: observingCrew.ImprovePerception(); break;
+            case 3: observingCrew.ImproveSecretKnowledge(); break;
+            case 4: observingCrew.ImproveIntelligence();break;
+            case 5: observingCrew.ImproveTechSkill(); break;
+        }
+        RedrawWindow();
     }
     //
     public void AddToClosingEvent(System.Action a)

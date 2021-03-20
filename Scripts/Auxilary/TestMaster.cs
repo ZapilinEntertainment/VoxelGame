@@ -41,15 +41,16 @@ public class TestMaster : MonoBehaviour
         {
             //TEST_AddCitizens(1000);
             //TEST_PrepareForExpeditions();
-            GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
+            // GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
+            //WritePuzzleColors();
         }
         if (Input.GetKeyDown("c"))
         {
-            GivePuzzleParts(50);
+            //GivePuzzleParts(50);
         }
         if (Input.GetKeyDown("n"))
         {
-            AddCitizens(5000, 30000f);
+            //AddCitizens(5000, 30000f);
         }
     }
 
@@ -336,6 +337,47 @@ public class TestMaster : MonoBehaviour
         chunk.GetRandomSurface().CreateStructure(Structure.SETTLEMENT_CENTER_ID);
         chunk.GetRandomSurface().CreateStructure(Structure.MINI_GRPH_REACTOR_3_ID);
         rm.SetStartResources();        
+    }
+
+    //
+    private void WritePuzzleColors()
+    {
+        byte x;
+        var knowledge = Knowledge.GetCurrent();
+        byte redcount = 0, bluecount = 0, greencount = 0, cyancount = 0;
+        for (byte i = 0; i < 8; i++)
+        {
+            string s = ((Knowledge.ResearchRoute)i).ToString() + ": ";
+            for (byte j = 0; j < 8; j++)
+            {
+                x = knowledge.GenerateCellColor(i, j);
+                switch (x)
+                {
+                    case Knowledge.REDCOLOR_CODE:
+                        redcount++;
+                        //s += "red ";
+                        break;
+                    case Knowledge.GREENCOLOR_CODE:
+                        greencount++;
+                        //s += "green ";
+                        break;
+                    case Knowledge.BLUECOLOR_CODE:
+                        bluecount++;
+                        //s += "blue ";
+                        break;
+                    case Knowledge.CYANCOLOR_CODE:
+                        cyancount++;
+                        //s += "cyan ";
+                        break;
+                }
+            }
+            //Debug.Log(s);
+            
+        }
+        Debug.Log("recount: " + redcount.ToString());
+        Debug.Log("greencount: " + greencount.ToString());
+        Debug.Log("bluecount: " + bluecount.ToString());
+        Debug.Log("cyancount :" + cyancount.ToString());
     }
 }
 

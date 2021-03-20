@@ -10,6 +10,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     [SerializeField] private Transform holder, infoPanel, maincanvas;
     [SerializeField] private RectTransform unblockAnnouncePanel;
     [SerializeField] private RawImage[] routeBackgrounds;
+    [SerializeField] private Text ascensionLabel;
     private Knowledge knowledge;
     private GameObject[] buttons;
     private UIController uicontroller;
@@ -355,7 +356,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     }
 
     public void Redraw()
-    {
+    {        
         // PAINTING PUZZLE BUTTONS
         var carray = knowledge.buttonsColorCodesArray;
         var colors = Knowledge.colors;
@@ -383,7 +384,6 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
 
         // PUZZLE PARTS COUNT
         var parts = knowledge.puzzlePartsCount;
-        ascensionPanel.GetChild(1).GetComponent<Text>().text = ((int)(knowledge.completeness * 100f)).ToString() + '%';
         redpartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.REDCOLOR_CODE].ToString();
         greenpartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.GREENCOLOR_CODE].ToString();
         bluepartsPanel.GetChild(1).GetComponent<Text>().text = parts[Knowledge.BLUECOLOR_CODE].ToString();
@@ -460,12 +460,14 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
                 if (endQuestButtons[i] != null) endQuestButtons[i].gameObject.SetActive(false);
             }
         }
+        //
+        ascensionLabel.text = ((int)(knowledge.GetAscension() * 100f)).ToString() + '%';
 
         lastChMarkerValue = knowledge.changesMarker;
     }
 
     private void Update()
-    {
+    {        
         if (unsufficientMarkering)
         {
             Color col = Vector4.MoveTowards(unsufficientLight.color, invisibleColor, DISAPPEAR_SPEED * Time.deltaTime);

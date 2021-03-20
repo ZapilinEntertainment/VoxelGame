@@ -1243,6 +1243,7 @@ MonoBehaviour:
   - {fileID: 2474698178660508991}
   - {fileID: 1119816152530305514}
   - {fileID: 3771439226705431915}
+  ascensionLabel: {fileID: 4722780080073385227}
 --- !u!1 &3054122751848140227
 GameObject:
   m_ObjectHideFlags: 0

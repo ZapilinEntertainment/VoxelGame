@@ -233,34 +233,57 @@ public sealed class GlobalMap : MonoBehaviour
     {
         var availableTypes = new List<MapPointType>() { MapPointType.Resources};
         if (createNewStars && Random.value < STAR_CREATE_CHANCE) availableTypes.Add(MapPointType.Star);
-        bool addStation = false, addColony = false;
-        if (ascension < GameConstants.ASCENSION_MEDIUM)
+        byte stage;
+        if (ascension <= GameConstants.ASCENSION_MEDIUM )
         {
-            availableTypes.Add(MapPointType.SOS);
-            availableTypes.Add(MapPointType.Wreck);
-            addStation = true;
+            if (ascension <= GameConstants.ASCENSION_VERYLOW) stage = 0;
+            else
+            {
+                if (ascension > GameConstants.ASCENSION_LOW) stage = 2;
+                else stage = 1;
+            }
         }
         else
         {
-            if (ascension > GameConstants.ASCENSION_HIGH)
-            {
-                availableTypes.Add(MapPointType.Wonder);
-                availableTypes.Add(MapPointType.Wiseman);
-                addColony = true;
-            }
+            if (ascension > GameConstants.ASCENSION_VERYHIGH) stage = 5;
             else
             {
-                addStation = true;
-                addColony = true;
+                if (ascension > GameConstants.ASCENSION_HIGH) stage = 4;
+                else stage = 3;
             }
         }
-        if (ascension > GameConstants.ASCENSION_VERYLOW && ascension < GameConstants.ASCENSION_VERYHIGH)
+        switch (stage)
         {
-            availableTypes.Add(MapPointType.Island);
-            availableTypes.Add(MapPointType.Colony);
+            case 0:
+            case 1: // less than 0.3
+                availableTypes.Add(MapPointType.Wreck);
+                availableTypes.Add(MapPointType.SOS);
+                break;
+            case 2: // 0.3 - 0.5
+                availableTypes.Add(MapPointType.Wreck);
+                availableTypes.Add(MapPointType.SOS);
+                availableTypes.Add(MapPointType.Station);
+                availableTypes.Add(MapPointType.Island);
+                availableTypes.Add(MapPointType.Colony);
+                break;
+            case 3: // 0.5 - 0.7
+                availableTypes.Add(MapPointType.Station);
+                availableTypes.Add(MapPointType.Island);
+                availableTypes.Add(MapPointType.Colony);
+                availableTypes.Add(MapPointType.Portal);
+                break;
+            case 4: // 0.7 - 0.9
+                availableTypes.Add(MapPointType.Island);
+                availableTypes.Add(MapPointType.Colony);
+                availableTypes.Add(MapPointType.Portal);
+                availableTypes.Add(MapPointType.Wonder);
+                availableTypes.Add(MapPointType.Wiseman);
+                break;
+            case 5: // more than 0.9
+                availableTypes.Add(MapPointType.Wonder);
+                availableTypes.Add(MapPointType.Wiseman);
+                break;
         }
-        if (addStation) availableTypes.Add(MapPointType.Station);
-        if (addColony) availableTypes.Add(MapPointType.Colony);    
         //     
 
         var pos = GetSectorPosition(i);
@@ -511,16 +534,16 @@ public sealed class GlobalMap : MonoBehaviour
     }
     private float GetGlobalMapAscension()
     {
-        float ringAscension = 50f;
+        float ringAscension = GameConstants.ASCENSION_MEDIUM;
         var ringIndex = cityPoint.ringIndex;
         if (ringIndex != 2)
         {
             switch (ringIndex)
             {
-                case 0: ringAscension = 10f; break;
-                case 1: ringAscension = 30f; break;
-                case 3: ringAscension = 70f; break;
-                case 4: ringAscension = 100f; break;
+                case 0: ringAscension = GameConstants.ASCENSION_VERYLOW; break;
+                case 1: ringAscension = GameConstants.ASCENSION_LOW; break;
+                case 3: ringAscension = GameConstants.ASCENSION_HIGH; break;
+                case 4: ringAscension = 1f; break;
             }
         }
         return ringAscension;

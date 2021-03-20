@@ -97,7 +97,7 @@ public sealed class GameMaster : MonoBehaviour
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
     private static GameStartSettings test_gameStartSettings = null;
-        //GameStartSettings.GetLoadingSettings(GameMode.Survival,"Electrastar5");
+        //GameStartSettings.GetLoadingSettings(GameMode.Survival,"Electrastar");
     //
   
    // SCENERY CHANGING

@@ -23,11 +23,11 @@ public sealed class QuestUI : MonoBehaviour
     private float rectTransformingSpeed = 0.8f, transformingProgress;
     private RectTransform transformingRect; Vector2 resultingAnchorMin, resultingAnchorMax;
     private bool transformingRectInProgress = false;   
-    private float questUpdateTimer = 0f,questCreateTimer = 0f;
-    private Queue<(byte index, float time)> questCreateTimers;
+    private float questUpdateTimer = 0f;
+    private Queue<byte> questCreateQueue;
     private MainCanvasController myCanvas;
 
-    private const float QUEST_CREATE_TIME = 30, QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;
+    private const float QUEST_UPDATE_TIME = 1, QUEST_EMPTY_TIMERVAL = -1, QUEST_AWAITING_TIMERVAL = -2;
 
     public static QuestUI current { get; private set; }
 
@@ -56,7 +56,8 @@ public sealed class QuestUI : MonoBehaviour
         
         int totalCount = (int)QuestSection.TotalCount;
         activeQuests = new Quest[totalCount];
-        questCreateTimers = new Queue<(byte, float)>();
+        questCreateQueue = new Queue<byte>();
+        GameMaster.realMaster.everydayUpdate += this.EverydayUpdate;
         for (int i = 0; i < activeQuests.Length; i++)
         {
             activeQuests[i] = Quest.NoQuest;
@@ -122,23 +123,16 @@ public sealed class QuestUI : MonoBehaviour
             }
         }
 
-        if (questCreateTimer > 0f)
-        {
-            questCreateTimer -= t;
-            if (questCreateTimer <= 0f)
-            {
-                var element = questCreateTimers.Dequeue();
-                SetNewQuest(element.index);
-                if (questCreateTimers.Count != 0)
-                {
-                    questCreateTimer = questCreateTimers.Peek().time;
-                    if (questCreateTimer <= 0f) questCreateTimer = 1f;
-                }
-                else questCreateTimer = 0f;
-            }
-        }
         //
         //if (Input.GetKeyDown("k")) Debug.Log(questCreateTimer);
+    }
+    private void EverydayUpdate()
+    {
+        if (questCreateQueue.Count > 0)
+        {
+            var element = questCreateQueue.Dequeue();
+            SetNewQuest(element);
+        }
     }
 
     public void Activate()
@@ -381,17 +375,7 @@ public sealed class QuestUI : MonoBehaviour
 
     private void StartNewQuestAwaiting(byte i)
     {
-        if (activeQuests[i] == Quest.NoQuest)
-        {
-            activeQuests[i] = Quest.AwaitingQuest;
-            if (questCreateTimers.Count < 20)
-            {
-                const float time = QUEST_CREATE_TIME;
-                questCreateTimers.Enqueue((i, time));
-                if (questCreateTimer == 0f) questCreateTimer = time;
-            }
-            else Debug.Log("Something goes wrong in quest awaiting system!");
-        }
+        if (!questCreateQueue.Contains(i)) questCreateQueue.Enqueue(i);
     }
     public void SetNewQuest(byte i)
     {
@@ -571,19 +555,16 @@ public sealed class QuestUI : MonoBehaviour
             }
             else fs.WriteByte(zero);
         }
-        // quest awaiting
-        fs.Write(System.BitConverter.GetBytes(questCreateTimer), 0, 4);
-        if (questCreateTimer != 0f)
+        //
+        byte queue = (byte)questCreateQueue.Count;
+        fs.WriteByte(queue);
+        if (queue != 0)
         {
-            byte qcount = (byte)questCreateTimers.Count;
-            fs.WriteByte(qcount);
-            var qa = questCreateTimers.ToArray();
-            for (byte i = 0; i < qcount; i++)
+            var qa = questCreateQueue.ToArray();
+            for (var b = 0; b < queue; b++)
             {
-                fs.WriteByte(qa[i].index);
-                fs.Write(System.BitConverter.GetBytes(qa[i].time), 0, 4);
+                fs.WriteByte(qa[b]);
             }
-            qa = null;
         }
     }
     public void Load(System.IO.FileStream fs)
@@ -626,21 +607,19 @@ public sealed class QuestUI : MonoBehaviour
                 if (questAccessMap[i] == true) StartNewQuestAwaiting(i);
             }
         }
-        //quest awaiting
-        data = new byte[5];
-        fs.Read(data, 0, 4);
-        questCreateTimer = System.BitConverter.ToSingle(data, 0);
-        if (questCreateTimer != 0f)
+        //quest awaiting        
+        byte queue = (byte)fs.ReadByte();
+        if (queue != 0)
         {
-            count = fs.ReadByte();
-            var qarray = new (byte, float)[count];
-            for (int i = 0; i< count; i++)
+            var qa = new byte[queue];
+            for (var b = 0; b < queue; b++)
             {
-                fs.Read(data, 0, 5);
-                qarray[i] = (data[0], System.BitConverter.ToSingle(data, 1));
+                qa[b] = (byte)fs.ReadByte();
             }
-            questCreateTimers = new Queue<(byte index, float time)>(qarray);
+            questCreateQueue = new Queue<byte>(qa);
         }
+        else questCreateQueue = new Queue<byte>();
+
     }
     #endregion
 }
