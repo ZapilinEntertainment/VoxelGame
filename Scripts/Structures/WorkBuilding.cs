@@ -279,6 +279,13 @@ public abstract class WorkBuilding : Building, ILabourable
                     gearsDamage *= 0.3f;
                     break;
                 }
+            case ANCHOR_BASEMENT_ID:
+                {
+                    maxWorkers = 1500;
+                    gearsDamage *= 0.1f;
+                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.AnchorBasement_Lift);
+                    break;
+                }
         }
         colony = GameMaster.realMaster.colonyController;
     }

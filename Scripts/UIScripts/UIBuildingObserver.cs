@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIBuildingObserver : UIObserver {
+public class UIBuildingObserver : UIObserver, ILocalizable {
 	private Building observingBuilding;
     private bool status_connectedToPowerGrid = false, status_energySupplied = false, status_active = false, canBeUpgraded = false, infoPanel_InUpgradeMode = true;
 	private float showingEnergySurplus = 0;
@@ -555,12 +555,18 @@ public class UIBuildingObserver : UIObserver {
 		gameObject.SetActive(false);
 	}
 
-    public override void LocalizeTitles()
+    public void LocalizeTitles()
     {
         Transform t = upgradeInfoPanel.transform;
         t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.UpgradeCost);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Accept);
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
         additionalButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.AddBuilding);
+        Localization.AddToLocalizeList(this);
+    }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Localization.RemoveFromLocalizeList(this);
     }
 }

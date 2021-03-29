@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum NotificationSound : ushort { Default, ColonyFounded, PowerFailure, BatteryCharged, NotEnoughResources, NotEnoughMoney,
 NotEnoughSlots, StorageOverload, newQuestAvailable, newObjectFound, SystemError, Disagree, CrewTaskCompleted, HQ_Upgraded}
-public enum SoundEffect: byte { Default, DicesRoll, Lightning, RollFail, SuccessfulRoll, Thunder, LocationSuccessExit}
+public enum SoundEffect: byte { Default, DicesRoll, Lightning, RollFail, SuccessfulRoll, Thunder, LocationSuccessExit, FD_anchorLaunch}
 public class Audiomaster : MonoBehaviour {
     private AudioSource notificationSource;
 

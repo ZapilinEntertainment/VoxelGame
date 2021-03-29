@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UITradeWindow : UIObserver {
+public sealed class UITradeWindow : UIObserver, ILocalizable {
 #pragma warning disable 0649
     [SerializeField] private GameObject[] resourcesButtons;
     [SerializeField] private GameObject resourceInfoPanel;
@@ -32,12 +32,18 @@ public sealed class UITradeWindow : UIObserver {
         LocalizeTitles();
     }
 
-    override public void LocalizeTitles() {
+    public void LocalizeTitles() {
         buyButtonText.text = Localization.GetWord(LocalizedWord.Buy);
         sellButtonText.text = Localization.GetWord(LocalizedWord.Sell);
         limitText.text = Localization.GetWord(LocalizedWord.Limitation);
         priceText.text = Localization.GetWord(LocalizedWord.Price);
         demandText.text = Localization.GetWord(LocalizedWord.Demand);
+        Localization.AddToLocalizeList(this);
+    }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Localization.RemoveFromLocalizeList(this);
     }
 
     override public void StatusUpdate()

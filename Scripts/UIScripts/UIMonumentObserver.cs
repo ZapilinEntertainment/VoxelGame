@@ -22,7 +22,6 @@ public sealed class UIMonumentObserver : UIObserver
     {
         UIMonumentObserver ub = Instantiate(Resources.Load<GameObject>("UIPrefs/monumentObserver"), mycanvas.rightPanel.transform).GetComponent<UIMonumentObserver>();
         Monument.SetObserver(ub);
-        ub.LocalizeTitles();
         return ub;
     }
 

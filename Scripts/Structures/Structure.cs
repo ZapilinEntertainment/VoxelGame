@@ -21,11 +21,10 @@ public class Structure : MonoBehaviour
 
     //проверь при добавлении
     //- ID
-    // - get structure by id
+    // - get structure by id + get type by id
     // -set model - загрузка модели, проверить разделение модели по материалам
     // -prepare - установка inner position - по всем классам
     // get structure size
-    // get type by id
     // special building conditions
     // place in center
     // - localization - name & description
@@ -44,12 +43,11 @@ public class Structure : MonoBehaviour
     COMPOSTER_ID = 40, HOUSE_BLOCK_ID = 42, ENERGY_CAPACITOR_2_ID = 43, HOSPITAL_2_ID = 44, FARM_2_ID = 45, FARM_3_ID = 46, COVERED_FARM = 47, FARM_BLOCK_ID = 48,
     LUMBERMILL_2_ID = 49, LUMBERMILL_3_ID = 50, COVERED_LUMBERMILL = 51, LUMBERMILL_BLOCK_ID = 52, SUPPLIES_FACTORY_5_ID = 53, SMELTERY_2_ID = 54,
     SMELTERY_3_ID = 55, SMELTERY_BLOCK_ID = 57, ENGINE_ID = 58, CAPACITOR_MAST_ID = 59, QUANTUM_TRANSMITTER_4_ID = 60,
-    COLUMN_ID = 61, SHUTTLE_HANGAR_4_ID = 63,
+    COLUMN_ID = 61, SHUTTLE_HANGAR_4_ID = 63, ANCHOR_BASEMENT_ID = 62,
     RECRUITING_CENTER_4_ID = 64, EXPEDITION_CORPUS_4_ID = 65, REACTOR_BLOCK_5_ID = 66, FOUNDATION_BLOCK_5_ID = 67, CONNECT_TOWER_6_ID = 68,
         CONTROL_CENTER_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78, CRYSTALLISER_ID = 79, CRYSTAL_MAST_ID = 80, ANCHOR_MAST_ID = 81, HANGING_TMAST_ID = 82,
         RESOURCE_FILTER_ID = 83, PROTECTION_CORE_ID = 84;
-    //free ids: 62
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
@@ -185,6 +183,8 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Control Center"); break;
             case CAPACITOR_MAST_ID:
                 s = new GameObject("Capacitor mast");break;
+            case ANCHOR_BASEMENT_ID:
+                s = new GameObject("Anchor mast");break;
             default:
                 throw new System.Exception("structure with ID " + i_id.ToString() + "not found");
         }
@@ -271,6 +271,7 @@ public class Structure : MonoBehaviour
             case MONUMENT_ID: return new Rect(4 * p, 2 * p, p, p);
             case PSYCHOKINECTIC_GEN_ID: return new Rect(5 * p, 2 * p, p, p);
             case COMPOSTER_ID: return new Rect(6 * p, 2 * p, p, p);
+            case ANCHOR_BASEMENT_ID: return new Rect(6 * p, 4 * p, p, p);
         }
     }
     public static System.Type GetTypeByID(int i_id)
@@ -386,6 +387,8 @@ public class Structure : MonoBehaviour
                 return typeof(Engine);
             case CONTROL_CENTER_ID:
                 return typeof(ControlCenter);
+            case ANCHOR_BASEMENT_ID:
+                return typeof(AnchorBasement);
             default: return typeof(Structure);
         }
     }
@@ -467,7 +470,8 @@ public class Structure : MonoBehaviour
             //END
             case OBSERVATORY_ID:
                 return Observatory.CheckSpecialBuildingCondition(p, ref refusalReason);
-            
+            case ANCHOR_BASEMENT_ID:
+                return AnchorBasement.CheckSpecialBuildingCondition(p, ref refusalReason);
             default: return true;
         }
     }
@@ -549,6 +553,7 @@ public class Structure : MonoBehaviour
             case SCIENCE_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/scienceLab")); break;
             case COMPOSTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/composter")); break;
             case ENGINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/engineTower")); break;
+            case ANCHOR_BASEMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Special/fd_anchor")); break;
         }
         model.transform.parent = transform;
         model.transform.localRotation = prevRot;
@@ -1101,6 +1106,14 @@ public class Structure : MonoBehaviour
                     maxHp = 15000;
                     rotate90only = true;
                     isArtificial = true;
+                    break;
+                }
+            case ANCHOR_BASEMENT_ID:
+                {
+                    maxHp = 100000;
+                    indestructible = true;
+                    isArtificial = true;
+                    rotate90only = true;
                     break;
                 }
         }

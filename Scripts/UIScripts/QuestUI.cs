@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public enum QuestSection : byte { Zero, One, Two,Three, Endgame, Five, Six, Seven, Eight, TotalCount}
 
-public sealed class QuestUI : MonoBehaviour
+public sealed class QuestUI : MonoBehaviour, ILocalizable
 {
 #pragma warning disable 0649
     [SerializeField] RectTransform[] questButtons; // fiti
@@ -519,6 +519,11 @@ public sealed class QuestUI : MonoBehaviour
         Transform t = questInfoPanel.transform;
         t.GetChild(4).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Goals);
         t.GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Reject);
+        Localization.AddToLocalizeList(this);
+    }
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
     }
 
     #region save-load

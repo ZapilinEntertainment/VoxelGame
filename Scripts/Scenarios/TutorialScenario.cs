@@ -57,7 +57,7 @@ namespace TutorialScenarioNS
         }
 
 
-        protected TutorialScenario()
+        protected TutorialScenario() : base(0)
         {         
             blockCanvasRaycaster = false;
         }
@@ -77,7 +77,6 @@ namespace TutorialScenarioNS
             }
         }
         virtual public void Proceed() { }
-        virtual public void OKButton() { }
         public override void EndScenario()
         {
             completed = true;

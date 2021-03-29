@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.Update - progress panel
+public sealed class UIHangarObserver : UIObserver, ILocalizable // dependence : UICONTROLLER.Update - progress panel
 {
     public Hangar observingHangar { get; private set; }
     public Hangar.HangarStatus showingStatus { get; private set; }
@@ -158,8 +158,14 @@ public sealed class UIHangarObserver : UIObserver // dependence : UICONTROLLER.U
         gameObject.SetActive(false);
     }
 
-    public override void LocalizeTitles()
+    public void LocalizeTitles()
     {
         constructButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.ConstructShuttle);
+        Localization.AddToLocalizeList(this);
+    }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Localization.RemoveFromLocalizeList(this);
     }
 }

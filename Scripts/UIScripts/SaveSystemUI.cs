@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 
-public sealed class SaveSystemUI : MonoBehaviour
+public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
 {
     public bool saveMode = false;
     private bool deleteSubmit = false, terrainsLoading;
@@ -384,6 +384,11 @@ public sealed class SaveSystemUI : MonoBehaviour
         deleteButtonText.text = Localization.GetWord(LocalizedWord.Delete);
         inputFieldBasis.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
         inputFieldBasis.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Cancel);
+        Localization.AddToLocalizeList(this);
+    }
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
     }
 
 }

@@ -48,7 +48,6 @@ public sealed class UISurfacePanelController : UIObserver {
         else
         {
             current = Instantiate(Resources.Load<GameObject>("UIPrefs/surfaceObserver"), mycanvas.GetMainCanvasTransform()).GetComponent<UISurfacePanelController>();            
-            current.LocalizeTitles();
             return current;
         }
     }

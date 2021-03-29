@@ -58,6 +58,7 @@ public sealed class GameMaster : MonoBehaviour
     public GlobalMap globalMap { get; private set; }
     private UIController uicontroller;
     private GameStartSettings startSettings;
+    private Scenario executingScenario;
     public GameRules gameRules { get; private set; }
 
     public event System.Action labourUpdateEvent, blockersRestoreEvent, everydayUpdate,
@@ -96,8 +97,8 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private static GameStartSettings test_gameStartSettings = null;
-        //GameStartSettings.GetLoadingSettings(GameMode.Survival,"Electrastar");
+    private static GameStartSettings test_gameStartSettings = //null;
+        GameStartSettings.GetLoadingSettings(GameMode.Survival,"Electrastar");
     //
   
    // SCENERY CHANGING
@@ -586,6 +587,14 @@ public sealed class GameMaster : MonoBehaviour
     {
         return gameRules.createNewQuests;
     }
+    public void BindScenario(Scenario s)
+    {
+        executingScenario = s;
+    }
+    public void UnbindScenario(Scenario s)
+    {
+        if (s == executingScenario) executingScenario = null;
+    }
     #endregion
     //test
     public void OnGUI()
@@ -682,6 +691,14 @@ public sealed class GameMaster : MonoBehaviour
         QuestUI.current.Save(fs);        
         Expedition.SaveStaticData(fs);
         Knowledge.GetCurrent().Save(fs);
+
+        if (executingScenario != null)
+        {
+            fs.WriteByte(1);
+            executingScenario.Save(fs);
+        }
+        else fs.WriteByte(0);
+
         fs.Position = 0;
         double hashsum = GetHashSum(fs, false);
         fs.Write(System.BitConverter.GetBytes(hashsum),0,8);
@@ -821,6 +838,8 @@ public sealed class GameMaster : MonoBehaviour
             }
             Expedition.LoadStaticData(fs);
             Knowledge.Load(fs);
+            b = fs.ReadByte();
+            if (b == 1) executingScenario = Scenario.StaticLoad(fs);
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();

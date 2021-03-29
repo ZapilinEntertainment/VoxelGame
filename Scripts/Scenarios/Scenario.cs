@@ -2,6 +2,7 @@
 
 public abstract class Scenario : MyObject
 {
+    public readonly int ID; // Tutorial - 0, FD Route - 1
     protected byte _scenarioIndex;
     protected ScenarioQuest scenarioQuest;
     protected bool completed = false, useSpecialQuestFilling = false, useSpecialWindowFilling = false;
@@ -13,10 +14,17 @@ public abstract class Scenario : MyObject
     {
         return _scenarioIndex == (obj as Scenario)._scenarioIndex;
     }
+    protected Scenario(int i_id)
+    {
+        ID = i_id;
+    }
 
     virtual public void StartScenario() { }
     virtual public void EndScenario() { }
     
+    virtual public void OKButton() { }
+    virtual public void UIConditionProceedButton() { }
+
     virtual public void SpecialQuestFilling() { } // for combined strings
     virtual public void SpecialWindowFilling() { }
     //quest:
@@ -84,6 +92,22 @@ public abstract class Scenario : MyObject
             
         }
     }
+
+
+    #region save-load
+    public virtual void Save(System.IO.FileStream fs)
+    {
+
+    }
+    public static Scenario StaticLoad(System.IO.FileStream fs)
+    {
+        return null;
+    }
+    virtual public void Load(System.IO.FileStream fs)
+    {
+
+    }
+    #endregion
 }
 
 

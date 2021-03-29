@@ -41,6 +41,7 @@ public sealed class TutorialUI : MonoBehaviour
     private void StartScenario(TutorialScenario s)
     {
         currentScenario = s;
+        GameMaster.realMaster.BindScenario(s);
         grcaster.enabled = !s.blockCanvasRaycaster;
         currentScenario.StartScenario();
     }
@@ -158,7 +159,9 @@ public sealed class TutorialUI : MonoBehaviour
         {
             GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Easy, StartFoundingType.Nothing));
             var qs = currentScenario.DefineQuestSection();
-            if (qs == QuestSection.Endgame) mcc.questUI.BlockQuestPosition(qs);            
+            if (qs == QuestSection.Endgame) mcc.questUI.BlockQuestPosition(qs);
+            GameMaster.realMaster.UnbindScenario(currentScenario);
+            currentScenario = null;
             Destroy(gameObject);
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIWorkbuildingObserver : UIObserver { // работает и на workbuilding, и на worksite
+public sealed class UIWorkbuildingObserver : UIObserver, ILocalizable { // работает и на workbuilding, и на worksite
 	 
 	int showingWorkersCount, showingWorkersMaxCount;
     private bool workspeedStringEnabled = true, ignoreWorkersSlider = false;
@@ -211,8 +211,9 @@ public sealed class UIWorkbuildingObserver : UIObserver { // работает и
         actionLabel.enabled = true;
     }
 
-    public override void LocalizeTitles()
+    public void LocalizeTitles()
     {
         stopButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Stop);
+        Localization.AddToLocalizeList(this);
     }
 }

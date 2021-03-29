@@ -420,6 +420,15 @@
             };
                     break;
                 }
+            case Structure.ANCHOR_BASEMENT_ID:
+                {
+                    cost = new ResourceContainer[] {
+                new ResourceContainer(ResourceType.Concrete, 6000), new ResourceContainer(ResourceType.metal_K, 1000),
+                    new ResourceContainer(ResourceType.metal_M, 800),new ResourceContainer(ResourceType.metal_E, 800),
+                        new ResourceContainer(ResourceType.Graphonium, 120)                   
+            };
+                    break;
+                }
         }                      
         return cost;
     }

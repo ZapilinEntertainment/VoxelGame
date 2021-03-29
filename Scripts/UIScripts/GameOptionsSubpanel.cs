@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameOptionsSubpanel : MonoBehaviour
+public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
 {
     [SerializeField] private Transform buttonsHolder,savePanelSpace;
     [SerializeField] private GameObject optionsPanel;
@@ -120,7 +120,7 @@ public class GameOptionsSubpanel : MonoBehaviour
         }
     }
 
-    private void LocalizeTitles()
+    public void LocalizeTitles()
     {
         buttonsHolder.GetChild(SAVE_BTN_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Save);
         buttonsHolder.GetChild(LOAD_BTN_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
@@ -128,7 +128,10 @@ public class GameOptionsSubpanel : MonoBehaviour
         buttonsHolder.GetChild(ADVICE_BTN_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Advice);
         buttonsHolder.GetChild(MAIN_MENU_BTN_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
         buttonsHolder.GetChild(EXIT_BTN_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
-
-        optionsPanel.GetComponent<GameSettingsUI>().LocalizeTitles();
+        Localization.AddToLocalizeList(this);
+    }
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
     }
 }

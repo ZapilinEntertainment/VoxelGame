@@ -1,0 +1,13 @@
+2 13
+[01]We decided that our population will be our stability. Our people are many, and united we stand tall. So lets transform our small home into a powerful country!
+[02]For owning our own lands we will need a lot of resources, workpower and transport mechanisms. At first we need an
+[03]. This massive construction needs a very powerful energy source with a 3x3 free space and of course you shall build it on the bottom side of the island.
+[04]Build
+[05]. Make attention that it needs a lot of energy supply. Also its workspeed will be in dependency of excess energy reserves. Be sure that you have got well-prepared power base.
+[06]Now continue supplying the Anchor with power.
+[07]thousands of energy to start anchoring your island!
+[08]Collect
+[09]energy and then press "
+[10]" button to start anchoring.
+[11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that life speed will be affected by excess power supply - up to
+[12]Construct inner platforms ring before further expansion. Track objectives on right panel and build new segments when possible.

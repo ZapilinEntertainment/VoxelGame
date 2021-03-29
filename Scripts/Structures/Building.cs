@@ -275,6 +275,7 @@ public class Building : Structure
             case HOTEL_BLOCK_6_ID: return 300f;
 
             case MONUMENT_ID: return 800f;
+            case ANCHOR_BASEMENT_ID: return 10000f;
             default: return 0;
         }
     }
@@ -334,6 +335,7 @@ public class Building : Structure
             case OBSERVATORY_ID: return -50f;
             case CONNECT_TOWER_6_ID: return -64f;
             case GRPH_ENRICHER_3_ID: return -70f;
+            case ANCHOR_BASEMENT_ID: return AnchorBasement.POWER_CONSUMPTION;
 
 
             case MINERAL_POWERPLANT_2_ID: return Powerplant.MINERAL_F_PP_OUTPUT;
@@ -375,7 +377,7 @@ public class Building : Structure
         level = 1;
 
         switch (ID)
-        {
+        {            
             case HEADQUARTERS_ID:
                 {
                     upgradedIndex = 0;
@@ -717,6 +719,11 @@ public class Building : Structure
                 {
                     level = 2;
                     canBePowerSwitched = true;
+                    break;
+                }
+            case ANCHOR_BASEMENT_ID:
+                {
+                    level = 6;
                     break;
                 }
         }

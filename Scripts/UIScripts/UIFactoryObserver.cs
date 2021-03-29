@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIFactoryObserver : UIObserver
+public sealed class UIFactoryObserver : UIObserver, ILocalizable
 {    
 #pragma warning disable 0649
     [SerializeField] GameObject limitPanel;
@@ -244,7 +244,7 @@ public sealed class UIFactoryObserver : UIObserver
     //    Debug.Log(StackTraceUtility.ExtractStackTrace());
    // }
 
-    public override void LocalizeTitles()
+    public void LocalizeTitles()
     {
         var options = new List<Dropdown.OptionData>()
         {
@@ -253,5 +253,11 @@ public sealed class UIFactoryObserver : UIObserver
             new Dropdown.OptionData(Localization.GetPhrase(LocalizedPhrase.IterationsCount))
         };
         modesDropdown.options = options;
+        Localization.AddToLocalizeList(this);
+    }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Localization.RemoveFromLocalizeList(this);
     }
 }

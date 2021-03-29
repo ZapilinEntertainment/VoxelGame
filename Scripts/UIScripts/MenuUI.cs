@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System.IO;
 
 
-public sealed class MenuUI : MonoBehaviour
+public sealed class MenuUI : MonoBehaviour, ILocalizable
 {
 #pragma warning disable 0649
     [SerializeField] private Image newGameButton, loadButton, optionsButton, generateButtonImage, usePresetsButtonImage, editorButton, highscoresButton, authorsButton;
@@ -438,9 +438,7 @@ public sealed class MenuUI : MonoBehaviour
             if ((x & 1) == 1) x -= 1;
         }
         PlayerPrefs.SetInt(GameConstants.PP_BASE_SETTINGS_PROPERTY, x);
-        PlayerPrefs.Save();
-
-        transform.root.BroadcastMessage("LocalizeTitles", SendMessageOptions.DontRequireReceiver);
+        PlayerPrefs.Save();        
     }
 
 
@@ -584,7 +582,7 @@ public sealed class MenuUI : MonoBehaviour
         }
     }
 
-    private void LocalizeTitles()
+    public void LocalizeTitles()
     {
         newGameButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NewGame);
         generateButtonImage.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Generate);
@@ -609,13 +607,11 @@ public sealed class MenuUI : MonoBehaviour
         highscoresButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Highscores);
         authorsButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Info);
         transform.GetChild(0).GetChild(6).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Exit);
+        Localization.AddToLocalizeList(this);
     }
 
-    /// <summary>
-    /// clears loaded buffers
-    /// </summary>
-    private void Flush()
+    private void OnDestroy()
     {
-        
+        Localization.RemoveFromLocalizeList(this);
     }
 }

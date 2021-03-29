@@ -110,6 +110,7 @@
         structuresCost[Structure.COMPOSTER_ID] = structuresCost[Structure.SMELTERY_2_ID];
         structuresCost[Structure.HOSPITAL_2_ID] = structuresCost[Structure.HOSPITAL_ID];
         structuresCost[Structure.CAPACITOR_MAST_ID] = structuresCost[Structure.ENERGY_CAPACITOR_2_ID] * 1.5f;
+        structuresCost[Structure.ANCHOR_BASEMENT_ID] = 1000 * val;
         #endregion
 
         Chunk c = gm.mainChunk;

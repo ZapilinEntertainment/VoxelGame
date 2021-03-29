@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UIDockObserver : UIObserver
+public sealed class UIDockObserver : UIObserver, ILocalizable
 {
     #pragma warning disable 0649
     [SerializeField] private Text tradingButtonText, immigrationButtonText, immigrationLimitText, dockInfoLabel;
@@ -242,9 +242,15 @@ public sealed class UIDockObserver : UIObserver
         gameObject.SetActive(false);
     }
 
-    public override void LocalizeTitles()
+    public void LocalizeTitles()
     {
         tradingButtonText.text = Localization.GetWord(LocalizedWord.Trading);
         immigrationButtonText.text = Localization.GetWord(LocalizedWord.Colonization);
+        Localization.AddToLocalizeList(this);
+    }
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        Localization.RemoveFromLocalizeList(this);
     }
 }

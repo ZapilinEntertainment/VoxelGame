@@ -720,7 +720,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
             {
                 case ChallengeType.CrystalFee:
                     observingExpedition.PayFee(cf.difficultyClass);
+                    Knowledge.GetCurrent().AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 7), 1f);
                     needInfoRefreshing = true;
+                    break;
+                case ChallengeType.AscensionTest:
+                    Knowledge.GetCurrent().AddResearchPoints((Knowledge.ResearchRoute)Random.Range(0, 7), 1f);
                     break;
                 case ChallengeType.Treasure:
                     observingExpedition.AddCrystals(cf.difficultyClass * 20);

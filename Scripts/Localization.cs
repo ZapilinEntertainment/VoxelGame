@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial,
+    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial, Ready, Anchor_verb,
     Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice
 };
 
@@ -16,7 +17,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -37,6 +38,7 @@ public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTas
 public static partial class Localization
 {
     public static Language currentLanguage { get; private set; }
+    private static ILocalizable[] localizeList;
 
     static Localization()
     {
@@ -52,6 +54,153 @@ public static partial class Localization
     public static void ChangeLanguage(Language lan)
     {
         currentLanguage = lan;
+        if (localizeList != null)
+        {
+            bool needRecalculation = false;
+            foreach (var f in localizeList)
+            {
+                if (f != null) f.LocalizeTitles();
+                else
+                {
+                    needRecalculation = true;
+                    continue;
+                }
+            }
+            if (needRecalculation)
+            {
+                var okayList = new List<int>();
+                int i = 0, oldCount = localizeList.Length;
+                for (; i < oldCount; i++)
+                {
+                    if (localizeList[i] != null) okayList.Add(i);
+                }
+                int newCount = okayList.Count;
+                if (newCount == 0)
+                {
+                    localizeList = null;
+                    return;
+                }
+                else
+                {
+                    var newlist = new ILocalizable[newCount];
+                    for (i = 0; i < newCount; i++)
+                    {
+                        newlist[i] = localizeList[okayList[i]];
+                    }
+                    localizeList = newlist;
+                    newlist = null;
+                }
+            }
+        }
+    }
+    public static void AddToLocalizeList(ILocalizable ilc)
+    {
+        if (localizeList == null)
+        {
+            localizeList = new ILocalizable[1] { ilc };
+            return;
+        }
+        else
+        {
+            bool addNewElement = true;
+            var okayList = new List<int>();
+            ILocalizable fl;
+            int oldCount = localizeList.Length, i =0;
+            for (; i < oldCount; i++)
+            {
+                fl = localizeList[i];
+                if (fl != null)
+                {
+                    okayList.Add(i);
+                    if (fl == ilc) addNewElement = false;
+                    continue;
+                }
+            }
+            int newCount = okayList.Count;
+            if (newCount == oldCount)
+            {
+                okayList = null;
+                if (!addNewElement) return;
+                else
+                {
+                    var newlist = new ILocalizable[oldCount + 1];
+                    for(i = 0; i < oldCount; i++)
+                    {
+                        newlist[i] = localizeList[i];
+                    }
+                    newlist[i] = ilc;
+                    localizeList = newlist;
+                    newlist = null;
+                }
+            }
+            else
+            {
+                if (newCount == 0)
+                {
+                    if (!addNewElement)
+                    {
+                        localizeList = null;
+                        return;
+                    }
+                    else
+                    {
+                        localizeList = new ILocalizable[1] { ilc};
+                    }
+                }
+                else
+                {
+                    ILocalizable[] newlist;
+                    if (addNewElement)
+                    {
+                        newlist = new ILocalizable[newCount + 1];
+                        for (i = 0; i < newCount; i++)
+                        {
+                            newlist[i] = localizeList[okayList[i]];
+                        }
+                        newlist[i] = ilc;
+                    }
+                    else
+                    {
+                        newlist = new ILocalizable[newCount];
+                        for (i = 0; i < newCount; i++)
+                        {
+                            newlist[i] = localizeList[okayList[i]];
+                        }
+                    }
+                    okayList = null;
+                    localizeList = newlist;
+                    newlist = null;
+                }
+            }
+        }
+    }    
+    public static void RemoveFromLocalizeList(ILocalizable ilc)
+    {
+        if (localizeList != null)
+        {
+            var okayList = new List<int>();
+            int i = 0, oldCount = localizeList.Length;
+            ILocalizable lf;
+            for (; i < oldCount; i++)
+            {
+                lf = localizeList[i];
+                if (lf != null && lf != ilc)
+                {
+                    okayList.Add(i);
+                }
+            }
+            int newCount = okayList.Count;
+            if (newCount != oldCount)
+            {
+                var newlist = new ILocalizable[newCount];
+                for (i = 0; i < newCount; i++)
+                {
+                    newlist[i] = localizeList[okayList[i]];
+                }
+                localizeList = newlist;
+                newlist = null;
+            }
+        }
     }
 
     public static string GetStructureName(int id)
@@ -132,6 +281,7 @@ public static partial class Localization
                     case Structure.ENGINE_ID: return "Движитель";
                     case Structure.CAPACITOR_MAST_ID: return "Накопительная мачта";
                     case Structure.CONTROL_CENTER_ID: return "Контроллер движителя";
+                    case Structure.ANCHOR_BASEMENT_ID: return "Крепления якоря";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -209,6 +359,7 @@ public static partial class Localization
                     case Structure.ENGINE_ID: return "Engine Tower";
                     case Structure.CAPACITOR_MAST_ID: return "Capacitor Mast";
                     case Structure.CONTROL_CENTER_ID: return "Engine Control";
+                    case Structure.ANCHOR_BASEMENT_ID: return "Anchor brace";
                     default: return "Unknown building";
                 }
         }
@@ -299,6 +450,7 @@ public static partial class Localization
                     case Structure.COMPOSTER_ID: return "Превращает органику в плодородную почву.";
                     case Structure.ENGINE_ID: return "Перемещает остров внутри кольца.";
                     case Structure.CONTROL_CENTER_ID: return "Расширяет возможности Движителя.";
+                    case Structure.ANCHOR_BASEMENT_ID: return "Закрепляет и удерживает гравитационные платформы.";
                     default: return "Описание отсутствует";
                 }
             case Language.English:
@@ -386,6 +538,7 @@ public static partial class Localization
                     case Structure.COMPOSTER_ID: return "Converts organic materials to fertile soil";
                     case Structure.ENGINE_ID: return "Moves island within the ring";
                     case Structure.CONTROL_CENTER_ID: return "Adds new engine abilities.";
+                    case Structure.ANCHOR_BASEMENT_ID: return "Fix and hold gravitational platforms.";
                     default: return "No description.";
                 }
         }
@@ -2372,6 +2525,8 @@ public static partial class Localization
                         case LocalizedWord.HospitalsCoverage: return "Медицинское обеспечение";
                         case LocalizedWord.Advice: return "Советы";
                         case LocalizedWord.Tutorial: return "Обучение";
+                        case LocalizedWord.Ready: return "Готово";
+                        case LocalizedWord.Anchor_verb: return "Бросить якорь!";
                         default: return "...";
                     }
                 }
@@ -2464,6 +2619,8 @@ public static partial class Localization
                         case LocalizedWord.HospitalsCoverage: return "Hospitals coverage";
                         case LocalizedWord.Advice: return "Advice";
                         case LocalizedWord.Tutorial: return "Tutorial";
+                        case LocalizedWord.Ready: return "Ready";
+                        case LocalizedWord.Anchor_verb: return "Anchor!";
                         default: return "...";
                     }
                 }
@@ -2582,6 +2739,8 @@ public static partial class Localization
                         case LocalizedPhrase.AskReturnToMainMenu: return "Выйти в главное меню?";
                         case LocalizedPhrase.AskExit: return "Выйти из игры?";
                         case LocalizedPhrase.AskNeedTutorial: return "Не желаете сначала пройти обучение?";
+
+                        case LocalizedPhrase.FoundationRoute: return "Путь Основания";
                         default: return "<...>";
                     }
                 }
@@ -2693,6 +2852,7 @@ public static partial class Localization
                         case LocalizedPhrase.AskReturnToMainMenu: return "Return to main menu?";
                         case LocalizedPhrase.AskExit: return "Exit game?";
                         case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
+                        case LocalizedPhrase.FoundationRoute: return "Foundation Route";
                         default: return "<...>";
                     }
                 }

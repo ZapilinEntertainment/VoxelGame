@@ -26,8 +26,6 @@ public abstract class UIObserver : MonoBehaviour {
 		isObserving = false;
 		gameObject.SetActive(false);
 	}
-    virtual public void LocalizeTitles()
-    { }
     public virtual void StatusUpdate() {		
 	}
 

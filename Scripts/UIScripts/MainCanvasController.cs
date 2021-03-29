@@ -9,7 +9,7 @@ public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCe
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
 
 
-sealed public class MainCanvasController : MonoBehaviour,IObserverController
+sealed public class MainCanvasController : MonoBehaviour,IObserverController, ILocalizable
 {
     //prev UIController
     public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
@@ -1291,6 +1291,12 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX + 3).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.AddPlatform);
 
         localized = true;
-    }  
+        Localization.AddToLocalizeList(this);
+    }
+
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
+    }
 
 }

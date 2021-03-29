@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class GameSettingsUI : MonoBehaviour
+public sealed class GameSettingsUI : MonoBehaviour, ILocalizable
 {
     // вешается на объект с панелью
 
@@ -13,7 +13,12 @@ public sealed class GameSettingsUI : MonoBehaviour
     [SerializeField] Slider lodDistanceSlider;
     [SerializeField] Toggle touchscreenToggle;
 #pragma warning restore 0649
-    private bool ignoreTouchscreenToggle = false, ignoreDistanceSliderChanging = false;
+    private bool ignoreTouchscreenToggle = false, ignoreDistanceSliderChanging = false, localized = false;
+
+    void Start()
+    {
+        if (!localized) LocalizeTitles();
+    }
 
     void OnEnable()
     {
@@ -28,7 +33,7 @@ public sealed class GameSettingsUI : MonoBehaviour
 
         ignoreTouchscreenToggle = true;
         touchscreenToggle.isOn = FollowingCamera.touchscreen;
-        ignoreTouchscreenToggle = false;
+        ignoreTouchscreenToggle = false;        
     }
 
 
@@ -60,5 +65,11 @@ public sealed class GameSettingsUI : MonoBehaviour
         qualityDropdown.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
         graphicsApplyButton.SetActive(false);
         graphicsApplyButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Apply);
+        Localization.AddToLocalizeList(this);
+        localized = true;
+    }
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
     }
 }

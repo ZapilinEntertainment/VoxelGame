@@ -304,7 +304,6 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         mapMarkers = new List<RectTransform>();
         RedrawMap();
         infoPanel.SetActive(false); infoPanelWidth = 0f;
-        LocalizeTitles();
     }
     public void RedrawMap()
     {
@@ -779,10 +778,5 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         rt.pivot = Vector3.down * (1f / s - 1);
         rt.localPosition = Vector3.zero;
 
-    }
-
-    public void LocalizeTitles()
-    {
-      
     }
 }

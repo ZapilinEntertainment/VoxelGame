@@ -3,7 +3,7 @@
 public enum FullfillStatus : byte { Unknown, Full, Empty};
 public enum WorkType : byte { Default, Digging, Pouring, Factory, Clearing, Gathering, BlockBuilding,
 OpenFarming, HydroponicsFarming, OpenLumbering, HydroponicsLumbering, Mining, GearsUpgrading, Recruiting,
-    ShuttleConstructing, ObservatoryFindCycle }
+    ShuttleConstructing, ObservatoryFindCycle, AnchorBasement_Lift }
 public abstract class GameConstants {
     public const float GEARS_LEVEL_TO_CREATE_BLOCK = 4, GEARS_LEVEL_TO_CHANGE_SURFACE_MATERIAL = 2.5f, GEARS_LOWER_LIMIT = 0.8f,
         GEARS_DAMAGE_COEFFICIENT = 0.00005f;
@@ -57,9 +57,10 @@ public abstract class GameConstants {
     {
         switch (wt)
         {
-            case WorkType.ObservatoryFindCycle: return 3000f;
-            case WorkType.ShuttleConstructing: return 1800f;
-            case WorkType.Recruiting: return 1500f;
+            case WorkType.AnchorBasement_Lift: return 15000f;
+            case WorkType.Recruiting: return 10000f;
+            case WorkType.ShuttleConstructing: return 8000f;
+            case WorkType.ObservatoryFindCycle: return 3000f;         
             case WorkType.HydroponicsLumbering: return 120f;
             case WorkType.HydroponicsFarming: return 100f;
             

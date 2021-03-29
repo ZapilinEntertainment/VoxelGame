@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class EditorUI : MonoBehaviour, IObserverController
+public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
 {
 #pragma warning disable 0649
     [SerializeField] GameObject actionsPanel, listPanel, menuPanel, settingsPanel, touchZone;
@@ -422,7 +422,10 @@ public sealed class EditorUI : MonoBehaviour, IObserverController
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Load);
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Options);
         t.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
-
-        settingsPanel.GetComponent<GameSettingsUI>().LocalizeTitles();
+        Localization.AddToLocalizeList(this);
+    }
+    private void OnDestroy()
+    {
+        Localization.RemoveFromLocalizeList(this);
     }
 }

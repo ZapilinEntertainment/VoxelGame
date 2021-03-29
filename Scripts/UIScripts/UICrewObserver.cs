@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UICrewObserver : UIObserver
+public sealed class UICrewObserver : UIObserver, ILocalizable
 {
 #pragma warning disable 0649
     [SerializeField] private InputField nameField;
@@ -222,7 +222,7 @@ public sealed class UICrewObserver : UIObserver
         closingEvent += a;
     }
 
-    override public void LocalizeTitles()
+    public void LocalizeTitles()
     {
         statsPanel.GetChild(0).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Persistence);
         statsPanel.GetChild(1).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.SurvivalSkills);
@@ -230,7 +230,8 @@ public sealed class UICrewObserver : UIObserver
         statsPanel.GetChild(3).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.SecretKnowledge);
         statsPanel.GetChild(4).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Intelligence);
         statsPanel.GetChild(5).GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.TechSkills);
-        dismissButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);        
+        dismissButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dismiss);
+        Localization.AddToLocalizeList(this);
     }
 
     override protected void OnEnable()
@@ -277,5 +278,6 @@ public sealed class UICrewObserver : UIObserver
                 closingEvent = null;
             }
         }
+        Localization.RemoveFromLocalizeList(this);
     }
 }
