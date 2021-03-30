@@ -9,5 +9,6 @@
 [08]Collect
 [09]energy and then press "
 [10]" button to start anchoring.
-[11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that life speed will be affected by excess power supply - up to
-[12]Construct inner platforms ring before further expansion. Track objectives on right panel and build new segments when possible.
+[11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that lift speed will be affected by excess power supply - up to
+[12]empty
+[13]Construct inner platforms ring before further expansion. Track objectives on right panel and build new sectors when possible.

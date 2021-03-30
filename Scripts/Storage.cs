@@ -221,7 +221,11 @@ public sealed class Storage : MonoBehaviour {
         }
     }
     
-
+    public float GetResourceCount(ResourceType rt)
+    {
+        // no need in check
+        return standartResources[rt.ID];
+    }
 	/// <summary>
 	/// standart resources only
 	/// </summary>

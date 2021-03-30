@@ -6,8 +6,8 @@ public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
-    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial, Ready, Anchor_verb,
-    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice
+    Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial, Ready, Anchor_verb, FreeWorkers, Sector,
+    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice, GearsLevel
 };
 
 public enum LocalizedPhrase : ushort
@@ -17,7 +17,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute, InnerRingConstruction
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2527,6 +2527,9 @@ public static partial class Localization
                         case LocalizedWord.Tutorial: return "Обучение";
                         case LocalizedWord.Ready: return "Готово";
                         case LocalizedWord.Anchor_verb: return "Бросить якорь!";
+                        case LocalizedWord.GearsLevel: return "Оборудование";
+                        case LocalizedWord.FreeWorkers: return "Незанятых рабочих";
+                        case LocalizedWord.Sector: return "Сектор";
                         default: return "...";
                     }
                 }
@@ -2621,6 +2624,9 @@ public static partial class Localization
                         case LocalizedWord.Tutorial: return "Tutorial";
                         case LocalizedWord.Ready: return "Ready";
                         case LocalizedWord.Anchor_verb: return "Anchor!";
+                        case LocalizedWord.GearsLevel: return "Gears level";
+                        case LocalizedWord.FreeWorkers: return "Free workers";
+                        case LocalizedWord.Sector: return "Sector";
                         default: return "...";
                     }
                 }
@@ -2741,6 +2747,7 @@ public static partial class Localization
                         case LocalizedPhrase.AskNeedTutorial: return "Не желаете сначала пройти обучение?";
 
                         case LocalizedPhrase.FoundationRoute: return "Путь Основания";
+                        case LocalizedPhrase.InnerRingConstruction: return "Стройка внутреннего кольца";
                         default: return "<...>";
                     }
                 }
@@ -2853,6 +2860,7 @@ public static partial class Localization
                         case LocalizedPhrase.AskExit: return "Exit game?";
                         case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
                         case LocalizedPhrase.FoundationRoute: return "Foundation Route";
+                        case LocalizedPhrase.InnerRingConstruction: return "Inner ring construction";
                         default: return "<...>";
                     }
                 }

@@ -68,7 +68,8 @@ namespace TutorialScenarioNS
             else SpecialWindowFilling();
             if (useQuest)
             {
-                scenarioQuest = mcc.questUI.SYSTEM_NewScenarioQuest(this);
+                scenarioQuest = new ScenarioQuest(this);
+                mcc.questUI.SYSTEM_NewScenarioQuest(scenarioQuest);
                 if (useSpecialQuestFilling) SpecialQuestFilling();
                 else
                 {

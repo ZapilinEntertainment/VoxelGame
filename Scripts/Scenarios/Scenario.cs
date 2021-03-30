@@ -7,8 +7,23 @@ public abstract class Scenario : MyObject
     protected ScenarioQuest scenarioQuest;
     protected bool completed = false, useSpecialQuestFilling = false, useSpecialWindowFilling = false;
     //
-    private static (int id, string filename)[] scenarioFiles; 
+    private static (int id, string filename)[] scenarioFiles;
     //
+    #region save-load
+    public virtual void Save(System.IO.FileStream fs)
+    {
+
+    }
+    public static Scenario StaticLoad(System.IO.FileStream fs)
+    {
+        return null;
+    }
+    virtual public void Load(System.IO.FileStream fs)
+    {
+
+    }
+    #endregion
+
 
     protected override bool IsEqualNoCheck(object obj)
     {
@@ -66,48 +81,34 @@ public abstract class Scenario : MyObject
         var srrs = new ScenarioRepresentator[count];
         for (int i = 0; i < count; i++) { srrs[i] = GetRepresentator(scenarioFiles[i].id); }
         return srrs;
-    }
+    }   
 
     public sealed class ScenarioRepresentator
     {
         public readonly int scenarioID;
-        public readonly string name, description;        
+        public readonly string name, description;
 
         public static ScenarioRepresentator GetTutorialRepresentator()
         {
             return new ScenarioRepresentator(0, "Tutorial", "Tutorial description");
         }
-       
+
         private ScenarioRepresentator(int i_ID, string i_name, string i_descr)
         {
             scenarioID = i_ID;
             name = i_name;
             description = i_descr;
         }
-       
+
         public GameStartSettings GetStartSettings()
         {
             //if (scenarioID == 0)
-                return GameStartSettings.GetTutorialSettings();
-            
+            return GameStartSettings.GetTutorialSettings();
+
         }
     }
 
-
-    #region save-load
-    public virtual void Save(System.IO.FileStream fs)
-    {
-
-    }
-    public static Scenario StaticLoad(System.IO.FileStream fs)
-    {
-        return null;
-    }
-    virtual public void Load(System.IO.FileStream fs)
-    {
-
-    }
-    #endregion
+    
 }
 
 

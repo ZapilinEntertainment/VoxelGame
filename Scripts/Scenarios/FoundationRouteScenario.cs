@@ -8,15 +8,19 @@ public sealed class FoundationRouteScenario : Scenario
     private FoundationScenarioStep currentStep; private byte stage = 0;
     private StandartScenarioUI scenarioUI;
     private AnchorBasement anchorBasement;
-    private QuestUI questUI;
+    private readonly QuestUI questUI;
+    private readonly Storage storage;
     private readonly Localizer localizer;
     private const byte WINDOW_INFO_0 = 1, WINDOW_INFO_1 =2, QUEST_INFO_0 = 3;
     private const int ANCHOR_LAUNCH_ENERGYCOST = 150000;
+      
+    
 
     public FoundationRouteScenario() : base(1)
     {
         localizer = new Localizer();
         colony = GameMaster.realMaster.colonyController;
+        storage = colony.storage;
         questUI = UIController.GetCurrent().GetMainCanvasController().questUI;
     }
 
@@ -32,7 +36,8 @@ public sealed class FoundationRouteScenario : Scenario
     {
         void StartQuest()
         {
-            scenarioQuest = questUI.SYSTEM_NewScenarioQuest(this);
+            scenarioQuest = new ScenarioQuest(this);
+            questUI.SYSTEM_NewScenarioQuest(scenarioQuest);
             scenarioQuest.FillText(Localization.GetPhrase(LocalizedPhrase.FoundationRoute), localizer.GetText(currentStep, QUEST_INFO_0));
         }
         switch (currentStep)
@@ -72,7 +77,9 @@ public sealed class FoundationRouteScenario : Scenario
                     }
                     else
                     {
-                        StartQuest();
+                        PrepareSectorBuildingQuest(0, 0);                       
+                        scenarioUI.ChangeConditionButtonLabel(Localization.GetWord(LocalizedWord.Build));
+                        scenarioUI.ShowConditionPanel(scenarioQuest);
                     }
                     break;
                 }
@@ -120,6 +127,7 @@ public sealed class FoundationRouteScenario : Scenario
                 {
                     scenarioUI.CloseAnnouncePanel();
                     stage++;
+                    PrepareStep();
                     break;
                 }
         }
@@ -137,15 +145,63 @@ public sealed class FoundationRouteScenario : Scenario
             PrepareStep();
         } 
     }
-    override public void CheckConditions() {
-       if (currentStep == FoundationScenarioStep.AnchorStart && stage == 1)
+    private void PrepareSectorBuildingQuest(byte ring, byte index)
+    {
+        if (ring == 0)
         {
-            bool a = anchorBasement.isEnergySupplied, b = colony.energyStored >= ANCHOR_LAUNCH_ENERGYCOST;
-            scenarioQuest.SetStepCompleteness(0, a);
-            scenarioQuest.SetStepCompleteness(1, b);
-            scenarioUI.UpdateConditionInfo();
-            scenarioUI.SetConditionButtonActivity(a & b);
+            var conditions = new SimpleCondition[3];
+            switch (index)
+            {
+                case 0:
+                    conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.metal_K, 4100f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_S, 1600f);
+                    conditions[2] = SimpleCondition.GetMoneyCondition(2500f);
+                    break;
+                case 1:
+                    conditions[0] = SimpleCondition.GetGearsCondition(4f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_M, 2500f);
+                    conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.metal_E, 1200f);
+                    break;
+                case 2:
+                    conditions[0] = SimpleCondition.GetMoneyCondition(2500f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_P, 500f);
+                    conditions[2] = SimpleCondition.GetFreeWorkersCondition(1500);
+                    break;
+                case 3:
+                    conditions[0] = SimpleCondition.GetFreeWorkersCondition(500);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.Concrete, 7530f);
+                    conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.Plastics, 7530f);
+                    break;
+                case 4:
+                    conditions[0] = SimpleCondition.GetFreeWorkersCondition(800);
+                    conditions[1] = SimpleCondition.GetMoneyCondition(1200f);
+                    conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.Food, 40000f);
+                    break;
+                case 5:
+                    conditions[0] = SimpleCondition.GetFreeWorkersCondition(600);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_K, 1200f);
+                    conditions[2] = SimpleCondition.GetMoneyCondition(1500f);
+
+                    break;
+            }
+            scenarioQuest = new ConditionScenarioQuest(this, conditions, colony);
+            scenarioQuest.FillText(
+                Localization.GetPhrase(LocalizedPhrase.InnerRingConstruction) + ' ' + index.ToString(),
+                localizer.lines[13]
+                );
+            questUI.SYSTEM_NewScenarioQuest(scenarioQuest);
         }
+    }
+    override public void CheckConditions() {
+
+            if (currentStep == FoundationScenarioStep.AnchorStart && stage == 1)
+            {
+                bool a = anchorBasement.isEnergySupplied, b = colony.energyStored >= ANCHOR_LAUNCH_ENERGYCOST;
+                scenarioQuest.SetStepCompleteness(0, a);
+                scenarioQuest.SetStepCompleteness(1, b);
+                scenarioUI.UpdateConditionInfo();
+                scenarioUI.SetConditionButtonActivity(a & b);
+            }
     }
     public override void UIConditionProceedButton()
     {
@@ -160,13 +216,25 @@ public sealed class FoundationRouteScenario : Scenario
             anchorBasement.StartActivating(this.PrepareStep);            
         }
     }
-
+    //
+   
+    //
     override public bool QuestMustCheckConditions() { return false; }
-    override public byte GetStepsCount() { return 1; }
+    override public byte GetStepsCount() {
+        switch (currentStep)
+        {
+            case FoundationScenarioStep.InnerRingBuilding:                
+            case FoundationScenarioStep.OuterRingBuilding:
+                return 3;
+            case FoundationScenarioStep.AnchorStart:
+                return 2;
+            default: return 1;
+        }
+    }
     //
     private sealed class Localizer
     {
-        private string[] lines;
+        public readonly string[] lines;
         public Localizer()
         {
             using (StreamReader sr = File.OpenText("Assets/Locales/foundationRoute_ENG.txt"))
@@ -229,7 +297,7 @@ public sealed class FoundationRouteScenario : Scenario
                         switch (subIndex)
                         {
                             case WINDOW_INFO_0: return lines[11] + ((int)AnchorBasement.MAX_EXCESS_POWER);
-                            case QUEST_INFO_0: return lines[12];
+                            case QUEST_INFO_0: return lines[13];
                         }
                         break;
                     }

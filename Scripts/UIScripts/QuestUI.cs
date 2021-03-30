@@ -436,14 +436,12 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
     }
 
-    public ScenarioQuest SYSTEM_NewScenarioQuest(Scenario s)
+    public void SYSTEM_NewScenarioQuest(ScenarioQuest q)
     {
-        var q = new ScenarioQuest(s);
         int sectionIndex = (int)q.DefineQuestSection();
         activeQuests[sectionIndex] = q;
         questAccessMap[sectionIndex] = true;
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
-        return q;
     }
     public Button SYSTEM_GetQuestButton(int i)
     {

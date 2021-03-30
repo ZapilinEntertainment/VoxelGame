@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-public sealed class ScenarioQuest : Quest
+public class ScenarioQuest : Quest
 {
-    private Scenario myScenario;
+    protected Scenario myScenario;
 
     public ScenarioQuest(Scenario i_scenario) : base(QuestType.Scenario, 0)
     {
