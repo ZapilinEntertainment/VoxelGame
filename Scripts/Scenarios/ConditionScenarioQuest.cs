@@ -22,6 +22,9 @@ public sealed class ConditionScenarioQuest : ScenarioQuest
                 case ConditionType.MoneyCheck: steps[i] = Localization.GetPhrase(LocalizedPhrase.CrystalsCollected);break;
                 case ConditionType.GearsCheck: steps[i] = Localization.GetWord(LocalizedWord.GearsLevel); break;
                 case ConditionType.FreeWorkersCheck: steps[i] = Localization.GetWord(LocalizedWord.FreeWorkers); break;
+                case ConditionType.StoredEnergyCondition: steps[i] = Localization.GetPhrase(LocalizedPhrase.EnergyStored); break;
+                case ConditionType.CrewsCondition: steps[i] = Localization.ComposeCrewLevel((byte)sc.value) + ':';break;
+                case ConditionType.ShuttlesCount: steps[i] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
             }
         }
         
@@ -59,8 +62,44 @@ public sealed class ConditionScenarioQuest : ScenarioQuest
                 case ConditionType.FreeWorkersCheck:
                     {
                         int count = colony.freeWorkers;
-                        stepsAddInfo[i] = count.ToString() + '/' + sc.index;
+                        stepsAddInfo[i] = count.ToString() + '/' + sc.index.ToString();
                         stepsFinished[i] = count >= sc.value;
+                        break;
+                    }
+                case ConditionType.StoredEnergyCondition:
+                    {
+                        int f = (int)colony.energyStored;
+                        stepsAddInfo[i] = f.ToString() + '/' + ((int)sc.value).ToString();
+                        stepsFinished[i] = f >= sc.value;
+                        break;
+                    }
+                case ConditionType.CrewsCondition:
+                    {
+                        int count = Crew.crewsList?.Count ?? 0, suitableCount = 0;
+                        byte lvl = (byte)sc.value;
+                        if (count > 0)
+                        {
+                            foreach (var c in Crew.crewsList)
+                            {
+                                if (c.level >= lvl) suitableCount++;
+                            }
+                        }
+                        stepsAddInfo[i] = suitableCount.ToString() + '/' + sc.index.ToString();
+                        stepsFinished[i] = suitableCount >= sc.index;
+                        break;
+                    }
+                case ConditionType.ShuttlesCount:
+                    {
+                        int count = Hangar.hangarsList?.Count ?? 0, suitableCount = 0;
+                        if (count > 0)
+                        {
+                            foreach (var h in Hangar.hangarsList)
+                            {
+                                if (h.status == Hangar.HangarStatus.ShuttleInside) suitableCount++;
+                            }
+                        }
+                        stepsAddInfo[i] = suitableCount.ToString() + '/' + sc.index.ToString();
+                        stepsFinished[i] = suitableCount >= sc.index;
                         break;
                     }
             }
@@ -96,5 +135,18 @@ public struct SimpleCondition
     {
         return new SimpleCondition(ConditionType.FreeWorkersCheck, count, 0f);
     }
+    public static SimpleCondition GetStoredEnergyCondition(float f)
+    {
+        return new SimpleCondition(ConditionType.StoredEnergyCondition, 0, f);
+    }
+    public static SimpleCondition GetCrewsCondition(int count, byte level)
+    {
+        return new SimpleCondition(ConditionType.CrewsCondition, count, level);
+    }
+    public static SimpleCondition GetShuttlesCondition(int count)
+    {
+        return new SimpleCondition(ConditionType.ShuttlesCount, count, 0f);
+    }
 }
-public enum ConditionType:byte { ResourceCountCheck, MoneyCheck, GearsCheck, FreeWorkersCheck}
+public enum ConditionType:byte { ResourceCountCheck, MoneyCheck, GearsCheck, FreeWorkersCheck, StoredEnergyCondition,
+    CrewsCondition, ShuttlesCount}

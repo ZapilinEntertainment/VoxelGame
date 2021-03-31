@@ -17,4 +17,11 @@ public class AnchorBasement : WorkBuilding
     }
 
     // добавить влияние на global map и вывод сообщения о том, что оcтров заякорен
+
+    public void AddInnerSector()
+    {
+
+    }
+
+    public enum FDSectorType : byte { Utilitary, LivingQuarters, Smeltery}
 }

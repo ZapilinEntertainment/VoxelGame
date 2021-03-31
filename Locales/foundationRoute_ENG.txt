@@ -12,3 +12,4 @@
 [11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that lift speed will be affected by excess power supply - up to
 [12]empty
 [13]Construct inner platforms ring before further expansion. Track objectives on right panel and build new sectors when possible.
+[14]

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
 public enum LocalizedWord : ushort
 {
-     Buy, Cancel, Close, Crew, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
-    Save, Load, Options, Exit, Build, Shuttles, Crews, Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
+     Buy, Cancel, Close, Crew, Crews, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
+    Save, Load, Options, Exit, Build, Shuttles,Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial, Ready, Anchor_verb, FreeWorkers, Sector,
     Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice, GearsLevel
 };
@@ -16,7 +16,7 @@ public enum LocalizedPhrase : ushort
     ColonizationEnabled, ColonizationDisabled, TicketsLeft, ColonistsArrived, PathBlocked, PointsSec, PerSecond, BirthrateMode,
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
-    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest,
+    AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest, EnergyStored,
     NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute, InnerRingConstruction
 }
 public enum LocalizationActionLabels : ushort
@@ -825,6 +825,14 @@ public static partial class Localization
             case Language.English:
             default:
                 return "Quest \"" + name + "\" completed!";
+        }
+    }
+    public static string ComposeCrewLevel(byte level)
+    {
+        switch (currentLanguage)
+        {
+            case Language.Russian: return "Команд выше уровня " + level.ToString();
+            default: return "Crews with level " + level.ToString() + " or higher";
         }
     }
 
@@ -2445,6 +2453,7 @@ public static partial class Localization
                         case LocalizedWord.Cancel: return "Отмена"; // cancel work and cancel save
                         case LocalizedWord.Close: return "Закрыть";
                         case LocalizedWord.Crew: return "Команда";
+                        case LocalizedWord.Crews: return "Команды";
                         case LocalizedWord.Dig: return "Копать";
                         case LocalizedWord.Expedition: return "Экспедиция";
                         case LocalizedWord.Gather: return "Собирать"; // gather resources	  
@@ -2488,8 +2497,7 @@ public static partial class Localization
                         case LocalizedWord.Options: return "Настройки";
                         case LocalizedWord.Exit: return "Выход"; // exit game
                         case LocalizedWord.Build: return "Построить"; // switch to building mode
-                        case LocalizedWord.Shuttles: return "Челноки";
-                        case LocalizedWord.Crews: return "Команды";
+                        case LocalizedWord.Shuttles: return "Челноки";                       
                         case LocalizedWord.Reward: return "Награда"; // reward in coins
                         case LocalizedWord.Delete: return "Удалить"; // delete save
                         case LocalizedWord.Rewrite: return "Перезаписать"; // rewrite save?
@@ -2542,6 +2550,7 @@ public static partial class Localization
                         case LocalizedWord.Cancel: return "Cancel"; // cancel work and cancel save
                         case LocalizedWord.Close: return "Close"; // close a panel
                         case LocalizedWord.Crew: return "Crew";
+                        case LocalizedWord.Crews: return "Crews";
                         case LocalizedWord.Dig: return "Dig";
                         case LocalizedWord.Expedition: return "Expedition";
                         case LocalizedWord.Gather: return "Gather"; // gather resources	    
@@ -2585,8 +2594,7 @@ public static partial class Localization
                         case LocalizedWord.Exit: return "Exit"; // exit game
                         case LocalizedWord.Build: return "Build"; // switch to building mode
                         case LocalizedWord.Shuttles: return "Shuttles";
-                        case LocalizedWord.Stamina: return "Stamina";
-                        case LocalizedWord.Crews: return "Crews";
+                        case LocalizedWord.Stamina: return "Stamina";                        
                         case LocalizedWord.Reward: return "Reward"; // reward in coins
                         case LocalizedWord.Delete: return "Delete"; // delete save
                         case LocalizedWord.Rewrite: return "Rewrite"; // rewrite save?
@@ -2748,6 +2756,7 @@ public static partial class Localization
 
                         case LocalizedPhrase.FoundationRoute: return "Путь Основания";
                         case LocalizedPhrase.InnerRingConstruction: return "Стройка внутреннего кольца";
+                        case LocalizedPhrase.EnergyStored: return "Энергии накоплено";
                         default: return "<...>";
                     }
                 }
@@ -2861,6 +2870,7 @@ public static partial class Localization
                         case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
                         case LocalizedPhrase.FoundationRoute: return "Foundation Route";
                         case LocalizedPhrase.InnerRingConstruction: return "Inner ring construction";
+                        case LocalizedPhrase.EnergyStored: return "Energy stored";
                         default: return "<...>";
                     }
                 }

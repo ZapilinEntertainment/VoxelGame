@@ -12,8 +12,7 @@ public sealed class FoundationRouteScenario : Scenario
     private readonly Storage storage;
     private readonly Localizer localizer;
     private const byte WINDOW_INFO_0 = 1, WINDOW_INFO_1 =2, QUEST_INFO_0 = 3;
-    private const int ANCHOR_LAUNCH_ENERGYCOST = 150000;
-      
+    private const int ANCHOR_LAUNCH_ENERGYCOST = 150000;     
     
 
     public FoundationRouteScenario() : base(1)
@@ -147,9 +146,9 @@ public sealed class FoundationRouteScenario : Scenario
     }
     private void PrepareSectorBuildingQuest(byte ring, byte index)
     {
-        if (ring == 0)
-        {
-            var conditions = new SimpleCondition[3];
+        var conditions = new SimpleCondition[3];
+        if (ring == 0) // INNER RING
+        {            
             switch (index)
             {
                 case 0:
@@ -191,9 +190,46 @@ public sealed class FoundationRouteScenario : Scenario
                 );
             questUI.SYSTEM_NewScenarioQuest(scenarioQuest);
         }
+        else // OUTER RING
+        {
+            switch (index)
+            {
+                case 0:
+                    conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.Plastics, 6800f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_K, 1200f);
+                    conditions[2] = SimpleCondition.GetStoredEnergyCondition(6100f);
+                    break;
+                case 1:
+                    //conditions[0] = SimpleCondition.GetGearsCondition(4f);
+                    conditions[1] = SimpleCondition.GetFreeWorkersCondition(700);
+                    conditions[2] = SimpleCondition.GetMoneyCondition(1700f);
+                    break;
+                case 2:
+                    conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.Concrete, 8000f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.Plastics, 8000f);
+                    conditions[2] = SimpleCondition.GetCrewsCondition(2, 3);
+                    break;
+                case 3:
+                    conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.metal_M, 5700f);
+                    conditions[1] = SimpleCondition.GetShuttlesCondition(10);
+                    //conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.Plastics, 7530f); 
+                    // 4 рейса с оборудованием
+                    break;
+                case 4:
+                    conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.Dirt, 12000f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.mineral_F, 2500f);
+                    conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.mineral_L, 1000f);
+                    break;
+                case 5:
+                    conditions[0] = SimpleCondition.GetMoneyCondition(2000f);
+                    conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.Dirt, 1200f);
+                    conditions[2] = SimpleCondition.GetGearsCondition(5f);
+                    break;
+            }
+            // 
+        }
     }
     override public void CheckConditions() {
-
             if (currentStep == FoundationScenarioStep.AnchorStart && stage == 1)
             {
                 bool a = anchorBasement.isEnergySupplied, b = colony.energyStored >= ANCHOR_LAUNCH_ENERGYCOST;
@@ -205,15 +241,34 @@ public sealed class FoundationRouteScenario : Scenario
     }
     public override void UIConditionProceedButton()
     {
-        if (currentStep == FoundationScenarioStep.AnchorStart && stage == 2)
+        if (currentStep == FoundationScenarioStep.InnerRingBuilding)
         {
             scenarioQuest.MakeQuestCompleted();
-            scenarioUI.DisableConditionPanel();
-            GameMaster.audiomaster.MakeSoundEffect(SoundEffect.FD_anchorLaunch);
-            // graphic effect
-            currentStep++;
-            stage = 0;
-            anchorBasement.StartActivating(this.PrepareStep);            
+            if (stage < 7)
+            {                
+                anchorBasement.AddInnerSector();
+                stage++;
+                PrepareSectorBuildingQuest(0, stage);
+            }
+            else
+            {
+                stage = 0;
+                currentStep++;
+                PrepareSectorBuildingQuest(1, 0);
+            }
+        }
+        else
+        {
+            if (currentStep == FoundationScenarioStep.AnchorStart && stage == 2)
+            {
+                scenarioQuest.MakeQuestCompleted();
+                scenarioUI.DisableConditionPanel();
+                GameMaster.audiomaster.MakeSoundEffect(SoundEffect.FD_anchorLaunch);
+                // graphic effect
+                currentStep++;
+                stage = 0;
+                anchorBasement.StartActivating(this.PrepareStep);
+            }
         }
     }
     //
