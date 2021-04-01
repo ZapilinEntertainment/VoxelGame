@@ -34,8 +34,9 @@ public class TestMaster : MonoBehaviour
     {
         if (Input.GetKeyDown("h"))
         {
-           // FollowingCamera.main.CameraToStartPosition();           
+            // FollowingCamera.main.CameraToStartPosition();           
             //GameMaster.realMaster.globalMap.TEST_MakeNewPoint(MapMarkerType.Star);
+            UIController.GetCurrent().GetMainCanvasController().questUI.StartEndQuest((byte)Knowledge.ResearchRoute.Foundation);
         }
         if (Input.GetKeyDown("x"))
         {

@@ -8,12 +8,16 @@ public class AnchorBasement : WorkBuilding
 
     public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
+        if (p.faceIndex == Block.DOWN_FACE_INDEX) return true;
         return false;
     }
 
-    public void StartActivating(System.Action endFucntion)
+    public void StartActivating(System.Action endFunction)
     {
-
+        GameMaster.audiomaster.MakeSoundEffect(SoundEffect.FD_anchorLaunch);
+        // graphic effect
+        //time
+        endFunction();
     }
 
     // добавить влияние на global map и вывод сообщения о том, что оcтров заякорен

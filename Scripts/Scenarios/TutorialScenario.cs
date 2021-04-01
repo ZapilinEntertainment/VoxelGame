@@ -15,6 +15,7 @@ namespace TutorialScenarioNS
     {
         protected static TutorialUI tutorialUI;
         protected static MainCanvasController mcc;
+        protected ScenarioQuest scenarioQuest;
         public bool blockCanvasRaycaster { get; protected set; }
         protected bool useQuest = true;
         public TutorialStep step

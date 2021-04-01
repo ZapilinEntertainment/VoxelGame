@@ -155,6 +155,7 @@ public class UIController : MonoBehaviour
                 case UIMode.Standart:
                     if (disableCanvas) mainCanvasController?.gameObject.SetActive(false);                    
                     GameMaster.realMaster.environmentMaster?.DisableDecorations();
+                    DisableSpecialCanvas();
                     break;
                 case UIMode.ExploringMinigame: if (disableCanvas) exploringMinigameController?.gameObject.SetActive(false); break;
                 case UIMode.GlobalMap:
@@ -203,6 +204,7 @@ public class UIController : MonoBehaviour
                     var mcc = GetMainCanvasController();
                     if (!mcc.gameObject.activeSelf) mcc.gameObject.SetActive(true);
                     GameMaster.realMaster.environmentMaster?.EnableDecorations();
+                    ReactivateSpecialCanvas();
                     break;
                 case UIMode.Editor:
                     var eui = GetEditorCanvasController();

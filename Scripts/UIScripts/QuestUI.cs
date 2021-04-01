@@ -239,7 +239,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
             if (i < x)
             {
                 so.SetActive(true);
-                so.GetComponent<Text>().text = q.steps[i] + q.stepsAddInfo[i];
+                so.GetComponent<Text>().text = q.steps[i] + ' ' + q.stepsAddInfo[i];
                 so.transform.GetChild(0).GetComponent<RawImage>().uvRect = UIController.GetIconUVRect(q.stepsFinished[i] ? Icons.TaskCompleted : Icons.TaskFrame);
             }
             else so.SetActive(false);
@@ -377,6 +377,41 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
     {
         if (!questCreateQueue.Contains(i)) questCreateQueue.Enqueue(i);
     }
+    private void StopQuestAwaiting(byte i)
+    {
+        int length = questCreateQueue.Count;
+        if (length > 0)
+        {
+            if (questCreateQueue.Contains(i))
+            {
+                if (length > 1)
+                {
+                    var qa = questCreateQueue.ToArray();
+                    var nq = new byte[length - 1];
+                    for (int a = 0; a < length - 1; a++)
+                    {
+                        if (qa[a] != i) nq[a] = qa[a];
+                    }
+                    questCreateQueue = new Queue<byte>(nq);
+                    qa = null;
+                    nq = null;
+                }
+                else questCreateQueue = new Queue<byte>();
+            }
+        }
+    }
+    public void SetNewQuest(Quest q, byte sectionIndex)
+    {
+        if (questAccessMap[sectionIndex] == false) questAccessMap[sectionIndex] = true;
+        Quest aq = activeQuests[sectionIndex];
+        if (aq != Quest.NoQuest)
+        {
+            if (aq == Quest.AwaitingQuest) StopQuestAwaiting(sectionIndex);
+            else aq.StopQuest(false);
+        }
+        activeQuests[sectionIndex] = q;
+        if (openedQuest == sectionIndex) RefreshObservingQuestData(sectionIndex);
+    }
     public void SetNewQuest(byte i)
     {
         if (questAccessMap[i] == false)
@@ -426,8 +461,17 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
         int endIndex = (int)QuestSection.Endgame;
         if (activeQuests[endIndex] == Quest.NoQuest || activeQuests[endIndex] == null)
         {
-            activeQuests[endIndex] = new Quest(QuestType.Endgame, routeIndex);
             questAccessMap[endIndex] = true;
+            if ((Knowledge.ResearchRoute)routeIndex == Knowledge.ResearchRoute.Foundation)
+            {
+                var scn = new FoundationRouteScenario();
+                GameMaster.realMaster.BindScenario(scn);
+                scn.StartScenario();
+            }
+            else
+            {
+                activeQuests[endIndex] = new Quest(QuestType.Endgame, routeIndex);                
+            }
         }
         else
         {
@@ -443,6 +487,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
         questAccessMap[sectionIndex] = true;
         if (openedQuest == -1 & GetComponent<Image>().enabled) PrepareBasicQuestWindow();
     }
+    
     public Button SYSTEM_GetQuestButton(int i)
     {
         return questButtons[i].GetComponent<Button>();

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum QuestType : byte
 {
-    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Scenario, Total
+    System, Progress, Foundation, CloudWhale, Engine, Pipes, Crystal, Monument, Blossom, Pollen, Endgame, Scenario, Condition, Total
 }
 // ограничения на кол-во - до 32х, иначе не влезет в questCompleteMask
 public enum ProgressQuestID : byte
@@ -62,6 +62,7 @@ public class Quest : MyObject
         questsCompletenessMask = m;
     }
 
+    protected Quest() { }
     public Quest(QuestType i_type, byte subID)
     {
         type = i_type;
@@ -69,8 +70,8 @@ public class Quest : MyObject
         needToCheckConditions = true;
         reward = 0f;
         completed = false;
-        bool scenario = type == QuestType.Scenario;
-        if (!scenario)
+        bool standartQuest = (type == QuestType.Scenario) || (type == QuestType.Condition);
+        if (!standartQuest)
         {
             byte stepsCount = 1;
             switch (i_type)
@@ -1043,6 +1044,13 @@ public class Quest : MyObject
         }
     }
 
+    virtual public void StopQuest(bool uiRedrawCall)
+    {
+        if (completed) return;
+        if (uiRedrawCall) QuestUI.current.ResetQuestCell(this);
+        if (subscribedToStructuresCheck) GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.StructureCheck;
+        completed = true;
+    }
     virtual public void MakeQuestCompleted()
     {
         if (completed) return;
@@ -1087,6 +1095,12 @@ public class Quest : MyObject
     {
         name = i_name;
         description = i_descr;
+    }
+    virtual public void FillText(string i_name, string i_descr, string i_step)
+    {
+        name = i_name;
+        description = i_descr;
+        steps[0] = i_step;
     }
 
     #region allQuestList
@@ -1314,6 +1328,9 @@ public class Quest : MyObject
                 break;
             case QuestType.Scenario:
                 (q as ScenarioQuest).GetIconInfo(ref icon, ref iconRect);
+                break;
+            case QuestType.Condition:
+                (q as ConditionQuest).GetIconInfo(ref icon, ref iconRect);
                 break;
             default:
                 icon = UIController.GetCurrent()?.GetMainCanvasController()?.buildingsIcons;

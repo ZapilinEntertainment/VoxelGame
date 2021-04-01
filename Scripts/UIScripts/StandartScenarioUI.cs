@@ -9,6 +9,8 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     [SerializeField] private Text announceText, condition0, condition1, condition2;
     [SerializeField] private RawImage icon, conditionCompleteMark0, conditionCompleteMark1, conditionCompleteMark2;
     [SerializeField] private Button conditionButton;
+    private bool conditionWindowEnabled = false, conditionWindowTemporarilyInvisible = false;
+    private GameObject maincanvas_rightpanel;
     private Scenario workingScenario;
     private Quest conditionQuest;
     private static StandartScenarioUI current;
@@ -24,9 +26,26 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     {
         announcePanel.SetActive(false);
         blockmask.SetActive(false);
+        conditionPanel.SetActive(false); conditionWindowEnabled = false;
         LocalizeTitles();
+        var uic = UIController.GetCurrent();
+        uic.AddSpecialCanvasToHolder(transform);
+        maincanvas_rightpanel = uic.GetMainCanvasController().rightPanel;
     }
-   
+
+    private void Update()
+    {
+        if (conditionWindowEnabled)
+        {
+            bool x = maincanvas_rightpanel.activeSelf;
+            if (conditionWindowTemporarilyInvisible != x)
+            {
+                conditionPanel.SetActive(!x);
+                conditionWindowTemporarilyInvisible = x;
+            }
+        }        
+    }
+
     public void ShowAnnouncePanel() {
         blockmask.SetActive(true);
         announcePanel.SetActive(true);
@@ -42,36 +61,39 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         UpdateConditionInfo();
         conditionButton.interactable = false;
         conditionPanel.SetActive(true);
+        conditionWindowEnabled = true;
     }
     public void DisableConditionPanel()
     {
         conditionPanel.SetActive(false);
+        conditionWindowEnabled = false;
+        conditionWindowTemporarilyInvisible = false;
     }
 
     public void UpdateConditionInfo()
     {        
-        condition0.text = conditionQuest.steps[0] + conditionQuest.stepsAddInfo[0];
+        condition0.text = conditionQuest.steps[0] + ' ' + conditionQuest.stepsAddInfo[0];
         conditionCompleteMark0.enabled = conditionQuest.stepsFinished[0];
         var stcount = conditionQuest.steps.Length;
         if (stcount != 1)
         {
-            condition1.text = conditionQuest.steps[1] + conditionQuest.stepsAddInfo[1];
+            condition1.text = conditionQuest.steps[1] + ' ' + conditionQuest.stepsAddInfo[1];
             conditionCompleteMark1.enabled = conditionQuest.stepsFinished[1];
             if (!conditionLine1.activeSelf) conditionLine1.SetActive(true);
             if (stcount != 2)
             {
-                condition2.text = conditionQuest.steps[2] + conditionQuest.stepsAddInfo[2];
+                condition2.text = conditionQuest.steps[2] + ' ' + conditionQuest.stepsAddInfo[2];
                 conditionCompleteMark2.enabled = conditionQuest.stepsFinished[2];
                 if (!conditionLine2.activeSelf) conditionLine2.SetActive(true);
             }
             else {
-                if (conditionLine1.activeSelf) conditionLine1.SetActive(false);
+                if (conditionLine2.activeSelf) conditionLine2.SetActive(false);
             }
         }
         else
         {
             if (conditionLine1.activeSelf) conditionLine1.SetActive(false);
-            if (conditionLine2.activeSelf) conditionLine1.SetActive(false);
+            if (conditionLine2.activeSelf) conditionLine2.SetActive(false);
         }
     }
     public void ChangeConditionButtonLabel(string s)

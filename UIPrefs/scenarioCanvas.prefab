@@ -748,7 +748,7 @@ MonoBehaviour:
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 14
+    m_MinSize: 8
     m_MaxSize: 20
     m_Alignment: 3
     m_AlignByGeometry: 0
@@ -1200,7 +1200,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   announcePanel: {fileID: 7081004208204226649}
-  conditionPanel: {fileID: 5884189722867160455}
+  conditionPanel: {fileID: 3479748900220412051}
   blockmask: {fileID: 8719227235023958610}
   conditionLine1: {fileID: 8380740987452907562}
   conditionLine2: {fileID: 2110901560662676007}
@@ -1353,7 +1353,7 @@ MonoBehaviour:
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 14
+    m_MinSize: 8
     m_MaxSize: 20
     m_Alignment: 3
     m_AlignByGeometry: 0
@@ -1542,7 +1542,7 @@ MonoBehaviour:
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 14
+    m_MinSize: 8
     m_MaxSize: 20
     m_Alignment: 3
     m_AlignByGeometry: 0

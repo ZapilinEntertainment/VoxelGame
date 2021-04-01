@@ -4,8 +4,8 @@ public abstract class Scenario : MyObject
 {
     public readonly int ID; // Tutorial - 0, FD Route - 1
     protected byte _scenarioIndex;
-    protected ScenarioQuest scenarioQuest;
     protected bool completed = false, useSpecialQuestFilling = false, useSpecialWindowFilling = false;
+    public const int FOUNDATION_ROUTE_ID = 1;
     //
     private static (int id, string filename)[] scenarioFiles;
     //

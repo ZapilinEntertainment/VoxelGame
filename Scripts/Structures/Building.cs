@@ -17,6 +17,7 @@ public class Building : Structure
     public byte level { get { return _level; } protected set { _level = value; } }
 
     public static UIBuildingObserver buildingObserver;
+    private static List<int> temporarilyUnblockedBuildings;
     public static int[] GetApplicableBuildingsList(byte i_level, Plane p)
     {
         List<int> bdlist;
@@ -189,7 +190,11 @@ public class Building : Structure
                     break;
                 default: bdlist = new List<int>(); break;
             }
-            if ( bottom && i_level <= Settlement.maxAchievedLevel) bdlist.Add(SETTLEMENT_CENTER_ID);
+            if (bottom)
+            {
+                if (i_level <= Settlement.maxAchievedLevel)  bdlist.Add(SETTLEMENT_CENTER_ID);
+                if (temporarilyUnblockedBuildings != null && temporarilyUnblockedBuildings.Contains(ANCHOR_BASEMENT_ID)) bdlist.Add(ANCHOR_BASEMENT_ID);
+            }
         }
         if (i_level == 6 && (Knowledge.KnowledgePrepared() | GameMaster.realMaster.IsInTestMode)) Knowledge.GetCurrent().AddUnblockedBuildings(p.faceIndex, ref bdlist);
         return bdlist.ToArray();
@@ -350,6 +355,36 @@ public class Building : Structure
             default: return 0;
         }
     }
+    public static void ResetStaticData()
+    {
+        temporarilyUnblockedBuildings = null;
+        GameMaster.staticResetFunctions -= ResetStaticData;
+    }
+    public static void AddTemporarilyAvailableBuilding(int i)
+    {
+        if (temporarilyUnblockedBuildings == null)
+        {
+            temporarilyUnblockedBuildings = new List<int>() { i };
+            GameMaster.staticResetFunctions += ResetStaticData;
+        }
+        else
+        {
+            if (!temporarilyUnblockedBuildings.Contains(i)) temporarilyUnblockedBuildings.Add(i);
+        }
+    }
+    public static void RemoveTemporarilyAvailableBuilding(int i)
+    {
+        if (temporarilyUnblockedBuildings != null && temporarilyUnblockedBuildings.Contains(i))
+        {
+            temporarilyUnblockedBuildings.Remove(i);
+            if (temporarilyUnblockedBuildings.Count == 0)
+            {
+                temporarilyUnblockedBuildings = null;
+                GameMaster.staticResetFunctions -= ResetStaticData;
+            }
+        }
+    }
+    //
 
     override public void Prepare() { PrepareBuilding(); }
 
