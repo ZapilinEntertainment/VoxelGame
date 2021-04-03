@@ -114,6 +114,7 @@ public sealed class XStation : WorkBuilding {
     {
         var s = envMaster.islandStability;
         bool show = isEnergySupplied & isActive & indicatorPrepared & ( showOnGUI | s <= VISIBLE_LOW_BORDER | s >= VISIBLE_UP_BORDER );
+        show = false;
         if (show)
         {
             cityMarker.anchoredPosition = Vector3.right * (s - 0.5f) * INDICATOR_EDGE_POSITION * 2f;

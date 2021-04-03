@@ -371,7 +371,7 @@ public sealed class UIExpeditionObserver : UIObserver
     {
         int fuelNeeded = (int)(MapPoint.Distance(GameMaster.realMaster.globalMap.cityPoint, selectedDestination) * FUEL_BASE_COST);
         fuelLabel.text = Localization.GetPhrase(LocalizedPhrase.FuelNeeded) + fuelNeeded.ToString();
-        int c = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
+        int c = (int)colony.storage.GetResourceCount(ResourceType.Fuel);
         if (c > fuelNeeded)
         {
             fuelMarker.uvRect = UIController.GetIconUVRect(Icons.TaskCompleted);
@@ -424,7 +424,7 @@ public sealed class UIExpeditionObserver : UIObserver
         int x = (int)f;
         var t = suppliesSlider.transform.GetChild(3).GetComponent<Text>();
         t.text = x.ToString();
-        if (x > colony.storage.standartResources[ResourceType.SUPPLIES_ID]) t.color = Color.red; else t.color = Color.white;
+        if (x > colony.storage.GetResourceCount(ResourceType.SUPPLIES_ID)) t.color = Color.red; else t.color = Color.white;
     }
     public void OnCrystalsSliderChanged(float f)
     {
@@ -441,11 +441,10 @@ public sealed class UIExpeditionObserver : UIObserver
             if (selectedCrew != null && selectedCrew.atHome)
             {
                 var storage = colony.storage;
-                var res = storage.standartResources;
                 bool TESTMODE = GameMaster.realMaster.weNeedNoResources;
-                if (TESTMODE || suppliesSlider.value <= res[ResourceType.SUPPLIES_ID] &&
+                if (TESTMODE || suppliesSlider.value <= storage.GetResourceCount(ResourceType.Supplies) &&
                     crystalsSlider.value <= colony.energyCrystalsCount &&
-                    res[ResourceType.FUEL_ID] >= FUEL_BASE_COST                    
+                    storage.GetResourceCount(ResourceType.Fuel) >= FUEL_BASE_COST                    
                     )
                 {
                     int shID = Hangar.GetFreeShuttleID();

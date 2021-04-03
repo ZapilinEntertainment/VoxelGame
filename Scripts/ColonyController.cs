@@ -295,7 +295,7 @@ public sealed class ColonyController : MonoBehaviour
             {
                 if (birthSpeed != 0 & !starvation)
                 {
-                    realBirthrate = birthSpeed *  birthrateCoefficient * happinessCoefficient * (1 + storage.standartResources[ResourceType.FOOD_ID] / 500f) * TICK_TIME;
+                    realBirthrate = birthSpeed *  birthrateCoefficient * happinessCoefficient * (1 + storage.GetResourceCount(ResourceType.Food) / 500f) * TICK_TIME;
                     if (peopleSurplus > 1)
                     {
                         int newborns = (int)peopleSurplus;

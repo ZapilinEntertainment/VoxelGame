@@ -356,7 +356,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                         dataString.text = s;
                     }
                     //food val
-                    float foodValue = storage.standartResources[ResourceType.FOOD_ID];
+                    float foodValue = storage.GetResourceCount(ResourceType.Food);
                     float foodMonth = colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
                     if (foodValue > foodMonth)
                     {
@@ -952,29 +952,30 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         }
         else
         {
-            List<int> resourceIDs = new List<int>();
-            float[] resources = st.standartResources;
-            for (i = 0; i < resources.Length; i++)
-            {
-                if (resources[i] > 0) resourceIDs.Add(i);
-            }
+            var resourcesList = storage.GetContent(1f);
             Transform t;
             int resourceID;
             // redraw 
-            for (i = 0; i < resourceIDs.Count; i++)
+            i = 0;
+            float v;
+            foreach (var r in resourcesList)
             {
-                resourceID = resourceIDs[i];
+                resourceID = r.Key;
                 t = storagePanelContent.GetChild(i);
                 t.GetChild(0).GetComponent<RawImage>().enabled = true;
                 t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(resourceID);
                 t.GetChild(1).GetComponent<Text>().text = Localization.GetResourceName(resourceID);
-                t.GetChild(2).GetComponent<Text>().text = ((int)(resources[resourceID] * 10) / 10f).ToString();
+                v = r.Value;
+                t.GetChild(2).GetComponent<Text>().text = v < 1000f ? string.Format("{0:0.#}", v) : string.Format("{0:0.#}", v / 1000f) + 'k';
                 t.gameObject.SetActive(true);
+                i++;
             }
             t = storagePanelContent.GetChild(i);
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
-            t.GetChild(2).GetComponent<Text>().text = string.Format("{0:0.##}", st.totalVolume) + " / " + st.maxVolume.ToString();
+            var tv = st.totalVolume; var mv = st.maxVolume;
+            t.GetChild(2).GetComponent<Text>().text = (tv < 1000f ? string.Format("{0:0.#}", tv) : string.Format("{0:0.#}", tv/1000f) + 'k' ) + " / "
+                + ((mv < 1000f) ? string.Format("{0:0.#}", mv) : string.Format("{0:0.#}", mv / 1000f) + 'k');
             t.gameObject.SetActive(true);
             i++;
             if (i < storagePanelContent.childCount)

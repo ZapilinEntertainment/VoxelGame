@@ -151,7 +151,7 @@
             score += colony.energyCrystalsCount;
             if (colony.storage != null)
             {
-                float[] res = colony.storage.standartResources;
+                var res = colony.storage.SYSTEM_GetResourcesArrayCopy();
                 for (int i = 0; i < res.Length; i++)
                 {
                     score += resourcesCosts[i] * res[i];

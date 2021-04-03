@@ -44,7 +44,7 @@ public sealed class AdvancedFactory : Factory
                     if (!workPaused) INLINE_WorkCalculation();
                     else
                     {
-                        if (storage.standartResources[recipe.output.ID] < productionModeValue)
+                        if (storage.GetResourceCount(recipe.output) < productionModeValue)
                         {
                             workPaused = false;
                             INLINE_WorkCalculation();
@@ -61,8 +61,8 @@ public sealed class AdvancedFactory : Factory
         if (iterations < 1) return;
         workflow -= iterations;
         Storage storage = colony.storage;
-        float i1 = storage.standartResources[recipe.input.ID] + inputResourcesBuffer,
-            i2 = storage.standartResources[recipe.input2.ID] + inputResourcesBuffer2;
+        float i1 = storage.GetResourceCount(recipe.input) + inputResourcesBuffer,
+            i2 = storage.GetResourceCount(recipe.input2) + inputResourcesBuffer2;
         if (i1 >= recipe.inputValue && i2 >= recipe.inputValue2)
         {
             int it = (int)(i1 / recipe.inputValue);
@@ -79,7 +79,7 @@ public sealed class AdvancedFactory : Factory
                 {
                     case FactoryProductionMode.Limit:
                         {
-                            float stVal = storage.standartResources[recipe.output.ID];
+                            float stVal = storage.GetResourceCount(recipe.output);
                             if (stVal + recipe.outputValue * iterations > productionModeValue)
                             {
                                 iterations = (int)((productionModeValue - stVal) / recipe.outputValue);
@@ -104,7 +104,7 @@ public sealed class AdvancedFactory : Factory
         switch (productionMode)
         {
             case FactoryProductionMode.Limit:
-                workPaused = (storage.standartResources[recipe.output.ID] >= productionModeValue);
+                workPaused = (storage.GetResourceCount(recipe.output) >= productionModeValue);
                 break;
             case FactoryProductionMode.Iterations:
                 productionModeValue -= iterations;
@@ -152,7 +152,7 @@ public sealed class AdvancedFactory : Factory
         recipe = ar;
         productionModeValue = 0;
         workComplexityCoefficient = ar.workComplexity;
-        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[ar.output.ID] >= productionModeValue;
+        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.GetResourceCount(ar.output) >= productionModeValue;
     }
     override public string UI_GetInfo()
     {

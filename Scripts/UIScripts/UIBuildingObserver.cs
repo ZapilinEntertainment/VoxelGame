@@ -9,7 +9,7 @@ public class UIBuildingObserver : UIObserver, ILocalizable {
 	private float showingEnergySurplus = 0;
 	private int showingHousing = 0;
     private byte savedLevel = 0;
-    private Vector2[] savedResourcesValues;
+    private ResourceContainer[] displayingCost; private int costLength;
 #pragma warning disable 0649
     [SerializeField] private RawImage energyImage, housingImage; //fiti
     [SerializeField] private Text energyValue, housingValue, upgradeButtonText, additionalText; // fiti
@@ -21,7 +21,8 @@ public class UIBuildingObserver : UIObserver, ILocalizable {
 
     private void Awake()
     {
-        savedResourcesValues = new Vector2[resourceCostIndicator.Length];
+        displayingCost = null;
+        costLength = 0;
     }
 
     public static UIBuildingObserver InitializeBuildingObserverScript()
@@ -278,12 +279,20 @@ public class UIBuildingObserver : UIObserver, ILocalizable {
             else
             {
                 if (resourceCostIndicator[0].activeSelf) {
-                    float[] storageVal = GameMaster.realMaster.colonyController.storage.standartResources;
+                    var storage = GameMaster.realMaster.colonyController.storage;
                     for (int i = 0; i < resourceCostIndicator.Length; i++) {
-                        GameObject g = resourceCostIndicator[i];
-                        if (g.activeSelf) {
-                            Text t = g.transform.GetChild(0).GetComponent<Text>();
-                            t.color = savedResourcesValues[i].y > storageVal[(int)savedResourcesValues[i].x] ? Color.red : Color.white;
+                        if (i < costLength)
+                        {
+                            GameObject g = resourceCostIndicator[i];
+                            if (g.activeSelf)
+                            {
+                                Text t = g.transform.GetChild(0).GetComponent<Text>();
+                                t.color = displayingCost[i].volume > storage.GetResourceCount(displayingCost[i].type) ? Color.red : Color.white;
+                            }
+                        }
+                        else
+                        {
+                            resourceCostIndicator[i].SetActive(false);
                         }
                     }
                 }
@@ -348,21 +357,21 @@ public class UIBuildingObserver : UIObserver, ILocalizable {
     }
 
     void RefreshResourcesData() {
+        var storage = GameMaster.realMaster.colonyController.storage;
         if (infoPanel_InUpgradeMode)
         {
-            ResourceContainer[] cost = observingBuilding.GetUpgradeCost();
-            if (cost != null && cost.Length != 0)
-            {
-                float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
+            displayingCost = observingBuilding.GetUpgradeCost();
+            costLength = displayingCost?.Length ?? 0;
+            if (costLength != 0)
+            {                
                 for (int i = 0; i < resourceCostIndicator.Length; i++)
                 {
-                    if (i < cost.Length)
+                    if (i < costLength)
                     {
-                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
+                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(displayingCost[i].type.ID);
                         Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
-                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
-                        t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;
-                        savedResourcesValues[i] = new Vector2(cost[i].type.ID, cost[i].volume);
+                        t.text = Localization.GetResourceName(displayingCost[i].type.ID) + " : " + string.Format("{0:0.##}", displayingCost[i].volume);
+                        t.color = displayingCost[i].volume > storage.GetResourceCount(displayingCost[i].type) ? Color.red : Color.white;
                         resourceCostIndicator[i].SetActive(true);
                     }
                     else resourceCostIndicator[i].SetActive(false);
@@ -371,19 +380,18 @@ public class UIBuildingObserver : UIObserver, ILocalizable {
         }
         else
         {
-            ResourceContainer[] cost = ResourcesCost.GetAdditionalSettlementBuildingCost(observingBuilding.level);
-            if (cost != null && cost.Length != 0)
+            displayingCost = ResourcesCost.GetAdditionalSettlementBuildingCost(observingBuilding.level);
+            costLength = displayingCost?.Length ?? 0;
+            if (costLength != 0)
             {
-                float[] storageVolume = GameMaster.realMaster.colonyController.storage.standartResources;
                 for (int i = 0; i < resourceCostIndicator.Length; i++)
                 {
-                    if (i < cost.Length)
+                    if (i < costLength)
                     {
-                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
+                        resourceCostIndicator[i].GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(displayingCost[i].type.ID);
                         Text t = resourceCostIndicator[i].transform.GetChild(0).GetComponent<Text>();
-                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
-                        t.color = cost[i].volume > storageVolume[cost[i].type.ID] ? Color.red : Color.white;
-                        savedResourcesValues[i] = new Vector2(cost[i].type.ID, cost[i].volume);
+                        t.text = Localization.GetResourceName(displayingCost[i].type.ID) + " : " + string.Format("{0:0.##}", displayingCost[i].volume);
+                        t.color = displayingCost[i].volume > storage.GetResourceCount(displayingCost[i].type) ? Color.red : Color.white;
                         resourceCostIndicator[i].SetActive(true);
                     }
                     else resourceCostIndicator[i].SetActive(false);

@@ -44,6 +44,7 @@ public class TestMaster : MonoBehaviour
             //TEST_PrepareForExpeditions();
             // GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
             //WritePuzzleColors();
+            GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_S, 10000);
         }
         if (Input.GetKeyDown("c"))
         {

@@ -7,9 +7,9 @@
 [06]Now continue supplying the Anchor with power.
 [07]thousands of energy to start anchoring your island!
 [08]Collect
-[09]energy and then press "
+[09] energy and then press "
 [10]" button to start anchoring.
-[15]Anchor powered
+[15]Anchor enabled, start charging!
 [11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that lift speed will be affected by excess power supply - up to
 [12]empty
 [13]Construct inner platforms ring before further expansion. Track objectives on right panel and build new sectors when possible.

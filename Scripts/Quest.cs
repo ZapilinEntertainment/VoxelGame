@@ -288,7 +288,7 @@ public class Quest : MyObject
                         break;
                     case ProgressQuestID.Progress_100Fuel:
                         {
-                            int f = (int)colony.storage.standartResources[ResourceType.FUEL_ID];
+                            int f = (int)colony.storage.GetResourceCount(ResourceType.Fuel);
                             stepsAddInfo[0] = f.ToString() + "/100";
                             if (f >= 100) MakeQuestCompleted();
                         }
@@ -516,7 +516,7 @@ public class Quest : MyObject
                         break;
                     case ProgressQuestID.Progress_FoodStocks:
                         {
-                            var f = colony.storage.standartResources[ResourceType.FOOD_ID];
+                            var f = colony.storage.GetResourceCount(ResourceType.FOOD_ID);
                             var fmc = colony.foodMonthConsumption;
                             stepsAddInfo[0] = ((int)f).ToString() + '/' + ((int)fmc).ToString();
                             if (f >= fmc) MakeQuestCompleted();
@@ -770,7 +770,7 @@ public class Quest : MyObject
                             }
                         case Knowledge.PipesRouteBoosters.FuelBoost:
                             {
-                                int v = (int)GameMaster.realMaster.colonyController.storage.standartResources[ResourceType.FUEL_ID];
+                                int v = (int)GameMaster.realMaster.colonyController.storage.GetResourceCount(ResourceType.Fuel);
                                 stepsAddInfo[0] = v.ToString() + " / " + ((int)Knowledge.R_P_FUEL_CONDITION).ToString();
                                 if (v >= Knowledge.R_P_FUEL_CONDITION) MakeQuestCompleted();
                                 break;
@@ -1054,18 +1054,12 @@ public class Quest : MyObject
     virtual public void MakeQuestCompleted()
     {
         if (completed) return;
-        if (type != QuestType.Scenario) AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
-        uint x = (uint)Mathf.Pow(2, subIndex);
-        if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
-        if (type == QuestType.Endgame)
+        if (type != QuestType.Scenario && type != QuestType.Condition)
         {
-            switch ((Knowledge.ResearchRoute)subIndex)
-            {
-                case Knowledge.ResearchRoute.Foundation:
-                    GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
-                    break;
-            }
-        }
+            AnnouncementCanvasController.MakeAnnouncement(Localization.AnnounceQuestCompleted(name));
+            uint x = (uint)Mathf.Pow(2, subIndex);
+            if ((questsCompletenessMask[(int)type] & x) == 0) questsCompletenessMask[(int)type] += x;
+        }       
         QuestUI.current.ResetQuestCell(this);
         GameMaster.realMaster.colonyController.AddEnergyCrystals(reward);
         completed = true;
@@ -1124,7 +1118,7 @@ public class Quest : MyObject
             int lvl = colony.hq?.level ?? -1;
             if (lvl == -1) return Quest.NoQuest;
             List<ProgressQuestID> acceptableQuest = new List<ProgressQuestID>();
-            var resources = colony.storage.standartResources;
+            var storage = colony.storage;
 
             for (int i = 0; i < complementQuests.Count; i++)
             {
@@ -1134,7 +1128,7 @@ public class Quest : MyObject
                     case ProgressQuestID.Progress_HousesToMax: if (colony.housingLevel < lvl & lvl != 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_FoodStocks:
                         {
-                            if (resources[ResourceType.FOOD_ID] < colony.foodMonthConsumption / 2f) acceptableQuest.Add(q);break;
+                            if (storage.GetResourceCount(ResourceType.Food) < colony.foodMonthConsumption / 2f) acceptableQuest.Add(q);break;
                         }
                     case ProgressQuestID.Progress_2Docks: if (colony.docks.Count < 2 & lvl > 1) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_2Storages: if (colony.storage.warehouses.Count < 2) acceptableQuest.Add(q); break;
@@ -1153,7 +1147,7 @@ public class Quest : MyObject
                     case ProgressQuestID.Progress_HospitalCoverage: if (colony.hospitals_coefficient < 1 & lvl > 1) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier3: if (lvl == 2) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_4MiniReactors: if (lvl == 4) acceptableQuest.Add(q); break;
-                    case ProgressQuestID.Progress_100Fuel: if (resources[ResourceType.FUEL_ID] < 90 & lvl > 3) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_100Fuel: if (storage.GetResourceCount(ResourceType.Fuel) < 90 & lvl > 3) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_XStation: if (lvl > 2 & XStation.current == null ) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:

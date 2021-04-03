@@ -12,7 +12,7 @@ public sealed class UIHangarObserver : UIObserver, ILocalizable // dependence : 
     [SerializeField] private Transform resourceCostContainer, shuttleLabel;
     [SerializeField] private GameObject buildWindow;
 #pragma warning restore 0649
-    private Vector2[] showingResourcesCount;    
+    private ResourceContainer[] displayingCost; private int costLength;  
     private int lastStorageDrawnValue = 0;
 
     public static UIHangarObserver InitializeHangarObserverScript()
@@ -24,7 +24,8 @@ public sealed class UIHangarObserver : UIObserver, ILocalizable // dependence : 
 
     private void Awake()
     {
-        showingResourcesCount = new Vector2[resourceCostContainer.childCount];
+        displayingCost = null;
+        costLength = 0;
     }
 
     public void SetObservingHangar(Hangar h)
@@ -79,20 +80,20 @@ public sealed class UIHangarObserver : UIObserver, ILocalizable // dependence : 
                     if (mycanvas.progressPanelMode == ProgressPanelMode.Hangar) mycanvas.DeactivateProgressPanel(ProgressPanelMode.Hangar);
                     if (shuttleLabel.gameObject.activeSelf) shuttleLabel.gameObject.SetActive(false);
 
-                    ResourceContainer[] rc = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
-                    var st = GameMaster.realMaster.colonyController.storage;
-                    float[] storageResources = st.standartResources;
+                    displayingCost = ResourcesCost.GetCost(ResourcesCost.SHUTTLE_BUILD_COST_ID);
+                    costLength = displayingCost?.Length ?? 0;
+                    var storage = GameMaster.realMaster.colonyController.storage;
+                    int rid; 
                     for (int i = 0; i < resourceCostContainer.transform.childCount; i++)
                     {
                         Transform t = resourceCostContainer.GetChild(i);
-                        if (i < rc.Length)
+                        if (i < costLength)
                         {
-                            int rid = rc[i].type.ID;
+                            rid = displayingCost[i].type.ID;
                             t.GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(rid);
                             Text tx = t.GetChild(0).GetComponent<Text>();
-                            tx.text = Localization.GetResourceName(rid) + " : " + rc[i].volume.ToString();                            
-                            showingResourcesCount[i] = new Vector2(rid, rc[i].volume);
-                            if (storageResources[rid] < rc[i].volume) tx.color = Color.red; else tx.color = Color.white;
+                            tx.text = Localization.GetResourceName(rid) + " : " + displayingCost[i].volume.ToString();                            
+                            if (storage.GetResourceCount(rid) < displayingCost[i].volume) tx.color = Color.red; else tx.color = Color.white;
                             t.gameObject.SetActive(true);
                         }
                         else
@@ -100,7 +101,7 @@ public sealed class UIHangarObserver : UIObserver, ILocalizable // dependence : 
                             t.gameObject.SetActive(false);
                         }
                     }
-                    lastStorageDrawnValue = st.operationsDone;
+                    lastStorageDrawnValue = storage.operationsDone;
                     break;
                 }
         }

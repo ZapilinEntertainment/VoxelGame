@@ -18,6 +18,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
     public bool[] questAccessMap { get; private set; }
     public sbyte openedQuest { get; private set; }
     public Quest[] activeQuests { get; private set; }
+    public System.Action questUpdateEvent;
 
     private bool prepared = false;
     private float rectTransformingSpeed = 0.8f, transformingProgress;
@@ -121,6 +122,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
                     }
                 }
             }
+            questUpdateEvent?.Invoke();
         }
 
         //

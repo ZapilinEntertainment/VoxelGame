@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AnchorBasement : WorkBuilding
 {
-    public const float POWER_CONSUMPTION = -10000f, MAX_EXCESS_POWER = 15000f;
+    public const float POWER_CONSUMPTION = -1500f, MAX_EXCESS_POWER = 15000f;
 
     public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
@@ -12,11 +12,18 @@ public class AnchorBasement : WorkBuilding
         return false;
     }
 
+
+    override public void SetBasement(Plane b, PixelPosByte pos)
+    {
+        if (b == null) return;
+        SetBuildingData(b, pos, false);        
+    }
+
     public void StartActivating(System.Action endFunction)
     {
         GameMaster.audiomaster.MakeSoundEffect(SoundEffect.FD_anchorLaunch);
         // graphic effect
-        //time
+        //time        
         endFunction();
     }
 

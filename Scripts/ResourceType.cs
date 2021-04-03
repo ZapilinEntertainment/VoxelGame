@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class ResourceType
+public sealed class ResourceType
 {
     public readonly float mass, toughness;
     public readonly Texture icon;

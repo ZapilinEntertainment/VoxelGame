@@ -128,6 +128,7 @@ public sealed class DockSystem
         float efficientcy = (float)d.workersCount / (float)d.maxWorkers; 
         float tradeVolume = s.volume * (0.05f + 0.95f * efficientcy);
         float rewardValue = 1f;
+        var storage = colony.storage;
         switch (s.type) {
 		case ShipType.Passenger:
                 {
@@ -176,14 +177,13 @@ public sealed class DockSystem
                 {
                     float buyPrioritiesPool = 0, sellPrioritiesPool = 0;
                     List<int> buyPositions = new List<int>(), sellPositions = new List<int>();
-                    var storage = colony.storage.standartResources;
                     float[] demands = ResourceType.demand;
                     for (int i = 0; i < ResourceType.TYPES_COUNT; i++)
                     {
                         if (isForSale[i] == null) continue;
                         if (isForSale[i] == true) // продаваемый островом ресурс
                         {                            
-                            if (storage[i] > minValueForTrading[i])
+                            if (storage.GetResourceCount(i) > minValueForTrading[i])
                             {
                                 sellPositions.Add(i);
                                 sellPrioritiesPool += demands[i];
@@ -191,7 +191,7 @@ public sealed class DockSystem
                         }
                         else // покупаемый островом ресурс
                         {
-                            if (storage[i] <= minValueForTrading[i])
+                            if (storage.GetResourceCount(i) <= minValueForTrading[i])
                             {
                                 buyPositions.Add(i);
                                 buyPrioritiesPool += demands[i];
@@ -202,10 +202,12 @@ public sealed class DockSystem
                     if (buyPositions.Count > 0)
                     {
                         float boughtVolume = 0;
+                        float v, a;
                         foreach (int id in buyPositions)
                         {
-                            float v = demands[id] / buyPrioritiesPool * tradeVolume;
-                            if (storage[id] + v > minValueForTrading[id]) v = minValueForTrading[id] - storage[id];
+                            v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            a = storage.GetResourceCount(id);
+                            if (a + v > minValueForTrading[id]) v = minValueForTrading[id] - a;
                             if (v != 0)  boughtVolume += d.BuyResource(ResourceType.GetResourceTypeById(id), v);
                         }
                         tradeVolume += boughtVolume;
@@ -214,10 +216,13 @@ public sealed class DockSystem
                     
                     if (sellPositions.Count > 0)
                     {
+                        double v;
+                        float a;
                         foreach (int id in sellPositions)
                         {
-                            double v = demands[id] / buyPrioritiesPool * tradeVolume;
-                            if (storage[id] - v < minValueForTrading[id]) v = storage[id] - minValueForTrading[id];
+                            v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            a = storage.GetResourceCount(id);
+                            if (a- v < minValueForTrading[id]) v = a - minValueForTrading[id];
                             float v2 = (float)(demands[id] / sellPrioritiesPool * tradeVolume);
                             if (v2 != 0)
                             {

@@ -767,12 +767,16 @@ public class Building : Structure
     {
         if (b == null) return;
         SetBuildingData(b, pos);
-        //copy to Gardens.cs
+        //copy to Gardens.cs, to AnchorBasement
     }
     protected void SetBuildingData(Plane b, PixelPosByte pos)
     {
+        SetBuildingData(b, pos, true);
+    }
+    protected void SetBuildingData(Plane b, PixelPosByte pos, bool i_isActive)
+    {
         SetStructureData(b, pos);
-        isActive = true;
+        isActive = i_isActive;
         if (energySurplus != 0 | energyCapacity > 0)
         {
             GameMaster.realMaster.colonyController.AddToPowerGrid(this);

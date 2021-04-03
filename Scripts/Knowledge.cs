@@ -515,7 +515,7 @@ public sealed class Knowledge
         #region pipes route - 1 position
         if (!BoostCounted(PipesRouteBoosters.FuelBoost))
         {
-            if (colony.storage.standartResources[ResourceType.FUEL_ID] >= R_P_FUEL_CONDITION) CountRouteBonus(PipesRouteBoosters.FuelBoost);
+            if (colony.storage.GetResourceCount(ResourceType.Fuel) >= R_P_FUEL_CONDITION) CountRouteBonus(PipesRouteBoosters.FuelBoost);
         }
         #endregion
         

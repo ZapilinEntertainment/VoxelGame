@@ -7,7 +7,7 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
 {
     [SerializeField] private GameObject announcePanel, conditionPanel, blockmask, conditionLine1, conditionLine2;
     [SerializeField] private Text announceText, condition0, condition1, condition2;
-    [SerializeField] private RawImage icon, conditionCompleteMark0, conditionCompleteMark1, conditionCompleteMark2;
+    [SerializeField] private RawImage icon,conditionIcon, conditionCompleteMark0, conditionCompleteMark1, conditionCompleteMark2;
     [SerializeField] private Button conditionButton;
     private bool conditionWindowEnabled = false, conditionWindowTemporarilyInvisible = false;
     private GameObject maincanvas_rightpanel;
@@ -58,10 +58,9 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     public void ShowConditionPanel(Quest i_quest)
     {
         conditionQuest = i_quest;
-        UpdateConditionInfo();
-        conditionButton.interactable = false;
-        conditionPanel.SetActive(true);
+        UpdateConditionInfo();        
         conditionWindowEnabled = true;
+        conditionPanel.SetActive(conditionWindowEnabled & !conditionWindowTemporarilyInvisible);
     }
     public void DisableConditionPanel()
     {
@@ -71,19 +70,28 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     }
 
     public void UpdateConditionInfo()
-    {        
+    {
         condition0.text = conditionQuest.steps[0] + ' ' + conditionQuest.stepsAddInfo[0];
-        conditionCompleteMark0.enabled = conditionQuest.stepsFinished[0];
-        var stcount = conditionQuest.steps.Length;
+        int completed = 0, stcount = conditionQuest.steps.Length;
+        bool finished = conditionQuest.stepsFinished[0];
+        conditionCompleteMark0.enabled = finished;
+        condition0.color = finished ? Color.grey : Color.white;
+        if (finished) completed++;
         if (stcount != 1)
         {
             condition1.text = conditionQuest.steps[1] + ' ' + conditionQuest.stepsAddInfo[1];
-            conditionCompleteMark1.enabled = conditionQuest.stepsFinished[1];
+            finished = conditionQuest.stepsFinished[1];
+            conditionCompleteMark1.enabled = finished;
+            condition1.color = finished ? Color.grey : Color.white;
+            if (finished) completed++;
             if (!conditionLine1.activeSelf) conditionLine1.SetActive(true);
             if (stcount != 2)
             {
                 condition2.text = conditionQuest.steps[2] + ' ' + conditionQuest.stepsAddInfo[2];
-                conditionCompleteMark2.enabled = conditionQuest.stepsFinished[2];
+                finished = conditionQuest.stepsFinished[2];
+                conditionCompleteMark2.enabled = finished;
+                condition2.color = finished ? Color.grey : Color.white;
+                if (finished) completed++;
                 if (!conditionLine2.activeSelf) conditionLine2.SetActive(true);
             }
             else {
@@ -95,12 +103,15 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
             if (conditionLine1.activeSelf) conditionLine1.SetActive(false);
             if (conditionLine2.activeSelf) conditionLine2.SetActive(false);
         }
+
+        bool x = completed == stcount;
+        conditionButton.interactable = x;
+        conditionButton.transform.GetChild(0).GetComponent<Text>().color = x ? Color.white : Color.grey;
     }
     public void ChangeConditionButtonLabel(string s)
     {
         conditionButton.transform.GetChild(0).GetComponent<Text>().text = s;
     }
-    public void SetConditionButtonActivity(bool x) { conditionButton.interactable = x; }
     public void ConditionProceedButton()
     {
         workingScenario.UIConditionProceedButton();
@@ -120,6 +131,11 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     {
         icon.texture = t;
         icon.uvRect = r;
+    }
+    public void ChangeConditionIcon(Texture t, Rect r)
+    {
+        conditionIcon.texture = t;
+        conditionIcon.uvRect = r;
     }
     public void ChangeAnnouncementText(string s)
     {

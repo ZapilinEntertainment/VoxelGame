@@ -394,7 +394,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 hc = colonyController.happinessCoefficient;
                 if (colonyController.storage != null)
                 {
-                    gc = colonyController.storage.standartResources[ResourceType.GRAPHONIUM_ID] / GameConstants.GRAPHONIUM_CRITICAL_MASS;
+                    gc = colonyController.storage.GetResourceCount(ResourceType.Graphonium) / GameConstants.GRAPHONIUM_CRITICAL_MASS;
 
                     // + блоки?
                 }

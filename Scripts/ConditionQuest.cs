@@ -6,7 +6,8 @@ public sealed class ConditionQuest : Quest
 {
     public enum ConditionQuestIcon : byte { FoundationRouteIcon}
 
-    private bool completeQuestWhenPossible = true;
+    private bool completeQuestWhenPossible = true, subscribedToQuestUpdate = false;
+    private System.Action uiRepresentationFunction;
     private readonly SimpleCondition[] conditions;
     private readonly ColonyController colony;    
 
@@ -17,6 +18,7 @@ public sealed class ConditionQuest : Quest
         completeQuestWhenPossible = i_completeQuestWhenPossible;
         byte count = (byte)i_conditions.Length;
         INLINE_PrepareSteps(count);
+        conditions = i_conditions;
         SimpleCondition sc;
         for (var i = 0; i < count;i++)
         {
@@ -32,7 +34,26 @@ public sealed class ConditionQuest : Quest
                 case ConditionType.ShuttlesCount: steps[i] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
             }
         }
-        
+        CheckQuestConditions();
+    }
+    public ConditionQuest(SimpleCondition i_condition, ColonyController i_colony, bool i_completeQuestWhenPossible, ConditionQuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
+    {
+        colony = i_colony;
+        needToCheckConditions = true;
+        completeQuestWhenPossible = i_completeQuestWhenPossible;
+        INLINE_PrepareSteps(1);
+        conditions = new SimpleCondition[1] { i_condition};
+        switch (i_condition.type)
+        {
+            case ConditionType.ResourceCountCheck: steps[0] = Localization.GetResourceName(i_condition.index); break;
+            case ConditionType.MoneyCheck: steps[0] = Localization.GetPhrase(LocalizedPhrase.CrystalsCollected); break;
+            case ConditionType.GearsCheck: steps[0] = Localization.GetWord(LocalizedWord.GearsLevel); break;
+            case ConditionType.FreeWorkersCheck: steps[0] = Localization.GetWord(LocalizedWord.FreeWorkers); break;
+            case ConditionType.StoredEnergyCondition: steps[0] = Localization.GetPhrase(LocalizedPhrase.EnergyStored); break;
+            case ConditionType.CrewsCondition: steps[0] = Localization.ComposeCrewLevel((byte)i_condition.value) + ':'; break;
+            case ConditionType.ShuttlesCount: steps[0] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
+        }
+        CheckQuestConditions();
     }
     public override void CheckQuestConditions()
     {
@@ -45,7 +66,7 @@ public sealed class ConditionQuest : Quest
             {
                 case ConditionType.ResourceCountCheck:
                     {
-                        int count = (int)colony.storage.standartResources[sc.index];
+                        int count = (int)colony.storage.GetResourceCount(sc.index);
                         stepsAddInfo[i] = count.ToString() + '/' + ((int)sc.value).ToString();
                         stepsFinished[i] = count >= sc.value;                        
                         break;
@@ -68,7 +89,7 @@ public sealed class ConditionQuest : Quest
                     {
                         int count = colony.freeWorkers;
                         stepsAddInfo[i] = count.ToString() + '/' + sc.index.ToString();
-                        stepsFinished[i] = count >= sc.value;
+                        stepsFinished[i] = count >= sc.index;
                         break;
                     }
                 case ConditionType.StoredEnergyCondition:
@@ -110,7 +131,31 @@ public sealed class ConditionQuest : Quest
             }
             if (stepsFinished[i]) completed++;
         }
+        uiRepresentationFunction?.Invoke();
         if (completeQuestWhenPossible && completed == cdCount) MakeQuestCompleted();
+    }
+
+    public void BindUIUpdateFunction(System.Action f)
+    {
+        //для  квестов, отслеживающихся через StandartScenarioUI.conditionWindow
+        uiRepresentationFunction += f;
+    }
+    public void SubscribeToUpdate(QuestUI qui)
+    {
+        //для квестов, выполняющихся вне QuestUI.activeQuests
+        if (!subscribedToQuestUpdate)
+        {
+            qui.questUpdateEvent += this.CheckQuestConditions;
+            subscribedToQuestUpdate = true;
+        }
+    }
+    private void Unsubscribe()
+    {
+        if (subscribedToQuestUpdate)
+        {
+            UIController.GetCurrent().GetMainCanvasController().questUI.questUpdateEvent -= this.CheckQuestConditions;
+            subscribedToQuestUpdate = false;
+        }
     }
 
     public void GetIconInfo(ref Texture icon, ref Rect rect)
@@ -119,6 +164,23 @@ public sealed class ConditionQuest : Quest
         // 
         icon = UIController.iconsTexture;
         rect = UIController.GetIconUVRect(Icons.FoundationRoute);
+    }
+
+    public override void MakeQuestCompleted()
+    {
+        if (completed) return;
+        base.MakeQuestCompleted();
+        Unsubscribe();
+        uiRepresentationFunction = null;
+        needToCheckConditions = false;
+    }
+    public override void StopQuest(bool uiRedrawCall)
+    {
+        if (completed) return;
+        base.StopQuest(uiRedrawCall);
+        Unsubscribe();
+        uiRepresentationFunction = null;
+        needToCheckConditions = false;        
     }
 }
 public struct SimpleCondition

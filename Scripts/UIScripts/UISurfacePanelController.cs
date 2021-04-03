@@ -15,7 +15,7 @@ public sealed class UISurfacePanelController : UIObserver {
     private bool status_digOrdered = false, firstSet = true;
     private bool? status_gather = null;
     private byte savedHqLevel = 0;
-    private Vector2[] showingResourcesCount;
+    private ResourceContainer[] displayingCost; int costLength;
 
     private int selectedBuildingButton = -1, lastStorageStatus = -1;
     private Vector2Int costPanel_selectedButton = new Vector2Int(-1,-1);
@@ -55,7 +55,7 @@ public sealed class UISurfacePanelController : UIObserver {
     void Start() {
         if (firstSet)
         {
-            showingResourcesCount = new Vector2[resourcesCostImage.Length];
+            displayingCost = null; costLength = 0;
             changeMaterialButton.onClick.AddListener(() =>
             {
                 this.SetCostPanelMode(CostPanelMode.SurfaceMaterialChanging);
@@ -178,11 +178,10 @@ public sealed class UISurfacePanelController : UIObserver {
                                 Storage storage = colony.storage;
                                 if (lastStorageStatus != storage.operationsDone)
                                 {
-                                    float[] onStorage = storage.standartResources;
                                     for (int i = 0; i < resourcesCostImage.Length; i++)
                                     {
-                                        int rid = (int)showingResourcesCount[i].x;
-                                        resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().color = (onStorage[rid] < showingResourcesCount[i].y) ? Color.red : Color.white;
+                                        if (i < costLength) 
+                                        resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>().color = (storage.GetResourceCount(displayingCost[i].type) < displayingCost[i].volume) ? Color.red : Color.white;
                                     }
                                     lastStorageStatus = storage.operationsDone;
                                 }
@@ -438,6 +437,7 @@ public sealed class UISurfacePanelController : UIObserver {
                     t = t.GetChild(1);// resource cost
                     t.gameObject.SetActive(true);
                     ResourceContainer[] rc = ResourcesCost.GetCost(Structure.COLUMN_ID);
+                    var storage = colony.storage;
                     for (int i = 0; i < t.childCount; i++)
                     {
                         Transform r = t.GetChild(i);
@@ -448,8 +448,7 @@ public sealed class UISurfacePanelController : UIObserver {
                             r.GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(id);
                             Text tx = r.GetChild(0).GetComponent<Text>();
                             tx.text= Localization.GetResourceName(id) + " : " + rc[i].volume.ToString();
-                            float[] storageResource = colony.storage.standartResources;
-                            tx.color = (rc[i].volume > storageResource[rc[i].type.ID]) ? Color.red : Color.white;
+                            tx.color = (rc[i].volume > storage.GetResourceCount(id)) ? Color.red : Color.white;
                         }
                         else
                         {
@@ -769,28 +768,29 @@ public sealed class UISurfacePanelController : UIObserver {
             else
             {
                 // all conditions met
-                ResourceContainer[] cost;
-                if (selectedStructureID != Structure.SETTLEMENT_CENTER_ID) cost = ResourcesCost.GetCost(selectedStructureID);
-                else cost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
-                //resource cost drawing
-                float[] storageResources = colony.storage.standartResources;
-                for (int i = 0; i < resourcesCostImage.Length; i++)
+                if (selectedStructureID != Structure.SETTLEMENT_CENTER_ID) displayingCost = ResourcesCost.GetCost(selectedStructureID);
+                else displayingCost = ResourcesCost.GetSettlementUpgradeCost(constructingLevel);
+            costLength = displayingCost?.Length ?? 0;
+            //resource cost drawing
+            var storage = colony.storage;
+            int rid;
+            for (int i = 0; i < resourcesCostImage.Length; i++)
+            {
+                if (i < costLength)
                 {
-                    if (i < cost.Length)
-                    {
-                        resourcesCostImage[i].uvRect = ResourceType.GetResourceIconRect(cost[i].type.ID);
-                        t = resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>();
-                        t.text = Localization.GetResourceName(cost[i].type.ID) + " : " + string.Format("{0:0.##}", cost[i].volume);
-                        showingResourcesCount[i] = new Vector2(cost[i].type.ID, cost[i].volume);
-                        if (storageResources[cost[i].type.ID] < cost[i].volume) t.color = Color.red; else t.color = Color.white;
-                        resourcesCostImage[i].gameObject.SetActive(true);
-                    }
-                    else
-                    {
-                        resourcesCostImage[i].gameObject.SetActive(false);
-                    }
+                    rid = displayingCost[i].type.ID;
+                    resourcesCostImage[i].uvRect = ResourceType.GetResourceIconRect(rid);
+                    t = resourcesCostImage[i].transform.GetChild(0).GetComponent<Text>();
+                    t.text = Localization.GetResourceName(rid) + " : " + string.Format("{0:0.##}", displayingCost[i].volume);
+                    if (storage.GetResourceCount(rid)< displayingCost[i].volume) t.color = Color.red; else t.color = Color.white;
+                    resourcesCostImage[i].gameObject.SetActive(true);
                 }
-                lastStorageStatus = colony.storage.operationsDone;
+                else
+                {
+                    resourcesCostImage[i].gameObject.SetActive(false);
+                }
+            }
+            lastStorageStatus = colony.storage.operationsDone;
                 buildingCreateMode = BuildingCreateInfoMode.Acceptable;
                 innerBuildButton.gameObject.SetActive(true);
             }

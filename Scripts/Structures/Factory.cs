@@ -98,7 +98,7 @@ public class Factory : WorkBuilding
                     if (!workPaused) INLINE_WorkCalculation();
                     else
                     {
-                        if (storage.standartResources[recipe.output.ID] < productionModeValue)
+                        if (storage.GetResourceCount(recipe.output) < productionModeValue)
                         {
                             workPaused = false;
                             INLINE_WorkCalculation();
@@ -116,7 +116,7 @@ public class Factory : WorkBuilding
         if (iterations < 1) return;
         workflow -= iterations;
         Storage storage = colony.storage;
-        if (storage.standartResources[recipe.input.ID] + inputResourcesBuffer >= recipe.inputValue)
+        if (storage.GetResourceCount(recipe.input) + inputResourcesBuffer >= recipe.inputValue)
         {
             inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
             iterations = Mathf.FloorToInt(inputResourcesBuffer / recipe.inputValue);
@@ -124,7 +124,7 @@ public class Factory : WorkBuilding
             {
                 case FactoryProductionMode.Limit:
                     {
-                        float stVal = storage.standartResources[recipe.output.ID];
+                        float stVal = storage.GetResourceCount(recipe.output);
                         if (stVal + recipe.outputValue * iterations > productionModeValue)
                         {
                             iterations = (int)((productionModeValue - stVal) / recipe.outputValue);
@@ -147,7 +147,7 @@ public class Factory : WorkBuilding
         switch (productionMode)
         {
             case FactoryProductionMode.Limit:
-                workPaused = (storage.standartResources[recipe.output.ID] >= productionModeValue);
+                workPaused = (storage.GetResourceCount(recipe.output) >= productionModeValue);
                 break;
             case FactoryProductionMode.Iterations:
                 productionModeValue -= iterations;
@@ -184,8 +184,8 @@ public class Factory : WorkBuilding
         workflow = 0;
         recipe = r;
         productionModeValue = 0;
-        workComplexityCoefficient = r.workComplexity;
-        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.standartResources[r.output.ID] >= productionModeValue;
+        workComplexityCoefficient = recipe.workComplexity;
+        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.GetResourceCount(recipe.output) >= productionModeValue;
     }
     public void SetRecipe(int x)
     {

@@ -5,7 +5,7 @@ public sealed class Storage : MonoBehaviour {
     public double totalVolume { get; private set; }
 	public float  maxVolume { get; private set; }
 	public List<StorageHouse> warehouses { get; private set; }
-	public float[] standartResources{get;private set;}
+    private float[] standartResources;
     public int operationsDone { get; private set; } // для UI
 
     private float announcementTimer;
@@ -225,6 +225,30 @@ public sealed class Storage : MonoBehaviour {
     {
         // no need in check
         return standartResources[rt.ID];
+    }
+    public float GetResourceCount(int id)
+    {
+        return standartResources[id];
+    }
+    public Dictionary<int, float> GetContent(float limit)
+    {
+        var d = new Dictionary<int,float>();
+        float f;
+        for (int i = 0; i < standartResources.Length; i++)
+        {
+            f = standartResources[i];
+            if (f >= limit) d.Add(i, f);
+        }
+        return d;
+    }
+    /// <summary>
+    /// Returns clone of storage array
+    /// </summary>
+    public float[] SYSTEM_GetResourcesArrayCopy()
+    {
+        var na = new float[standartResources.Length];
+        standartResources.CopyTo(na, 0);
+        return na;
     }
 	/// <summary>
 	/// standart resources only

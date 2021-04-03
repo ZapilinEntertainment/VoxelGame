@@ -261,7 +261,7 @@ namespace TutorialScenarioNS
             }
             public override void CheckConditions()
             {
-                int stCount = (int)storage.standartResources[ResourceType.LUMBER_ID];
+                int stCount = (int)storage.GetResourceCount(ResourceType.Lumber);
                 scenarioQuest.ChangeAddInfo(0, stCount.ToString() + " / " + LUMBER_COUNT.ToString());
                 if (stCount >= LUMBER_COUNT) EndScenario();
             }
@@ -336,7 +336,7 @@ namespace TutorialScenarioNS
             }
             public override void CheckConditions()
             {
-                int stCount = (int)storage.standartResources[ResourceType.STONE_ID];
+                int stCount = (int)storage.GetResourceCount(ResourceType.Stone);
                 scenarioQuest.ChangeAddInfo(0, ' ' + stCount.ToString() + " / " + STONE_COUNT.ToString());
                 if (stCount >= STONE_COUNT) EndScenario();
             }
@@ -588,7 +588,7 @@ namespace TutorialScenarioNS
                 }
                 scenarioQuest.SetStepCompleteness(1, haveDocks);
                 //
-                int stCount = (int)colony.storage.standartResources[ResourceType.CONCRETE_ID];
+                int stCount = (int)colony.storage.GetResourceCount(ResourceType.Concrete);
                 scenarioQuest.ChangeAddInfo(0, ' ' + stCount.ToString() + " / " + ResourcesCost.DOCK_CONCRETE_COSTVOLUME.ToString());
                 if (stCount >= ResourcesCost.DOCK_CONCRETE_COSTVOLUME)
                 {
