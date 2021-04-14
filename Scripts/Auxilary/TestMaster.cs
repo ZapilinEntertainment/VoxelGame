@@ -45,6 +45,7 @@ public class TestMaster : MonoBehaviour
             // GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
             //WritePuzzleColors();
             GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_S, 10000);
+            GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_E, 10000);
         }
         if (Input.GetKeyDown("c"))
         {
@@ -52,7 +53,7 @@ public class TestMaster : MonoBehaviour
         }
         if (Input.GetKeyDown("n"))
         {
-            //AddCitizens(5000, 30000f);
+            AddCitizens(5000, 30000f);
         }
     }
 
@@ -243,7 +244,7 @@ public class TestMaster : MonoBehaviour
         if (cc != null)
         {
             if (foodCount != 0f) cc.storage.AddResource(ResourceType.Food, foodCount);
-            cc.AddCitizens(count);
+            cc.AddCitizens(count, true);
         }
     }
     public static void PrepareForExpeditions()

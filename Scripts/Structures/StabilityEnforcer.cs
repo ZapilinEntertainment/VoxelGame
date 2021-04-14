@@ -50,10 +50,11 @@ public sealed class StabilityEnforcer : WorkBuilding
         return w;
     }
 
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     {
-        base.FreeWorkers(x);
+        var n = base.FreeWorkers(x);
         RecalculateAffection();
+        return n;
     }
     private void RecalculateAffection()
     {
@@ -95,7 +96,7 @@ public sealed class StabilityEnforcer : WorkBuilding
                     int vc = (byte)gm.difficulty - (byte)Difficulty.Normal + 1;
                     if (colony.citizenCount >= vc)
                     {
-                        colony.RemoveCitizens(vc);
+                        colony.RemoveCitizens(vc, true);
                     }
                     else
                     {

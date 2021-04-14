@@ -50,10 +50,11 @@ public class Hospital : WorkBuilding {
         RecalculateCoverage();
         return w;
     }
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     {
-        base.FreeWorkers(x);
+        var n = base.FreeWorkers(x);
         RecalculateCoverage();
+        return n;
     }
 
     public override UIObserver ShowOnGUI()

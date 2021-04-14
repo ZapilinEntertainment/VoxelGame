@@ -116,11 +116,12 @@ public class Powerplant : WorkBuilding
         }
     }
 
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     { // не используется recalculate workspeed
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
+        return x;
     }
 
     public int GetFuelResourceID() { return fuel.ID; }

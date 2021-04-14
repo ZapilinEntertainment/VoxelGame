@@ -19,20 +19,9 @@ public sealed class ConditionQuest : Quest
         byte count = (byte)i_conditions.Length;
         INLINE_PrepareSteps(count);
         conditions = i_conditions;
-        SimpleCondition sc;
         for (var i = 0; i < count;i++)
         {
-            sc = conditions[i];
-            switch(sc.type)
-            {
-                case ConditionType.ResourceCountCheck: steps[i] = Localization.GetResourceName(sc.index); break;
-                case ConditionType.MoneyCheck: steps[i] = Localization.GetPhrase(LocalizedPhrase.CrystalsCollected);break;
-                case ConditionType.GearsCheck: steps[i] = Localization.GetWord(LocalizedWord.GearsLevel); break;
-                case ConditionType.FreeWorkersCheck: steps[i] = Localization.GetWord(LocalizedWord.FreeWorkers); break;
-                case ConditionType.StoredEnergyCondition: steps[i] = Localization.GetPhrase(LocalizedPhrase.EnergyStored); break;
-                case ConditionType.CrewsCondition: steps[i] = Localization.ComposeCrewLevel((byte)sc.value) + ':';break;
-                case ConditionType.ShuttlesCount: steps[i] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
-            }
+            INLINE_DefineStep(ref conditions[i], i);
         }
         CheckQuestConditions();
     }
@@ -43,17 +32,22 @@ public sealed class ConditionQuest : Quest
         completeQuestWhenPossible = i_completeQuestWhenPossible;
         INLINE_PrepareSteps(1);
         conditions = new SimpleCondition[1] { i_condition};
-        switch (i_condition.type)
-        {
-            case ConditionType.ResourceCountCheck: steps[0] = Localization.GetResourceName(i_condition.index); break;
-            case ConditionType.MoneyCheck: steps[0] = Localization.GetPhrase(LocalizedPhrase.CrystalsCollected); break;
-            case ConditionType.GearsCheck: steps[0] = Localization.GetWord(LocalizedWord.GearsLevel); break;
-            case ConditionType.FreeWorkersCheck: steps[0] = Localization.GetWord(LocalizedWord.FreeWorkers); break;
-            case ConditionType.StoredEnergyCondition: steps[0] = Localization.GetPhrase(LocalizedPhrase.EnergyStored); break;
-            case ConditionType.CrewsCondition: steps[0] = Localization.ComposeCrewLevel((byte)i_condition.value) + ':'; break;
-            case ConditionType.ShuttlesCount: steps[0] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
-        }
+        INLINE_DefineStep(ref i_condition, 0);
         CheckQuestConditions();
+    }
+    private void INLINE_DefineStep(ref SimpleCondition sc, int i)
+    {
+        switch (sc.type)
+        {
+            case ConditionType.ResourceCountCheck: steps[i] = Localization.GetResourceName(sc.index); break;
+            case ConditionType.MoneyCheck: steps[i] = Localization.GetPhrase(LocalizedPhrase.CrystalsCollected); break;
+            case ConditionType.GearsCheck: steps[i] = Localization.GetWord(LocalizedWord.GearsLevel); break;
+            case ConditionType.FreeWorkersCheck: steps[i] = Localization.GetWord(LocalizedWord.FreeWorkers); break;
+            case ConditionType.StoredEnergyCondition: steps[i] = Localization.GetPhrase(LocalizedPhrase.EnergyStored); break;
+            case ConditionType.CrewsCondition: steps[i] = Localization.ComposeCrewLevel((byte)sc.value) + ':'; break;
+            case ConditionType.ShuttlesCount: steps[i] = Localization.GetWord(LocalizedWord.Shuttles) + ':'; break;
+            case ConditionType.Dummy: steps[i] = string.Empty; break;
+        }
     }
     public override void CheckQuestConditions()
     {
@@ -224,6 +218,10 @@ public struct SimpleCondition
     {
         return new SimpleCondition(ConditionType.ShuttlesCount, count, 0f);
     }
+    public static SimpleCondition GetDummyCondition()
+    {
+        return new SimpleCondition(ConditionType.Dummy, 0, 0f);
+    }
 }
 public enum ConditionType:byte { ResourceCountCheck, MoneyCheck, GearsCheck, FreeWorkersCheck, StoredEnergyCondition,
-    CrewsCondition, ShuttlesCount}
+    CrewsCondition, ShuttlesCount, Dummy}

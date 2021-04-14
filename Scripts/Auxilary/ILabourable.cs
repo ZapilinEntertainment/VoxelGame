@@ -11,8 +11,8 @@ public interface ILabourable
     /// returns excess workers
     /// </summary>
     int AddWorkers(int x);
-    void FreeWorkers(int x);
-    void FreeWorkers();
+    int FreeWorkers(int x);
+    int FreeWorkers();
     int GetWorkersCount();
     int GetMaxWorkersCount();
     bool MaximumWorkersReached();

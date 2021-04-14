@@ -3,6 +3,11 @@
     ColonyController colony;
     float charge = 0, chargeSpeed = 0.01f;
 
+    public override bool CanBeRotated()
+    {
+        return false;
+    }
+
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;

@@ -14,6 +14,8 @@ public class WindGenerator : Building {
 		PrepareBuilding();
 	}
 
+    public override bool CanBeRotated() { return false; }
+
     override public void SetBasement(Plane b, PixelPosByte pos) {
 		if (b == null) return;
 		SetBuildingData(b, pos);

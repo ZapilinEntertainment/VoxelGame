@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 public class ScenarioQuest : Quest
 {
     protected Scenario myScenario;
@@ -37,4 +38,5 @@ public class ScenarioQuest : Quest
         icon = GlobalMapCanvasController.GetMapMarkersTexture();
         rect = GlobalMapCanvasController.GetMarkerRect(MapPointType.QuestMark);
     }
+
 }

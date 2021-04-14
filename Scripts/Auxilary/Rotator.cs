@@ -9,4 +9,9 @@ public class Rotator : MonoBehaviour
     {
         transform.Rotate(rotationVector * Time.deltaTime * GameMaster.gameSpeed, rotationSpace);
     }
+
+    public void SetRotationVector(Vector3 rv)
+    {
+        rotationVector = rv;
+    }
 }

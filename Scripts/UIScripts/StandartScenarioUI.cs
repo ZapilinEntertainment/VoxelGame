@@ -2,17 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
 {
-    [SerializeField] private GameObject announcePanel, conditionPanel, blockmask, conditionLine1, conditionLine2;
-    [SerializeField] private Text announceText, condition0, condition1, condition2;
+    [SerializeField] private GameObject announcePanel, conditionPanel, blockmask, conditionLine1, conditionLine2, specialButton;
+    [SerializeField] private Text announceText, condition0, condition1, condition2, infoString0;
     [SerializeField] private RawImage icon,conditionIcon, conditionCompleteMark0, conditionCompleteMark1, conditionCompleteMark2;
     [SerializeField] private Button conditionButton;
-    private bool conditionWindowEnabled = false, conditionWindowTemporarilyInvisible = false;
+    private bool conditionWindowEnabled = false, canvasEnabled = true, infoString0_enabled = false;
     private GameObject maincanvas_rightpanel;
     private Scenario workingScenario;
     private Quest conditionQuest;
+    private Canvas myCanvas;
+    private MainCanvasController mcc;
+    private Action specialButtonFunction;
     private static StandartScenarioUI current;
 
     public static StandartScenarioUI GetCurrent(Scenario requester)
@@ -24,13 +28,18 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
 
     private void Awake()
     {
+        myCanvas = GetComponent<Canvas>(); canvasEnabled = myCanvas.enabled;
         announcePanel.SetActive(false);
         blockmask.SetActive(false);
         conditionPanel.SetActive(false); conditionWindowEnabled = false;
+        specialButton.SetActive(false);
+        infoString0.transform.parent.gameObject.SetActive(false); infoString0_enabled = false;
+        
         LocalizeTitles();
         var uic = UIController.GetCurrent();
         uic.AddSpecialCanvasToHolder(transform);
-        maincanvas_rightpanel = uic.GetMainCanvasController().rightPanel;
+        mcc = uic.GetMainCanvasController();
+        maincanvas_rightpanel = mcc.rightPanel;
     }
 
     private void Update()
@@ -38,10 +47,11 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         if (conditionWindowEnabled)
         {
             bool x = maincanvas_rightpanel.activeSelf;
-            if (conditionWindowTemporarilyInvisible != x)
+            if (canvasEnabled != x)
             {
-                conditionPanel.SetActive(!x);
-                conditionWindowTemporarilyInvisible = x;
+                x = !x;
+                myCanvas.enabled = x;
+                canvasEnabled = x;
             }
         }        
     }
@@ -49,6 +59,7 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     public void ShowAnnouncePanel() {
         blockmask.SetActive(true);
         announcePanel.SetActive(true);
+        mcc.ChangeChosenObject(ChosenObjectType.None);
     }
     public void CloseAnnouncePanel() {
         announcePanel.SetActive(false);
@@ -60,13 +71,13 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         conditionQuest = i_quest;
         UpdateConditionInfo();        
         conditionWindowEnabled = true;
-        conditionPanel.SetActive(conditionWindowEnabled & !conditionWindowTemporarilyInvisible);
+        conditionPanel.SetActive(conditionWindowEnabled);
+        mcc.ChangeChosenObject(ChosenObjectType.None);
     }
     public void DisableConditionPanel()
     {
         conditionPanel.SetActive(false);
         conditionWindowEnabled = false;
-        conditionWindowTemporarilyInvisible = false;
     }
 
     public void UpdateConditionInfo()
@@ -115,6 +126,39 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     public void ConditionProceedButton()
     {
         workingScenario.UIConditionProceedButton();
+    }
+    // info string
+    public void ShowInfoString(string s)
+    {
+        infoString0.text = s;
+        if (!infoString0_enabled)
+        {
+            infoString0.transform.parent.gameObject.SetActive(true);
+            infoString0_enabled = true;
+        }
+    }
+    public void DisableInfoString()
+    {
+        if (infoString0_enabled)
+        {
+            infoString0.transform.parent.gameObject.SetActive(false);
+            infoString0_enabled = false;
+        }
+    }
+    // special button
+    public void EnableSpecialButton(string s, Action i_action)
+    {
+        specialButton.transform.GetChild(0).GetComponent<Text>().text = s;
+        specialButtonFunction = i_action;
+        specialButton.SetActive(true);
+    }
+    public void SpecialButtonClick()
+    {
+        specialButtonFunction?.Invoke();
+    }
+    public void DisableSpecialButton()
+    {
+        specialButton.SetActive(false);
     }
     //
 

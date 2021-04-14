@@ -80,16 +80,17 @@ public abstract class Worksite : ILabourable
             return x;
         }
     }
-    public void FreeWorkers()
+    public int FreeWorkers()
     {
-        FreeWorkers(workersCount);
+        return FreeWorkers(workersCount);
     }
-    virtual public void FreeWorkers(int x)
+    virtual public int FreeWorkers(int x)
     {
-        if (workersCount == 0) return;
+        if (workersCount == 0) return 0;
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
+        return x;
     }
     public int GetWorkersCount() { return workersCount; }
     public int GetMaxWorkersCount() { return maxWorkersCount; }

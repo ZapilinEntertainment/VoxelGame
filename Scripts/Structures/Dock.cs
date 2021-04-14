@@ -493,10 +493,11 @@ public sealed class Dock : WorkBuilding {
     }  
 
 
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     {
-        base.FreeWorkers(x);
+        var n = base.FreeWorkers(x);
         if (workersCount == 0 && maintainingShip && servicingShip != null) servicingShip.Undock();
+        return n;
     }
 
     public override UIObserver ShowOnGUI()

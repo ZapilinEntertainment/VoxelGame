@@ -137,14 +137,14 @@ public sealed class DockSystem
                     {
                         if (vol > immigrationPlan)
                         {
-                            colony.AddCitizens(immigrationPlan);
+                            colony.AddCitizens(immigrationPlan, true);
                             immigrationPlan = 0;
                             vol -= immigrationPlan;
                         }
                         else
                         {
                             int x = (int)vol;
-                            colony.AddCitizens(x); immigrationPlan -= x;
+                            colony.AddCitizens(x, true); immigrationPlan -= x;
                             vol = 0;
                         }
                     }
@@ -154,7 +154,7 @@ public sealed class DockSystem
                         if (Random.value < colony.happinessCoefficient * 0.25f)
                         {
                             int x = (int)(Random.value * colony.hq.level);
-                            if (x != 0) colony.AddCitizens(x);
+                            if (x != 0) colony.AddCitizens(x, true);
                         }
                     }
 
@@ -250,7 +250,7 @@ public sealed class DockSystem
                     {
                         int veterans = (int)(s.volume * 0.02f);
                         if (veterans > immigrationPlan) veterans = immigrationPlan;
-                        colony.AddCitizens(veterans);
+                        colony.AddCitizens(veterans, true);
                     }
                     if (isForSale[ResourceType.FUEL_ID] == true) {
                         float tv = (float)(tradeVolume * 0.5f * (Random.value * 0.5f + 0.5f));

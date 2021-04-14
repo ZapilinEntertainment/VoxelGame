@@ -4,7 +4,8 @@ public abstract class Scenario : MyObject
 {
     public readonly int ID; // Tutorial - 0, FD Route - 1
     protected byte _scenarioIndex;
-    protected bool completed = false, useSpecialQuestFilling = false, useSpecialWindowFilling = false;
+    public bool completed { get; protected set; }
+        protected bool useSpecialQuestFilling = false, useSpecialWindowFilling = false;
     public const int FOUNDATION_ROUTE_ID = 1;
     //
     private static (int id, string filename)[] scenarioFiles;
@@ -12,16 +13,28 @@ public abstract class Scenario : MyObject
     #region save-load
     public virtual void Save(System.IO.FileStream fs)
     {
-
+        fs.Write(System.BitConverter.GetBytes(ID),0,4);
     }
     public static Scenario StaticLoad(System.IO.FileStream fs)
     {
-        return null;
+        var data = new byte[4];
+        fs.Read(data, 0, 4);
+        var x = System.BitConverter.ToInt32(data, 0);
+        Scenario s = null;
+        switch (x)
+        {
+            case FOUNDATION_ROUTE_ID:
+                var fr = new FoundationRouteScenario();
+                fr.PrepareUI();
+                fr.Load(fs);
+                s = fr;
+                
+                
+                break;
+        }
+        return s;
     }
-    virtual public void Load(System.IO.FileStream fs)
-    {
-
-    }
+    virtual public void Load(System.IO.FileStream fs) { }
     #endregion
 
 

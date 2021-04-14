@@ -82,10 +82,11 @@ public sealed class HangingTMast : WorkBuilding
         RecalculateLifepowerSurplus();
         return w;
     }
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     {
-        base.FreeWorkers(x);
+        var n = base.FreeWorkers(x);
         RecalculateLifepowerSurplus();
+        return n;
     }
 
     #region save-load

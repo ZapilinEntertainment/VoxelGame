@@ -56,7 +56,7 @@ public sealed class ColonyController : MonoBehaviour
             hospitalCoverageRecalculationNeeded = true;
         }
     }
-    private int _citizenCount;
+    private int _citizenCount, citizensToDisappear = 0;
     public float realBirthrate { get; private set; }
     public int totalLivespace { get; private set; }
 
@@ -120,7 +120,6 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
-
         if (showingHappiness != happinessCoefficient)
         {
             showingHappiness = Mathf.Lerp(showingHappiness, happinessCoefficient, Time.deltaTime);
@@ -202,10 +201,14 @@ public sealed class ColonyController : MonoBehaviour
                     }
                     else
                     {
-                        if (freeWorkers > 0f) { freeWorkers--; citizenCount--; }
-                        else StartCoroutine(DeportateWorkingCitizen());
-                        if (houses.Count > 0) PoolMaster.current.CitizenLeaveEffect(houses[UnityEngine.Random.Range(0, houses.Count )].transform.position);
-                        else PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
+                        if (freeWorkers > 0f)
+                        {
+                            freeWorkers--;
+                            citizenCount--;
+                            if (houses.Count > 0) PoolMaster.current.CitizenLeaveEffect(houses[UnityEngine.Random.Range(0, houses.Count)].transform.position);
+                            else PoolMaster.current.CitizenLeaveEffect(hq.transform.position);
+                        }
+                        else citizensToDisappear++;                      
                     }
                     foodSupplyHappiness = 0f;
                     realBirthrate = 0f;
@@ -299,7 +302,7 @@ public sealed class ColonyController : MonoBehaviour
                     if (peopleSurplus > 1)
                     {
                         int newborns = (int)peopleSurplus;
-                        AddCitizens(newborns);
+                        AddCitizens(newborns, true);
                         peopleSurplus -= newborns;
                     }
                 }
@@ -308,9 +311,13 @@ public sealed class ColonyController : MonoBehaviour
 
             // WORKSPEED
             workers_coefficient = starvation ? 0.3f : (0.5f + happinessCoefficient * 0.7f) * gears_coefficient;
-        }
-
-        
+            //deleting citizens
+            if (citizensToDisappear > 0)
+            {
+                StartCoroutine(DeportateWorkingCitizen(citizensToDisappear));
+                citizensToDisappear = 0;
+            }
+        }        
     }
     public void EverydayUpdate()
     {
@@ -346,61 +353,66 @@ public sealed class ColonyController : MonoBehaviour
     }
     #endregion
 
-    public void AddCitizens(int x)
+    public void AddCitizens(int x, bool workable)
     {
         citizenCount += x;
-        freeWorkers += x;
+        if (workable) freeWorkers += x;
     }
-    public void RemoveCitizens(int x)
+    public void RemoveCitizens(int x, bool working)
     {
-        if (citizenCount >= x)
+        if (working)
         {
-            citizenCount -= x;
+            if (freeWorkers > 0)
+            {
+                if (freeWorkers >= x)
+                {
+                    freeWorkers -= x;
+                    citizenCount -= x;
+                    return;
+                }
+                else
+                {
+                    x -= freeWorkers;
+                    citizenCount -= freeWorkers;
+                    freeWorkers = 0;
+                }
+            }
+            citizensToDisappear += x;
         }
-        else
-        {
-            citizenCount = 0;
-        }
+        else citizenCount -= x;
     }
-    private IEnumerator DeportateWorkingCitizen() // чтобы не тормозить апдейт
+    private IEnumerator DeportateWorkingCitizen(int x) // чтобы не тормозить апдейт
     {
-        bool found = false;
         var wbs = FindObjectsOfType<WorkBuilding>();
+        int n = 0;
         if (wbs != null)
         {
             foreach (var wb in wbs)
             {
                 if (wb == null || wb.workersCount == 0) continue;
-                wb.FreeWorkers(1);// knock-knock, whos there? ME ME ME ME ME HAHAHA
-                found = true;
-                break;
+                n = wb.FreeWorkers(x);// knock-knock, whos there? ME ME ME ME ME HAHAHA
+                freeWorkers -= n;
+                citizenCount -= n;
+                x -= n;
+                if (x == 0) goto END;
             }
         }
-        if (found)
+        if (x != 0 && worksites != null)
         {
-            if (freeWorkers > 0)
+            foreach (var w in worksites)
             {
-                freeWorkers--;
-                citizenCount--;
-            }
-        }
-        else
-        {
-            if (worksites != null)
-            {
-                foreach (var pw in worksites)
+                n = w.Value?.FreeWorkers(x) ?? 0;
+                if (n != 0)
                 {
-                    pw.Value.FreeWorkers();
-                    if (freeWorkers > 0)
-                    {
-                        freeWorkers--;
-                        citizenCount--;
-                    }
-                    break;
+                    freeWorkers -= n;
+                    citizenCount -= n;
+                    x -= n;
+                    if (x == 0) break;
                 }
             }
         }
-
+        END:
+        if (x != 0) citizensToDisappear += x;
         yield return null;
     }
 
@@ -827,6 +839,21 @@ public sealed class ColonyController : MonoBehaviour
         }
         else return false;
     }
+    public Building GetBuilding(int sid)
+    {
+        if (powerGrid != null && powerGrid.Count > 0)
+        {
+            foreach (var p in powerGrid)
+            {
+                if (p == null) { powerGridRecalculationNeeded = true; continue; }
+                else
+                {
+                    if (p.ID == sid) return p;
+                }
+            }
+        }
+        return null;
+    }
     public int GetBuildingsCount(int sid)
     {
         if (powerGrid == null || powerGrid.Count == 0) return 0;
@@ -1028,9 +1055,9 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(peopleSurplus), 0, 4);
         fs.Write(System.BitConverter.GetBytes(realBirthrate), 0, 4);
         fs.Write(System.BitConverter.GetBytes(birthSpeed), 0, 4); // 5 x 4
-        fs.WriteByte((byte)birthrateMode); // 20
+        fs.WriteByte((byte)birthrateMode); // 21
 
-        if (happinessAffects != null && happinessAffects.Count > 0) // 21
+        if (happinessAffects != null && happinessAffects.Count > 0) // 22
         {
             fs.WriteByte(1);
             fs.WriteByte((byte)happinessAffects.Count);
@@ -1068,7 +1095,7 @@ public sealed class ColonyController : MonoBehaviour
             Worksite.StaticLoad(fs, count);
         }
         //
-        data = new byte[22]; // 20 + 1 + 1- name length
+        data = new byte[22]; // 24+ 1 + 1- name length
         fs.Read(data, 0, data.Length);
         freeWorkers = System.BitConverter.ToInt32(data, 0);
         citizenCount = System.BitConverter.ToInt32(data, 4);

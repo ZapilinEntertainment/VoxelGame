@@ -585,6 +585,7 @@ public class Structure : MonoBehaviour
     }
     public bool IsDestroyed() { return destroyed; }    
     virtual public bool IsIPlanable() { return false; }
+    virtual public bool CanBeRotated() { return true; }
     virtual public void AfterloadRecalculation() { }
    
     virtual public void Prepare()

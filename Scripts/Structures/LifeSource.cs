@@ -8,6 +8,11 @@ public sealed class LifeSource : Structure {
     public const float MAX_HP = 25000;
     private List<Block> dependentBlocks;
 
+    public override bool CanBeRotated()
+    {
+        return false;
+    }
+
     override public void SetBasement(Plane sb, PixelPosByte pos) {
 		if (sb == null) return;
 		SetStructureData(sb,pos);        

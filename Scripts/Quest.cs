@@ -1345,7 +1345,7 @@ public class Quest : MyObject
     }
 
     #region save-load
-    public List<byte> Save()
+    public virtual List<byte> Save()
     {
         var data = new List<byte>() { (byte)type, subIndex };
         int stepsCount = stepsFinished.Length;
@@ -1375,5 +1375,6 @@ public class Quest : MyObject
         }
         return q;
     }
+    
     #endregion
 }

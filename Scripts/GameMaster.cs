@@ -525,7 +525,7 @@ public sealed class GameMaster : MonoBehaviour
         switch (difficulty)
         {
             case Difficulty.Utopia:
-                colonyController.AddCitizens(100);
+                colonyController.AddCitizens(100, true);
                 colonyController.storage.AddResource(ResourceType.metal_K, 100);
                 colonyController.storage.AddResource(ResourceType.metal_M, 100);
                 colonyController.storage.AddResource(ResourceType.metal_E, 50);
@@ -534,7 +534,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * 1.5f * DAYS_IN_MONTH);
                 break;
             case Difficulty.Easy:
-                colonyController.AddCitizens(70);
+                colonyController.AddCitizens(70, true);
                 colonyController.storage.AddResource(ResourceType.metal_K, 100);
                 colonyController.storage.AddResource(ResourceType.metal_M, 60);
                 colonyController.storage.AddResource(ResourceType.metal_E, 30);
@@ -542,7 +542,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH);
                 break;
             case Difficulty.Normal:
-                colonyController.AddCitizens(50);
+                colonyController.AddCitizens(50, true);
                 colonyController.storage.AddResource(ResourceType.metal_K, 100);
                 colonyController.storage.AddResource(ResourceType.metal_M, 50);
                 colonyController.storage.AddResource(ResourceType.metal_E, 20);
@@ -550,7 +550,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH * 0.75f);
                 break;
             case Difficulty.Hard:
-                colonyController.AddCitizens(40);
+                colonyController.AddCitizens(40, true);
                 colonyController.storage.AddResource(ResourceType.metal_K, 50);
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 2);
@@ -558,7 +558,7 @@ public sealed class GameMaster : MonoBehaviour
                 colonyController.storage.AddResource(ResourceType.Food, colonyController.citizenCount * DAYS_IN_MONTH * 0.55f);
                 break;
             case Difficulty.Torture:
-                colonyController.AddCitizens(30);
+                colonyController.AddCitizens(30, true);
                 colonyController.storage.AddResource(ResourceType.metal_K, 40);
                 colonyController.storage.AddResource(ResourceType.metal_M, 20);
                 colonyController.storage.AddResource(ResourceType.metal_E, 10);
@@ -871,7 +871,7 @@ public sealed class GameMaster : MonoBehaviour
         FAIL:
         AnnouncementCanvasController.MakeImportantAnnounce(Localization.GetAnnouncementString(GameAnnouncements.LoadingFailed) + " : data corruption");
         if (soundEnabled) audiomaster.Notify(NotificationSound.SystemError);
-        print(errorReason);
+        Debug.Log(errorReason);
         SetPause(true);
         fs.Close();
         if (debug_noresource) weNeedNoResources = true;

@@ -7,6 +7,7 @@ public sealed class Hotel : Building, IPlanable
     private byte lodgersCount;
     private Block myBlock;
     private Plane upperPlane, bottomPlane;
+    private ColonyController colony;
     private const float RENT = 1f, NEGATIVE_EFFECT_TIMER = 25f;
     private const byte MAX_LODGERS_COUNT = 150;
     private static List<Hotel> hotels;
@@ -20,30 +21,28 @@ public sealed class Hotel : Building, IPlanable
         hotels = new List<Hotel>();
     }
     public static void DistributeLodgers(int x)
-    {
+    {        
         if (hotels != null && hotels.Count > 0)
         {
             int count = hotels.Count;
             if (count == 1)
             {
-                var h = hotels[0];
-                if (h.lodgersCount + x > MAX_LODGERS_COUNT) h.lodgersCount = MAX_LODGERS_COUNT;
-                else h.lodgersCount += (byte)x;
+                if (x > MAX_LODGERS_COUNT) x = MAX_LODGERS_COUNT;
+                hotels[0].AddLodgers((byte)x);
             }
             else
             {
-                int i = Random.Range(0, count);
-                var h = hotels[i];
-                if ( h.lodgersCount + x <= MAX_LODGERS_COUNT) h.lodgersCount += (byte)x;
-                else
+                var h = hotels[Random.Range(0, count)];
+                byte n;
+                if (x > MAX_LODGERS_COUNT) n = MAX_LODGERS_COUNT;
+                else n = (byte)x;
+                x -= n;
+                x += h.AddLodgers(n);
+                if (x > 0)
                 {
-                    x -= MAX_LODGERS_COUNT - h.lodgersCount;
-                    h.lodgersCount = MAX_LODGERS_COUNT;
-                    i += 1;
-                    if (i == count) i = 0;
-                    h = hotels[i];
-                    if (h.lodgersCount + x <= MAX_LODGERS_COUNT) h.lodgersCount += (byte)x;
-                    else h.lodgersCount = MAX_LODGERS_COUNT;
+                    h = hotels[Random.Range(0, count)];
+                    if (x > MAX_LODGERS_COUNT) x = MAX_LODGERS_COUNT;
+                    h.AddLodgers((byte)x);
                 }
             }
         }
@@ -59,6 +58,44 @@ public sealed class Hotel : Building, IPlanable
             "\n" + Localization.GetPhrase(LocalizedPhrase.TotalRent) + ": +" + ((int)(lodgersCount * RENT));
         else return Localization.GetPhrase(LocalizedPhrase.LodgersCount) + ": 0" +
             "\n" + Localization.GetPhrase(LocalizedPhrase.TotalRent) + ": 0";
+    }
+
+    /// <summary>
+    /// returns excess lodgers
+    /// </summary>
+    private int AddLodgers(byte x)
+    {
+        if (x == 0 || lodgersCount == MAX_LODGERS_COUNT) return 0;
+        else {
+            int v = lodgersCount + x, excess;
+            if (v > MAX_LODGERS_COUNT)
+            {
+                x = (byte)(MAX_LODGERS_COUNT - lodgersCount);
+                lodgersCount = MAX_LODGERS_COUNT;
+                excess = v - MAX_LODGERS_COUNT;
+            }
+            else
+            {
+                lodgersCount += x;
+                excess = 0;
+            }
+            colony.AddCitizens(x, false);
+            return excess;
+        }        
+    }
+    private void RemoveLodgers( byte x)
+    {
+        if (x == 0 | lodgersCount == 0) return;
+        if (lodgersCount >= x)
+        {
+            lodgersCount -= x;
+            colony.RemoveCitizens(x, false);
+        }
+        else
+        {
+            colony.RemoveCitizens(lodgersCount, false);
+            lodgersCount = 0;
+        }
     }
 
     //--------
@@ -80,9 +117,10 @@ public sealed class Hotel : Building, IPlanable
     {
         if (b == null) return;
         SetBuildingData(b, pos);
+        var master = GameMaster.realMaster;
         if (!subscribedToUpdate)
         {
-            GameMaster.realMaster.everydayUpdate += EverydayUpdate;
+            master.everydayUpdate += EverydayUpdate;
             subscribedToUpdate = true;           
         }
         if (hotels == null)
@@ -94,6 +132,7 @@ public sealed class Hotel : Building, IPlanable
         {
             if (!hotels.Contains(this)) hotels.Add(this);
         }
+        colony = master.colonyController;
 
         if (!GameMaster.loading) IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, true);
     }
@@ -131,11 +170,7 @@ public sealed class Hotel : Building, IPlanable
             c.AddEnergyCrystals(lodgersCount * RENT * c.happinessCoefficient);
             if (Random.value > c.happinessCoefficient)
             {
-                if (lodgersCount == 1) lodgersCount = 0;
-                else
-                {
-                    lodgersCount -= (byte)(Random.value * 0.5f * lodgersCount);
-                }
+                RemoveLodgers((byte)(Random.value * 0.2f * lodgersCount));
             }
         }
     }

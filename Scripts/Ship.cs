@@ -164,11 +164,11 @@ public sealed class Ship : MonoBehaviour {
 
 	void Update() { 
 		if (GameMaster.gameSpeed == 0 | docked) return;
-        float breakLength = speed * speed / acceleration / 2f, t = Time.deltaTime * GameMaster.gameSpeed;
+        float brakingDistances = speed * speed / acceleration / 2f, t = Time.deltaTime * GameMaster.gameSpeed;
         RaycastHit rh;
-        bool breaking = false;
-        breaking = Physics.Raycast(transform.position + transform.forward * halfLength, transform.forward, out rh, breakLength + halfLength);
-        if (breaking)
+        bool braking = false;
+        braking = Physics.Raycast(transform.position + transform.forward * halfLength, transform.forward, out rh, brakingDistances + halfLength);
+        if (braking)
         {
             if (awaitingTimer == 0) awaitingTimer = AWAITING_TIME;
             awaitingTimer -= t;
@@ -202,7 +202,7 @@ public sealed class Ship : MonoBehaviour {
                     destination = null;
                 }
             }
-            if (breakLength >= dist | breaking) speed = Mathf.MoveTowards(speed, 0, acceleration * 10 * Time.deltaTime * GameMaster.gameSpeed);
+            if (brakingDistances >= dist | braking) speed = Mathf.MoveTowards(speed, 0, acceleration * 10 * Time.deltaTime * GameMaster.gameSpeed);
             else
             {
                 if (speed != START_SPEED) speed = Mathf.MoveTowards(speed, START_SPEED, acceleration * Time.deltaTime * GameMaster.gameSpeed);
@@ -210,7 +210,7 @@ public sealed class Ship : MonoBehaviour {
         }
         else
         {
-            if (!breaking)
+            if (!braking)
             {
                 speed += acceleration * Time.deltaTime * GameMaster.gameSpeed;
                 if (dpointSet) transform.forward = Vector3.RotateTowards(transform.forward, exitDirection, acceleration / 4f * t, 1);

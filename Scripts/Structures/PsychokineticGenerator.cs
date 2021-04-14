@@ -22,10 +22,11 @@ public sealed class PsychokineticGenerator : WorkBuilding
         RecalculateSurplus();
         return w;
     }
-    override public void FreeWorkers(int x)
+    override public int FreeWorkers(int x)
     {
-        base.FreeWorkers(x);
+        var n = base.FreeWorkers(x);
         RecalculateSurplus();
+        return n;
     }
 
     override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)

@@ -343,16 +343,21 @@ public abstract class WorkBuilding : Building, ILabourable
             return x;
         }
     }
-    public void FreeWorkers()
+    public int FreeWorkers()
     {
-        FreeWorkers(workersCount);
+        return FreeWorkers(workersCount);
     }
-    virtual public void FreeWorkers(int x)
+
+    /// <summary>
+    /// returns the count of workers been free
+    /// </summary>
+    public virtual int FreeWorkers(int x)
     {
-        if (workersCount == 0) return;
+        if (workersCount == 0) return 0;
         if (x > workersCount) x = workersCount;
         workersCount -= x;
         colony.AddWorkers(x);
+        return x;
     }
     public int GetWorkersCount() { return workersCount; }
     public int GetMaxWorkersCount() { return maxWorkers; }

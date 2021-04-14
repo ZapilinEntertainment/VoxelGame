@@ -27,7 +27,7 @@ public class UIStructureObserver : UIObserver {
             CheckName();
 			demolishButton.gameObject.SetActive(!s.indestructible);
             sizeField.text = s.surfaceRect.size.ToString() + " x " + s.surfaceRect.size.ToString();
-            if (s.isArtificial & s.ID != Structure.WIND_GENERATOR_1_ID)
+            if (s.CanBeRotated())
             {
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX).gameObject.SetActive(true);
                 transform.GetChild(ROTATE_BUTTON_CHILDINDEX + 1).gameObject.SetActive(true);

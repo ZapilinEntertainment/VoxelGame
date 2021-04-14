@@ -1077,6 +1077,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             }
         }
     }
+
     #endregion
 
    public void MenuButton()

@@ -55,7 +55,10 @@ public abstract class Plant : Structure {
         stage = 0;
         type = GetPlantType();
     }
-
+    public override bool CanBeRotated()
+    {
+        return false;
+    }
     /// <summary>
     /// sets to random position
     /// </summary>

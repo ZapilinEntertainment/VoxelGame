@@ -17,7 +17,7 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest, EnergyStored,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute, InnerRingConstruction
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2755,7 +2755,6 @@ public static partial class Localization
                         case LocalizedPhrase.AskNeedTutorial: return "Не желаете сначала пройти обучение?";
 
                         case LocalizedPhrase.FoundationRoute: return "Путь Основания";
-                        case LocalizedPhrase.InnerRingConstruction: return "Стройка внутреннего кольца";
                         case LocalizedPhrase.EnergyStored: return "Энергии накоплено";
                         default: return "<...>";
                     }
@@ -2869,7 +2868,6 @@ public static partial class Localization
                         case LocalizedPhrase.AskExit: return "Exit game?";
                         case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
                         case LocalizedPhrase.FoundationRoute: return "Foundation Route";
-                        case LocalizedPhrase.InnerRingConstruction: return "Inner ring construction";
                         case LocalizedPhrase.EnergyStored: return "Energy stored";
                         default: return "<...>";
                     }

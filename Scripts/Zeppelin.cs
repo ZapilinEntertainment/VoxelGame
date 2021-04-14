@@ -22,7 +22,7 @@ public sealed class Zeppelin : MonoBehaviour {
 
     public static void CreateNew()
     {
-        Instantiate(Resources.Load<GameObject>("Prefs/Zeppelin"));        
+        Instantiate(Resources.Load<GameObject>("Prefs/Ships/Zeppelin"));        
     }
 
     void Start() {
