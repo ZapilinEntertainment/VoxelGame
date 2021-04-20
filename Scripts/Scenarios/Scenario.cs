@@ -52,6 +52,7 @@ public abstract class Scenario : MyObject
     
     virtual public void OKButton() { }
     virtual public void UIConditionProceedButton() { }
+    virtual public void ScenarioObjectUIDisabled() { }
 
     virtual public void SpecialQuestFilling() { } // for combined strings
     virtual public void SpecialWindowFilling() { }
