@@ -5,23 +5,41 @@ using UnityEngine;
 namespace FoundationRoute
 {
     public sealed class HexBuilder
-    {        
+    {
+        public FoundationRouteScenario scenario { get; private set; }
         private GameObject hexMaquetteExample;
         private HexCanvasUIC uic;
         private Dictionary<(byte, byte), Hex> hexList;        
         private Dictionary<HexPosition, GameObject> maquettesList;
         private List<GameObject> maquettesPool;
-        private int poolLength = 0;
+        private int poolLength = 0;     
 
 
-        public void Prepare()
+        public void Prepare(FoundationRouteScenario frs)
         {
+            scenario = frs;
             hexList = new Dictionary<(byte, byte), Hex>();
             hexMaquetteExample = Resources.Load<GameObject>("Prefs/Special/hexMaquette");
             maquettesPool = new List<GameObject>();
             poolLength = 0;
-            maquettesList = new Dictionary<HexPosition, GameObject>();
+            maquettesList = new Dictionary<HexPosition, GameObject>();            
         }
+
+        public void CountBuildings(ref int[] buildingsCount)
+        {
+            for (int i = 0; i < (int)HexType.TotalCount; i++)
+            {
+                buildingsCount[i] = 0;
+            }
+            if (hexList.Count > 0)
+            {
+                foreach (var h in hexList.Values)
+                {
+                    buildingsCount[(int)h.type]++;
+                }
+            }
+        }
+        
 
         public void CreateHexMaquette(HexPosition hpos)
         {
@@ -44,9 +62,11 @@ namespace FoundationRoute
             if (uic == null)
             {
                 uic = Object.Instantiate(Resources.Load<GameObject>("UIPrefs/hexCanvas")).transform.GetChild(0).GetChild(0).GetComponent<HexCanvasUIC>();
+                uic.Prepare(this);
             }
             uic.OpenConstructionWindow(hpos);
         }
+
 
     }
 }

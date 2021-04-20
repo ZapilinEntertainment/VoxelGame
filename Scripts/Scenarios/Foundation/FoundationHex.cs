@@ -436,7 +436,7 @@ namespace FoundationRoute
     public enum HexType : byte { Residential,ResidentialDense, ResidentialEco, Commercial, CommercialDense,
     Fields, AdvancedFields, Forest, Mountain, Lake, Industrial, IndustrialExperimental, Powerplant, TotalCount }
 
-    public sealed class HexBuildingStats
+    public sealed class HexBuildingStats : MyObject
     {
         public readonly float powerConsumption;
         public readonly int personnel;
@@ -448,6 +448,11 @@ namespace FoundationRoute
         public readonly string name;
         public readonly string description;
         private readonly HexType htype;
+
+        protected override bool IsEqualNoCheck(object obj)
+        {
+            return htype == (obj as HexBuildingStats).htype;
+        }
 
         private static HexBuildingStats[] allstats;
 
@@ -468,6 +473,7 @@ namespace FoundationRoute
             return allstats[index];
         }
 
+        private HexBuildingStats() { }
         private HexBuildingStats(HexType type) 
         {
             const float pwr = 1f, m = 1f, lp = 1f, f = 1f;
