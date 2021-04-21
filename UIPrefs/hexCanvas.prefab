@@ -557,7 +557,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.16800001}
   m_AnchorMin: {x: 0.10635463, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.46, y: -0.13999939}
+  m_AnchoredPosition: {x: 4.4600067, y: -0.13999939}
   m_SizeDelta: {x: -8.902954, y: -1.7010612}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &407985194791394421
@@ -635,7 +635,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.10635463, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.43, y: -0.14947128}
+  m_AnchoredPosition: {x: 4.4299927, y: -0.14947128}
   m_SizeDelta: {x: -8.86232, y: -1.7010612}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6060249257757056623
@@ -868,7 +868,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8335455300917025998}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 5
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1010493927682216628
 GameObject:
   m_ObjectHideFlags: 0
@@ -1102,7 +1113,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 263025826069621349}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1669441852064124927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1434,7 +1456,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2039157019031003767}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2233337707090575870
 GameObject:
   m_ObjectHideFlags: 0
@@ -1735,7 +1768,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8038824003600861113}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 8
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2654820254124840614
 GameObject:
   m_ObjectHideFlags: 0
@@ -1924,7 +1968,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.1, y: 0}
   m_AnchorMax: {x: 0.9, y: 0.16869938}
-  m_AnchoredPosition: {x: 0, y: 0.040008545}
+  m_AnchoredPosition: {x: 0, y: 0.040039062}
   m_SizeDelta: {x: -0.0000038146973, y: 0.0827713}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8709145776727580789
@@ -2006,7 +2050,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 148787326501349074}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2992496768436501660
 GameObject:
   m_ObjectHideFlags: 0
@@ -2298,7 +2353,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.149, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0009689331, y: 0.000005722046}
+  m_AnchoredPosition: {x: -0.0009613037, y: 0.0000076293945}
   m_SizeDelta: {x: -0.0019378662, y: -4.663273}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4183151707951716717
@@ -2596,7 +2651,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.16800001}
   m_AnchorMin: {x: 0.10635463, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.46, y: -0.13999939}
+  m_AnchoredPosition: {x: 4.4600067, y: -0.13999939}
   m_SizeDelta: {x: -8.902954, y: -1.7010612}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &287932415829298340
@@ -2829,7 +2884,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4345354479084908782}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &3766754199326461210
 GameObject:
   m_ObjectHideFlags: 0
@@ -3168,7 +3234,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3976421863902550007}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 9
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &4043372470897405435
 GameObject:
   m_ObjectHideFlags: 0
@@ -3274,7 +3351,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.72187597}
   m_AnchorMax: {x: 1, y: 0.938}
-  m_AnchoredPosition: {x: 1.0196, y: -2.24}
+  m_AnchoredPosition: {x: 1.0195923, y: -2.2400208}
   m_SizeDelta: {x: -6.1175995, y: -3.9861603}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7364483635337990360
@@ -3436,7 +3513,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2958511266910530706}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &4375288243884931166
 GameObject:
   m_ObjectHideFlags: 0
@@ -3555,7 +3643,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 9186119795099074800}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 12
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &4383526768673354276
 GameObject:
   m_ObjectHideFlags: 0
@@ -3671,6 +3770,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   constructionWindow: {fileID: 372057046366540179}
   statsPanel: {fileID: 286324564644594542}
+  costLines:
+  - {fileID: 2438933437849474621}
+  - {fileID: 2655095699631034760}
+  - {fileID: 2233337707090575870}
+  - {fileID: 8298342394835064123}
+  - {fileID: 6014836357414814702}
+  buildButton: {fileID: 0}
+  buildingButtons:
+  - {fileID: 6180220849809661401}
+  - {fileID: 7922138432731016588}
+  - {fileID: 5847736945783780798}
+  - {fileID: 3028641440159253216}
+  - {fileID: 4676416710341281573}
+  - {fileID: 6050747334694751844}
+  - {fileID: 3456912215987262101}
+  - {fileID: 6968028534817988041}
+  - {fileID: 5250143346343141597}
+  - {fileID: 7792397785047964230}
+  - {fileID: 6006184985984819016}
+  - {fileID: 5911991457261069175}
+  - {fileID: 8205567976459314042}
+  stats:
+  - {fileID: 340951537023196841}
+  - {fileID: 1928539812429852981}
+  - {fileID: 6502584820694835397}
+  - {fileID: 6250821737957036547}
+  - {fileID: 6006721959170110523}
+  - {fileID: 407686956511669096}
+  nameField: {fileID: 7806544939333006297}
+  descriptionField: {fileID: 1967817913926330646}
+  conditionLine0: {fileID: 6597644394922962234}
+  conditionLine1: {fileID: 3201795608713525408}
 --- !u!1 &4563776026744343878
 GameObject:
   m_ObjectHideFlags: 0
@@ -3816,7 +3947,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.2}
   m_AnchorMax: {x: 1, y: 0.72187597}
-  m_AnchoredPosition: {x: 0, y: -0.12000275}
+  m_AnchoredPosition: {x: 0, y: -0.11999512}
   m_SizeDelta: {x: 0, y: -0.23596191}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &5016866560806414968
@@ -3937,7 +4068,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 463310829903754626}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 10
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &5027633608134740083
 GameObject:
   m_ObjectHideFlags: 0
@@ -4205,7 +4347,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 715630552648537229}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 11
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &5353387364403013688
 GameObject:
   m_ObjectHideFlags: 0
@@ -4240,7 +4393,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.938}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000015258789, y: -1.2829895}
+  m_AnchoredPosition: {x: -0.000030517578, y: -1.2829895}
   m_SizeDelta: {x: -4.07843, y: -2.5659351}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8493172650186204845
@@ -4521,7 +4674,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4212416838222828517}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &5870239892755258775
 GameObject:
   m_ObjectHideFlags: 0
@@ -4779,7 +4943,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.16800001}
   m_AnchorMin: {x: 0.10635463, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.46, y: -0.13999939}
+  m_AnchoredPosition: {x: 4.4600067, y: -0.13999939}
   m_SizeDelta: {x: -8.902954, y: -1.7010612}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1942763748730405668
@@ -4894,7 +5058,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.3}
-  m_AnchoredPosition: {x: -0.000045776367, y: -0.00022888184}
+  m_AnchoredPosition: {x: -0.000061035156, y: -0.00024414062}
   m_SizeDelta: {x: 0.000061035156, y: -0.00048828125}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6253271439013179615
@@ -5015,7 +5179,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 378408044817789477}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 6
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &6331030757684422172
 GameObject:
   m_ObjectHideFlags: 0
@@ -5585,10 +5760,21 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1447220180988681865}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: CloseButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1447220180988681865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5651,7 +5837,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 1, y: 0.8671417}
-  m_AnchoredPosition: {x: -6.062523, y: 6.027008}
+  m_AnchoredPosition: {x: -6.0625305, y: 6.0269775}
   m_SizeDelta: {x: -12.125046, y: -10.943176}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6922811332908613571
@@ -5688,7 +5874,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.35, y: 0.27400002}
-  m_AnchoredPosition: {x: 0, y: 0.037000656}
+  m_AnchoredPosition: {x: 0, y: 0.037002563}
   m_SizeDelta: {x: 0, y: 0.07414627}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1652911646656448920
@@ -5870,7 +6056,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.5, y: 0.8177611}
-  m_AnchoredPosition: {x: 6.062607, y: 5.4747}
+  m_AnchoredPosition: {x: 6.062622, y: 5.4746704}
   m_SizeDelta: {x: -12.125092, y: -10.949402}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &7192066441087906480
@@ -6343,7 +6529,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.149, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0009689331, y: 0.000005722046}
+  m_AnchoredPosition: {x: -0.0009613037, y: 0.0000076293945}
   m_SizeDelta: {x: -0.0019378662, y: -4.663273}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7658047840098060429
@@ -6647,7 +6833,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4425356514411669276}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 533282828803779730}
+        m_MethodName: BuildButton
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 7
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8298342394835064123
 GameObject:
   m_ObjectHideFlags: 0
@@ -6981,7 +7178,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.025, y: 0.8671417}
   m_AnchorMax: {x: 0.9775, y: 0.9713806}
-  m_AnchoredPosition: {x: 0.69999695, y: 0.024383545}
+  m_AnchoredPosition: {x: 0.7000122, y: 0.024383545}
   m_SizeDelta: {x: -2.8502197, y: 0.048755646}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &9000369972359861073
@@ -7204,7 +7401,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.16800001}
   m_AnchorMin: {x: 0.10635463, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.46, y: -0.13999939}
+  m_AnchoredPosition: {x: 4.4600067, y: -0.13999939}
   m_SizeDelta: {x: -8.902954, y: -1.7010612}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1632488019965234296

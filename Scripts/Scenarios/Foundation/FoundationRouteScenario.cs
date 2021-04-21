@@ -102,9 +102,10 @@ public sealed class FoundationRouteScenario : Scenario
     {
         if (currentStep == FoundationScenarioStep.InnerRingBuilding && (subscenario == null || subscenario.completed)) Next();
     }    
-    public void LoadHexConditionsStrings(out string s)
+    public void LoadHexInfo(out string[] conditionInfo, out string[] buildingsInfo)
     {
-
+        conditionInfo = new string[1];
+        buildingsInfo = new string[1];
     }
 
     public override void EndScenario()

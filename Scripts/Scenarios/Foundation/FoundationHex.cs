@@ -445,8 +445,6 @@ namespace FoundationRoute
         public readonly float foodProduction;
         public readonly int housing;
         private readonly ResourceContainer[] cost;
-        public readonly string name;
-        public readonly string description;
         private readonly HexType htype;
 
         protected override bool IsEqualNoCheck(object obj)
@@ -487,6 +485,12 @@ namespace FoundationRoute
                     lifepower = -1f * lp;
                     foodProduction = -10f * f;
                     housing = 10 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 1000f),
+                        new ResourceContainer(ResourceType.metal_K, 180f),
+                        new ResourceContainer(ResourceType.Plastics, 1500f)
+                    };
                     break;
                 case HexType.ResidentialDense:
                     powerConsumption = 10f * pwr;
@@ -495,6 +499,12 @@ namespace FoundationRoute
                     lifepower = -2f * lp;
                     foodProduction = -22f * f;
                     housing = 15 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.metal_P, 250f),
+                        new ResourceContainer(ResourceType.metal_K, 300f),
+                        new ResourceContainer(ResourceType.Plastics, 2000f)
+                    };
                     break;
                 case HexType.ResidentialEco:
                     powerConsumption = 2f * pwr;
@@ -503,6 +513,14 @@ namespace FoundationRoute
                     lifepower = 0f;
                     foodProduction = -9f * f;
                     housing = 8 * h;
+                    cost = new ResourceContainer[5]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 800f),
+                        new ResourceContainer(ResourceType.metal_K, 100f),
+                        new ResourceContainer(ResourceType.Plastics, 800f),
+                        new ResourceContainer(ResourceType.metal_E, 200f),
+                        new ResourceContainer(ResourceType.Graphonium, 25f),                        
+                    };
                     break;
                 case HexType.Commercial:
                     powerConsumption = 15f * pwr;
@@ -511,6 +529,13 @@ namespace FoundationRoute
                     lifepower = -5f * lp;
                     foodProduction = -4f * f;
                     housing = 0;
+                    cost = new ResourceContainer[4]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 2000f),
+                        new ResourceContainer(ResourceType.metal_K, 700f),
+                        new ResourceContainer(ResourceType.Plastics, 4000f),
+                        new ResourceContainer(ResourceType.metal_E, 250f)
+                    };
                     break;
                 case HexType.CommercialDense:
                     powerConsumption = 30f * pwr;
@@ -519,6 +544,13 @@ namespace FoundationRoute
                     lifepower = -8f * lp;
                     foodProduction = -8f * f;
                     housing = 0;
+                    cost = new ResourceContainer[4]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 3000f),
+                        new ResourceContainer(ResourceType.metal_K, 1000f),
+                        new ResourceContainer(ResourceType.Plastics, 6500f),
+                        new ResourceContainer(ResourceType.metal_E, 700f)
+                    };
                     break;
                 case HexType.Fields:
                     powerConsumption = 1f * pwr;
@@ -527,6 +559,12 @@ namespace FoundationRoute
                     lifepower = 2f * lp;
                     foodProduction = 25f * f;
                     housing = 1 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.Dirt, 5000f),
+                        new ResourceContainer(ResourceType.metal_K, 200f),
+                        new ResourceContainer(ResourceType.metal_M, 300f)                        
+                    };
                     break;
                 case HexType.AdvancedFields:
                     powerConsumption = 1.5f * pwr;
@@ -535,6 +573,14 @@ namespace FoundationRoute
                     lifepower = 5f * lp;
                     foodProduction = 20f * f;
                     housing = 1* h;
+                    cost = new ResourceContainer[5]
+                    {
+                        new ResourceContainer(ResourceType.Dirt, 5000f),
+                        new ResourceContainer(ResourceType.metal_K, 400f),
+                        new ResourceContainer(ResourceType.metal_M, 300f),
+                        new ResourceContainer(ResourceType.metal_N_ore, 500f),
+                        new ResourceContainer(ResourceType.mineral_F, 500f)
+                    };
                     break;
                 case HexType.Forest:
                     powerConsumption = 1.5f * pwr;
@@ -543,6 +589,12 @@ namespace FoundationRoute
                     lifepower = 10f * lp;
                     foodProduction = 5f * f;
                     housing = 1 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.Dirt, 4000f),
+                        new ResourceContainer(ResourceType.Lumber, 800f),
+                        new ResourceContainer(ResourceType.mineral_F, 300f)
+                    };
                     break;
                 case HexType.Mountain:
                     powerConsumption = 0f;
@@ -551,6 +603,12 @@ namespace FoundationRoute
                     lifepower = 7f * lp;
                     foodProduction = f;
                     housing = 1 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.Dirt, 1000f),
+                        new ResourceContainer(ResourceType.Stone, 6000f),
+                        new ResourceContainer(ResourceType.mineral_L, 700f)
+                    };
                     break;
                 case HexType.Lake:
                     powerConsumption = 1f;
@@ -559,6 +617,12 @@ namespace FoundationRoute
                     lifepower = 12f * lp;
                     foodProduction = 7f * f;
                     housing = 1 * h;
+                    cost = new ResourceContainer[3]
+                    {
+                        new ResourceContainer(ResourceType.Dirt, 1000f),
+                        new ResourceContainer(ResourceType.Stone, 1000f),
+                        new ResourceContainer(ResourceType.metal_N, 200f)
+                    };
                     break;
                 case HexType.Industrial:
                     powerConsumption = 30f * pwr;
@@ -567,6 +631,13 @@ namespace FoundationRoute
                     lifepower = -30f * lp;
                     foodProduction = -2f * f;
                     housing = 0;
+                    cost = new ResourceContainer[4]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 6000f),
+                        new ResourceContainer(ResourceType.metal_K, 2200f),
+                        new ResourceContainer(ResourceType.metal_M, 1500f),
+                        new ResourceContainer(ResourceType.metal_E, 600f)
+                    };
                     break;
                 case HexType.IndustrialExperimental:
                     powerConsumption = 52f * pwr;
@@ -575,6 +646,14 @@ namespace FoundationRoute
                     lifepower = -21f * lp;
                     foodProduction = -2f * f;
                     housing = 0;
+                    cost = new ResourceContainer[5]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 5000f),
+                        new ResourceContainer(ResourceType.metal_K, 2000f),
+                        new ResourceContainer(ResourceType.metal_M, 2000f),
+                        new ResourceContainer(ResourceType.metal_E, 1000f),
+                        new ResourceContainer(ResourceType.Graphonium, 200f),
+                    };
                     break;
                 case HexType.Powerplant:
                     powerConsumption = -70f * pwr;
@@ -583,8 +662,21 @@ namespace FoundationRoute
                     lifepower = -14f * lp;
                     foodProduction = -1f * f;
                     housing = 1 * h;
+                    cost = new ResourceContainer[5]
+                    {
+                        new ResourceContainer(ResourceType.Concrete, 3000f),
+                        new ResourceContainer(ResourceType.metal_K, 1000f),
+                        new ResourceContainer(ResourceType.metal_M, 900f),
+                        new ResourceContainer(ResourceType.metal_E, 1000f),
+                        new ResourceContainer(ResourceType.metal_N, 500f),
+                    };
                     break;
             }
+        }
+
+        public ResourceContainer[] GetCost()
+        {
+            return cost;
         }
     }
 

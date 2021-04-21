@@ -8,28 +8,35 @@ namespace FoundationRoute
     public sealed class HexCanvasUIC : MonoBehaviour
     {
         [SerializeField] private GameObject constructionWindow, statsPanel;
+        [SerializeField] private GameObject[] costLines;
+        [SerializeField] private Button buildButton;
         [SerializeField] private Button[] buildingButtons;
         [SerializeField] private Text[] stats;
+        [SerializeField] private Text nameField, descriptionField;
         [SerializeField] private Transform conditionLine0, conditionLine1;
         private HexBuilder hexBuilder;
         private HexPosition selectedPosition;
         private HexType selectedType = HexType.Residential;
+        private ColonyController colony;
         private int[] buildingsCount = new int[(int)HexType.TotalCount];
         private int livingQuartersCount, commCount, natureCount, indCount;
         private BitArray availabilityMask = new BitArray((int)HexType.TotalCount, true);
-        private readonly Rect taskIncompletedRect = UIController.GetIconUVRect(Icons.TaskFrame),
-            taskCompletedRect = UIController.GetIconUVRect(Icons.TaskCompleted);
-        private string[] conditionStrings;
+        private Rect taskIncompletedRect, taskCompletedRect;
+        private string[] conditionStrings, buildingsInfo;
         private const byte RES2_LQ_COUNT = 2, RES3_NAT_COUNT = 2, COM2_COM_COUNT = 2, PP_LQ_COUNT = 3;
 
 
         public void Prepare(HexBuilder hb)
         {
             hexBuilder = hb;
+            colony = GameMaster.realMaster.colonyController;
             constructionWindow.SetActive(false);
             statsPanel.SetActive(false);
             buildingsCount = new int[(int)HexType.TotalCount];
             RecalculateAvailabilityMask();
+            hexBuilder.scenario.LoadHexInfo(out conditionStrings, out buildingsInfo);
+            taskIncompletedRect = UIController.GetIconUVRect(Icons.TaskFrame);
+            taskCompletedRect = UIController.GetIconUVRect(Icons.TaskCompleted);
         }
         private void RecalculateAvailabilityMask()
         {
@@ -119,6 +126,12 @@ namespace FoundationRoute
                     break;
             }
         }
+        private void WriteBuildingInfo(HexType type, Text name, Text description)
+        {
+            int index = ((int)type) * 2;
+            name.text = buildingsInfo[index];
+            description.text = buildingsInfo[index + 1];
+        }
 
         public void OpenConstructionWindow(HexPosition hpos)
         {
@@ -129,7 +142,7 @@ namespace FoundationRoute
         private void RedrawConstructionWindow()
         {
             int selected = (int)selectedType;
-            bool buildingAvailable = availabilityMask[selected];
+            bool buildingAvailable = availabilityMask[selected], buildConditionsMet = true;
             for (int i = 0; i< (int)HexType.TotalCount; i++)
             {
                 if (availabilityMask[i])
@@ -219,11 +232,70 @@ namespace FoundationRoute
                     WriteConditionsText(t, selectedType, 1);
                     conditionLine1.gameObject.SetActive(true);
                 }
+
+                buildConditionsMet = (a == null) || ((a == true) & ((b == null) | (b == true)));
                 #endregion
             
             }
             //right panel:
+            {
+                WriteBuildingInfo(selectedType, nameField, descriptionField);
+                var cost = hbs.GetCost();
+                int rcount = cost.GetLength(0), rid, costConditionsMet = 0;
+                GameObject g;
+                Transform t;
+                Text label;
+                Storage storage = colony.storage;
+                ResourceContainer rc;
+                void FillCostString(int i)
+                {
+                    g = costLines[0];
+                    rc = cost[i];
+                    rid = rc.resourceID;
+                    t = g.transform;
+                    t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(rid);
+                    label = t.GetChild(1).GetComponent<Text>();
+                    label.text = Localization.GetResourceName(rid);
+                    if (storage.GetResourceCount(rid) >= rc.volume)
+                    {
+                        label.color = Color.white;
+                        costConditionsMet++;
+                    }
+                    else label.color = Color.red;
+                    g.SetActive(true);
+                }
+                FillCostString(0);
+                FillCostString(1);
+                FillCostString(2);
+                if (rcount > 3)
+                {
+                    FillCostString(3);
+                    if (rcount > 4) FillCostString(4);
+                    else
+                    {
+                        costLines[4].gameObject.SetActive(false);
+                    }
+                }
+                else
+                {
+                    costLines[3].gameObject.SetActive(false);
+                    costLines[4].gameObject.SetActive(false);
+                }
 
+                buildButton.interactable = buildConditionsMet & (costConditionsMet == rcount);
+            }
+        }
+
+        public void BuildButton(int i)
+        {
+            selectedType = (HexType)i;
+            RedrawConstructionWindow();
+        }
+        public void BuildButton()
+        {
+
+        }
+        public void CloseButton() {
 
         }
     }

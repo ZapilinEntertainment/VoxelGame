@@ -179,6 +179,7 @@ public sealed class ResourceType
 public struct ResourceContainer
 {
     public readonly ResourceType type;
+    public int resourceID { get { return type.ID; } }
     public readonly float volume;
     public static readonly ResourceContainer Empty;
 
