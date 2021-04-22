@@ -3776,7 +3776,7 @@ MonoBehaviour:
   - {fileID: 2233337707090575870}
   - {fileID: 8298342394835064123}
   - {fileID: 6014836357414814702}
-  buildButton: {fileID: 0}
+  buildButton: {fileID: 8013014646331626630}
   buildingButtons:
   - {fileID: 6180220849809661401}
   - {fileID: 7922138432731016588}

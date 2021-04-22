@@ -1,4 +1,4 @@
-2 22
+2 51
 [01]We decided that our population will be our stability. Our people are many, and united we stand tall. So lets transform our small home into a powerful country!
 [02]For owning our own lands we will need a lot of resources, workpower and transport mechanisms. At first we need an
 [03]. This massive construction needs a very powerful energy source with a 3x3 free space and of course you shall build it on the bottom side of the island.
@@ -20,3 +20,34 @@
 [19]Colonists arrived:
 [20]Outer ring construction includes both building and colonizing. Be sure that you match <conditions>!
 [21]Outer ring construction
+-
+[22]Residential
+[23]Basic residential hex. Boosts Commercial and Industrial districts.
+[24]Dense residential
+[25]Densed residential area, more require to resources and infrastructure.
+[26]Eco Residential
+[27]Living quarters mixed with park zones. Affects on nature less destructive.
+[28]Commercial
+[29]Commercial zone is a trade spot for your citizens and industry.
+[30]Dense Commercial
+[31]Dense commercial zone is much mre efficient and busy. For massive trade activity.
+[32]Fields
+[33]Standart agricultural zone, which fed your colonists. Try not to build them close to Industry.
+[34]AdvancedFields
+[35]Field with specialized plants cultivating. Will increase industry income, by lifepower cost.
+[36]Forest
+[37]Mountain
+[38]Lake
+[39]A place of nature.
+[40]Industrial
+[41]Different facilities, supporting your colonists, and also supplying trade ships.
+[42]Experimental Industrial
+[43]High-tech machinery with research labs- the place where future forges.
+[44]Powerplant
+[45]Supplies newfound colony, make them more independent frmm island energy grid. 
+[46]Total count
+-
+[47]Residential areas
+[48]Commercial areas
+[49]Nature hexes
+[50]Industrial areas

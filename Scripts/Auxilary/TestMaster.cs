@@ -20,7 +20,9 @@ public class TestMaster : MonoBehaviour
     private void Awake()
     {
         emaster = GameMaster.realMaster.environmentMaster;
-        selectedPreset = Environment.EnvironmentPreset.Default;       
+        selectedPreset = Environment.EnvironmentPreset.Default;    
+        
+
     }
 
     private void Start()

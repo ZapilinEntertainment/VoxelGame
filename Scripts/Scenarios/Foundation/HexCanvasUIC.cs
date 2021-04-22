@@ -23,7 +23,8 @@ namespace FoundationRoute
         private BitArray availabilityMask = new BitArray((int)HexType.TotalCount, true);
         private Rect taskIncompletedRect, taskCompletedRect;
         private string[] conditionStrings, buildingsInfo;
-        private const byte RES2_LQ_COUNT = 2, RES3_NAT_COUNT = 2, COM2_COM_COUNT = 2, PP_LQ_COUNT = 3;
+        private const byte RES2_LQ_COUNT = 2, RES3_NAT_COUNT = 2, COM2_COM_COUNT = 2, PP_LQ_COUNT = 3, IND_EXP_NAME_INDEX = 20,
+            MOUNTAIN_NAME_INDEX = 15, POWERPLANT_NAME_INDEX = 22,RESIDENTIAL_ECO_NAME_INDEX = 4;
 
 
         public void Prepare(HexBuilder hb)
@@ -100,43 +101,101 @@ namespace FoundationRoute
             switch (htype)
             {
                 case HexType.ResidentialDense:
-                    if (stage == 0) t.text = conditionStrings[0] + ' ' + livingQuartersCount.ToString() + '/' + RES2_LQ_COUNT.ToString();
-                    else t.text = conditionStrings[1];
+                    if (stage == 0) t.text = conditionStrings[0] + ": " + livingQuartersCount.ToString() + '/' + RES2_LQ_COUNT.ToString();
+                    else t.text = conditionStrings[1] + ": " + commCount.ToString() +"/1";
                     break;
                 case HexType.ResidentialEco:
-                    t.text = conditionStrings[2] + ' ' + natureCount.ToString() + '/' + RES3_NAT_COUNT.ToString();
+                    t.text = conditionStrings[2] + ": " + natureCount.ToString() + '/' + RES3_NAT_COUNT.ToString();
                     break;
                 case HexType.CommercialDense:
-                    if (stage == 0) t.text = conditionStrings[3] + ' ' + commCount.ToString() + '/' + COM2_COM_COUNT.ToString();
-                    else t.text = conditionStrings[4];
+                    if (stage == 0) t.text = conditionStrings[1] + ": " + commCount.ToString() + '/' + COM2_COM_COUNT.ToString();
+                    else t.text = conditionStrings[3] + ": " + indCount.ToString() + "/1";
                     break;
                 case HexType.AdvancedFields:
-                    if (stage == 0) t.text = conditionStrings[5];
-                    else t.text = conditionStrings[6];
+                    if (stage == 0) t.text = buildingsInfo[IND_EXP_NAME_INDEX];
+                    else t.text = buildingsInfo[MOUNTAIN_NAME_INDEX];
                     break;
                 case HexType.Mountain:
-                    t.text = conditionStrings[7];
+                    t.text = conditionStrings[3] + ": " + indCount.ToString() + "/1";
                     break;
                 case HexType.IndustrialExperimental:
-                    if (stage == 0) t.text = conditionStrings[8];
-                    else t.text = conditionStrings[9];
+                    if (stage == 0) t.text = buildingsInfo[POWERPLANT_NAME_INDEX];
+                    else t.text = buildingsInfo[RESIDENTIAL_ECO_NAME_INDEX];
                     break;
                 case HexType.Powerplant:
-                    t.text = conditionStrings[10] + ' ' + livingQuartersCount.ToString() + '/' + PP_LQ_COUNT.ToString();
+                    t.text = conditionStrings[0] + ": " + livingQuartersCount.ToString() + '/' + PP_LQ_COUNT.ToString();
                     break;
             }
         }
         private void WriteBuildingInfo(HexType type, Text name, Text description)
         {
-            int index = ((int)type) * 2;
-            name.text = buildingsInfo[index];
-            description.text = buildingsInfo[index + 1];
+            switch (type)
+            {
+                case HexType.Residential:
+                    name.text = buildingsInfo[0];
+                    description.text = buildingsInfo[1];
+                    break;
+                case HexType.ResidentialDense:
+                    name.text = buildingsInfo[2];
+                    description.text = buildingsInfo[3];
+                    break;
+                case HexType.ResidentialEco:
+                    name.text = buildingsInfo[RESIDENTIAL_ECO_NAME_INDEX];
+                    description.text = buildingsInfo[5];
+                    break;
+                case HexType.Commercial:
+                    name.text = buildingsInfo[6];
+                    description.text = buildingsInfo[7];
+                    break;
+                case HexType.CommercialDense:
+                    name.text = buildingsInfo[8];
+                    description.text = buildingsInfo[9];
+                    break;
+                case HexType.Fields:
+                    name.text = buildingsInfo[10];
+                    description.text = buildingsInfo[11];
+                    break;
+                case HexType.AdvancedFields:
+                    name.text = buildingsInfo[12];
+                    description.text = buildingsInfo[13];
+                    break;
+                case HexType.Forest:
+                    name.text = buildingsInfo[14];
+                    description.text = buildingsInfo[17];
+                    break;
+                case HexType.Mountain:
+                    name.text = buildingsInfo[MOUNTAIN_NAME_INDEX];
+                    description.text = buildingsInfo[17];
+                    break;
+                case HexType.Lake:
+                    name.text = buildingsInfo[16];
+                    description.text = buildingsInfo[17];
+                    break;
+                case HexType.Industrial:
+                    name.text = buildingsInfo[18];
+                    description.text = buildingsInfo[19];
+                    break;
+                case HexType.IndustrialExperimental:
+                    name.text = buildingsInfo[IND_EXP_NAME_INDEX];
+                    description.text = buildingsInfo[21];
+                    break;
+                case HexType.Powerplant:
+                    name.text = buildingsInfo[POWERPLANT_NAME_INDEX];
+                    description.text = buildingsInfo[23];
+                    break;
+                case HexType.TotalCount:
+                    name.text = buildingsInfo[24];
+                    if (description != null) { description.text = buildingsInfo[24]; }
+                    break;
+            }
+
         }
 
         public void OpenConstructionWindow(HexPosition hpos)
         {
             if (!constructionWindow.activeSelf) constructionWindow.SetActive(true);
             selectedPosition = hpos;
+            RedrawConstructionWindow();
         }
 
         private void RedrawConstructionWindow()
@@ -154,7 +213,9 @@ namespace FoundationRoute
                     buildingButtons[i].GetComponent<Image>().color = Color.grey;
                 }
             }
-            HexBuildingStats hbs = HexBuildingStats.GetStats(selectedType);
+            HexBuildingStats hbs = new HexBuildingStats(selectedType);
+            bool?[] affectionsList;
+            hbs.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
             #region left panel
             float pc = hbs.powerConsumption;
             Text s;
@@ -162,23 +223,68 @@ namespace FoundationRoute
             else {
                 s = stats[0];
                 s.text = (pc > 0f ? '-' : '+') + string.Format("{0:0.##}", pc);
+                if (affectionsList[0] == null) s.color = Color.white;
+                else
+                {
+                    if (affectionsList[0] == true) s.color = Color.green;
+                    else s.color = Color.red;
+                }
                 if (!s.enabled) s.enabled = true;
             }
-            stats[1].text = hbs.personnel.ToString();
+            //
+            s = stats[1];
+            s.text = hbs.personnel.ToString();
+            if (affectionsList[1] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[1] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            //
             pc = hbs.income;
-            if (pc > 0f) stats[2].text = '+' + string.Format("{0:0.##}", pc);
-            else stats[2].text = string.Format("{0:0.##}", pc);
+            s = stats[2];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[2] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[2] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            //
             pc = hbs.lifepower;
-            if (pc > 0f) stats[3].text = '+' + string.Format("{0:0.##}", pc);
-            else stats[3].text = string.Format("{0:0.##}", pc);
+            s = stats[3];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[3] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[3] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            //
             pc = hbs.foodProduction;
-            if (pc > 0f) stats[4].text = '+' + string.Format("{0:0.##}", pc);
-            else stats[4].text = string.Format("{0:0.##}", pc);
+            s = stats[4];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[4] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[4] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            //
             s = stats[5];
             if (hbs.housing == 0) s.enabled = false;
             else
             {
                 s.text = hbs.housing.ToString();
+                if (affectionsList[5] == null) s.color = Color.white;
+                else
+                {
+                    if (affectionsList[5] == true) s.color = Color.green;
+                    else s.color = Color.red;
+                }
                 if (!s.enabled) s.enabled = true;
             }
               //-conditions
@@ -249,7 +355,7 @@ namespace FoundationRoute
                 ResourceContainer rc;
                 void FillCostString(int i)
                 {
-                    g = costLines[0];
+                    g = costLines[i];
                     rc = cost[i];
                     rid = rc.resourceID;
                     t = g.transform;
@@ -282,7 +388,16 @@ namespace FoundationRoute
                     costLines[4].gameObject.SetActive(false);
                 }
 
-                buildButton.interactable = buildConditionsMet & (costConditionsMet == rcount);
+                if (buildConditionsMet & (costConditionsMet == rcount))
+                {
+                    buildButton.interactable = true;
+                    buildButton.GetComponentInChildren<Text>().color = Color.white;
+                }
+                else
+                {
+                    buildButton.interactable = false;
+                    buildButton.GetComponentInChildren<Text>().color = Color.grey;
+                }
             }
         }
 
@@ -296,7 +411,7 @@ namespace FoundationRoute
 
         }
         public void CloseButton() {
-
+            constructionWindow.SetActive(false);
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum ChosenObjectType : byte { None, Plane, Structure, Worksite }
+public enum ChosenObjectType : byte { None, Plane, Structure, Worksite, Clickable }
 
 public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCenter, Settlement }
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
@@ -61,9 +61,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     private Structure chosenStructure;
     private Storage storage;
     public UIObserver workingObserver { get; private set; }
-    Worksite chosenWorksite;
-    ChosenObjectType selectedObjectType;
-    Transform selectionFrame; Material selectionFrameMaterial;
+    private Worksite chosenWorksite;
+    private ChosenObjectType selectedObjectType;
+    private Transform selectionFrame; private Material selectionFrameMaterial;
+    private ClickableObject selectedClickable;
 
     private const int RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
     private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
@@ -503,6 +504,16 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                         else ChangeChosenObject(ChosenObjectType.None);
                     }
                     break;
+                case ClickableObject.CLICKABLE_TAG:
+                    {
+                        selectedClickable = collided.GetComponent<ClickableObject>();
+                        if (selectedClickable != null)
+                        {
+                            selectedClickable.Clicked();
+                            ChangeChosenObject(ChosenObjectType.Clickable);
+                        }
+                        break;
+                    }
                 default:
                     if (collided.transform.parent != null)
                     {
@@ -552,8 +563,14 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             workingObserver.ShutOff();
             workingObserver = null;
         }
+        bool clickable = newChosenType == ChosenObjectType.Clickable;
+        if (!clickable && selectedClickable != null)
+        {
+            selectedClickable.LostFocus();
+            selectedClickable = null;
+        }
         bool changeFrameColor = true;
-        if (newChosenType == ChosenObjectType.None)
+        if (newChosenType == ChosenObjectType.None || clickable)
         {
             rightPanel.SetActive(false);
             FollowingCamera.main.ResetTouchRightBorder();
@@ -567,6 +584,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         }
         else
         {
+            
             switch (newChosenType)
             {
                 case ChosenObjectType.Structure: if (chosenStructure == null) return; else break;

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEngine;
+using FoundationRoute;
 public sealed class FoundationRouteScenario : Scenario
 {
     private enum FoundationScenarioStep { Begin, AnchorBuilding, AnchorStart, InnerRingBuilding, PierPreparing, OuterRingBuilding }
@@ -13,7 +14,7 @@ public sealed class FoundationRouteScenario : Scenario
     private Localizer localizer;
     private ColonyController colony;
     private Quest scenarioQuest;
-    private FoundationRoute.HexBuilder hexBuilder;
+    private HexBuilder hexBuilder;
 
     private const byte WINDOW_INFO_0 = 1, WINDOW_INFO_1 =2, QUEST_INFO_0 = 3, QUEST_INFO_1 = 4;
     private const int ANCHOR_LAUNCH_ENERGYCOST = 20000; //70
@@ -34,7 +35,14 @@ public sealed class FoundationRouteScenario : Scenario
     {
         PrepareUI();
         currentStep = FoundationScenarioStep.Begin;
-        StartSubscenario();
+        hexBuilder = new HexBuilder(this);
+        hexBuilder.CreateHexMaquette(HexPosition.zer0);
+        hexBuilder.CreateHexMaquette(new HexPosition(0,1));
+        hexBuilder.CreateHexMaquette(new HexPosition(0, 2));
+        hexBuilder.CreateHexMaquette(new HexPosition(0, 3));
+        hexBuilder.CreateHexMaquette(new HexPosition(0, 4));
+        hexBuilder.CreateHexMaquette(new HexPosition(0, 5));
+        //StartSubscenario();
     }
     private void StartSubscenario()
     {
@@ -101,11 +109,10 @@ public sealed class FoundationRouteScenario : Scenario
     public void AnchorBigGearReady()
     {
         if (currentStep == FoundationScenarioStep.InnerRingBuilding && (subscenario == null || subscenario.completed)) Next();
-    }    
-    public void LoadHexInfo(out string[] conditionInfo, out string[] buildingsInfo)
+    }
+    public void LoadHexInfo(out string[] conditionStrings, out string[] buildingsInfo)
     {
-        conditionInfo = new string[1];
-        buildingsInfo = new string[1];
+        localizer.LoadHexBuildingData(out conditionStrings, out buildingsInfo);
     }
 
     public override void EndScenario()
@@ -697,6 +704,22 @@ public sealed class FoundationRouteScenario : Scenario
                     }
                 default: return null;
             }
+        }
+        public void LoadHexBuildingData(out string[] conditions, out string[] descriptions)
+        {
+            int count = 24;
+            descriptions = new string[count];            
+            for (int i = 0; i < count; i++)
+            {
+                descriptions[i] = lines[22 + i];
+            }
+            //
+            count = 4;
+            conditions = new string[count];
+            conditions[0] = lines[47];
+            conditions[1] = lines[48];
+            conditions[2] = lines[49];
+            conditions[3] = lines[50];
         }
     }
 
