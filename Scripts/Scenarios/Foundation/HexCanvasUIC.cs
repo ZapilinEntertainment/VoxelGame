@@ -18,6 +18,7 @@ namespace FoundationRoute
         private HexPosition selectedPosition;
         private HexType selectedType = HexType.Residential;
         private ColonyController colony;
+        private HexBuildingStats selectedTypeStats;
         private int[] buildingsCount = new int[(int)HexType.TotalCount];
         private int livingQuartersCount, commCount, natureCount, indCount;
         private BitArray availabilityMask = new BitArray((int)HexType.TotalCount, true);
@@ -39,7 +40,7 @@ namespace FoundationRoute
             taskIncompletedRect = UIController.GetIconUVRect(Icons.TaskFrame);
             taskCompletedRect = UIController.GetIconUVRect(Icons.TaskCompleted);
         }
-        private void RecalculateAvailabilityMask()
+        public void RecalculateAvailabilityMask()
         {
             hexBuilder.CountBuildings(ref buildingsCount);
             livingQuartersCount = buildingsCount[(int)HexType.Residential] + buildingsCount[(int)HexType.ResidentialDense] + buildingsCount[(int)HexType.ResidentialEco];
@@ -197,6 +198,10 @@ namespace FoundationRoute
             selectedPosition = hpos;
             RedrawConstructionWindow();
         }
+        public void EnableTotalStatsPanel()
+        {
+            statsPanel.SetActive(true);
+        }
 
         private void RedrawConstructionWindow()
         {
@@ -213,11 +218,11 @@ namespace FoundationRoute
                     buildingButtons[i].GetComponent<Image>().color = Color.grey;
                 }
             }
-            HexBuildingStats hbs = new HexBuildingStats(selectedType);
+            selectedTypeStats = new HexBuildingStats(selectedType);
             bool?[] affectionsList;
-            hbs.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
+            selectedTypeStats.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
             #region left panel
-            float pc = hbs.powerConsumption;
+            float pc = selectedTypeStats.powerConsumption;
             Text s;
             if (pc == 0f) stats[0].enabled = false;
             else {
@@ -226,22 +231,22 @@ namespace FoundationRoute
                 if (affectionsList[0] == null) s.color = Color.white;
                 else
                 {
-                    if (affectionsList[0] == true) s.color = Color.green;
+                    if (affectionsList[0] == false) s.color = Color.green; // inverted!
                     else s.color = Color.red;
                 }
                 if (!s.enabled) s.enabled = true;
             }
             //
             s = stats[1];
-            s.text = hbs.personnel.ToString();
+            s.text = selectedTypeStats.personnel.ToString();
             if (affectionsList[1] == null) s.color = Color.white;
             else
             {
-                if (affectionsList[1] == true) s.color = Color.green;
+                if (affectionsList[1] == false) s.color = Color.green; // inverted!
                 else s.color = Color.red;
             }
             //
-            pc = hbs.income;
+            pc = selectedTypeStats.income;
             s = stats[2];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
@@ -252,7 +257,7 @@ namespace FoundationRoute
                 else s.color = Color.red;
             }
             //
-            pc = hbs.lifepower;
+            pc = selectedTypeStats.lifepower;
             s = stats[3];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
@@ -263,7 +268,7 @@ namespace FoundationRoute
                 else s.color = Color.red;
             }
             //
-            pc = hbs.foodProduction;
+            pc = selectedTypeStats.foodProduction;
             s = stats[4];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
@@ -275,10 +280,10 @@ namespace FoundationRoute
             }
             //
             s = stats[5];
-            if (hbs.housing == 0) s.enabled = false;
+            if (selectedTypeStats.housing == 0) s.enabled = false;
             else
             {
-                s.text = hbs.housing.ToString();
+                s.text = selectedTypeStats.housing.ToString();
                 if (affectionsList[5] == null) s.color = Color.white;
                 else
                 {
@@ -346,7 +351,7 @@ namespace FoundationRoute
             //right panel:
             {
                 WriteBuildingInfo(selectedType, nameField, descriptionField);
-                var cost = hbs.GetCost();
+                var cost = selectedTypeStats.GetCost();
                 int rcount = cost.GetLength(0), rid, costConditionsMet = 0;
                 GameObject g;
                 Transform t;
@@ -361,7 +366,7 @@ namespace FoundationRoute
                     t = g.transform;
                     t.GetChild(0).GetComponent<RawImage>().uvRect = ResourceType.GetResourceIconRect(rid);
                     label = t.GetChild(1).GetComponent<Text>();
-                    label.text = Localization.GetResourceName(rid);
+                    label.text =((int)rc.volume).ToString() + ' '+  Localization.GetResourceName(rid);
                     if (storage.GetResourceCount(rid) >= rc.volume)
                     {
                         label.color = Color.white;
@@ -400,6 +405,40 @@ namespace FoundationRoute
                 }
             }
         }
+        public void RedrawStatsPanel()
+        {
+            Text GetText(int i)
+            {
+                return statsPanel.transform.GetChild(i).GetChild(1).GetComponent<Text>();
+            }
+            Text t;
+            var stats = hexBuilder.totalStats;
+            float x = stats.powerConsumption;
+            void FillFloatVal(int i)
+            {
+                t = GetText(i);
+                if (x > 0) t.text = '+' + string.Format("{0:0.##}", x);
+                else t.text = string.Format("{0:0.##}", x);
+                t.color = x < 0 ? Color.red : Color.white;
+            }
+            //
+            t = GetText(1);
+            t.text = stats.personnel.ToString();
+            t.color = x < 0 ? Color.red : Color.white;
+            //
+            x = stats.income;
+            FillFloatVal(2);
+            //
+            x = stats.lifepower;
+            FillFloatVal(3);
+            //
+            x = stats.foodProduction;
+            FillFloatVal(4);
+            //
+            t = GetText(5);
+            t.text = stats.housing.ToString();
+            t.color = x < 0 ? Color.red : Color.white;
+        }
 
         public void BuildButton(int i)
         {
@@ -408,10 +447,13 @@ namespace FoundationRoute
         }
         public void BuildButton()
         {
-
+            hexBuilder.CreateHex(selectedPosition, selectedType, selectedTypeStats);
+            constructionWindow.SetActive(false);
         }
         public void CloseButton() {
             constructionWindow.SetActive(false);
         }
+
+        
     }
 }

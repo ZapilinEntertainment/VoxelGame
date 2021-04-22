@@ -36,12 +36,12 @@ public sealed class FoundationRouteScenario : Scenario
         PrepareUI();
         currentStep = FoundationScenarioStep.Begin;
         hexBuilder = new HexBuilder(this);
-        hexBuilder.CreateHexMaquette(HexPosition.zer0);
-        hexBuilder.CreateHexMaquette(new HexPosition(0,1));
-        hexBuilder.CreateHexMaquette(new HexPosition(0, 2));
-        hexBuilder.CreateHexMaquette(new HexPosition(0, 3));
-        hexBuilder.CreateHexMaquette(new HexPosition(0, 4));
-        hexBuilder.CreateHexMaquette(new HexPosition(0, 5));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
+        hexBuilder.CreateHexMaquette(new HexPosition(1,2));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
         //StartSubscenario();
     }
     private void StartSubscenario()

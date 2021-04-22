@@ -7,14 +7,17 @@ namespace FoundationRoute
     public sealed class HexBuilder
     {
         public readonly FoundationRouteScenario scenario;
+        public HexBuildingStats totalStats { get; private set; }
         private readonly GameObject hexMaquetteExample;
         private HexCanvasUIC uic;
         private Dictionary<(byte, byte), Hex> hexList;        
         private Dictionary<HexPosition, GameObject> maquettesList;
-        private List<GameObject> maquettesPool;
+        private List<GameObject> maquettesPool;        
         private int poolLength = 0;
+        private bool firstHex = true;
         private readonly float innerRadius, outerRadius;
         private const float CONST_0 = 1.73205f;
+        private const int RING_LIMIT = 4;
 
 
         private HexBuilder() { }// reserved
@@ -28,13 +31,14 @@ namespace FoundationRoute
             maquettesList = new Dictionary<HexPosition, GameObject>();
             innerRadius = 8f;
             outerRadius = innerRadius * 2f / CONST_0;
+            totalStats = new HexBuildingStats(HexType.TotalCount);
             if (uic == null)
             {
                 var t = Object.Instantiate(Resources.Load<GameObject>("UIPrefs/hexCanvas")).transform;
                 UIController.GetCurrent().AddSpecialCanvasToHolder(t);
                 uic = t.GetComponentInChildren<HexCanvasUIC>();
                 uic.Prepare(this);
-            }
+            }            
         }
 
         public void CountBuildings(ref int[] buildingsCount)
@@ -63,12 +67,63 @@ namespace FoundationRoute
                 poolLength -= 1;
             }
             else g = Object.Instantiate(hexMaquetteExample);
-            g.transform.position = GetHexLocalPosition(hpos) + new Vector3(8f, -21f, 8f);
+            g.transform.position = GetHexWorldPosition(hpos);
             var cl = g.GetComponentInChildren<ClickableObject>();
 
             var npos = hpos.Copy;
             cl.AssignFunction(() => uic.OpenConstructionWindow(npos), uic.CloseButton);
             maquettesList.Add(npos, g);
+        }
+        public void CreateHex(HexPosition hpos, HexType htype, HexBuildingStats stats)
+        {
+            var bb = hpos.ToBytes();
+            if (hexList.ContainsKey(bb))
+            {
+                Debug.Log("hex create error - key already exists");
+                return;
+            }
+            else
+            {
+                if (maquettesList.ContainsKey(hpos))
+                {
+                    var m = maquettesList[hpos];
+                    m.SetActive(false);
+                    maquettesList.Remove(hpos);
+                    maquettesPool.Add(m);
+                }
+                //
+                var g = LoadHexPref(htype);
+                var hex = g.AddComponent<Hex>();
+                hex.Initialize(htype, this, stats);
+                g.transform.position = GetHexWorldPosition(hpos);
+                // модуляции высоты?
+                hexList.Add(hpos.ToBytes(), hex);                
+                uic.RecalculateAvailabilityMask();
+                //+spread affection on neighbours:
+                HexPosition npos;
+                if (hexList.Count > 1) {
+                    bool?[] aff;
+                    for (byte i = 0; i < 6; i++)
+                    {
+                        npos = hpos.GetNeighbour(i);
+                        bb = npos.ToBytes();
+                        if (hexList.ContainsKey(bb))
+                        {
+                            hexList[bb].hexStats.ApplyNeighboursAffection(GetNeighboursHexTypes(npos), out aff);
+                        }
+                    }
+                }
+                //
+                RecalculateTotalParameters();
+                if (firstHex)
+                {
+                    uic.EnableTotalStatsPanel();
+                    firstHex = false;
+                }
+                //
+                npos = hpos.GetNextPosition();
+                if (npos.ringIndex < RING_LIMIT) CreateHexMaquette(npos);
+            }
         }
 
         public Hex GetHex(HexPosition hpos)
@@ -77,28 +132,18 @@ namespace FoundationRoute
             if (hexList.ContainsKey(b)) return hexList[b];
             else return null;
         }
-        public List<HexType> GetNeighboursHexTypes(HexPosition hpos)
+       
+        private void RecalculateTotalParameters()
         {
-            var list = new List<HexType>();
-            if (hexList.Count != 0) 
-            {
-                var np = hpos.GetNeighbour(0).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
-                np = hpos.GetNeighbour(1).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
-                np = hpos.GetNeighbour(2).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
-                np = hpos.GetNeighbour(3).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
-                np = hpos.GetNeighbour(4).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
-                np = hpos.GetNeighbour(5).ToBytes();
-                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);                
-            }
-            return list;
+            totalStats = new HexBuildingStats(hexList.Values);
+            uic.RedrawStatsPanel();
         }
 
         #region positioning
+        private Vector3 GetHexWorldPosition(HexPosition hpos)
+        {
+            return GetHexLocalPosition(hpos) + new Vector3(8f, -21f, 8f); 
+        }
         private Vector3 GetHexLocalPosition(HexPosition hpos)
         {
             switch (hpos.ringIndex)
@@ -133,6 +178,31 @@ namespace FoundationRoute
                 default: return Vector3.zero;
             }
         }
+        public List<HexType> GetNeighboursHexTypes(HexPosition hpos)
+        {
+            var list = new List<HexType>();
+            if (hexList.Count != 0)
+            {
+                var np = hpos.GetNeighbour(0).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+                np = hpos.GetNeighbour(1).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+                np = hpos.GetNeighbour(2).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+                np = hpos.GetNeighbour(3).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+                np = hpos.GetNeighbour(4).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+                np = hpos.GetNeighbour(5).ToBytes();
+                if (hexList.ContainsKey(np)) list.Add(hexList[np].type);
+            }
+            return list;
+        }
         #endregion
+
+        private GameObject LoadHexPref(HexType htype)
+        {
+            return Object.Instantiate(Resources.Load<GameObject>("Prefs/Special/foundationHex"));
+        }
     }
 }

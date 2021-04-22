@@ -45,10 +45,14 @@ namespace FoundationRoute
         }
         public HexPosition GetNextPosition()
         {
-            var sectors = ringIndex + 1;
-            var inpos = DefineInsectorPosition();
-            if (inpos == sectors - 1) return new HexPosition(ringIndex + 1, DefineSector() * (ringIndex + 2));
-            else return new HexPosition(ringIndex, ringPosition + 1);
+            if (ringIndex != 0)
+            {
+                var sectors = ringIndex + 1;
+                var inpos = DefineInsectorPosition();
+                if (inpos == sectors - 1) return new HexPosition(ringIndex + 1, DefineSector() * (ringIndex + 2));
+                else return new HexPosition(ringIndex, ringPosition + 1);
+            }
+            else return new HexPosition(1, 2 * ringPosition);
         }
         public HexPosition GetNeighbour(byte direction)
         {
@@ -714,6 +718,23 @@ namespace FoundationRoute
                     }
             }
         }
+        public HexBuildingStats(ICollection<Hex> collection) : this(HexType.TotalCount)
+        {
+            if (collection.Count > 0)
+            {
+                HexBuildingStats stats;
+                foreach (var v in collection)
+                {
+                    stats = v.hexStats;
+                    powerConsumption += stats.powerConsumption;
+                    personnel += stats.personnel;
+                    income += stats.income;
+                    lifepower += stats.lifepower;
+                    foodProduction += stats.foodProduction;
+                    housing += stats.housing;
+                }
+            }
+        }
 
         public ResourceContainer[] GetCost()
         {
@@ -832,7 +853,7 @@ namespace FoundationRoute
                 if (m > 1f)
                 {
                     affections[0] = true;
-                    
+
                 }
                 else affections[0] = false;
                 powerConsumption *= m;
@@ -848,7 +869,7 @@ namespace FoundationRoute
 
                 }
                 else affections[1] = false;
-                personnel =(int)(personnel * m);
+                personnel = (int)(personnel * m);
             }
             //
             m = multipliers[2];
@@ -900,23 +921,29 @@ namespace FoundationRoute
 
                 }
                 else affections[5] = false;
-                housing = (int)(housing *m);
+                housing = (int)(housing * m);
             }
         }
-
     }
 
 
-    public sealed class Hex : MyObject
+    public sealed class Hex : MonoBehaviour
     {
         public HexType type { get; private set; }
-        private readonly int ID;
-
-        protected override bool IsEqualNoCheck(object obj)
+        public HexBuildingStats hexStats { get; private set; }
+        private HexBuilder hexBuilder;
+        private int ID = -1;
+        private static int nextID = 1;
+        
+        public void Initialize(HexType htype, HexBuilder i_hexBuilder, HexBuildingStats i_stats)
         {
-            return ID == (obj as Hex).ID;
+            if (ID == -1)
+            {
+                ID = nextID++;
+            }
+            type = htype;
+            hexBuilder = i_hexBuilder;
+            hexStats = i_stats;
         }
-
-
     }
 }

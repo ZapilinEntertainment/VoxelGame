@@ -33,7 +33,7 @@
 [31]Dense commercial zone is much mre efficient and busy. For massive trade activity.
 [32]Fields
 [33]Standart agricultural zone, which fed your colonists. Try not to build them close to Industry.
-[34]AdvancedFields
+[34]Advanced Fields
 [35]Field with specialized plants cultivating. Will increase industry income, by lifepower cost.
 [36]Forest
 [37]Mountain
