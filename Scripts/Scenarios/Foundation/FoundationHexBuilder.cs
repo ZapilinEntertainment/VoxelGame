@@ -10,6 +10,8 @@ namespace FoundationRoute
         public HexBuildingStats totalStats { get; private set; }
         private readonly GameObject hexMaquetteExample;
         private HexCanvasUIC uic;
+        private ColonyController colony;
+        private AnchorBasement anchor;
         private Dictionary<(byte, byte), Hex> hexList;        
         private Dictionary<HexPosition, GameObject> maquettesList;
         private List<GameObject> maquettesPool;        
@@ -38,7 +40,11 @@ namespace FoundationRoute
                 UIController.GetCurrent().AddSpecialCanvasToHolder(t);
                 uic = t.GetComponentInChildren<HexCanvasUIC>();
                 uic.Prepare(this);
-            }            
+            }
+            var rm = GameMaster.realMaster;
+            colony = rm.colonyController;
+            anchor = scenario.anchorBasement;
+            rm.everydayUpdate += this.EverydayUpdate;
         }
 
         public void CountBuildings(ref int[] buildingsCount)
@@ -94,7 +100,7 @@ namespace FoundationRoute
                 //
                 var g = LoadHexPref(htype);
                 var hex = g.AddComponent<Hex>();
-                hex.Initialize(htype, this, stats);
+                hex.Initialize(htype, hpos, this, stats);
                 g.transform.position = GetHexWorldPosition(hpos);
                 // модуляции высоты?
                 hexList.Add(hpos.ToBytes(), hex);                
@@ -131,12 +137,18 @@ namespace FoundationRoute
             var b = hpos.ToBytes();
             if (hexList.ContainsKey(b)) return hexList[b];
             else return null;
-        }
-       
+        }       
         private void RecalculateTotalParameters()
         {
             totalStats = new HexBuildingStats(hexList.Values);
             uic.RedrawStatsPanel();
+        }
+
+        private void EverydayUpdate()
+        {
+            const float energyCf = 1000f, moneyCf = 100f;
+            anchor.SetEnergySurplus(totalStats.powerConsumption * energyCf);
+            float x = colony.FORCED_GetEnergyCrystals(totalStats.income * moneyCf);
         }
 
         #region positioning

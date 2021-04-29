@@ -7,7 +7,7 @@ public sealed class FoundationRouteScenario : Scenario
     
     private FoundationScenarioStep currentStep;
     private StandartScenarioUI scenarioUI;
-    private AnchorBasement anchorBasement { get { return _anchorBasement; } }
+    public AnchorBasement anchorBasement { get { return _anchorBasement; } }
     private AnchorBasement _anchorBasement;
     private FDR_Subscenario subscenario;
     private QuestUI questUI;
@@ -36,12 +36,25 @@ public sealed class FoundationRouteScenario : Scenario
         PrepareUI();
         currentStep = FoundationScenarioStep.Begin;
         hexBuilder = new HexBuilder(this);
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
-        hexBuilder.CreateHexMaquette(new HexPosition(1,2));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1,2));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
+        //hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
+
+        void crh(HexPosition hpos, HexType htype)
+        {
+            hexBuilder.CreateHex(hpos, htype, new HexBuildingStats(htype));
+        }
+        //crh(new HexPosition(0, 0),HexType.Residential);
+        //crh(new HexPosition(0, 1),HexType.ResidentialDense);
+        crh(new HexPosition(0, 0), HexType.Industrial);
+        //crh(new HexPosition(0, 3), HexType.Commercial);
+        crh(new HexPosition(0, 4), HexType.CommercialDense);
+        crh(new HexPosition(0, 1), HexType.IndustrialExperimental);
+       // crh(new HexPosition(1, 0), HexType.Powerplant);
+
         //StartSubscenario();
     }
     private void StartSubscenario()

@@ -945,6 +945,12 @@ public sealed class ColonyController : MonoBehaviour
         if (v >= 1 && observer != null) observer.MoneyChanging(-v);
         return v;
     }    
+    public float FORCED_GetEnergyCrystals(float v)
+    {
+        energyCrystalsCount -= v;
+        if (v >= 1 && observer != null) observer.MoneyChanging(-v);
+        return v;
+    }
 
     public void SetBirthrateMode(BirthrateMode bm)
     {

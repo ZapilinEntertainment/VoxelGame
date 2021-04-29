@@ -23,7 +23,8 @@ public sealed class AnchorBasement : WorkBuilding
     private float poweringProgress = 0f, shipSpeed = 0f, distanceToPier = 0f, shipTimer = 0f;
     public int colonistsArrived { get; private set; }
     public const float POWER_CONSUMPTION = -1500f, MAX_EXCESS_POWER = 15000f;
-    private const float INNER_RING_HEIGHT = 20f, OUTER_RING_HEIGHT = 23f, HEXSIZE = 4f, PIER_HEIGHT = 10f,
+    private static readonly float INNER_RING_HEIGHT = Chunk.chunkSize * 1.25f + 2f, OUTER_RING_HEIGHT = INNER_RING_HEIGHT + HEXSIZE * 0.75f;
+    private const float HEXSIZE = 4f, PIER_HEIGHT = 10f,
         PADS_LIFT_SPEED = 2f, SHIP_WIDTH = 4f, SHIP_SPAWN_DISTANCE = 200f, SHIP_MAX_SPEED = 50f, SHIP_ACCELERATION = 2f, SHIP_AWAITING_TIME = 10f,
         SHIP_DOCKING_TIME = 10f, POWERING_SPEED = 0.1f;
     private const int MIN_COLONISTS_COUNT = 400, MAX_COLONISTS_COUNT = 2000;
@@ -50,6 +51,17 @@ public sealed class AnchorBasement : WorkBuilding
         pierPosition = transform.position + Vector3.down * PIER_HEIGHT;
         PrepareMainLine();
     }
+    public void SetEnergySurplus(float x)
+    {
+        var prev = energySurplus;
+        var ns = GetEnergySurplus(ID) + x;
+        if (ns != prev)
+        {
+            energySurplus = ns;
+            colony.powerGridRecalculationNeeded = true;
+        }
+    }
+
     public void LinkScenario(FoundationRouteScenario frs)
     {
         scenario = frs;

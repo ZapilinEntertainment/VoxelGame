@@ -390,7 +390,7 @@ public sealed class PoolMaster : MonoBehaviour {
 
     public static Mesh SetMaterialByID(ref MeshFilter mf, ref MeshRenderer mr, int materialID, byte i_illumination)
     {
-        var m = mf.mesh;
+        Mesh m = mf.mesh;
         MeshMaster.SetMeshUVs(ref m, materialID);
         mf.sharedMesh = m;
         if (useIlluminationSystem) mr.sharedMaterial = GetMaterial(materialID, i_illumination);

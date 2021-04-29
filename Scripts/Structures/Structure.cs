@@ -480,7 +480,7 @@ public class Structure : MonoBehaviour
     virtual protected void SetModel()
     {
         //switch skin index        
-        GameObject model;
+        
         Quaternion prevRot = Quaternion.identity;
         if (transform.childCount != 0)
         {
@@ -489,7 +489,19 @@ public class Structure : MonoBehaviour
             Destroy(p.gameObject);
         }
         else prevRot = Quaternion.Euler(0f, 45f * modelRotation, 0f);
-        switch (ID)
+        GameObject model = GetModel(ID) ;
+        model.transform.parent = transform;
+        model.transform.localRotation = prevRot;
+        model.transform.localPosition = Vector3.zero;
+       
+        // copy to StorageBlock
+        //copy to Gardens.cs
+        //dependency at Platform.cs
+    }
+    public static GameObject GetModel(int id)
+    {
+        GameObject model;
+        switch (id)
         {
             default: model = GameObject.CreatePrimitive(PrimitiveType.Cube); break;
             case DRYED_PLANT_ID:
@@ -498,7 +510,7 @@ public class Structure : MonoBehaviour
             case TREE_OF_LIFE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Tree of Life")); break;
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
-            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;          
+            case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;
             case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
             case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
@@ -506,15 +518,15 @@ public class Structure : MonoBehaviour
             case DOCK_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_2")); break;
             case DOCK_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_3")); break;
             case ENERGY_CAPACITOR_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_1")); break;
-            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_2")); break;           
+            case ENERGY_CAPACITOR_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Energy_capacitor_level_2")); break;
             case FARM_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_1")); break;
             case FARM_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_2")); break;
             case FARM_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_3")); break;
-            case COVERED_FARM: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;            
+            case COVERED_FARM: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Farm_level_4")); break;
             case LUMBERMILL_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_1")); break;
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
-            case COVERED_LUMBERMILL: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;           
+            case COVERED_LUMBERMILL: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;
             case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
             case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
             case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
@@ -534,13 +546,13 @@ public class Structure : MonoBehaviour
             case SUPPLIES_FACTORY_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Blocks/foodFactoryBlock_level_5")); break;
             case GRPH_ENRICHER_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/graphoniumEnricher_level_3")); break;
             case XSTATION_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/XStation_level_3")); break;
-            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;           
-         
+            case QUANTUM_ENERGY_TRANSMITTER_5_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumEnergyTransmitter_level_4")); break;
+
             case SHUTTLE_HANGAR_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/shuttleHangar")); break;
             case RECRUITING_CENTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/recruitingCenter")); break;
             case EXPEDITION_CORPUS_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/expeditionCorpus")); break;
-            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;  
-            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;           
+            case QUANTUM_TRANSMITTER_4_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/quantumTransmitter")); break;
+            case CONNECT_TOWER_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/connectTower")); break;
             case HOTEL_BLOCK_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/hotelBlock")); break;
             case HOUSING_MAST_6_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/housingMast")); break;
             case DOCK_ADDON_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_addon1")); break;
@@ -549,19 +561,14 @@ public class Structure : MonoBehaviour
             case ARTIFACTS_REPOSITORY_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/artifactsRepository")); break;
             case MONUMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/monument")); break;
             case SETTLEMENT_CENTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_0")); break;
-            case PSYCHOKINECTIC_GEN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator"));break;
+            case PSYCHOKINECTIC_GEN_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/psychokineticGenerator")); break;
             case SCIENCE_LAB_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/scienceLab")); break;
             case COMPOSTER_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/composter")); break;
             case ENGINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/engineTower")); break;
             case ANCHOR_BASEMENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Special/fd_anchor")); break;
         }
-        model.transform.parent = transform;
-        model.transform.localRotation = prevRot;
-        model.transform.localPosition = Vector3.zero;
         if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
-        // copy to StorageBlock
-        //copy to Gardens.cs
-        //dependency at Platform.cs
+        return model;
     }
     virtual public void SetModelRotation(int r)
     {

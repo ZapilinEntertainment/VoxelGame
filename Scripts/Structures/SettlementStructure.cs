@@ -8,6 +8,7 @@ public sealed class SettlementStructure : Structure
     public byte level { get; private set; }
     public float value { get; private set; }
     private Settlement settlement;
+    private static GameObject[] housesPrefs = new GameObject[6];
     // byte subIndex - подвид модели
 
     public const byte CELLSIZE = 2;
@@ -22,19 +23,12 @@ public sealed class SettlementStructure : Structure
                 prevRot = p.localRotation;
                 Destroy(p.gameObject);
             }
+        bool replacementCheck = true;
         switch (type)
         {
             case Settlement.SettlementStructureType.House:
-                switch (level) {
-                    case 8:
-                    case 7:
-                    case 6: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl6")); break;
-                    case 5: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl5")); break;
-                    case 4: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl4")); break;
-                    case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl3")); break;
-                    case 2: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl2")); break;
-                    default:  model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/housePart_lvl1")); break;
-                }
+                model = GetHouseModel(level);
+                replacementCheck = false;
                 break;
             case Settlement.SettlementStructureType.Shop:
                 model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/shopPart"));
@@ -50,8 +44,44 @@ public sealed class SettlementStructure : Structure
         model.transform.parent = transform;
         model.transform.localRotation = prevRot;
         model.transform.localPosition = Vector3.zero;
-        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
+        if (!PoolMaster.useDefaultMaterials & replacementCheck) PoolMaster.ReplaceMaterials(model);
     }
+    public static GameObject GetHouseModel(byte lvl)
+    {
+        GameObject m;
+        switch (lvl)
+        {
+            case 8:
+            case 7:
+            case 6:
+                if (housesPrefs[5] == null) housesPrefs[5] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl6");
+                m= Instantiate(housesPrefs[5]);
+                break;
+            case 5:
+                if (housesPrefs[4] == null) housesPrefs[4] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl5");
+                m = Instantiate(housesPrefs[4]);
+                break;
+            case 4:
+                if (housesPrefs[3] == null) housesPrefs[3] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl4");
+                m = Instantiate(housesPrefs[3]);
+                break;
+            case 3:
+                if (housesPrefs[2] == null) housesPrefs[2] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl3");
+                m = Instantiate(housesPrefs[2]);
+                break;
+            case 2:
+                if (housesPrefs[1] == null) housesPrefs[1] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl2");
+                m = Instantiate(housesPrefs[1]);
+                break;
+            default:
+                if (housesPrefs[0] == null) housesPrefs[0] = Resources.Load<GameObject>("Structures/Settlement/housePart_lvl1");
+                m = Instantiate(housesPrefs[0]);
+                break;
+        }
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(m);
+        return m;
+    }
+
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;

@@ -218,7 +218,7 @@ namespace FoundationRoute
                     buildingButtons[i].GetComponent<Image>().color = Color.grey;
                 }
             }
-            selectedTypeStats = new HexBuildingStats(selectedType);
+            selectedTypeStats = new HexBuildingStats(selectedType, true);
             bool?[] affectionsList;
             selectedTypeStats.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
             #region left panel
@@ -227,7 +227,8 @@ namespace FoundationRoute
             if (pc == 0f) stats[0].enabled = false;
             else {
                 s = stats[0];
-                s.text = (pc > 0f ? '-' : '+') + string.Format("{0:0.##}", pc);
+                if (pc > 0f) s.text = '-' + string.Format("{0:0.##}", pc);
+                else s.text = '+' + string.Format("{0:0.##}", pc * (-1f));
                 if (affectionsList[0] == null) s.color = Color.white;
                 else
                 {
@@ -236,17 +237,19 @@ namespace FoundationRoute
                 }
                 if (!s.enabled) s.enabled = true;
             }
-            //
+            // 1 - income
+            pc = selectedTypeStats.income;
             s = stats[1];
-            s.text = selectedTypeStats.personnel.ToString();
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
             if (affectionsList[1] == null) s.color = Color.white;
             else
             {
-                if (affectionsList[1] == false) s.color = Color.green; // inverted!
+                if (affectionsList[1] == true) s.color = Color.green;
                 else s.color = Color.red;
             }
-            //
-            pc = selectedTypeStats.income;
+            // 2 - food
+            pc = selectedTypeStats.foodProduction;
             s = stats[2];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
@@ -256,7 +259,7 @@ namespace FoundationRoute
                 if (affectionsList[2] == true) s.color = Color.green;
                 else s.color = Color.red;
             }
-            //
+            // 3 - lifepower
             pc = selectedTypeStats.lifepower;
             s = stats[3];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
@@ -267,18 +270,16 @@ namespace FoundationRoute
                 if (affectionsList[3] == true) s.color = Color.green;
                 else s.color = Color.red;
             }
-            //
-            pc = selectedTypeStats.foodProduction;
+            // 4 - personnel & maxpersonnel
             s = stats[4];
-            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
-            else s.text = string.Format("{0:0.##}", pc);
+            s.text = selectedTypeStats.maxPersonnel.ToString();
             if (affectionsList[4] == null) s.color = Color.white;
             else
             {
-                if (affectionsList[4] == true) s.color = Color.green;
+                if (affectionsList[4] == false) s.color = Color.green; // inverted!
                 else s.color = Color.red;
             }
-            //
+            // 5 - housing           
             s = stats[5];
             if (selectedTypeStats.housing == 0) s.enabled = false;
             else
@@ -414,6 +415,11 @@ namespace FoundationRoute
             Text t;
             var stats = hexBuilder.totalStats;
             float x = stats.powerConsumption;
+            t = GetText(0);
+            if (x > 0) t.text = '-' + string.Format("{0:0.##}", x);
+            else t.text = '+' + string.Format("{0:0.##}", -x);
+            t.color = x > 0 ? Color.red : Color.white;
+            //
             void FillFloatVal(int i)
             {
                 t = GetText(i);
@@ -421,23 +427,35 @@ namespace FoundationRoute
                 else t.text = string.Format("{0:0.##}", x);
                 t.color = x < 0 ? Color.red : Color.white;
             }
-            //
-            t = GetText(1);
-            t.text = stats.personnel.ToString();
-            t.color = x < 0 ? Color.red : Color.white;
+            
             //
             x = stats.income;
+            FillFloatVal(1);
+            // 2 - food
+            x = stats.foodProduction;
             FillFloatVal(2);
-            //
+            // 3 - lifepower
             x = stats.lifepower;
             FillFloatVal(3);
-            //
-            x = stats.foodProduction;
-            FillFloatVal(4);
-            //
+            // 4 - personnel & maxpersonnel
+            bool highlightHousing = false;
+            t = GetText(4);
+            int pi = stats.personnelInvolved, housing = stats.housing;
+            t.text = pi.ToString() + '/' + stats.maxPersonnel.ToString();
+            if (pi > housing) t.color = Color.red;
+            else
+            {
+                if (stats.maxPersonnel >= housing)
+                {
+                    t.color = Color.yellow;
+                    highlightHousing = true;
+                }
+                else t.color = Color.white;
+            }
+            // 5 - housing
             t = GetText(5);
             t.text = stats.housing.ToString();
-            t.color = x < 0 ? Color.red : Color.white;
+            t.color = highlightHousing ? Color.yellow : Color.white;
         }
 
         public void BuildButton(int i)
@@ -447,7 +465,8 @@ namespace FoundationRoute
         }
         public void BuildButton()
         {
-            hexBuilder.CreateHex(selectedPosition, selectedType, selectedTypeStats);
+            var ns = selectedTypeStats.GetNoPersonnelCopy();
+            hexBuilder.CreateHex(selectedPosition, selectedType, ns);
             constructionWindow.SetActive(false);
         }
         public void CloseButton() {

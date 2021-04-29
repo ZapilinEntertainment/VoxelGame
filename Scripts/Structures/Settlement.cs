@@ -114,21 +114,28 @@ public sealed class Settlement : House
         //switch skin index
         GameObject model;
         if (transform.childCount != 0) Destroy(transform.GetChild(0).gameObject);
-        switch (level)
-        {
-            case 8:
-            case 7:
-            case 6: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_6")); break;
-            case 5: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_5")); break;
-            case 4: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_4")); break;
-            case 3: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_3")); break;
-            case 2: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_2")); break;
-            default: model = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_1")); break;
-        }
+        model = GetSettlementSpire(level);
         model.transform.parent = transform;
         model.transform.localRotation = Quaternion.Euler(0, 0, 0);
         model.transform.localPosition = Vector3.zero;
-        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(model);
+        
+    }
+    public static GameObject GetSettlementSpire(byte lvl)
+    {
+        GameObject m;
+        switch (lvl)
+        {
+            case 8:
+            case 7:
+            case 6: m= Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_6")); break;
+            case 5: m = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_5")); break;
+            case 4: m = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_4")); break;
+            case 3: m = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_3")); break;
+            case 2: m = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_2")); break;
+            default: m = Instantiate(Resources.Load<GameObject>("Structures/Settlement/settlementCenter_1")); break;
+        }
+        if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(m);
+        return m;
     }
 
     override public void SetBasement(Plane b, PixelPosByte pos)

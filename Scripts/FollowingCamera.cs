@@ -29,7 +29,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     [SerializeField] private RectTransform controllerBack, controllerStick;
     [SerializeField] private GameObject camUpButton, camLowButton;
 #pragma warning restore 0649
-    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, MAX_LOOKPOINT_RADIUS = 50, ENV_CAMERA_CF = 0.01f;
+    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, ENV_CAMERA_CF = 0.01f, MAX_VISIBILITY_RANGE = 50f;
 
     private bool camPosChanged = false;
     private bool? verticalMovement = null;
@@ -128,7 +128,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             mv.z *= (1 + moveSmoothCoefficient.z);
             Vector3 endPoint = transform.position + transform.TransformDirection(mv) * moveSpeed * Time.deltaTime ;
             float d = (endPoint - GameMaster.sceneCenter).magnitude;
-            if (d < MAX_LOOKPOINT_RADIUS || (transform.position - GameMaster.sceneCenter).magnitude > d) transform.position = endPoint;
+            if (d < MAX_VISIBILITY_RANGE || (transform.position - GameMaster.sceneCenter).magnitude > d) transform.position = endPoint;
             //transform.Translate(mv * 30 * Time.deltaTime,Space.Self);
         }
 
