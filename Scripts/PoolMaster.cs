@@ -56,6 +56,7 @@ public sealed class PoolMaster : MonoBehaviour {
         MATERIAL_WHITEWALL_ID = -11, MATERIAL_MULTIMATERIAL_ID = -12, FIXED_UV_BASIC = -13;
     // зависимость - ResourceType.GetResourceByID
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2, BASIC_MAT_INDEX = 0, METAL_MAT_INDEX = 1, GREEN_MAT_INDEX = 2, GLASS_MAT_INDEX = 3, GLASS_OFF_MAT_INDEX = 4;
+  
 
     public void Load() {
 		if (current != null) return;
@@ -572,7 +573,8 @@ public sealed class PoolMaster : MonoBehaviour {
                 }
             }
         }        
-    }    
+    }
+    public static string GetColouredMaterialName() { return "Coloured"; }
 
     public static bool IsMaterialAGrass(int id)
     {

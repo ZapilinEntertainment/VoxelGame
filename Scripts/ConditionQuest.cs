@@ -4,10 +4,11 @@ using UnityEngine;
 
 public sealed class ConditionQuest : Quest
 {
-    public enum ConditionQuestIcon : byte { FoundationRouteIcon}
+    public enum ConditionQuestIcon : byte { FoundationRouteIcon, PeopleIcon}
 
     private bool completeQuestWhenPossible = true, subscribedToQuestUpdate = false;
     private System.Action uiRepresentationFunction;
+    private ConditionQuestIcon iconType;
     private readonly SimpleCondition[] conditions;
     private readonly ColonyController colony;    
 
@@ -23,6 +24,7 @@ public sealed class ConditionQuest : Quest
         {
             INLINE_DefineStep(ref conditions[i], i);
         }
+        iconType = cqi;
         CheckQuestConditions();
     }
     public ConditionQuest(SimpleCondition i_condition, ColonyController i_colony, bool i_completeQuestWhenPossible, ConditionQuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
@@ -30,6 +32,7 @@ public sealed class ConditionQuest : Quest
         colony = i_colony;
         needToCheckConditions = true;
         completeQuestWhenPossible = i_completeQuestWhenPossible;
+        iconType = cqi;
         INLINE_PrepareSteps(1);
         conditions = new SimpleCondition[1] { i_condition};
         INLINE_DefineStep(ref i_condition, 0);
@@ -122,6 +125,14 @@ public sealed class ConditionQuest : Quest
                         stepsFinished[i] = suitableCount >= sc.index;
                         break;
                     }
+                case ConditionType.Dummy:
+                    {
+                        if (sc.index != 2)
+                        {
+                            stepsFinished[i] =  sc.index == 1;
+                        }
+                        break;
+                    }
             }
             if (stepsFinished[i]) completed++;
         }
@@ -156,8 +167,20 @@ public sealed class ConditionQuest : Quest
     {
         //use subIndex where stores construction info
         // 
-        icon = UIController.iconsTexture;
-        rect = UIController.GetIconUVRect(Icons.FoundationRoute);
+        switch (iconType) {
+            case ConditionQuestIcon.FoundationRouteIcon:
+                {
+                    icon = UIController.iconsTexture;
+                    rect = UIController.GetIconUVRect(Icons.FoundationRoute);
+                    break;
+                }
+            case ConditionQuestIcon.PeopleIcon:
+                {
+                    icon = UIController.iconsTexture;
+                    rect = UIController.GetIconUVRect(Icons.Citizen);
+                    break;
+                }
+            }
     }
 
     public override void MakeQuestCompleted()
@@ -218,9 +241,15 @@ public struct SimpleCondition
     {
         return new SimpleCondition(ConditionType.ShuttlesCount, count, 0f);
     }
-    public static SimpleCondition GetDummyCondition()
+    public static SimpleCondition GetDummyCondition(bool? alwaysTrue)
     {
-        return new SimpleCondition(ConditionType.Dummy, 0, 0f);
+        int x;
+        if (alwaysTrue == null) x = 2;
+        else
+        {
+            if (alwaysTrue == true) x = 1; else x = 0;
+        }
+        return new SimpleCondition(ConditionType.Dummy, x, 0f);
     }
 }
 public enum ConditionType:byte { ResourceCountCheck, MoneyCheck, GearsCheck, FreeWorkersCheck, StoredEnergyCondition,

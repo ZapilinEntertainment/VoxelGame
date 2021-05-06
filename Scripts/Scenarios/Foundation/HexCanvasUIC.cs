@@ -7,18 +7,25 @@ namespace FoundationRoute
 {
     public sealed class HexCanvasUIC : MonoBehaviour
     {
-        [SerializeField] private GameObject constructionWindow, statsPanel;
+        [SerializeField] private GameObject constructionWindow, statsPanel, upPanel, workersPanel;
         [SerializeField] private GameObject[] costLines;
         [SerializeField] private Button buildButton;
         [SerializeField] private Button[] buildingButtons;
         [SerializeField] private Text[] stats;
         [SerializeField] private Text nameField, descriptionField;
         [SerializeField] private Transform conditionLine0, conditionLine1;
+        private GameObject conditionPanel { get { return conditionLine0.parent.gameObject; } }
+        private GameObject costPanel { get { return costLines[0].transform.parent.gameObject; } }
+        private Button workersPanel_minusButton { get { return workersPanel.transform.GetChild(0).GetComponent<Button>(); } }
+        private Button workersPanel_plusButton { get { return workersPanel.transform.GetChild(1).GetComponent<Button>(); } }
+        private Text workersPanel_label { get { return workersPanel.transform.GetChild(2).GetComponent<Text>(); } }
+        private bool buildmode = true;
         private HexBuilder hexBuilder;
         private HexPosition selectedPosition;
         private HexType selectedType = HexType.Residential;
+        private Hex selectedHex;
         private ColonyController colony;
-        private HexBuildingStats selectedTypeStats;
+        private HexBuildingStats selectedStats;
         private int[] buildingsCount = new int[(int)HexType.TotalCount];
         private int livingQuartersCount, commCount, natureCount, indCount;
         private BitArray availabilityMask = new BitArray((int)HexType.TotalCount, true);
@@ -192,17 +199,130 @@ namespace FoundationRoute
 
         }
 
+        public void OpenHexWindow(Hex h)
+        {
+            SwitchBuildmode(false);
+            selectedStats = h.hexStats;
+            selectedPosition = h.hexPosition;
+            selectedHex = h;
+            var affectionsList = new bool?[6] { null, null, null, null, null,null};            
+            FillStatsPanel(affectionsList);
+            WriteBuildingInfo(h.type, nameField, descriptionField);
+            var hs = h.hexStats;
+            if (hs.maxPersonnel == 0)
+            {
+                workersPanel.SetActive(false);
+            }
+            else
+            {
+                int pi = hs.personnelInvolved, mi = hs.maxPersonnel ;
+                workersPanel_label.text = pi.ToString() + " / " + mi.ToString();
+                workersPanel_minusButton.interactable = (pi != 0);
+                workersPanel_plusButton.interactable = (pi != mi);
+                workersPanel.SetActive(true);
+            }
+            if (!constructionWindow.activeSelf) constructionWindow.SetActive(true);
+        }
         public void OpenConstructionWindow(HexPosition hpos)
         {
-            if (!constructionWindow.activeSelf) constructionWindow.SetActive(true);
+            selectedHex = null;
             selectedPosition = hpos;
+            SwitchBuildmode(true);
             RedrawConstructionWindow();
+            if (!constructionWindow.activeSelf) constructionWindow.SetActive(true);
+        }
+        private void SwitchBuildmode(bool x)
+        {
+            if (x != buildmode)
+            {
+                buildmode = x;
+                upPanel.SetActive(buildmode);
+                conditionPanel.SetActive(buildmode);
+                costPanel.SetActive(buildmode);
+                buildButton.gameObject.SetActive(buildmode);
+                workersPanel.SetActive(!buildmode);
+            }
         }
         public void EnableTotalStatsPanel()
         {
             statsPanel.SetActive(true);
         }
 
+        private void FillStatsPanel(bool?[] affectionsList)
+        {           
+            float pc = selectedStats.powerConsumption;
+            Text s;
+            if (pc == 0f) stats[0].enabled = false;
+            else
+            {
+                s = stats[0];
+                if (pc > 0f) s.text = '-' + string.Format("{0:0.##}", pc);
+                else s.text = '+' + string.Format("{0:0.##}", pc * (-1f));
+                if (affectionsList[0] == null) s.color = Color.white;
+                else
+                {
+                    if (affectionsList[0] == false) s.color = Color.green; // inverted!
+                    else s.color = Color.red;
+                }
+                if (!s.enabled) s.enabled = true;
+            }
+            // 1 - income
+            pc = selectedStats.income;
+            s = stats[1];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[1] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[1] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            // 2 - food
+            pc = selectedStats.foodProduction;
+            s = stats[2];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[2] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[2] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            // 3 - lifepower
+            pc = selectedStats.lifepower;
+            s = stats[3];
+            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
+            else s.text = string.Format("{0:0.##}", pc);
+            if (affectionsList[3] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[3] == true) s.color = Color.green;
+                else s.color = Color.red;
+            }
+            // 4 - personnel & maxpersonnel
+            s = stats[4];
+            s.text = selectedStats.maxPersonnel.ToString();
+            if (affectionsList[4] == null) s.color = Color.white;
+            else
+            {
+                if (affectionsList[4] == false) s.color = Color.green; // inverted!
+                else s.color = Color.red;
+            }
+            // 5 - housing           
+            s = stats[5];
+            if (selectedStats.housing == 0) s.enabled = false;
+            else
+            {
+                s.text = selectedStats.housing.ToString();
+                if (affectionsList[5] == null) s.color = Color.white;
+                else
+                {
+                    if (affectionsList[5] == true) s.color = Color.green;
+                    else s.color = Color.red;
+                }
+                if (!s.enabled) s.enabled = true;
+            }
+        }
         private void RedrawConstructionWindow()
         {
             int selected = (int)selectedType;
@@ -218,82 +338,13 @@ namespace FoundationRoute
                     buildingButtons[i].GetComponent<Image>().color = Color.grey;
                 }
             }
-            selectedTypeStats = new HexBuildingStats(selectedType, true);
-            bool?[] affectionsList;
-            selectedTypeStats.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
+            selectedStats = new HexBuildingStats(selectedType, true);
+
             #region left panel
-            float pc = selectedTypeStats.powerConsumption;
-            Text s;
-            if (pc == 0f) stats[0].enabled = false;
-            else {
-                s = stats[0];
-                if (pc > 0f) s.text = '-' + string.Format("{0:0.##}", pc);
-                else s.text = '+' + string.Format("{0:0.##}", pc * (-1f));
-                if (affectionsList[0] == null) s.color = Color.white;
-                else
-                {
-                    if (affectionsList[0] == false) s.color = Color.green; // inverted!
-                    else s.color = Color.red;
-                }
-                if (!s.enabled) s.enabled = true;
-            }
-            // 1 - income
-            pc = selectedTypeStats.income;
-            s = stats[1];
-            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
-            else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[1] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[1] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
-            // 2 - food
-            pc = selectedTypeStats.foodProduction;
-            s = stats[2];
-            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
-            else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[2] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[2] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
-            // 3 - lifepower
-            pc = selectedTypeStats.lifepower;
-            s = stats[3];
-            if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
-            else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[3] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[3] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
-            // 4 - personnel & maxpersonnel
-            s = stats[4];
-            s.text = selectedTypeStats.maxPersonnel.ToString();
-            if (affectionsList[4] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[4] == false) s.color = Color.green; // inverted!
-                else s.color = Color.red;
-            }
-            // 5 - housing           
-            s = stats[5];
-            if (selectedTypeStats.housing == 0) s.enabled = false;
-            else
-            {
-                s.text = selectedTypeStats.housing.ToString();
-                if (affectionsList[5] == null) s.color = Color.white;
-                else
-                {
-                    if (affectionsList[5] == true) s.color = Color.green;
-                    else s.color = Color.red;
-                }
-                if (!s.enabled) s.enabled = true;
-            }
-              //-conditions
+            bool?[] affectionsList;
+            selectedStats.ApplyNeighboursAffection(hexBuilder.GetNeighboursHexTypes(selectedPosition), out affectionsList);
+            FillStatsPanel(affectionsList);
+            //-conditions
             if (buildingAvailable)
             {
                 conditionLine0.gameObject.SetActive(false);
@@ -352,7 +403,7 @@ namespace FoundationRoute
             //right panel:
             {
                 WriteBuildingInfo(selectedType, nameField, descriptionField);
-                var cost = selectedTypeStats.GetCost();
+                var cost = selectedStats.GetCost();
                 int rcount = cost.GetLength(0), rid, costConditionsMet = 0;
                 GameObject g;
                 Transform t;
@@ -413,8 +464,7 @@ namespace FoundationRoute
                 return statsPanel.transform.GetChild(i).GetChild(1).GetComponent<Text>();
             }
             Text t;
-            var stats = hexBuilder.totalStats;
-            float x = stats.powerConsumption;
+            float x = hexBuilder.totalPowerConsumption;
             t = GetText(0);
             if (x > 0) t.text = '-' + string.Format("{0:0.##}", x);
             else t.text = '+' + string.Format("{0:0.##}", -x);
@@ -429,33 +479,26 @@ namespace FoundationRoute
             }
             
             //
-            x = stats.income;
+            x = hexBuilder.totalIncome;
             FillFloatVal(1);
             // 2 - food
-            x = stats.foodProduction;
+            x = hexBuilder.totalFoodProduction;
             FillFloatVal(2);
             // 3 - lifepower
-            x = stats.lifepower;
+            x = hexBuilder.totalLifepower;
             FillFloatVal(3);
             // 4 - personnel & maxpersonnel
-            bool highlightHousing = false;
             t = GetText(4);
-            int pi = stats.personnelInvolved, housing = stats.housing;
-            t.text = pi.ToString() + '/' + stats.maxPersonnel.ToString();
-            if (pi > housing) t.color = Color.red;
-            else
-            {
-                if (stats.maxPersonnel >= housing)
-                {
-                    t.color = Color.yellow;
-                    highlightHousing = true;
-                }
-                else t.color = Color.white;
-            }
+            int a = hexBuilder.totalPersonnelInvolved, b = hexBuilder.totalPersonnelSlots;
+            t.text = a.ToString() + '/' + b.ToString();
+            if (a > b) t.color = Color.yellow;
+            else t.color = Color.white;
             // 5 - housing
             t = GetText(5);
-            t.text = stats.housing.ToString();
-            t.color = highlightHousing ? Color.yellow : Color.white;
+            a = hexBuilder.freeColonists;
+            b = hexBuilder.totalHousing;
+            t.text = a.ToString() + '/' + b.ToString();
+            t.color = a > b ? Color.red : Color.white;
         }
 
         public void BuildButton(int i)
@@ -465,14 +508,28 @@ namespace FoundationRoute
         }
         public void BuildButton()
         {
-            var ns = selectedTypeStats.GetNoPersonnelCopy();
-            hexBuilder.CreateHex(selectedPosition, selectedType, ns);
+            var ns = selectedStats.GetNoPersonnelCopy();
+            hexBuilder.CreateHex(selectedPosition, ns);
             constructionWindow.SetActive(false);
         }
         public void CloseButton() {
             constructionWindow.SetActive(false);
         }
 
-        
+        public void AddWorker()
+        {
+            if (selectedHex != null && hexBuilder.SendColonistsForWork(selectedHex))
+            {
+                 OpenHexWindow(selectedHex);
+            }
+        }
+        public void RemoveWorker()
+        {
+            if (selectedHex != null && selectedHex.RemoveWorker())
+            {
+                hexBuilder.FreeColonistFromWork();
+                OpenHexWindow(selectedHex);
+            }
+        }
     }
 }

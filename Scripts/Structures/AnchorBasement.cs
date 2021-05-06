@@ -13,18 +13,17 @@ public sealed class AnchorBasement : WorkBuilding
     private Transform endCrystal, hexBasement, bigGear, smallGear, colonistsShip;
     private LineRenderer mainLine;
     private Vector3 pierPosition;
-    private Vector3 endCrystalEndPosition { get { return transform.position + Vector3.down * OUTER_RING_HEIGHT; } }
-    private Vector3 hexBasementEndPosition { get { return transform.position + Vector3.down * INNER_RING_HEIGHT;  } }
+    public Vector3 outerRingZeroPoint { get { return new Vector3(transform.position.x, OUTER_RING_HEIGHT, transform.position.z); } }
+    private Vector3 innerRingZeroPoint { get { return new Vector3(transform.position.x, INNER_RING_HEIGHT, transform.position.z); } }
     private ActivityStage currentStage;
-    private bool liftObject = false, transportColonists = false;
+    private bool liftObject = false, transportColonists = false, sendSystemActivated = false;
     private FoundationRouteScenario scenario;
     private ShipStatus shipStatus;
-    private Action colonistsInfoUpdate;
     private float poweringProgress = 0f, shipSpeed = 0f, distanceToPier = 0f, shipTimer = 0f;
     public int colonistsArrived { get; private set; }
+    private byte innerSectorsBuilt = 0;
     public const float POWER_CONSUMPTION = -1500f, MAX_EXCESS_POWER = 15000f;
-    private static readonly float INNER_RING_HEIGHT = Chunk.chunkSize * 1.25f + 2f, OUTER_RING_HEIGHT = INNER_RING_HEIGHT + HEXSIZE * 0.75f;
-    private const float HEXSIZE = 4f, PIER_HEIGHT = 10f,
+    private const float HEXSIZE = 4f, INNER_RING_HEIGHT = -25f, OUTER_RING_HEIGHT = -29f,  PIER_HEIGHT = -10f,
         PADS_LIFT_SPEED = 2f, SHIP_WIDTH = 4f, SHIP_SPAWN_DISTANCE = 200f, SHIP_MAX_SPEED = 50f, SHIP_ACCELERATION = 2f, SHIP_AWAITING_TIME = 10f,
         SHIP_DOCKING_TIME = 10f, POWERING_SPEED = 0.1f;
     private const int MIN_COLONISTS_COUNT = 400, MAX_COLONISTS_COUNT = 2000;
@@ -45,10 +44,10 @@ public sealed class AnchorBasement : WorkBuilding
         SetBuildingData(b, pos, false);
         currentStage = ActivityStage.BasementBuilt;
         poweringProgress = 0f;
-        endCrystal = Instantiate(Resources.Load<GameObject>("Prefs/Special/fd_endCrystal")).transform;
+        endCrystal = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "fd_endCrystal")).transform;
         endCrystal.position = transform.position;
         endCrystal.GetComponent<Rotator>().SetRotationVector(Vector3.up * 25f);
-        pierPosition = transform.position + Vector3.down * PIER_HEIGHT;
+        pierPosition = new Vector3(transform.position.x, PIER_HEIGHT, transform.position.z);
         PrepareMainLine();
     }
     public void SetEnergySurplus(float x)
@@ -109,8 +108,8 @@ public sealed class AnchorBasement : WorkBuilding
         {
             case ActivityStage.BasementBuilt:
                 {
-                    poweringProgress = Mathf.MoveTowards(poweringProgress, 1f, PADS_LIFT_SPEED * t * 0.02f);
-                    endCrystal.position = Vector3.Lerp(transform.position, endCrystalEndPosition, poweringProgress);
+                    poweringProgress = Mathf.MoveTowards(poweringProgress, 1f, PADS_LIFT_SPEED * t * 0.1f);
+                    endCrystal.position = Vector3.Lerp(transform.position, outerRingZeroPoint + Vector3.down * 3f, poweringProgress);
                     mainLine.SetPosition(1, endCrystal.transform.position);
                     if (poweringProgress >= 1f)
                     {                        
@@ -126,7 +125,7 @@ public sealed class AnchorBasement : WorkBuilding
                     float energyBoost = colony.energySurplus / MAX_EXCESS_POWER;
                     if (energyBoost >= 1f) energyBoost = 1f;
                     poweringProgress += (POWERING_SPEED + energyBoost) * t;
-                    hexBasement.position = Vector3.Lerp(transform.position, hexBasementEndPosition, poweringProgress);
+                    hexBasement.position = Vector3.Lerp(transform.position, innerRingZeroPoint, poweringProgress);
                     if (poweringProgress >= 1f)
                     {
                         // special sound?
@@ -145,10 +144,11 @@ public sealed class AnchorBasement : WorkBuilding
                     {
                         float energyBoost = colony.energySurplus / MAX_EXCESS_POWER;
                         if (energyBoost >= 1f) energyBoost = 1f;
-                        poweringProgress += (POWERING_SPEED + energyBoost) * t * 0.25f;
-                        bigGear.position = Vector3.Lerp(transform.position, hexBasementEndPosition, poweringProgress);
+                        poweringProgress += (POWERING_SPEED + energyBoost) * t * 0.5f;
+                        bigGear.position = Vector3.Lerp(transform.position, innerRingZeroPoint, poweringProgress);
                         if (poweringProgress >= 1f)
                         {
+                            poweringProgress = 0f;
                             liftObject = false;
                             scenario.AnchorBigGearReady();
                         }
@@ -241,11 +241,6 @@ public sealed class AnchorBasement : WorkBuilding
             default:return true;
         }
     }   
-    public void SetColonistUIUpdateFunction(Action ui_update)
-    {
-        colonistsInfoUpdate = ui_update;
-        ui_update();
-    }
     
     public void StartActivating()
     {
@@ -272,13 +267,12 @@ public sealed class AnchorBasement : WorkBuilding
             PrepareMainLine();
         }
     }
-    public void StartTransportingColonists(Action ui_function)
+    public void StartTransportingColonists()
     {
         if (GameMaster.loading) return;
         if (currentStage == ActivityStage.PierPreparing)
         {
             currentStage = ActivityStage.OuterRingBuilding;
-            colonistsInfoUpdate = ui_function;
             transportColonists = true;
             if (colonistsShip == null) LoadColonistsShip();
             SetShipStartPosition();
@@ -286,15 +280,15 @@ public sealed class AnchorBasement : WorkBuilding
     }
     private void LoadHexBasement()
     {
-        hexBasement = Instantiate(Resources.Load<GameObject>("Prefs/Special/fd_hexBasement"), transform.position + Vector3.down * 2f, Quaternion.identity).transform;
+        hexBasement = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "fd_hexBasement"), transform.position + Vector3.down * 2f, Quaternion.identity).transform;
     }
     private void LoadSmallGear()
     {
-        smallGear = Instantiate(Resources.Load<GameObject>("Prefs/Special/fd_smallGear"), transform.position, Quaternion.identity).transform;
+        smallGear = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "fd_smallGear"), transform.position, Quaternion.identity).transform;
     }
     private void LoadBigGear()
     {
-        bigGear = Instantiate(Resources.Load<GameObject>("Prefs/Special/fd_bigGear")).transform;
+        bigGear = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "fd_bigGear")).transform;
     }
     private void LoadColonistsShip()
     {
@@ -346,31 +340,49 @@ public sealed class AnchorBasement : WorkBuilding
         var x = UnityEngine.Random.Range(MIN_COLONISTS_COUNT, MAX_COLONISTS_COUNT);
         colonistsArrived += x;
         colony.AddCitizens(x, false);
-        colonistsInfoUpdate?.Invoke();
+        if (!sendSystemActivated)
+        {
+            scenario.PrepareSettling();
+            sendSystemActivated = true;
+        }
     }
 
-    public void AddSector(byte ringIndex, byte ringPosition)
+    public bool TryGetColonists(int x)
+    {
+        if (colonistsArrived >= x)
+        {
+            colonistsArrived -= x;
+            return true;
+        }
+        else return false;
+    }
+
+    public void AddInnerSector( byte ringPosition)
     {
         if (hexPref == null)
         {
-            hexPref = Resources.Load<GameObject>("Prefs/Special/foundationHex");
+            hexPref = Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "foundationHex");
         }
         Transform t = Instantiate(hexPref).transform;
-        switch (ringIndex)
+        t.position = innerRingZeroPoint + Quaternion.AngleAxis(60f * ringPosition, Vector3.up) * (Vector3.forward * HEXSIZE * 2f);
+        t.localScale = Vector3.one * 0.5f;
+        string name;
+        var x = ringPosition % 3;
+        if (x == 0)
         {
-            case 0: // INNER
-                {
-                    t.position = transform.position + Vector3.down * INNER_RING_HEIGHT + Quaternion.AngleAxis(60f * ringPosition, Vector3.up) * (Vector3.forward * HEXSIZE * 2f);
-                    t.localScale = Vector3.one * 0.5f;
-                    break;
-                }
-            case 1: // OUTER
-                {
-                    t.position = transform.position + Vector3.down * OUTER_RING_HEIGHT + Quaternion.AngleAxis(60f * ringPosition, Vector3.up) * (Vector3.forward * HEXSIZE * 4f);
-                    
-                    break;
-                }
+            name = "forge";
         }
+        else
+        {
+            if (x == 1) name = "techStation";
+            else name = "residentialBuilding";
+        }
+        var model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + name));
+        Transform t2 = model.transform;
+        t2.parent = t;
+        t2.localPosition = Vector3.zero;
+        t2.localRotation = Quaternion.Euler(0f, 60f * ringPosition, 0f);
+        innerSectorsBuilt = (byte)(ringPosition + 1);
     }
 
     private void OnDestroy()
@@ -386,13 +398,21 @@ public sealed class AnchorBasement : WorkBuilding
         switch (currentStage)
         {
             case ActivityStage.BasementBuilt:
-            case ActivityStage.PoweringUp:
                 data.AddRange(BitConverter.GetBytes(poweringProgress));
                 break;
+            case ActivityStage.PoweringUp:
+                data.AddRange(BitConverter.GetBytes(poweringProgress));
+                data.Add(hexBasement != null ? (byte)1 : (byte)0);
+                break;
             case ActivityStage.InnerRingBuilding:
+                data.Add(liftObject ? (byte)1 : (byte)0);
+                data.AddRange(BitConverter.GetBytes(poweringProgress));
+                data.Add(bigGear != null ? (byte)1 : (byte)0);
+                break;
             case ActivityStage.PierPreparing:
                 data.Add(liftObject ? (byte)1 : (byte)0);
                 data.AddRange(BitConverter.GetBytes(poweringProgress));
+                data.Add(smallGear != null ? (byte)1 : (byte)0);
                 break;
             case ActivityStage.OuterRingBuilding:
                 data.Add(transportColonists ? (byte)1 : (byte)0);
@@ -425,6 +445,7 @@ public sealed class AnchorBasement : WorkBuilding
                 data.AddRange(BitConverter.GetBytes(colonistsArrived));
                 break;
         }
+        data.Add(innerSectorsBuilt);
         return data;
     }
 
@@ -433,21 +454,34 @@ public sealed class AnchorBasement : WorkBuilding
         base.Load(fs, sblock);
         var x = fs.ReadByte();
         currentStage = (ActivityStage)x;
-        byte[] data;       
+        byte[] data;
+        bool loadBasement = true, loadBigGear = true, loadSmallGear = true;
         switch (currentStage)
         {
             case ActivityStage.BasementBuilt:
-            case ActivityStage.PoweringUp:
                 data = new byte[4];
                 fs.Read(data, 0, data.Length);
                 poweringProgress = BitConverter.ToSingle(data, 0);
                 break;
-            case ActivityStage.InnerRingBuilding:
-            case ActivityStage.PierPreparing:
+            case ActivityStage.PoweringUp:
                 data = new byte[5];
+                fs.Read(data, 0, data.Length);
+                poweringProgress = BitConverter.ToSingle(data, 0);
+                loadBasement = data[4] == 1;
+                break;
+            case ActivityStage.InnerRingBuilding:
+                data = new byte[6];
                 fs.Read(data, 0, data.Length);
                 liftObject = data[0] == 1;
                 poweringProgress = BitConverter.ToSingle(data, 1);
+                loadBigGear = data[5] == 1;
+                break;
+            case ActivityStage.PierPreparing:
+                data = new byte[6];
+                fs.Read(data, 0, data.Length);
+                liftObject = data[0] == 1;
+                poweringProgress = BitConverter.ToSingle(data, 1);
+                loadSmallGear = data[5] == 1;
                 break;
             case ActivityStage.OuterRingBuilding:
                 transportColonists = (fs.ReadByte() == 1);
@@ -491,19 +525,19 @@ public sealed class AnchorBasement : WorkBuilding
                 colonistsArrived = BitConverter.ToInt32(data, 0);
                 break;
         }
-        // SAVING HEX ARRAYS
+
         if (currentStage > ActivityStage.BasementBuilt)
         {
-            endCrystal.position = endCrystalEndPosition;
-            LoadHexBasement();
+            endCrystal.position = outerRingZeroPoint;
+            if (loadBasement) LoadHexBasement();
             if (currentStage > ActivityStage.PoweringUp)
             {
-                LoadBigGear();
-                var p = hexBasementEndPosition;
+                if (loadBigGear) LoadBigGear();
+                var p = innerRingZeroPoint;
                 hexBasement.position = p;
                 if (currentStage > ActivityStage.InnerRingBuilding)
                 {
-                    LoadSmallGear();
+                    if (loadSmallGear) LoadSmallGear();
                     bigGear.position = p;
                     if (currentStage > ActivityStage.InnerRingBuilding)
                     {
@@ -513,6 +547,14 @@ public sealed class AnchorBasement : WorkBuilding
             }
         }
         PrepareMainLine();
+        var s_innerSectorsBuilt = (byte)fs.ReadByte();
+        if (innerSectorsBuilt != 0)
+        {
+            for (byte i = 0; i < s_innerSectorsBuilt; i++)
+            {
+                AddInnerSector(i);
+            }
+        }
     }
     #endregion
 }

@@ -1,7 +1,7 @@
-2 51
+2 57
 [01]We decided that our population will be our stability. Our people are many, and united we stand tall. So lets transform our small home into a powerful country!
 [02]For owning our own lands we will need a lot of resources, workpower and transport mechanisms. At first we need an
-[03]. This massive construction needs a very powerful energy source with a 3x3 free space and of course you shall build it on the bottom side of the island.
+[03]. This massive construction needs a very powerful energy source with a 3x3 free space and shall be built at the bottom side of the island.
 [04]Build
 [05]. Make attention that it needs a lot of energy supply. Also its workspeed will be in dependency of excess energy reserves. Be sure that you have got well-prepared power base.
 [06]Now continue supplying the Anchor with power.
@@ -51,3 +51,10 @@
 [48]Commercial areas
 [49]Nature hexes
 [50]Industrial areas
+-
+[51]Send colonists
+[52]Not enough colonists! Need 
+[53] to deploy.
+[54]Not enough supplies!
+[55]Not enough living space!
+[56]Living space

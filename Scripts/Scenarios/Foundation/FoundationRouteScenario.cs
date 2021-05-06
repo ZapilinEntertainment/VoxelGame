@@ -1,9 +1,10 @@
 ﻿using System.IO;
 using UnityEngine;
 using FoundationRoute;
+using UnityEngine.UI;
 public sealed class FoundationRouteScenario : Scenario
 {
-    private enum FoundationScenarioStep { Begin, AnchorBuilding, AnchorStart, InnerRingBuilding, PierPreparing, OuterRingBuilding }
+    private enum FoundationScenarioStep { Begin, AnchorBuilding, AnchorStart, InnerRingBuilding, PierPreparing, OuterRingBuilding, Settling }
     
     private FoundationScenarioStep currentStep;
     private StandartScenarioUI scenarioUI;
@@ -15,9 +16,14 @@ public sealed class FoundationRouteScenario : Scenario
     private ColonyController colony;
     private Quest scenarioQuest;
     private HexBuilder hexBuilder;
+    private ConditionQuest settleQuest;
+    private ConditionWindowController settleWindow;
 
     private const byte WINDOW_INFO_0 = 1, WINDOW_INFO_1 =2, QUEST_INFO_0 = 3, QUEST_INFO_1 = 4;
-    private const int ANCHOR_LAUNCH_ENERGYCOST = 20000; //70
+    private const int ANCHOR_LAUNCH_ENERGYCOST = 20000, //70 
+        COST_RESOURCE_ID = ResourceType.SUPPLIES_ID, COLONISTS_SEND_COST = 10000;
+    public const int COLONISTS_SEND_LIMIT = 1000;    
+    public static readonly string resourcesPath = "Prefs/Special/FoundationRoute/"; 
 
     public FoundationRouteScenario() : base(FOUNDATION_ROUTE_ID)
     {
@@ -34,28 +40,33 @@ public sealed class FoundationRouteScenario : Scenario
     public override void StartScenario()
     {
         PrepareUI();
-        currentStep = FoundationScenarioStep.Begin;
-        hexBuilder = new HexBuilder(this);
-        //hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
-        //hexBuilder.CreateHexMaquette(new HexPosition(1,2));
-        //hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
-        //hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
-        //hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
-        //hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
+        currentStep = FoundationScenarioStep.Begin;        
+        /*
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
+        hexBuilder.CreateHexMaquette(new HexPosition(1,2));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
+        hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
+         */
+        colony.storage.AddResource(ResourceType.Stone, 25000f);
+        colony.storage.AddResource(ResourceType.metal_M, 5000f);
+        colony.storage.AddResource(ResourceType.metal_N, 600f);
+        colony.storage.AddResource(ResourceType.Dirt, 25000f);
+        colony.storage.AddResource(ResourceType.mineral_F, 6000f);
+
 
         void crh(HexPosition hpos, HexType htype)
         {
-            hexBuilder.CreateHex(hpos, htype, new HexBuildingStats(htype));
+            hexBuilder.CreateHex(hpos, new HexBuildingStats(htype));
         }
-        //crh(new HexPosition(0, 0),HexType.Residential);
-        //crh(new HexPosition(0, 1),HexType.ResidentialDense);
-        crh(new HexPosition(0, 0), HexType.Industrial);
-        //crh(new HexPosition(0, 3), HexType.Commercial);
-        crh(new HexPosition(0, 4), HexType.CommercialDense);
-        crh(new HexPosition(0, 1), HexType.IndustrialExperimental);
-       // crh(new HexPosition(1, 0), HexType.Powerplant);
+        /*
+              crh(new HexPosition(1, 0), HexType.Forest);
+              crh(new HexPosition(1, 1), HexType.Mountain);
+              crh(new HexPosition(1, 2), HexType.Lake);
+              */
 
-        //StartSubscenario();
+        StartSubscenario();
     }
     private void StartSubscenario()
     {
@@ -110,7 +121,7 @@ public sealed class FoundationRouteScenario : Scenario
     private void AssignAnchor(AnchorBasement ab)
     {
         _anchorBasement = ab;
-        _anchorBasement.LinkScenario(this);
+        _anchorBasement?.LinkScenario(this);
     }
 
     public void AnchorPoweredUp()
@@ -121,12 +132,65 @@ public sealed class FoundationRouteScenario : Scenario
     }
     public void AnchorBigGearReady()
     {
-        if (currentStep == FoundationScenarioStep.InnerRingBuilding && (subscenario == null || subscenario.completed)) Next();
+        if (currentStep == FoundationScenarioStep.InnerRingBuilding) {
+            if (subscenario == null || subscenario.completed) Next();
+        }
+        else
+        {
+            if (currentStep == FoundationScenarioStep.PierPreparing)
+            {
+                anchorBasement.ActivatePier();
+            }
+        }
     }
     public void LoadHexInfo(out string[] conditionStrings, out string[] buildingsInfo)
     {
         localizer.LoadHexBuildingData(out conditionStrings, out buildingsInfo);
     }
+    public void PrepareSettling()
+    {
+        if (settleQuest != null) return;
+        settleQuest = new ConditionQuest( new SimpleCondition[3]
+        {
+            SimpleCondition.GetDummyCondition(null),
+            SimpleCondition.GetDummyCondition(null),
+            SimpleCondition.GetResourceCondition(ResourceType.Supplies, COLONISTS_SEND_COST)
+        },
+        colony, false, ConditionQuest.ConditionQuestIcon.PeopleIcon  );
+        settleQuest.steps[0] = localizer.colonistArrivedLabel;
+        settleQuest.steps[1] = localizer.livingSpaceLabel;
+        UIController.GetCurrent().updateEvent += CheckSettlingConditions;
+        settleWindow = scenarioUI.ShowConditionPanel(1, settleQuest, this.SendColonists);
+        settleWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.Citizen));
+        settleWindow.SetButtonText(localizer.sendColonistsLabel);
+    }
+    private void CheckSettlingConditions()
+    {
+        if (GameMaster.loading) return;
+        settleQuest.CheckQuestConditions(); // for resource
+        int x = anchorBasement.colonistsArrived;
+        settleQuest.stepsAddInfo[0] = x.ToString() + " / " + COLONISTS_SEND_LIMIT.ToString();
+        settleQuest.stepsFinished[0] = x >= COLONISTS_SEND_LIMIT;
+        x = hexBuilder.totalHousing;
+        int y = hexBuilder.colonistsCount;
+        settleQuest.stepsAddInfo[1] = y.ToString() + " / " + x.ToString();
+        settleQuest.stepsFinished[1] = x > y;        
+        settleWindow.Refresh();
+    }
+
+    private void SendColonists()
+    {
+        if (anchorBasement.TryGetColonists(COLONISTS_SEND_LIMIT))
+        {
+            if (colony.storage.TryGetResources(COST_RESOURCE_ID, COLONISTS_SEND_COST))
+            {
+                if (!hexBuilder.TryAddColonist()) AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughLivingSpace);
+            }
+            else AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughSuppliesMsg);
+        }
+        else AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughColonistsMsg);
+    }
+    
 
     public override void EndScenario()
     {
@@ -152,6 +216,9 @@ public sealed class FoundationRouteScenario : Scenario
     }
     override public byte GetStepsCount() {
         return subscenario.GetStepsCount();
+    }
+    private void SetHexBuilder() {
+        hexBuilder = new HexBuilder(this);
     }
     //
     #region steps
@@ -184,9 +251,10 @@ public sealed class FoundationRouteScenario : Scenario
     private class FDR_ConditionSubscenario : FDR_Subscenario
     {
         protected ConditionQuest conditionQuest;
+        protected ConditionWindowController conditionWindow;
         public FDR_ConditionSubscenario(FoundationRouteScenario i_scenario) : base (i_scenario) { }
 
-        protected void StartSectorBuildingQuest(byte ring, byte index)
+        protected void StartSectorBuildingQuest(byte ring, byte index, System.Action clickAction)
         {
             var conditions = new SimpleCondition[3];
             if (ring == 0) // INNER RING
@@ -249,7 +317,7 @@ public sealed class FoundationRouteScenario : Scenario
                     case 3:
                         conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.metal_M, 5700f);
                         conditions[1] = SimpleCondition.GetShuttlesCondition(1); // 10
-                        conditions[2] = SimpleCondition.GetDummyCondition(); 
+                        conditions[2] = SimpleCondition.GetDummyCondition(true); 
                         // 4 рейса с оборудованием
                         break;
                     case 4:
@@ -268,8 +336,8 @@ public sealed class FoundationRouteScenario : Scenario
                 
             }
             conditionQuest.CheckQuestConditions();
-            scenarioUI.ShowConditionPanel(conditionQuest);
-            conditionQuest.BindUIUpdateFunction(scenarioUI.UpdateConditionInfo);
+            conditionWindow = scenarioUI.ShowConditionPanel(0, conditionQuest, clickAction);
+            conditionQuest.BindUIUpdateFunction(conditionWindow.Refresh);
             conditionQuest.SubscribeToUpdate(questUI);                 
         }
 
@@ -359,10 +427,11 @@ public sealed class FoundationRouteScenario : Scenario
                     );
                 scenario.StartQuest(conditionQuest);
                 scenarioQuest.FillText(localizer.GetQuestData(FoundationScenarioStep.AnchorStart));
-                scenarioUI.ChangeConditionButtonLabel(Localization.GetWord(LocalizedWord.Anchor_verb));
-                scenarioUI.ChangeConditionIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.FoundationRoute));
-                conditionQuest.BindUIUpdateFunction(scenarioUI.UpdateConditionInfo);                
-                scenarioUI.ShowConditionPanel(scenarioQuest);
+
+                conditionWindow = scenarioUI.ShowConditionPanel(0, conditionQuest, this.UIConditionProceedButton);
+                conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Anchor_verb));
+                conditionWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.FoundationRoute));
+                conditionQuest.BindUIUpdateFunction(conditionWindow.Refresh);                
             }
         }
         public override void UIConditionProceedButton()
@@ -371,7 +440,7 @@ public sealed class FoundationRouteScenario : Scenario
             {
                 stage++;
                 scenarioQuest.MakeQuestCompleted();
-                scenarioUI.DisableConditionPanel();
+                scenarioUI.DisableConditionPanel(0);
                 anchorBasement.StartActivating();
                 completed = true;
             }
@@ -412,8 +481,8 @@ public sealed class FoundationRouteScenario : Scenario
             {
                 scenarioUI.CloseAnnouncePanel();
                 stage++;
-                scenarioUI.ChangeConditionButtonLabel(Localization.GetWord(LocalizedWord.Build));
-                StartSectorBuildingQuest(0, 0);                
+                StartSectorBuildingQuest(0, 0, this.UIConditionProceedButton);
+                conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Build));
             }
             else
             {
@@ -432,16 +501,17 @@ public sealed class FoundationRouteScenario : Scenario
             scenarioQuest.stepsAddInfo[0] = ringStage.ToString() + "/6";            
             if (ringStage < 5)
             {
-                anchorBasement.AddSector(0, ringStage);
+                anchorBasement.AddInnerSector(ringStage);
                 conditionQuest.StopQuest(false);
-                StartSectorBuildingQuest(0, (byte)(ringStage + 1));
+                StartSectorBuildingQuest(0, (byte)(ringStage + 1), this.UIConditionProceedButton);
             } 
             else
             {
                 if (ringStage == 5)
                 {
-                    anchorBasement.AddSector(0, 5);
-                    scenarioUI.DisableConditionPanel();
+                    scenario.SetHexBuilder();
+                    anchorBasement.AddInnerSector(5);
+                    scenarioUI.DisableConditionPanel(0);
                     conditionQuest.StopQuest(false);
                     conditionQuest = null;
                     scenarioQuest.MakeQuestCompleted();                   
@@ -471,7 +541,7 @@ public sealed class FoundationRouteScenario : Scenario
                     else
                     {
                         stage = nstage;
-                        StartSectorBuildingQuest(0, --nstage);
+                        StartSectorBuildingQuest(0, --nstage, this.UIConditionProceedButton);
                         scenarioQuest.stepsAddInfo[0] = (--nstage).ToString() + "/6";
                     }
                 }
@@ -535,36 +605,37 @@ public sealed class FoundationRouteScenario : Scenario
         {
             scenario.StartQuest(this);
             scenarioQuest.stepsAddInfo[0] = "0/6";
-            anchorBasement.StartTransportingColonists(this.RewriteColonistsCount);
+            anchorBasement.StartTransportingColonists();
 
-            scenarioUI.ChangeConditionButtonLabel(Localization.GetWord(LocalizedWord.Build));
-            StartSectorBuildingQuest(1, 0);
-        }
-        private void RewriteColonistsCount()
-        {
-            scenarioUI.ShowInfoString(
-                localizer.GetAnnounceTitle(FoundationScenarioStep.OuterRingBuilding, WINDOW_INFO_0) + ' ' +
-                anchorBasement.colonistsArrived.ToString()
-                )
-                ;
+            StartSectorBuildingQuest(1, 0, this.UIConditionProceedButton);
+            conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Build));            
+            //
         }
 
         public override void UIConditionProceedButton()
         {
             scenarioQuest.stepsAddInfo[0] = (stage+1).ToString() + "/6";
-            if (stage < 6)
+            HexType htype;
+            int x = stage % 3;
+            if (x == 0) htype = HexType.DummyRed;
+            else
             {
-                anchorBasement.AddSector(1, stage);
+                if (x == 1) htype = HexType.DummyGreen;
+                else htype = HexType.DummyBlue;
+            }
+            scenario.hexBuilder.CreateHex(new HexPosition(0, stage), htype);
+
+            if (stage < 5)
+            {                   
                 conditionQuest.StopQuest(false);
-                StartSectorBuildingQuest(1, stage);
+                StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
                 stage++;
             }
             else
             {
-                anchorBasement.AddSector(1, stage);
                 scenarioQuest.MakeQuestCompleted();
                 conditionQuest.StopQuest(false);
-                scenarioUI.DisableConditionPanel();
+                scenarioUI.DisableConditionPanel(0);
                 conditionQuest = null;
                 scenario.Next();
             }
@@ -579,9 +650,8 @@ public sealed class FoundationRouteScenario : Scenario
             if (nstage != 0)
             {
                 stage = nstage;
-                StartSectorBuildingQuest(1, stage);
+                StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
             }
-            anchorBasement.SetColonistUIUpdateFunction(this.RewriteColonistsCount);
         }
     }
     sealed class FDR_Example : FDR_Subscenario
@@ -601,6 +671,12 @@ public sealed class FoundationRouteScenario : Scenario
         public string conditionQuestText { get { return lines[13]; } }
         public string innerRingConstruction { get { return lines[12]; } }
         public string outerRingConstruction { get { return lines[21]; } }
+        public string colonistArrivedLabel {  get { return lines[19]; } }
+        public string sendColonistsLabel { get { return lines[51]; } }
+        public string notEnoughColonistsMsg {  get { return lines[52] + COLONISTS_SEND_LIMIT.ToString() + lines[53]; } }
+        public string notEnoughSuppliesMsg { get { return lines[54]; } }
+        public string notEnoughLivingSpace { get { return lines[55]; } }
+        public string livingSpaceLabel { get { return lines[56]; } }
 
         public Localizer()
         {
@@ -746,12 +822,23 @@ public sealed class FoundationRouteScenario : Scenario
         {
             fs.WriteByte(1);
             subscenario.Save(fs);
-        }         
+        }
+        if (hexBuilder != null)
+        {
+            fs.WriteByte(1);
+            hexBuilder.Save(fs);
+        }
+        else fs.WriteByte(0);
+        if (settleQuest != null)
+        {
+            fs.WriteByte(1);
+        }
+        else fs.WriteByte(0);
     }
     public override void Load(FileStream fs)
     {
         currentStep = (FoundationScenarioStep)fs.ReadByte();
-        if (currentStep > FoundationScenarioStep.AnchorBuilding)
+        if (currentStep >= FoundationScenarioStep.AnchorBuilding)
         {
             AssignAnchor( colony.GetBuilding(Structure.ANCHOR_BASEMENT_ID) as AnchorBasement );
         }
@@ -759,8 +846,14 @@ public sealed class FoundationRouteScenario : Scenario
         if (x != 0)
         {
             StartSubscenario();
-            subscenario.Load(fs);
+            subscenario?.Load(fs);
         }
+        if (fs.ReadByte() == 1)
+        {
+            if (hexBuilder == null) SetHexBuilder();
+            hexBuilder.Load(fs);
+        }
+        if (fs.ReadByte() == 1) PrepareSettling();
     }
     #endregion
 }

@@ -259,6 +259,10 @@ public class UIController : MonoBehaviour
 
 
     // --------------
+    public static Texture GetResourcesTexture()
+    {
+        return Resources.Load<Texture>("Textures/resourcesIcons");
+    }
     public static Rect GetIconUVRect(Icons i)
     {
         float p = 0.125f;

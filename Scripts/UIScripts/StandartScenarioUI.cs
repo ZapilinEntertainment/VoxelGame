@@ -4,16 +4,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
-public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
+public sealed class StandartScenarioUI : MonoBehaviour
 {
-    [SerializeField] private GameObject announcePanel, conditionPanel, blockmask, conditionLine1, conditionLine2, specialButton;
-    [SerializeField] private Text announceText, condition0, condition1, condition2, infoString0;
-    [SerializeField] private RawImage icon,conditionIcon, conditionCompleteMark0, conditionCompleteMark1, conditionCompleteMark2;
-    [SerializeField] private Button conditionButton;
-    private bool conditionWindowEnabled = false, canvasEnabled = true, infoString0_enabled = false;
+    [SerializeField] private GameObject announcePanel, blockmask, specialButton;
+    [SerializeField] private Text announceText,infoString0;
+    [SerializeField] private RawImage icon;
+    [SerializeField] private ConditionWindowController[] conditionWindows;
+    private bool canvasEnabled = true, infoString0_enabled = false;
     private GameObject maincanvas_rightpanel;
     private Scenario workingScenario;
-    private Quest conditionQuest;
     private Canvas myCanvas;
     private MainCanvasController mcc;
     private Action specialButtonFunction;
@@ -31,29 +30,17 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         myCanvas = GetComponent<Canvas>(); canvasEnabled = myCanvas.enabled;
         announcePanel.SetActive(false);
         blockmask.SetActive(false);
-        conditionPanel.SetActive(false); conditionWindowEnabled = false;
         specialButton.SetActive(false);
         infoString0.transform.parent.gameObject.SetActive(false); infoString0_enabled = false;
+        foreach(var cw in conditionWindows)
+        {
+            cw.gameObject.SetActive(false);
+        }
         
-        LocalizeTitles();
         var uic = UIController.GetCurrent();
         uic.AddSpecialCanvasToHolder(transform);
         mcc = uic.GetMainCanvasController();
         maincanvas_rightpanel = mcc.rightPanel;
-    }
-
-    private void Update()
-    {
-        if (conditionWindowEnabled)
-        {
-            bool x = maincanvas_rightpanel.activeSelf;
-            if (canvasEnabled != x)
-            {
-                x = !x;
-                myCanvas.enabled = x;
-                canvasEnabled = x;
-            }
-        }        
     }
 
     public void ShowAnnouncePanel() {
@@ -66,66 +53,16 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         blockmask.SetActive(false);
     }
     // conditions
-    public void ShowConditionPanel(Quest i_quest)
+    public ConditionWindowController ShowConditionPanel(int i,Quest conditionQuest, Action i_clickAction)
     {
-        conditionQuest = i_quest;
-        UpdateConditionInfo();        
-        conditionWindowEnabled = true;
-        conditionPanel.SetActive(conditionWindowEnabled);
-        mcc.ChangeChosenObject(ChosenObjectType.None);
+        var cwo = conditionWindows[i];
+        cwo.SetConditions(conditionQuest, i_clickAction);
+        cwo.gameObject.SetActive(true);
+        return cwo;
     }
-    public void DisableConditionPanel()
+    public void DisableConditionPanel(int index)
     {
-        conditionPanel.SetActive(false);
-        conditionWindowEnabled = false;
-    }
-
-    public void UpdateConditionInfo()
-    {
-        condition0.text = conditionQuest.steps[0] + ' ' + conditionQuest.stepsAddInfo[0];
-        int completed = 0, stcount = conditionQuest.steps.Length;
-        bool finished = conditionQuest.stepsFinished[0];
-        conditionCompleteMark0.enabled = finished;
-        condition0.color = finished ? Color.grey : Color.white;
-        if (finished) completed++;
-        if (stcount != 1)
-        {
-            condition1.text = conditionQuest.steps[1] + ' ' + conditionQuest.stepsAddInfo[1];
-            finished = conditionQuest.stepsFinished[1];
-            conditionCompleteMark1.enabled = finished;
-            condition1.color = finished ? Color.grey : Color.white;
-            if (finished) completed++;
-            if (!conditionLine1.activeSelf) conditionLine1.SetActive(true);
-            if (stcount != 2)
-            {
-                condition2.text = conditionQuest.steps[2] + ' ' + conditionQuest.stepsAddInfo[2];
-                finished = conditionQuest.stepsFinished[2];
-                conditionCompleteMark2.enabled = finished;
-                condition2.color = finished ? Color.grey : Color.white;
-                if (finished) completed++;
-                if (!conditionLine2.activeSelf) conditionLine2.SetActive(true);
-            }
-            else {
-                if (conditionLine2.activeSelf) conditionLine2.SetActive(false);
-            }
-        }
-        else
-        {
-            if (conditionLine1.activeSelf) conditionLine1.SetActive(false);
-            if (conditionLine2.activeSelf) conditionLine2.SetActive(false);
-        }
-
-        bool x = completed == stcount;
-        conditionButton.interactable = x;
-        conditionButton.transform.GetChild(0).GetComponent<Text>().color = x ? Color.white : Color.grey;
-    }
-    public void ChangeConditionButtonLabel(string s)
-    {
-        conditionButton.transform.GetChild(0).GetComponent<Text>().text = s;
-    }
-    public void ConditionProceedButton()
-    {
-        workingScenario.UIConditionProceedButton();
+        conditionWindows[index].gameObject.SetActive(false);
     }
     // info string
     public void ShowInfoString(string s)
@@ -150,7 +87,7 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
     {
         specialButton.transform.GetChild(0).GetComponent<Text>().text = s;
         specialButtonFunction = i_action;
-        specialButton.SetActive(true);
+        specialButton.SetActive(true);        
     }
     public void SpecialButtonClick()
     {
@@ -176,11 +113,6 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         icon.texture = t;
         icon.uvRect = r;
     }
-    public void ChangeConditionIcon(Texture t, Rect r)
-    {
-        conditionIcon.texture = t;
-        conditionIcon.uvRect = r;
-    }
     public void ChangeAnnouncementText(string s)
     {
         announceText.text = s;
@@ -190,14 +122,4 @@ public sealed class StandartScenarioUI : MonoBehaviour, ILocalizable
         if (s == workingScenario) Destroy(gameObject);
     }
 
-    //
-    public void LocalizeTitles()
-    {
-        conditionButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Ready);
-        Localization.AddToLocalizeList(this);
-    }
-    private void OnDestroy()
-    {
-        Localization.RemoveFromLocalizeList(this);
-    }
 }

@@ -239,7 +239,7 @@ public sealed class OakTree : Plant
         RefreshVisibility();
     }
 
-    static GameObject LoadModel(byte stage)
+    public static GameObject LoadModel(byte stage)
     {
         GameObject g =  Instantiate(Resources.Load<GameObject>("Lifeforms/oak-" + stage.ToString()));
         if (!PoolMaster.useDefaultMaterials) PoolMaster.ReplaceMaterials(g);

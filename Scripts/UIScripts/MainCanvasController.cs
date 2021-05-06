@@ -581,10 +581,12 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             selectedPlane = null;
             selectedFaceIndex = Chunk.NO_FACE_VALUE;
             changeFrameColor = false;
+
+            uicontroller.ReactivateSpecialCanvas();
         }
         else
         {
-            
+            uicontroller.DisableSpecialCanvas();
             switch (newChosenType)
             {
                 case ChosenObjectType.Structure: if (chosenStructure == null) return; else break;

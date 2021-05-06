@@ -3,7 +3,6 @@
 public sealed class ResourceType
 {
     public readonly float mass, toughness;
-    public readonly Texture icon;
     public readonly string name;
     public readonly string description;
     public readonly int ID = -1;

@@ -11,6 +11,12 @@ namespace FoundationRoute
         public static readonly HexPosition zer0 = new HexPosition(0, 0), unexist = new HexPosition(255, 255);
         public HexPosition Copy { get { return new HexPosition(ringIndex, ringPosition); } }
 
+        public HexPosition(int index, byte position)
+        {
+            if (index < 0 || index > 255) { index = 255; Debug.Log("error in hexpositon index"); }
+            ringIndex = (byte)index;
+            ringPosition = position;
+        }
         public HexPosition(byte index, byte position)
         {
             ringIndex = index;
@@ -435,10 +441,25 @@ namespace FoundationRoute
             if (d > 5) d -= 6;
             return (byte)d;
         }
+
+        public override string ToString()
+        {
+            return "ring: " + ringIndex + ", position: " + ringPosition.ToString();
+        }
+
+        public void Save(System.IO.FileStream fs)
+        {
+            fs.WriteByte(ringIndex);
+            fs.WriteByte(ringPosition);
+        }
+        public static HexPosition Load(System.IO.FileStream fs)
+        {
+            return new HexPosition(fs.ReadByte(), fs.ReadByte());
+        }
     }
     
     public enum HexType : byte { Residential,ResidentialDense, ResidentialEco, Commercial, CommercialDense,
-    Fields, AdvancedFields, Forest, Mountain, Lake, Industrial, IndustrialExperimental, Powerplant, TotalCount }
+    Fields, AdvancedFields, Forest, Mountain, Lake, Industrial, IndustrialExperimental, Powerplant, TotalCount, DummyRed, DummyBlue, DummyGreen }
     public static class HexTypeExtension
     {
         public static HexSubtype DefineSubtype(this HexType htype)
@@ -474,16 +495,19 @@ namespace FoundationRoute
                 case HexType.ResidentialEco:
                 case HexType.Commercial:
                 case HexType.CommercialDense:
+                case HexType.DummyBlue:
                     return ColorCode.Blue;
                 case HexType.Fields:
                 case HexType.AdvancedFields:
                 case HexType.Forest:
                 case HexType.Mountain:
                 case HexType.Lake:
+                case HexType.DummyGreen:
                     return ColorCode.Green;
                 case HexType.Industrial:
                 case HexType.IndustrialExperimental:
                 case HexType.Powerplant:
+                case HexType.DummyRed:
                     return ColorCode.Red;
                 default: return ColorCode.NoColor;
             }
@@ -495,7 +519,8 @@ namespace FoundationRoute
     public class HexBuildingStats : MyObject
     {
         // нумерация нужна для ui-подсветки строчек
-        public float powerConsumption { get; private set; } // 0
+        
+        private float _maxPowerConsumption;// 0
         private float _maxIncome; // 1
         private float _maxFoodProduction; // 2
         private float _maxLifepower; // 3
@@ -503,17 +528,33 @@ namespace FoundationRoute
         public int maxPersonnel { get; private set; }      // 4b
         public int housing { get; private set; } // 5
 
-
-        public float income { get { return _maxIncome * personnel_cf; } private set { _maxIncome = value; } }         
-        public float lifepower { get { return _maxLifepower * personnel_cf; } private set { _maxLifepower = value; } }        
-        public float foodProduction { get { return _maxFoodProduction * personnel_cf; } private set { _maxFoodProduction = value; } }      
+        public float powerConsumption
+        {
+            get { if (maxPersonnel != 0) return _maxPowerConsumption * (0.2f +0.8f * personnel_cf); else return _maxPowerConsumption; }
+            private set { _maxPowerConsumption = value; }
+        }
+        public float income {
+            get { if (_maxIncome > 0f) return _maxIncome * personnel_cf; else return _maxIncome; }
+            private set { _maxIncome = value; } }         
+        public float lifepower {
+            get { if (_maxLifepower > 0f) return _maxLifepower * personnel_cf; else return _maxLifepower; }
+            private set { _maxLifepower = value; } }        
+        public float foodProduction {
+            get { if (_maxFoodProduction > 0f) return _maxFoodProduction * personnel_cf; else return _maxFoodProduction; }
+            private set { _maxFoodProduction = value; } }      
         private float personnel_cf { get {
                 if (maxPersonnel == 0) return 1f;
                 else return (float)personnelInvolved / (float)maxPersonnel;
             } }
         private readonly ResourceContainer[] cost;
-        private readonly HexType htype;
-        public const byte POWER_INDEX = 0, PERSONNEL_INDEX = 1, INCOME_INDEX = 2, LIFEPOWER_INDEX = 3, FOOD_INDEX = 4, HOUSING_INDEX = 5;
+        public readonly HexType htype;
+        public enum Stats : byte { PowerConsumption, Income, FoodProduction, LifepowerProduction, Personnel, Housing}
+        public int POWER_INDEX { get { return (int)Stats.PowerConsumption; } }
+        public int INCOME_INDEX { get { return (int)Stats.Income; } }
+        public int FOOD_INDEX { get { return (int)Stats.FoodProduction; } }
+        public int LIFEPOWER_INDEX { get { return (int)Stats.LifepowerProduction; } }
+        public int PERSONNEL_INDEX { get { return (int)Stats.Personnel; } }
+        public int HOUSING_INDEX { get { return (int)Stats.Housing; } }
 
         protected override bool IsEqualNoCheck(object obj)
         {
@@ -534,7 +575,6 @@ namespace FoundationRoute
             switch (type)
             {
                 case HexType.Residential:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 4f * pwr;                    
                     income = -3f * m;
                     lifepower = -1f * lp;
@@ -548,7 +588,6 @@ namespace FoundationRoute
                     };
                     break;
                 case HexType.ResidentialDense:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 10f * pwr;                    
                     income = -8f * m;
                     lifepower = -2f * lp;
@@ -562,7 +601,6 @@ namespace FoundationRoute
                     };
                     break;
                 case HexType.ResidentialEco:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 2f * pwr;                    
                     income = -4f * m;
                     lifepower = 0f;
@@ -712,7 +750,7 @@ namespace FoundationRoute
                     break;
                 case HexType.Powerplant:
                     maxPersonnel = 4 * ppl;
-                    powerConsumption = -70f * pwr;                    
+                    powerConsumption = -100f * pwr;                    
                     income = -10f * m;
                     lifepower = -14f * lp;
                     foodProduction = -1f * f;
@@ -739,24 +777,6 @@ namespace FoundationRoute
                     }
             }
             if (fullPersonnel) personnelInvolved = maxPersonnel;
-        }
-        public HexBuildingStats(ICollection<Hex> collection) : this(HexType.TotalCount)
-        {
-            if (collection.Count > 0)
-            {
-                HexBuildingStats stats;
-                foreach (var v in collection)
-                {
-                    stats = v.hexStats;
-                    powerConsumption += stats.powerConsumption;
-                    maxPersonnel += stats.maxPersonnel;
-                    personnelInvolved += stats.personnelInvolved;
-                    income += stats.income;
-                    lifepower += stats.lifepower;
-                    foodProduction += stats.foodProduction;
-                    housing += stats.housing;
-                }
-            }
         }
 
         public ResourceContainer[] GetCost()
@@ -828,6 +848,15 @@ namespace FoundationRoute
                                     case HexSubtype.Nature:
                                         multipliers[LIFEPOWER_INDEX] *= (htype == HexType.ResidentialEco) ? (1f + lifepowerBoost * 1.5f) : (1f + lifepowerBoost);
                                         break;
+                                    default:
+                                        {
+                                            if (n == HexType.DummyBlue)
+                                            {
+                                                multipliers[HOUSING_INDEX] *= 1.5f;
+                                                multipliers[FOOD_INDEX] *= 0.8f;
+                                            }
+                                            break;
+                                        }
                                 }
                             }
                         }
@@ -850,6 +879,14 @@ namespace FoundationRoute
                                     case HexSubtype.Industrial:
                                         multipliers[INCOME_INDEX] *= incomeBoost;
                                         break;
+                                    default:
+                                        {
+                                            if (n == HexType.DummyBlue)
+                                            {
+                                                multipliers[INCOME_INDEX] *= 1.5f;
+                                            }
+                                            break;
+                                        }
                                 }
                             }
                         }
@@ -866,6 +903,13 @@ namespace FoundationRoute
                                 if (n.DefineColorCode() == ColorCode.Blue)
                                 {
                                     multipliers[INCOME_INDEX] *= incomeIndBoost;
+                                }
+                                else
+                                {
+                                    if (n == HexType.DummyRed)
+                                    {
+                                        multipliers[POWER_INDEX] *= 0.5f;
+                                    }
                                 }
                             }
                         }
@@ -886,6 +930,10 @@ namespace FoundationRoute
                                 {
                                     multipliers[FOOD_INDEX] *= 1.2f;
                                     if (htype == HexType.Fields) multipliers[INCOME_INDEX] *= 1.1f;
+                                    if (n == HexType.DummyGreen)
+                                    {
+                                        multipliers[LIFEPOWER_INDEX] *= 1.5f;
+                                    }
                                 }
                                 else // blue
                                 {
@@ -898,123 +946,163 @@ namespace FoundationRoute
                 }
             }
             affections = new bool?[6];
-            float m = multipliers[0];
-            if (m == 1f) affections[0] = null;
+            int i = POWER_INDEX;
+            float m = multipliers[i];
+            if (m == 1f || _maxPowerConsumption == 0f) affections[i] = null;
             else
             {
-                if (m > 1f && powerConsumption > 0f)
+                if (m > 1f)
                 {
-                    affections[0] = true;
+                    affections[i] = false;
                 }
-                else affections[0] = false;
+                else affections[i] = true;
                 powerConsumption *= m;
             }
             //
-            m = multipliers[1];
-            if (m == 1f) affections[1] = null;
+            i = INCOME_INDEX;
+            m = multipliers[i];
+            if (m == 1f || _maxIncome == 0f) affections[i] = null;
             else
             {
                 if (m > 1f)
                 {
-                    affections[1] = true;
+                    affections[i] = true;
 
                 }
-                else affections[1] = false;
-                maxPersonnel = (int)(maxPersonnel * m);
+                else affections[i] = false;
+                income *= m;                
             }
             //
-            m = multipliers[2];
-            if (m == 1f) affections[2] = null;
+            i = FOOD_INDEX;
+            m = multipliers[i];
+            if (m == 1f || _maxFoodProduction == 0f) affections[i] = null;
             else
             {
                 if (m > 1f)
                 {
-                    affections[2] = true;
-
+                    affections[i] = true;
                 }
-                else affections[2] = false;
-                income *= m;
-            }
-            //
-            m = multipliers[3];
-            if (m == 1f) affections[3] = null;
-            else
-            {
-                if (m > 1f)
-                {
-                    affections[3] = true;
-
-                }
-                else affections[3] = false;
-                lifepower *= m;
-            }
-            //
-            m = multipliers[4];
-            if (m == 1f) affections[4] = null;
-            else
-            {
-                if (m > 1f)
-                {
-                    affections[4] = true;
-
-                }
-                else affections[4] = false;
+                else affections[i] = false;
                 foodProduction *= m;
             }
             //
-            m = multipliers[5];
-            if (m == 1f) affections[5] = null;
+            i = LIFEPOWER_INDEX;
+            m = multipliers[i];
+            if (m == 1f || _maxLifepower == 0f) affections[i] = null;
             else
             {
                 if (m > 1f)
                 {
-                    affections[5] = true;
-
+                    affections[i] = true;
                 }
-                else affections[5] = false;
+                else affections[i] = false;
+                lifepower *= m;
+            }
+            //
+            i = PERSONNEL_INDEX;
+            m = multipliers[i];
+            if (m == 1f || maxPersonnel == 0) affections[i] = null;
+            else
+            {
+                if (m > 1f)
+                {
+                    affections[i] = false;
+                }
+                else affections[i] = true;
+                maxPersonnel = (int)(maxPersonnel * m);
+            }
+            //
+            i = HOUSING_INDEX;
+            m = multipliers[i];
+            if (m == 1f || housing == 0) affections[i] = null;
+            else
+            {
+                if (m > 1f)
+                {
+                    affections[i] = true;
+                }
+                else affections[i] = false;
                 housing = (int)(housing * m);
             }
         }
+
+        public float GetMaxPowerConsumption() { return _maxPowerConsumption; }
+        public float GetMaxIncome() { return _maxIncome; }
+        public float GetMaxLifepower() { return _maxLifepower; }
+        public float GetMaxFoodProduction() { return _maxFoodProduction; }
+
+        #region save-load
+        public void Save(System.IO.FileStream fs)
+        {
+            fs.WriteByte((byte)htype);
+            fs.Write(System.BitConverter.GetBytes(_maxPowerConsumption),0,4);
+            fs.Write(System.BitConverter.GetBytes(_maxIncome), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(_maxFoodProduction), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(_maxLifepower), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(personnelInvolved), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(maxPersonnel), 0, 4);
+            fs.Write(System.BitConverter.GetBytes(housing), 0, 4);
+        }
+        public static HexBuildingStats Load(System.IO.FileStream fs)
+        {
+            const int length = 29;
+            var data = new byte[length];
+            fs.Read(data, 0, length);
+            var hbs = new HexBuildingStats((HexType)data[0]);
+            hbs._maxPowerConsumption = System.BitConverter.ToSingle(data, 0);
+            hbs._maxIncome = System.BitConverter.ToSingle(data, 4);
+            hbs._maxFoodProduction = System.BitConverter.ToSingle(data, 8);
+            hbs._maxLifepower = System.BitConverter.ToSingle(data, 12);
+            hbs.personnelInvolved = System.BitConverter.ToInt32(data, 16);
+            hbs.maxPersonnel = System.BitConverter.ToInt32(data, 20);
+            hbs.housing = System.BitConverter.ToInt32(data, 24);
+            return hbs;
+        }
+        #endregion
     }
 
 
     public sealed class Hex : MonoBehaviour
     {
-        public HexType type { get; private set; }
+        public HexType type { get { return hexStats.htype; } }
         public HexBuildingStats hexStats { get; private set; }
         public HexPosition hexPosition { get; private set; }
         private HexBuilder hexBuilder;
-        public int personnel { get; private set; }
-        private float personnel_cf { get { return (float)personnel / (float)hexStats.maxPersonnel; } }
        
         private int ID = -1;
         private static int nextID = 1;
         
-        public void Initialize(HexType htype, HexPosition i_hpos, HexBuilder i_hexBuilder, HexBuildingStats i_stats)
+        public void Initialize( HexPosition i_hpos, HexBuilder i_hexBuilder, HexBuildingStats i_stats)
         {
             if (ID == -1)
             {
                 ID = nextID++;
             }
-            type = htype;
             hexPosition = i_hpos;
             hexBuilder = i_hexBuilder;
             hexStats = i_stats;
 
-            GameObject model;
-            Transform t;
+            GameObject model, collider = gameObject;
+            Transform t, mytransform = transform; 
+            GameObject GetCube()
+            {
+                return Resources.Load<GameObject>("Prefs/5cube");
+            }
+
             switch (type)
             {
                 case HexType.Residential:
                     {
                         GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
-                        model = Instantiate(Resources.Load<GameObject>("Prefs/Special/residentialTower"));
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
+                        model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "residentialTower"));
                         t = model.transform;
                         t.parent = transform;
                         t.localPosition = Vector3.zero;
                         t.localRotation = Quaternion.Euler(0f, 60f * ((hexPosition.ringPosition + hexPosition.ringIndex) / 6), 0f);
 
                         Vector3 pos;
+                        var example = GetCube();
                         for (int r = 0; r < 4; r++)
                         {
                             int c = (r + 1) * 6;
@@ -1025,13 +1113,55 @@ namespace FoundationRoute
                                 pos = Quaternion.AngleAxis(angle * a, Vector3.up) * Vector3.forward * (2 * r + 1f);
                                 pos += new Vector3(Random.value, 0f, Random.value);
                                 float scale = Random.value * 1.5f + 0.5f, scale2 = 1f + Random.value;
-                                model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                model = Instantiate(example, mytransform);
                                 t = model.transform;
-                                t.parent = transform;
                                 t.localPosition = pos + Vector3.up * scale / 2f;
                                 t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
                                 t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
-                                //model.GetComponentInChildren<Renderer>().sharedMaterial = PoolMaster.glassMaterial;
+                                // не добавляем тени
+                            }
+                        }
+                        break;
+                    }
+                case HexType.ResidentialEco:
+                    {
+                        GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
+                        model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "residentialTower"));
+                        t = model.transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, 60f * ((hexPosition.ringPosition + hexPosition.ringIndex) / 6), 0f);
+
+                        var example = GetCube();
+                        void CreateHouse(Vector3 pos)
+                        {
+                            model = Instantiate(example, mytransform) ;
+                            t = model.transform;
+                            float scale = Random.value * 1.5f + 0.5f, scale2 = 1f + Random.value;
+                            t.localPosition = pos + Vector3.up * scale / 2f;
+                            t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
+                            t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
+                        }
+                        for (int i = 0; i< 6; i++)
+                        {                           
+                            if (Random.value > 0.5f)
+                            {
+                                var dir = Quaternion.AngleAxis(i * 60f, Vector3.up) * Vector3.forward * 1.5f;
+                                CreateHouse(dir);
+                                dir *= 2f;
+                                var x = Quaternion.AngleAxis(90f, Vector3.up) * dir.normalized * 1.5f;
+                                CreateHouse(dir + x); CreateHouse(dir - x);
+                                dir *= 2f;
+                                CreateHouse(dir + x);CreateHouse(dir + 2f * x);
+                                CreateHouse(dir - x); CreateHouse(dir - 2f * x);
+                            }
+                            else
+                            {
+                                t = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "forestSector")).transform;
+                                t.parent = transform;
+                                t.localPosition = Vector3.zero;
+                                t.localRotation = Quaternion.Euler(0f, i * 60f, 0f);
                             }
                         }
                     }
@@ -1039,13 +1169,15 @@ namespace FoundationRoute
                 case HexType.ResidentialDense:
                     {
                         GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
-                        model = Instantiate(Resources.Load<GameObject>("Prefs/Special/residentialDenseTower"));
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
+                        model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "residentialDenseTower"));
                         t = model.transform;
                         t.parent = transform;
                         t.localPosition = Vector3.zero;
                         t.localRotation = Quaternion.Euler(0f, 60f * ((hexPosition.ringPosition + hexPosition.ringIndex) / 6), 0f);
 
                         Vector3 pos;
+                        var example = GetCube();
                         for (int r = 0; r < 4; r++)
                         {
                             int c = (r + 1) * 6;
@@ -1056,9 +1188,8 @@ namespace FoundationRoute
                                 pos = Quaternion.AngleAxis(angle * a, Vector3.up) * Vector3.forward * (2 * r + 1f);
                                 pos += new Vector3(Random.value, 0f, Random.value);
                                 float scale = Random.value * 4f + 2f, scale2 = 1f + 2f *Random.value;
-                                model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                model = Instantiate(example, mytransform);
                                 t = model.transform;
-                                t.parent = transform;
                                 t.localPosition = pos + Vector3.up * scale / 2f;
                                 t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
                                 t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
@@ -1070,22 +1201,22 @@ namespace FoundationRoute
                 case HexType.Commercial:
                     {
                         GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
 
                         Vector3 pos;
+                        var example = GetCube();
                         for (int r = 0; r < 4; r++)
                         {
                             int c = (r + 1) * 6;
                             float angle;
                             for (int a = 0; a < c; a++)
-                            {
-                                model = GameObject.CreatePrimitive(PrimitiveType.Cube);                              
-
+                            {                                
                                 angle = 360f / c;
                                 pos = Quaternion.AngleAxis(angle * a, Vector3.up) * Vector3.forward * (2 * r + 1f);
                                 pos += new Vector3(Random.value, 0f, Random.value);
                                 float scale = Random.value * 1.5f + 0.5f, scale2 = 1f + Random.value;
+                                model = Instantiate(example, mytransform);
                                 t = model.transform;
-                                t.parent = transform;
                                 t.localPosition = pos + Vector3.up * scale / 2f;
                                 t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
                                 t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
@@ -1102,7 +1233,9 @@ namespace FoundationRoute
                 case HexType.CommercialDense:
                     {
                         GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
                         Vector3 pos;
+                        var example = GetCube();
                         for (int r = 0; r < 4; r++)
                         {
                             int c = (r + 1) * 6;
@@ -1111,7 +1244,7 @@ namespace FoundationRoute
                             {
                                 if (Random.value > 0.6f)
                                 {
-                                    model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                    model = Instantiate(example, mytransform);
                                     angle = 360f / c;
                                     pos = Quaternion.AngleAxis(angle * a, Vector3.up) * Vector3.forward * (2 * r + 1f);
                                     pos += new Vector3(Random.value, 0f, Random.value);
@@ -1119,7 +1252,6 @@ namespace FoundationRoute
                                     model.GetComponentInChildren<Renderer>().sharedMaterial = PoolMaster.glassMaterial;
                                     
                                     t = model.transform;
-                                    t.parent = transform;
                                     t.localPosition = pos + Vector3.up * scale / 2f;
                                     t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
                                     t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
@@ -1131,12 +1263,14 @@ namespace FoundationRoute
                 case HexType.Industrial:
                 case HexType.IndustrialExperimental:
                     {
-                        bool simple = htype == HexType.Industrial;
+                        var example = GetCube();
+                        bool simple = type == HexType.Industrial;
                         GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
+                        transform.GetChild(0).localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
 
-                        const float R = 8f, height = R * 0.5f, hwidth = R * 0.6f;
+                        const float R = 8f, height = R * 0.35f, hwidth = R * 0.6f;
 
-                        model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        model = Instantiate(example, mytransform);
                         var mf = model.GetComponentInChildren<MeshFilter>();
                         var mr = model.GetComponentInChildren<MeshRenderer>();
                         PoolMaster.SetMaterialByID(ref mf, ref mr, ResourceType.METAL_K_ID, 255);
@@ -1145,14 +1279,13 @@ namespace FoundationRoute
                         var npos = transform.position;
 
                         t = model.transform;
-                        t.parent = transform;
                         var hangarpos = dir * R * 0.5f + Vector3.up * height * 0.5f;
                         t.localPosition = hangarpos;
                         t.LookAt(new Vector3(npos.x, t.position.y, npos.z), Vector3.up);
                         t.localScale = new Vector3(R * 0.5f, height, R * 0.8f);
                         if (!simple)
                         {
-                            model = Instantiate(Resources.Load<GameObject>("Prefs/Special/industrialSpire"));
+                            model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "industrialSpire"));
                             t = model.transform;
                             t.parent = transform;
                             t.localPosition = hangarpos + Quaternion.AngleAxis(Random.value * 360f, Vector3.up) * (Vector3.forward * (Random.value * 1f));
@@ -1164,22 +1297,23 @@ namespace FoundationRoute
                         void MakeHangar()
                         {
                             angle += step * (0.8f + 0.8f * Random.value);
-                            model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            model = Instantiate(example, mytransform);
                             t = model.transform;
-                            t.parent = transform;
                             t.localPosition = Quaternion.AngleAxis(angle, Vector3.up) * Vector3.forward * (hwidth * 0.5f);
                             t.LookAt(new Vector3(npos.x, t.position.y, npos.z), Vector3.up);
-                            t.localScale = new Vector3(2f, 2f, hwidth);
+                            t.localScale = new Vector3(2f, height * 0.8f, hwidth);
                         }
                         MakeHangar();
                         MakeHangar();
                         if (!simple) MakeHangar();
                         for (int i = 0; i < 4+ Random.Range(0, 8); i++)
                         {
-                            model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            model = Instantiate(example, mytransform);
+                            mf = model.GetComponentInChildren<MeshFilter>();
+                            mr = model.GetComponentInChildren<MeshRenderer>();
+                            PoolMaster.SetMaterialByID(ref mf, ref mr, ResourceType.METAL_M_ID, 255);
                             t = model.transform;
-                            t.parent = transform;
-                            t.localPosition = Quaternion.AngleAxis(Random.value * 360f, Vector3.up) * Vector3.forward * (Random.value * R);
+                            t.localPosition = Quaternion.AngleAxis(Random.value * 360f, Vector3.up) * Vector3.forward * (Random.value * R*0.8f);
                             t.rotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
                             t.localScale = new Vector3(1f, 15f, 1f);
                         }                        
@@ -1191,7 +1325,7 @@ namespace FoundationRoute
                         var mr = GetComponentInChildren<MeshRenderer>();
                         PoolMaster.SetMaterialByID(ref mf, ref mr, ResourceType.CONCRETE_ID, 255);
                         //
-                        model = Instantiate(Resources.Load<GameObject>("Prefs/Special/powerplant"));
+                        model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "powerplant"));
                         t = model.transform;
                         t.parent = transform;
                         t.localPosition = Vector3.zero;
@@ -1200,49 +1334,174 @@ namespace FoundationRoute
                     }
                 case HexType.Forest:
                     {
-                        break;
-                        GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/Roads");
-                        Vector3 pos;
-                        for (int r = 0; r < 4; r++)
-                        {
-                            int c = (r + 1) * 6;
-                            float angle;
-                            for (int a = 0; a < c; a++)
-                            {
-                                    angle = 360f / c;
-                                    pos = Quaternion.AngleAxis(angle * a, Vector3.up) * Vector3.forward * (2 * r + 1f);
-                                    pos += new Vector3(Random.value, 0f, Random.value);
-                                    float scale = Random.value * 5f + 2f, scale2 = 2f + Random.value;                                   
-                                    //model = OakTree.GetModel();
-                                    t = model.transform;
-                                    t.parent = transform;
-                                    t.localPosition = pos + Vector3.up * scale / 2f;
-                                    t.localScale = new Vector3(0.5f * scale2, scale, 0.5f * scale2);
-                                    t.localRotation = Quaternion.Euler(0f, Random.value * 180f, 0f);
-                            }
-                        }
+                        RemoveStandartModel();
+                        collider = PrepareHexWalls();
+                        var g = PrepareHexRoof();
+                        var mf = g.GetComponentInChildren<MeshFilter>();
+                        var mr = g.GetComponentInChildren<MeshRenderer>();
+                        PoolMaster.SetMaterialByID(ref mf, ref mr, PoolMaster.MATERIAL_GRASS_100_ID, 255);
+                        //
+                        t = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "forest")).transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
                         break;
                     }
-
+                case HexType.Fields:
+                    {
+                        RemoveStandartModel();
+                        collider = PrepareHexWalls();
+                        PrepareHexRoof().GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/fields");
+                        t = InstantiateSiloModel().transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, Random.value * 360f, 0f);
+                        break;
+                    }
+                case HexType.AdvancedFields:
+                    {
+                        RemoveStandartModel();
+                        collider = PrepareHexWalls();
+                        PrepareHexRoof().GetComponentInChildren<Renderer>().sharedMaterial = Resources.Load<Material>("Materials/experimentalFields");
+                        t = InstantiateSiloModel().transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, Random.value * 360f, 0f);
+                        t = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "advancedFieldLab")).transform;
+                        t.parent = transform;
+                        t.localPosition = Quaternion.AngleAxis(Random.value * 360f, Vector3.up) * Vector3.forward * 2f;
+                        t.localRotation = Quaternion.Euler(0f, Random.value * 360f, 0f);
+                        break;
+                    }
+                case HexType.Mountain:
+                    {
+                        RemoveStandartModel();
+                        collider = PrepareHexWalls();
+                        t = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "mountain")).transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, 60f * Random.Range(0, 6), 0f);
+                        break;
+                    }
+                case HexType.Lake:
+                    {
+                        RemoveStandartModel();
+                        collider = PrepareHexWalls();
+                        t = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "lake")).transform;
+                        t.parent = transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, 60f * Random.Range(0, 6), 0f);
+                        break;
+                    }
+                case HexType.DummyBlue:
+                case HexType.DummyGreen:
+                case HexType.DummyRed:
+                    {
+                        model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "nullhex"), mytransform);
+                        t = model.transform;
+                        t.localPosition = Vector3.zero;
+                        t.localRotation = Quaternion.Euler(0f, 60f * hexPosition.ringPosition, 0f);
+                        var rrs = model.GetComponentsInChildren<Renderer>();
+                        var replacingMaterial = Instantiate(Resources.Load<Material>("Materials/Coloured"));
+                        Color col;
+                        if (type == HexType.DummyBlue) col = Color.blue;
+                        else
+                        {
+                            if (type == HexType.DummyGreen) col = Color.green;
+                            else col = Color.red;
+                        }
+                        replacingMaterial.color = Color.Lerp(col, Color.white, 0.5f);
+                        var clr_name = PoolMaster.GetColouredMaterialName();
+                        int i,l;
+                        foreach (var r in rrs)
+                        {
+                            l = r.sharedMaterials.Length;
+                            if (l== 1)
+                            {
+                                if (r.sharedMaterial.name == clr_name) r.sharedMaterial = replacingMaterial;
+                            }
+                            else
+                            {
+                                for (i = 0; i< l; i++)
+                                {
+                                    if (r.sharedMaterials[i].name == clr_name)
+                                    {
+                                        var nmats = new Material[l];
+                                        for (int j = 0; j< l; j++)
+                                        {
+                                            nmats[j] = r.sharedMaterials[j];
+                                        }
+                                        nmats[i] = replacingMaterial;
+                                        r.sharedMaterials = nmats;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
             }
-            personnel = 0;
+
+            var me = this;
+            collider.GetComponentInChildren<ClickableObject>().AssignFunction(() => hexBuilder.uic.OpenHexWindow(me), hexBuilder.uic.CloseButton);
+        }
+        private GameObject PrepareHexWalls()
+        {
+            var g =  Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "hexWalls"));
+            var t = g.transform;
+            t.parent = transform;
+            t.localPosition = Vector3.zero;
+            return g;
+        }
+        private GameObject PrepareHexRoof()
+        {
+            var g = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "hexRoof"));
+            var t = g.transform;
+            t.parent = transform;
+            t.localPosition = Vector3.zero;
+            t.localRotation = Quaternion.Euler(0f, Random.Range(0, 6) * 60f, 0f);
+            return g;
+        }
+        private GameObject InstantiateSiloModel()
+        {
+            return Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "basicSilo"));
+        }
+        private void RemoveStandartModel()
+        {
+            Destroy(transform.GetChild(0).gameObject);
         }
 
-        public float GetPowerConsumption()
+        public bool AddWorker()
         {
-            return personnel_cf * hexStats.powerConsumption;
+            if (hexStats.personnelInvolved != hexStats.maxPersonnel)
+            {
+                hexStats.AddPersonnel();
+                hexBuilder.RecalculateTotalParameters();
+                return true;
+            }
+            return false;
         }
-        public float GetIncome()
+        public bool RemoveWorker()
         {
-            return personnel_cf * hexStats.income;
+            if (hexStats.personnelInvolved != 0)
+            {
+                hexStats.RemovePersonnel();
+                hexBuilder.RecalculateTotalParameters();
+                return true;
+            }
+            return false;
         }
-        public float GetLifepower()
+
+        #region save-load
+        public void Save(System.IO.FileStream fs)
         {
-            return personnel_cf * hexStats.lifepower;
+            hexPosition.Save(fs);
+            hexStats.Save(fs);            
         }
-        public float GetFoodProduction()
+        public void Load(System.IO.FileStream fs, HexBuilder i_builder)
         {
-            return personnel_cf * hexStats.foodProduction;
+            Initialize(HexPosition.Load(fs), i_builder, HexBuildingStats.Load(fs));
         }
+        #endregion
     }
 }

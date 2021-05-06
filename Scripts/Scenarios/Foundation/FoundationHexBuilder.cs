@@ -4,21 +4,32 @@ using UnityEngine;
 
 namespace FoundationRoute
 {
-    public sealed class HexBuilder
+    public sealed class HexBuilder : MyObject
     {
         public readonly FoundationRouteScenario scenario;
-        public HexBuildingStats totalStats { get; private set; }
+
+        public float totalPowerConsumption { get; private set; }
+        public float totalIncome { get; private set; }
+        public float totalFoodProduction { get; private set; }
+        public float totalLifepower { get; private set; }
+        public int totalPersonnelInvolved { get; private set; }
+        public int totalPersonnelSlots { get; private set; }
+        public int colonistsCount { get; private set; }
+        public int freeColonists { get; private set; }
+        public int totalHousing { get; private set; }
+
         private readonly GameObject hexMaquetteExample;
-        private HexCanvasUIC uic;
+        public HexCanvasUIC uic { get; private set; }
         private ColonyController colony;
         private AnchorBasement anchor;
         private Dictionary<(byte, byte), Hex> hexList;        
         private Dictionary<HexPosition, GameObject> maquettesList;
-        private List<GameObject> maquettesPool;        
+        private List<GameObject> maquettesPool;
+        private Vector3 zeroPoint;
         private int poolLength = 0;
         private bool firstHex = true;
         private readonly float innerRadius, outerRadius;
-        private const float CONST_0 = 1.73205f;
+        private const float CONST_0 = 1.73205f, ENERGY_CF = 1000f;
         private const int RING_LIMIT = 4;
 
 
@@ -27,13 +38,12 @@ namespace FoundationRoute
         {
             scenario = frs;
             hexList = new Dictionary<(byte, byte), Hex>();
-            hexMaquetteExample = Resources.Load<GameObject>("Prefs/Special/hexMaquette");
+            hexMaquetteExample = Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "hexMaquette");
             maquettesPool = new List<GameObject>();
             poolLength = 0;
             maquettesList = new Dictionary<HexPosition, GameObject>();
             innerRadius = 8f;
             outerRadius = innerRadius * 2f / CONST_0;
-            totalStats = new HexBuildingStats(HexType.TotalCount);
             if (uic == null)
             {
                 var t = Object.Instantiate(Resources.Load<GameObject>("UIPrefs/hexCanvas")).transform;
@@ -44,6 +54,7 @@ namespace FoundationRoute
             var rm = GameMaster.realMaster;
             colony = rm.colonyController;
             anchor = scenario.anchorBasement;
+            zeroPoint = anchor?.outerRingZeroPoint ?? Vector3.zero ;
             rm.everydayUpdate += this.EverydayUpdate;
         }
 
@@ -57,7 +68,7 @@ namespace FoundationRoute
             {
                 foreach (var h in hexList.Values)
                 {
-                    buildingsCount[(int)h.type]++;
+                    if (h.type < HexType.TotalCount)  buildingsCount[(int)h.type]++;
                 }
             }
         }
@@ -80,7 +91,11 @@ namespace FoundationRoute
             cl.AssignFunction(() => uic.OpenConstructionWindow(npos), uic.CloseButton);
             maquettesList.Add(npos, g);
         }
-        public void CreateHex(HexPosition hpos, HexType htype, HexBuildingStats stats)
+        public void CreateHex(HexPosition hpos, HexType htype)
+        {
+            CreateHex(hpos, new HexBuildingStats(htype));
+        }
+        public void CreateHex(HexPosition hpos, HexBuildingStats stats)
         {
             var bb = hpos.ToBytes();
             if (hexList.ContainsKey(bb))
@@ -98,10 +113,10 @@ namespace FoundationRoute
                     maquettesPool.Add(m);
                 }
                 //
-                var g = LoadHexPref(htype);
-                var hex = g.AddComponent<Hex>();
-                hex.Initialize(htype, hpos, this, stats);
-                g.transform.position = GetHexWorldPosition(hpos);
+                var hex = LoadHexPref();
+                hex.Initialize(hpos, this, stats);
+                if (hpos.ringIndex > 0) hex.transform.position = GetHexWorldPosition(hpos) + Vector3.down * (Random.value * 2f);
+                else hex.transform.position = GetHexWorldPosition(hpos);
                 // модуляции высоты?
                 hexList.Add(hpos.ToBytes(), hex);                
                 uic.RecalculateAvailabilityMask();
@@ -138,23 +153,45 @@ namespace FoundationRoute
             if (hexList.ContainsKey(b)) return hexList[b];
             else return null;
         }       
-        private void RecalculateTotalParameters()
+        public void RecalculateTotalParameters()
         {
-            totalStats = new HexBuildingStats(hexList.Values);
+            totalPowerConsumption = 0f;
+            totalIncome = 0f;
+            totalLifepower = 0f;
+            totalFoodProduction = 0f;
+            totalPersonnelInvolved = 0;
+            totalPersonnelSlots = 0;
+            totalHousing = 0;
+            if (hexList.Count > 0)
+            {
+                HexBuildingStats stats;
+                foreach(var h in hexList.Values)
+                {
+                    stats = h.hexStats;
+                    totalPowerConsumption += stats.powerConsumption;
+                    totalIncome += stats.income;
+                    totalLifepower += stats.lifepower;
+                    totalFoodProduction += stats.foodProduction;
+                    totalPersonnelInvolved += stats.personnelInvolved;
+                    totalPersonnelSlots += stats.maxPersonnel;
+                    totalHousing += stats.housing;
+                }
+            }
+            freeColonists = colonistsCount - totalPersonnelInvolved;
+            anchor?.SetEnergySurplus(totalPowerConsumption * ENERGY_CF);
             uic.RedrawStatsPanel();
         }
 
         private void EverydayUpdate()
         {
-            const float energyCf = 1000f, moneyCf = 100f;
-            anchor.SetEnergySurplus(totalStats.powerConsumption * energyCf);
-            float x = colony.FORCED_GetEnergyCrystals(totalStats.income * moneyCf);
+            const float moneyCf = 100f;            
+            float x = colony.FORCED_GetEnergyCrystals(totalIncome * moneyCf);
         }
 
         #region positioning
         private Vector3 GetHexWorldPosition(HexPosition hpos)
         {
-            return GetHexLocalPosition(hpos) + new Vector3(8f, -21f, 8f); 
+            return GetHexLocalPosition(hpos) + zeroPoint; 
         }
         private Vector3 GetHexLocalPosition(HexPosition hpos)
         {
@@ -212,9 +249,79 @@ namespace FoundationRoute
         }
         #endregion
 
-        private GameObject LoadHexPref(HexType htype)
+        private Hex LoadHexPref()
         {
-            return Object.Instantiate(Resources.Load<GameObject>("Prefs/Special/foundationHex"));
+            return Object.Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "foundationHex")).AddComponent<Hex>();
         }
+        public bool SendColonistsForWork(Hex h)
+        {
+            if (freeColonists > 0)
+            {
+                if (h.AddWorker())
+                {
+                    freeColonists--;
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool TryAddColonist()
+        {
+            if (totalHousing < colonistsCount)
+            {
+                colonistsCount++;
+                freeColonists++;
+                return true;
+            }
+            else return false;
+        }
+        public void FreeColonistFromWork()
+        {
+            freeColonists++;
+        }
+
+        #region save-load
+        public void Save(System.IO.FileStream fs)
+        {
+            if (hexList.Count > 0)
+            {
+                fs.WriteByte(1);
+                fs.Write(System.BitConverter.GetBytes(hexList.Count), 0, 4);
+                foreach (var h in hexList.Values)
+                {
+                    h.Save(fs);
+                }
+            }
+            else fs.WriteByte(0);
+        }
+        public void Load(System.IO.FileStream fs)
+        {
+            if (anchor == null)
+            {
+                anchor = scenario.anchorBasement;
+            }
+            if (hexList == null || hexList.Count != 0) hexList = new Dictionary<(byte, byte), Hex>();
+            if (fs.ReadByte() == 1)
+            {
+                var data = new byte[4];
+                fs.Read(data, 0, 4);
+                int count = System.BitConverter.ToInt32(data, 0);                
+                Hex h;
+                for (int i = 0; i < count; i++)
+                {
+                    h = LoadHexPref();
+                    h.Load(fs, this);
+                    hexList.Add(h.hexPosition.ToBytes(), h);
+                    h.transform.position = GetHexWorldPosition(h.hexPosition);
+                }
+                if (firstHex)
+                {
+                    uic.EnableTotalStatsPanel();
+                    firstHex = false;
+                }
+            }
+            RecalculateTotalParameters();
+        }
+        #endregion
     }
 }

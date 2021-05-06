@@ -179,7 +179,8 @@ public sealed class Storage : MonoBehaviour {
         operationsDone++;
         return gainedCount;
 	}
-    public bool TryGetResources(ResourceType rtype, float count)
+
+    public bool TryGetResources(int rid, float count)
     {
         if (GameMaster.realMaster.weNeedNoResources) return true;
         else
@@ -187,16 +188,20 @@ public sealed class Storage : MonoBehaviour {
             if (totalVolume == 0) return false;
             else
             {
-                if (standartResources[rtype.ID] < count) return false;
+                if (standartResources[rid] < count) return false;
                 else
                 {
-                    standartResources[rtype.ID] -= count;
+                    standartResources[rid] -= count;
                     totalVolume -= count;
                     operationsDone++;
                     return true;
                 }
             }
         }
+    }
+    public bool TryGetResources(ResourceType rtype, float count)
+    {
+        return TryGetResources(rtype.ID, count);
     }
     public void GetResources(ResourceContainer[] cost)
     {
