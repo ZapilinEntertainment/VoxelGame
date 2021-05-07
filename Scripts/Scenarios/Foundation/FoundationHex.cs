@@ -1049,13 +1049,13 @@ namespace FoundationRoute
             var data = new byte[length];
             fs.Read(data, 0, length);
             var hbs = new HexBuildingStats((HexType)data[0]);
-            hbs._maxPowerConsumption = System.BitConverter.ToSingle(data, 0);
-            hbs._maxIncome = System.BitConverter.ToSingle(data, 4);
-            hbs._maxFoodProduction = System.BitConverter.ToSingle(data, 8);
-            hbs._maxLifepower = System.BitConverter.ToSingle(data, 12);
-            hbs.personnelInvolved = System.BitConverter.ToInt32(data, 16);
-            hbs.maxPersonnel = System.BitConverter.ToInt32(data, 20);
-            hbs.housing = System.BitConverter.ToInt32(data, 24);
+            hbs._maxPowerConsumption = System.BitConverter.ToSingle(data, 1);
+            hbs._maxIncome = System.BitConverter.ToSingle(data, 5);
+            hbs._maxFoodProduction = System.BitConverter.ToSingle(data, 9);
+            hbs._maxLifepower = System.BitConverter.ToSingle(data, 13);
+            hbs.personnelInvolved = System.BitConverter.ToInt32(data, 17);
+            hbs.maxPersonnel = System.BitConverter.ToInt32(data, 21);
+            hbs.housing = System.BitConverter.ToInt32(data, 25);
             return hbs;
         }
         #endregion

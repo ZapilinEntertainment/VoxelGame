@@ -178,7 +178,7 @@ namespace FoundationRoute
                 }
             }
             freeColonists = colonistsCount - totalPersonnelInvolved;
-            anchor?.SetEnergySurplus(totalPowerConsumption * ENERGY_CF);
+            anchor?.SetEnergySurplus(-totalPowerConsumption * ENERGY_CF);
             uic.RedrawStatsPanel();
         }
 
@@ -265,15 +265,10 @@ namespace FoundationRoute
             }
             return false;
         }
-        public bool TryAddColonist()
+        public void AddColonist()
         {
-            if (totalHousing < colonistsCount)
-            {
-                colonistsCount++;
-                freeColonists++;
-                return true;
-            }
-            else return false;
+            colonistsCount++;
+            freeColonists++;
         }
         public void FreeColonistFromWork()
         {
@@ -293,6 +288,19 @@ namespace FoundationRoute
                 }
             }
             else fs.WriteByte(0);
+            if (maquettesList.Count > 0)
+            {
+                fs.WriteByte(1);
+                fs.Write(System.BitConverter.GetBytes(maquettesList.Count), 0, 4);
+                HexPosition hpos;
+                foreach (var m in maquettesList)
+                {
+                    hpos = m.Key;
+                    fs.WriteByte(hpos.ringIndex);
+                    fs.WriteByte(hpos.ringPosition);
+                }
+            }
+            else fs.WriteByte(0);
         }
         public void Load(System.IO.FileStream fs)
         {
@@ -301,13 +309,14 @@ namespace FoundationRoute
                 anchor = scenario.anchorBasement;
             }
             if (hexList == null || hexList.Count != 0) hexList = new Dictionary<(byte, byte), Hex>();
+            int count, i;
+            byte[] data = new byte[4];
             if (fs.ReadByte() == 1)
             {
-                var data = new byte[4];
                 fs.Read(data, 0, 4);
-                int count = System.BitConverter.ToInt32(data, 0);                
+                count = System.BitConverter.ToInt32(data, 0);                
                 Hex h;
-                for (int i = 0; i < count; i++)
+                for (i = 0; i < count; i++)
                 {
                     h = LoadHexPref();
                     h.Load(fs, this);
@@ -318,9 +327,19 @@ namespace FoundationRoute
                 {
                     uic.EnableTotalStatsPanel();
                     firstHex = false;
-                }
+                }             
             }
             RecalculateTotalParameters();
+            // maquettes
+            if (fs.ReadByte() == 1)
+            {
+                fs.Read(data, 0, 4);
+                count = System.BitConverter.ToInt32(data, 0);
+                for (i = 0; i< count; i++)
+                {
+                    CreateHexMaquette(new HexPosition(fs.ReadByte(), fs.ReadByte()));
+                }
+            }
         }
         #endregion
     }

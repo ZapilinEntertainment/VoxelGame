@@ -36,12 +36,12 @@ public sealed class AnchorBasement : WorkBuilding
     }
 
     public override bool CanBeRotated() { return false; }
-
+    public override bool CanBePoweredOffBySystem() { return false; }
 
     override public void SetBasement(Plane b, PixelPosByte pos)
     {
         if (b == null) return;
-        SetBuildingData(b, pos, false);
+        SetBuildingData(b, pos, true);
         currentStage = ActivityStage.BasementBuilt;
         poweringProgress = 0f;
         endCrystal = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "fd_endCrystal")).transform;
@@ -103,6 +103,7 @@ public sealed class AnchorBasement : WorkBuilding
 
     public void Update()
     {
+        if (GameMaster.loading) return;
         var t = Time.deltaTime * GameMaster.gameSpeed;
         switch (currentStage)
         {
@@ -347,14 +348,13 @@ public sealed class AnchorBasement : WorkBuilding
         }
     }
 
-    public bool TryGetColonists(int x)
+    public void GetColonists(int x)
     {
         if (colonistsArrived >= x)
         {
             colonistsArrived -= x;
-            return true;
         }
-        else return false;
+        else colonistsArrived = 0;
     }
 
     public void AddInnerSector( byte ringPosition)
@@ -400,6 +400,9 @@ public sealed class AnchorBasement : WorkBuilding
             case ActivityStage.BasementBuilt:
                 data.AddRange(BitConverter.GetBytes(poweringProgress));
                 break;
+            case ActivityStage.AwaitingPowering:
+                data.Add(hexBasement != null ? (byte)1 : (byte)0);
+                break;
             case ActivityStage.PoweringUp:
                 data.AddRange(BitConverter.GetBytes(poweringProgress));
                 data.Add(hexBasement != null ? (byte)1 : (byte)0);
@@ -415,35 +418,37 @@ public sealed class AnchorBasement : WorkBuilding
                 data.Add(smallGear != null ? (byte)1 : (byte)0);
                 break;
             case ActivityStage.OuterRingBuilding:
-                data.Add(transportColonists ? (byte)1 : (byte)0);
-                data.Add((byte)shipStatus);
-                void SaveShipPosition()
                 {
-                    var v = colonistsShip.position;
-                    data.AddRange(BitConverter.GetBytes(v.x));
-                    data.AddRange(BitConverter.GetBytes(v.y));
-                    data.AddRange(BitConverter.GetBytes(v.z));
-                    v = colonistsShip.forward;
-                    data.AddRange(BitConverter.GetBytes(v.x));
-                    data.AddRange(BitConverter.GetBytes(v.y));
-                    data.AddRange(BitConverter.GetBytes(v.z));
+                    data.Add(transportColonists ? (byte)1 : (byte)0);
+                    data.Add((byte)shipStatus);
+                    void SaveShipPosition()
+                    {
+                        var v = colonistsShip.position;
+                        data.AddRange(BitConverter.GetBytes(v.x));
+                        data.AddRange(BitConverter.GetBytes(v.y));
+                        data.AddRange(BitConverter.GetBytes(v.z));                        
+                        v = colonistsShip.forward;
+                        data.AddRange(BitConverter.GetBytes(v.x));
+                        data.AddRange(BitConverter.GetBytes(v.y));
+                        data.AddRange(BitConverter.GetBytes(v.z));
+                    }
+                    switch (shipStatus)
+                    {
+                        case ShipStatus.ComingToPier:
+                        case ShipStatus.Leaving:
+                            SaveShipPosition();
+                            break;
+                        case ShipStatus.Docking:
+                            SaveShipPosition();
+                            data.AddRange(BitConverter.GetBytes(shipTimer));
+                            break;
+                        case ShipStatus.WaitingForNextShip:
+                            data.AddRange(BitConverter.GetBytes(shipTimer));
+                            break;
+                    }
+                    data.AddRange(BitConverter.GetBytes(colonistsArrived));
+                    break;
                 }
-                switch(shipStatus)
-                {
-                    case ShipStatus.ComingToPier:
-                    case ShipStatus.Leaving:
-                        SaveShipPosition();
-                        break;
-                    case ShipStatus.Docking:
-                        SaveShipPosition();
-                        data.AddRange(BitConverter.GetBytes(shipTimer));
-                        break;
-                    case ShipStatus.WaitingForNextShip:
-                        data.AddRange(BitConverter.GetBytes(shipTimer));
-                        break;                   
-                }
-                data.AddRange(BitConverter.GetBytes(colonistsArrived));
-                break;
         }
         data.Add(innerSectorsBuilt);
         return data;
@@ -462,6 +467,9 @@ public sealed class AnchorBasement : WorkBuilding
                 data = new byte[4];
                 fs.Read(data, 0, data.Length);
                 poweringProgress = BitConverter.ToSingle(data, 0);
+                break;
+            case ActivityStage.AwaitingPowering:
+                loadBasement = fs.ReadByte() == 1;
                 break;
             case ActivityStage.PoweringUp:
                 data = new byte[5];
@@ -484,77 +492,88 @@ public sealed class AnchorBasement : WorkBuilding
                 loadSmallGear = data[5] == 1;
                 break;
             case ActivityStage.OuterRingBuilding:
-                transportColonists = (fs.ReadByte() == 1);
-                shipStatus = (ShipStatus)fs.ReadByte();
-                void LoadShipPosition()
                 {
-                    LoadColonistsShip();
-                    colonistsShip.position = new Vector3(
-                        BitConverter.ToSingle(data, 0),
-                        BitConverter.ToSingle(data, 4),
-                        BitConverter.ToSingle(data, 8)
-                        );
-                    colonistsShip.forward = new Vector3(
-                        BitConverter.ToSingle(data, 12),
-                        BitConverter.ToSingle(data, 16),
-                        BitConverter.ToSingle(data, 20)
-                        );
-                }
-                switch (shipStatus)
-                {
-                    case ShipStatus.ComingToPier:
-                    case ShipStatus.Leaving:
-                        data = new byte[24]; 
-                        fs.Read(data, 0, data.Length);
-                        LoadShipPosition();
-                        break;
-                    case ShipStatus.Docking:
-                        data = new byte[28];
-                        fs.Read(data, 0, data.Length);
-                        LoadShipPosition();
-                        shipTimer = BitConverter.ToSingle(data, 24);
-                        break;
-                    case ShipStatus.WaitingForNextShip:
-                        data = new byte[4]; 
-                        fs.Read(data, 0, data.Length);
-                        shipTimer = BitConverter.ToSingle(data, 0);
-                        break;
-                }
-                data = new byte[4];
-                fs.Read(data, 0, data.Length);
-                colonistsArrived = BitConverter.ToInt32(data, 0);
-                break;
+                    transportColonists = (fs.ReadByte() == 1);
+                    shipStatus = (ShipStatus)fs.ReadByte();
+                    void LoadShipPosition()
+                    {
+                        LoadColonistsShip();
+                        colonistsShip.position = new Vector3(
+                            BitConverter.ToSingle(data, 0),
+                            BitConverter.ToSingle(data, 4),
+                            BitConverter.ToSingle(data, 8)
+                            );
+                        colonistsShip.forward = new Vector3(
+                            BitConverter.ToSingle(data, 12),
+                            BitConverter.ToSingle(data, 16),
+                            BitConverter.ToSingle(data, 20)
+                            );
+                    }
+                    switch (shipStatus)
+                    {
+                        case ShipStatus.ComingToPier:
+                        case ShipStatus.Leaving:
+                            data = new byte[24];
+                            fs.Read(data, 0, data.Length);
+                            LoadShipPosition();
+                            break;
+                        case ShipStatus.Docking:
+                            data = new byte[28];
+                            fs.Read(data, 0, data.Length);
+                            LoadShipPosition();
+                            shipTimer = BitConverter.ToSingle(data, 24);
+                            break;
+                        case ShipStatus.WaitingForNextShip:
+                            data = new byte[4];
+                            fs.Read(data, 0, data.Length);
+                            shipTimer = BitConverter.ToSingle(data, 0);
+                            break;
+                    }
+                    data = new byte[4];
+                    fs.Read(data, 0, data.Length);
+                    colonistsArrived = BitConverter.ToInt32(data, 0);
+                    break;
+                }               
         }
 
         if (currentStage > ActivityStage.BasementBuilt)
         {
             endCrystal.position = outerRingZeroPoint;
-            if (loadBasement) LoadHexBasement();
-            if (currentStage > ActivityStage.PoweringUp)
+            if (currentStage > ActivityStage.AwaitingPowering)
             {
-                if (loadBigGear) LoadBigGear();
-                var p = innerRingZeroPoint;
-                hexBasement.position = p;
-                if (currentStage > ActivityStage.InnerRingBuilding)
+                if (loadBasement) LoadHexBasement();
+                if (currentStage > ActivityStage.PoweringUp)
                 {
-                    if (loadSmallGear) LoadSmallGear();
-                    bigGear.position = p;
+                    if (loadBigGear) LoadBigGear();
+                    var p = innerRingZeroPoint;
+                    hexBasement.position = p;                    
                     if (currentStage > ActivityStage.InnerRingBuilding)
                     {
-                        smallGear.position = pierPosition;
+                        bigGear.position = p;
+                        if (loadSmallGear) LoadSmallGear();
+                        if (currentStage > ActivityStage.InnerRingBuilding)
+                        {
+                            smallGear.position = pierPosition;
+                        }
+                    }
+                    else
+                    {
+                        if (!liftObject) bigGear.position = p;
                     }
                 }
             }
         }
         PrepareMainLine();
-        var s_innerSectorsBuilt = (byte)fs.ReadByte();
-        if (innerSectorsBuilt != 0)
+        var s_innerSectorsBuilt = (byte)fs.ReadByte();        
+        if (s_innerSectorsBuilt != 0)
         {
             for (byte i = 0; i < s_innerSectorsBuilt; i++)
             {
-                AddInnerSector(i);
+                AddInnerSector(i);                
             }
         }
+
+        if (!isActive) SetActivationStatus(true, true);
     }
     #endregion
 }

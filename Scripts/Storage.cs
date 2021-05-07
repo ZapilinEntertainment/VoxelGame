@@ -163,22 +163,23 @@ public sealed class Storage : MonoBehaviour {
         }
     }
 
-	public float GetResources(ResourceType rtype, float count) {
+	public float GetResources(int rid, float count) {
 		if (GameMaster.realMaster.weNeedNoResources) return count;
 		if (totalVolume == 0 ) return 0;
 		float gainedCount = 0;
-			if (standartResources[rtype.ID] > count) {
+			if (standartResources[rid] > count) {
 				gainedCount = count;
-				standartResources[rtype.ID] -= count;
+				standartResources[rid] -= count;
 			}
 			else {
-				gainedCount = standartResources[rtype.ID];
-				standartResources[rtype.ID] = 0;
+				gainedCount = standartResources[rid];
+				standartResources[rid] = 0;
 			}
         totalVolume -= gainedCount;
         operationsDone++;
         return gainedCount;
 	}
+    public float GetResources(ResourceType rtype, float count) { return GetResources(rtype.ID, count); }
 
     public bool TryGetResources(int rid, float count)
     {

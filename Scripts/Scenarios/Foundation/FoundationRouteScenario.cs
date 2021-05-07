@@ -4,7 +4,7 @@ using FoundationRoute;
 using UnityEngine.UI;
 public sealed class FoundationRouteScenario : Scenario
 {
-    private enum FoundationScenarioStep { Begin, AnchorBuilding, AnchorStart, InnerRingBuilding, PierPreparing, OuterRingBuilding, Settling }
+    private enum FoundationScenarioStep { Begin, AnchorBuilding, AnchorStart, InnerRingBuilding, PierPreparing, OuterRingBuilding, Settling, Empty }
     
     private FoundationScenarioStep currentStep;
     private StandartScenarioUI scenarioUI;
@@ -94,24 +94,29 @@ public sealed class FoundationRouteScenario : Scenario
                 Debug.Log("no subscenario found");
                 return;
         }
-        subscenario.StartScenario();
+        subscenario?.StartScenario();
     }
     public void Next()
     {
-        if (currentStep == FoundationScenarioStep.AnchorStart)
+        switch (currentStep)
         {
-            AnnouncementCanvasController.MakeAnnouncement(localizer.GetAnnounceTitle(currentStep,QUEST_INFO_1));
-            scenarioQuest.MakeQuestCompleted();
+            case FoundationScenarioStep.AnchorBuilding:
+                scenarioQuest?.MakeQuestCompleted();
+                break;
+            case FoundationScenarioStep.AnchorStart:
+                AnnouncementCanvasController.MakeAnnouncement(localizer.GetAnnounceTitle(currentStep, QUEST_INFO_1));
+                scenarioQuest.MakeQuestCompleted();
+                break;
         }
         currentStep++;
         StartSubscenario();
     }
-    private void StartQuest(Scenario s)
+    private void StartQuest(FDR_Subscenario s)
     {
         var sq = new ScenarioQuest(s);
         questUI.SYSTEM_NewScenarioQuest(sq);
         scenarioQuest = sq;
-        scenarioQuest.FillText(localizer.GetQuestData(currentStep));
+        scenarioQuest.FillText(localizer.GetQuestData(s.GetScenarioStep()));
     }
     private void StartQuest(ConditionQuest cq)
     {
@@ -180,11 +185,18 @@ public sealed class FoundationRouteScenario : Scenario
 
     private void SendColonists()
     {
-        if (anchorBasement.TryGetColonists(COLONISTS_SEND_LIMIT))
+        if (anchorBasement.colonistsArrived >= COLONISTS_SEND_LIMIT)
         {
-            if (colony.storage.TryGetResources(COST_RESOURCE_ID, COLONISTS_SEND_COST))
+            if (colony.storage.GetResourceCount(COST_RESOURCE_ID) >= COLONISTS_SEND_COST)
             {
-                if (!hexBuilder.TryAddColonist()) AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughLivingSpace);
+                if (hexBuilder.totalHousing < hexBuilder.colonistsCount)
+                {
+                    anchorBasement.GetColonists(COLONISTS_SEND_LIMIT);
+                    colony.storage.GetResources(COST_RESOURCE_ID, COLONISTS_SEND_COST);
+                    hexBuilder.AddColonist();
+                    settleWindow.Refresh();
+                }
+                else AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughLivingSpace);
             }
             else AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughSuppliesMsg);
         }
@@ -247,6 +259,21 @@ public sealed class FoundationRouteScenario : Scenario
 
         virtual public void Save(FileStream fs) { }
         virtual public void Load(FileStream fs) { }
+
+        public virtual FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.Empty; }
+        public static FDR_Subscenario GetSubscenario(FoundationScenarioStep step, FoundationRouteScenario baseScenario)
+        {
+            switch (step)
+            {
+                case FoundationScenarioStep.OuterRingBuilding: return new FDR_OuterRingBuilding(baseScenario);
+                case FoundationScenarioStep.PierPreparing: return new FDR_PierPreparing(baseScenario);
+                case FoundationScenarioStep.InnerRingBuilding: return new FDR_InnerRingBuilding(baseScenario);
+                case FoundationScenarioStep.AnchorStart: return new FDR_AnchorStart(baseScenario);
+                case FoundationScenarioStep.AnchorBuilding: return new FDR_AnchorBuilding(baseScenario);
+                case FoundationScenarioStep.Begin: return new FDR_Begin(baseScenario);
+                default: return null;
+            }
+        }
     }
     private class FDR_ConditionSubscenario : FDR_Subscenario
     {
@@ -354,6 +381,7 @@ public sealed class FoundationRouteScenario : Scenario
     sealed class FDR_Begin : FDR_Subscenario
     {
         private byte stage = 0;
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.Begin; }
         public FDR_Begin(FoundationRouteScenario i_scn) : base(i_scn) { }
         public override void StartScenario()
         {
@@ -383,6 +411,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
     sealed class FDR_AnchorBuilding : FDR_Subscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.AnchorBuilding; }
         public FDR_AnchorBuilding(FoundationRouteScenario i_scn) : base(i_scn) { }
         public override void StartScenario()
         {
@@ -399,13 +428,14 @@ public sealed class FoundationRouteScenario : Scenario
                 scenario.AssignAnchor(anchorBasement);
                 Building.RemoveTemporarilyAvailableBuilding(Structure.ANCHOR_BASEMENT_ID);
                 GameMaster.realMaster.eventTracker.buildingConstructionEvent -= this.BuildingCheck;
-                scenarioQuest.MakeQuestCompleted();
+                scenarioQuest.stepsFinished[0] = true;
                 completed = true;
             }
         }
     }
     sealed class FDR_AnchorStart : FDR_ConditionSubscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.AnchorStart; }
         private byte stage = 0;
         public FDR_AnchorStart(FoundationRouteScenario i_scn) : base(i_scn) { }
         public override void StartScenario()
@@ -430,7 +460,7 @@ public sealed class FoundationRouteScenario : Scenario
 
                 conditionWindow = scenarioUI.ShowConditionPanel(0, conditionQuest, this.UIConditionProceedButton);
                 conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Anchor_verb));
-                conditionWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.FoundationRoute));
+                conditionWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.PowerPlus));
                 conditionQuest.BindUIUpdateFunction(conditionWindow.Refresh);                
             }
         }
@@ -465,6 +495,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
     sealed class FDR_InnerRingBuilding : FDR_ConditionSubscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.InnerRingBuilding; }
         private byte stage = 0;
         public FDR_InnerRingBuilding(FoundationRouteScenario i_scn) : base(i_scn) { }
         
@@ -483,6 +514,7 @@ public sealed class FoundationRouteScenario : Scenario
                 stage++;
                 StartSectorBuildingQuest(0, 0, this.UIConditionProceedButton);
                 conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Build));
+                conditionWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.FoundationRoute));
             }
             else
             {
@@ -530,26 +562,25 @@ public sealed class FoundationRouteScenario : Scenario
             byte nstage = (byte)fs.ReadByte();
             if (nstage != 0)
             {
-                if (nstage == 1 ) OKButton();
+                OKButton();
+                if (nstage == 7)
+                {
+                    stage = nstage;
+                    scenarioUI.ChangeAnnouncementText(localizer.GetAnnounceTitle(FoundationScenarioStep.InnerRingBuilding, WINDOW_INFO_1));
+                    scenarioQuest.MakeQuestCompleted();
+                }
                 else
                 {
-                    if (nstage == 7) {
-                        stage = nstage;
-                        scenarioUI.ChangeAnnouncementText(localizer.GetAnnounceTitle(FoundationScenarioStep.InnerRingBuilding, WINDOW_INFO_1));
-                        scenarioQuest.MakeQuestCompleted();
-                    }
-                    else
-                    {
-                        stage = nstage;
-                        StartSectorBuildingQuest(0, --nstage, this.UIConditionProceedButton);
-                        scenarioQuest.stepsAddInfo[0] = (--nstage).ToString() + "/6";
-                    }
+                    stage = nstage;
+                    StartSectorBuildingQuest(0, --nstage, this.UIConditionProceedButton);
+                    scenarioQuest.stepsAddInfo[0] = (--nstage).ToString() + "/6";
                 }
             }
         }
     }
     sealed class FDR_PierPreparing : FDR_Subscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.PierPreparing; }
         private byte stage = 0;
         public FDR_PierPreparing(FoundationRouteScenario i_scn) : base(i_scn) { }
         public override void StartScenario()
@@ -598,6 +629,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
     sealed class FDR_OuterRingBuilding : FDR_ConditionSubscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.OuterRingBuilding; }
         private byte stage = 0;
         public FDR_OuterRingBuilding(FoundationRouteScenario i_scn) : base(i_scn) { }
 
@@ -608,7 +640,8 @@ public sealed class FoundationRouteScenario : Scenario
             anchorBasement.StartTransportingColonists();
 
             StartSectorBuildingQuest(1, 0, this.UIConditionProceedButton);
-            conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Build));            
+            conditionWindow.SetButtonText(Localization.GetWord(LocalizedWord.Build));
+            conditionWindow.SetMainIcon(UIController.iconsTexture, UIController.GetIconUVRect(Icons.FoundationRoute));
             //
         }
 
@@ -654,8 +687,10 @@ public sealed class FoundationRouteScenario : Scenario
             }
         }
     }
+    // for copying
     sealed class FDR_Example : FDR_Subscenario
     {
+        public override FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.Empty; }
         private byte stage = 0;
         public FDR_Example(FoundationRouteScenario i_scn) : base(i_scn) { }
         public override void StartScenario()
@@ -816,17 +851,18 @@ public sealed class FoundationRouteScenario : Scenario
     public override void Save(FileStream fs)
     {
         base.Save(fs);
-        fs.WriteByte((byte)currentStep);
+        fs.WriteByte((byte)currentStep);        
         if (subscenario == null || subscenario.completed) fs.WriteByte(0);
         else
         {
             fs.WriteByte(1);
+            fs.WriteByte((byte)subscenario.GetScenarioStep());
             subscenario.Save(fs);
         }
         if (hexBuilder != null)
         {
             fs.WriteByte(1);
-            hexBuilder.Save(fs);
+            hexBuilder.Save(fs);           
         }
         else fs.WriteByte(0);
         if (settleQuest != null)
@@ -845,14 +881,20 @@ public sealed class FoundationRouteScenario : Scenario
         int x = fs.ReadByte();
         if (x != 0)
         {
-            StartSubscenario();
-            subscenario?.Load(fs);
+            FoundationScenarioStep fss = (FoundationScenarioStep)fs.ReadByte();
+            subscenario = FDR_Subscenario.GetSubscenario(fss, this);
+            if (subscenario != null)
+            {
+                subscenario.StartScenario();
+                subscenario.Load(fs);
+            }
         }
         if (fs.ReadByte() == 1)
         {
             if (hexBuilder == null) SetHexBuilder();
-            hexBuilder.Load(fs);
+            hexBuilder.Load(fs);           
         }
+        if (hexBuilder == null) SetHexBuilder();
         if (fs.ReadByte() == 1) PrepareSettling();
     }
     #endregion

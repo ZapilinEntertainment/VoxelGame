@@ -170,7 +170,7 @@ public sealed class ColonyController : MonoBehaviour
                             }
                             else
                             {
-                                if (b.isActive & b.energySurplus < 0)
+                                if (b.CanBePoweredOffBySystem() && (b.isActive && b.energySurplus < 0))
                                 {
                                     energySurplus -= b.energySurplus;
                                     b.SetEnergySupply(false, false);

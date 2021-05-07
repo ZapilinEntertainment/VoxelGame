@@ -759,6 +759,7 @@ public class Building : Structure
             case ANCHOR_BASEMENT_ID:
                 {
                     level = 6;
+                    isActive = true;
                     break;
                 }
         }
@@ -784,7 +785,7 @@ public class Building : Structure
         }
     }
 
-
+    virtual public bool CanBePoweredOffBySystem() { return true; }
     virtual public void SetActivationStatus(bool x, bool sendRecalculationRequest)
     {
         bool activityStateChanged = false;
