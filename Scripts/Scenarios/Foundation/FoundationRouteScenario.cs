@@ -189,11 +189,12 @@ public sealed class FoundationRouteScenario : Scenario
         {
             if (colony.storage.GetResourceCount(COST_RESOURCE_ID) >= COLONISTS_SEND_COST)
             {
-                if (hexBuilder.totalHousing < hexBuilder.colonistsCount)
+                if (hexBuilder.totalHousing > hexBuilder.colonistsCount)
                 {
                     anchorBasement.GetColonists(COLONISTS_SEND_LIMIT);
                     colony.storage.GetResources(COST_RESOURCE_ID, COLONISTS_SEND_COST);
                     hexBuilder.AddColonist();
+                    colony.RemoveCitizens(COLONISTS_SEND_LIMIT, false);
                     settleWindow.Refresh();
                 }
                 else AnnouncementCanvasController.MakeImportantAnnounce(localizer.notEnoughLivingSpace);
@@ -666,6 +667,8 @@ public sealed class FoundationRouteScenario : Scenario
             }
             else
             {
+                completed = true;
+                stage++;
                 scenarioQuest.MakeQuestCompleted();
                 conditionQuest.StopQuest(false);
                 scenarioUI.DisableConditionPanel(0);
@@ -683,7 +686,7 @@ public sealed class FoundationRouteScenario : Scenario
             if (nstage != 0)
             {
                 stage = nstage;
-                StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
+                if (stage < 6) StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
             }
         }
     }

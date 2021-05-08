@@ -2,6 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public class SpecialWorkMode : MyObject
+{
+    public readonly int ID;
+    public readonly string workname;
+    public System.Action resultAction;
+
+    protected override bool IsEqualNoCheck(object obj)
+    {
+        return ID == (obj as SpecialWorkMode).ID;
+    }
+
+    private SpecialWorkMode() { }
+    public SpecialWorkMode(int i_ID, string i_label, System.Action i_action)
+    {
+        ID = i_ID;
+        workname = i_label;
+        resultAction = i_action;
+    }
+}
+
 public abstract class WorkBuilding : Building, ILabourable
 {
     public static UIWorkbuildingObserver workbuildingObserver;

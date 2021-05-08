@@ -6,8 +6,13 @@ public sealed class RecruitingCenter : WorkBuilding {
     public static List<RecruitingCenter> recruitingCentersList;
     private static float hireCost = -1;       
 
-    private const float backupSpeed = 0.02f;
+    
     public bool finding = false;
+    //indev
+    private bool workInSpecialMode = false;
+    private SpecialWorkMode spmode;
+    //
+    private const float backupSpeed = 0.02f;
     const int CREW_SLOTS_FOR_BUILDING = 4, START_CREW_COST = 150;
     public const int REPLENISH_COST = 50;	
 

@@ -29,7 +29,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     [SerializeField] private RectTransform controllerBack, controllerStick;
     [SerializeField] private GameObject camUpButton, camLowButton;
 #pragma warning restore 0649
-    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, ENV_CAMERA_CF = 0.01f, MAX_VISIBILITY_RANGE = 50f;
+    const float MAX_ZOOM = 0.3f, MAX_FAR = 50, ENV_CAMERA_CF = 0.01f, MAX_VISIBILITY_RANGE = 200f;
 
     private bool camPosChanged = false;
     private bool? verticalMovement = null;

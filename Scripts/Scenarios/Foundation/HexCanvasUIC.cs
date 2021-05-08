@@ -54,19 +54,35 @@ namespace FoundationRoute
             commCount = buildingsCount[(int)HexType.Commercial] + buildingsCount[(int)HexType.CommercialDense];
             natureCount = buildingsCount[(int)HexType.Forest] + buildingsCount[(int)HexType.Mountain] + buildingsCount[(int)HexType.Lake];
             indCount = buildingsCount[(int)HexType.Industrial] + buildingsCount[(int)HexType.IndustrialExperimental];
+            //
             bool? a, b;
             void CheckConditions(HexType htype)
             {
                 CheckBuildingConditions(htype, out a, out b);
-                availabilityMask[(int)htype] = (a == null) || (( a == true) & (b == true | b == null));
+                availabilityMask[(int)htype] = (a == null) || ((a == true) & (b == true | b == null));
             }
-            CheckConditions(HexType.ResidentialDense);
-            CheckConditions(HexType.ResidentialEco);
-            CheckConditions(HexType.CommercialDense);
-            CheckConditions(HexType.AdvancedFields);
-            CheckConditions(HexType.Mountain);
-            CheckConditions(HexType.IndustrialExperimental);
-            CheckConditions(HexType.Powerplant);
+            //
+            int allCount = 0;
+            foreach (var i in buildingsCount) allCount += i;
+            if (allCount - 6 >= hexBuilder.hexLimit)
+            {
+                for (int i = 0; i < (int)HexType.TotalCount; i++)
+                {
+                    availabilityMask[i] = false;
+                }
+                availabilityMask[(int)HexType.Industrial] = true;
+                CheckConditions(HexType.IndustrialExperimental);
+            }
+            else
+            {               
+                CheckConditions(HexType.ResidentialDense);
+                CheckConditions(HexType.ResidentialEco);
+                CheckConditions(HexType.CommercialDense);
+                CheckConditions(HexType.AdvancedFields);
+                CheckConditions(HexType.Mountain);
+                CheckConditions(HexType.IndustrialExperimental);
+                CheckConditions(HexType.Powerplant);
+            }
         }
         private void CheckBuildingConditions(HexType type, out bool? a, out bool? b)
         {
@@ -249,77 +265,61 @@ namespace FoundationRoute
         }
 
         private void FillStatsPanel(bool?[] affectionsList)
-        {           
-            float pc = selectedStats.powerConsumption;
+        {          
+            int POWER_INDEX = HexBuildingStats.POWER_INDEX, INCOME_INDEX = HexBuildingStats.INCOME_INDEX,
+                FOOD_INDEX = HexBuildingStats.FOOD_INDEX, LIFEPOWER_INDEX = HexBuildingStats.LIFEPOWER_INDEX,
+                PERSONNEL_INDEX = HexBuildingStats.PERSONNEL_INDEX, HOUSING_INDEX = HexBuildingStats.HOUSING_INDEX;
+            //
             Text s;
-            if (pc == 0f) stats[0].enabled = false;
-            else
+            void DisplayAffection(int i)
             {
-                s = stats[0];
-                if (pc > 0f) s.text = '-' + string.Format("{0:0.##}", pc);
-                else s.text = '+' + string.Format("{0:0.##}", pc * (-1f));
-                if (affectionsList[0] == null) s.color = Color.white;
+                if (affectionsList[i] == null) s.color = Color.white;
                 else
                 {
-                    if (affectionsList[0] == false) s.color = Color.green; // inverted!
-                    else s.color = Color.red;
+                    if (affectionsList[i] == false) s.color = Color.red;
+                    else s.color = Color.green;
                 }
+            }
+            //
+            float pc = selectedStats.powerConsumption;            
+            if (pc == 0f) stats[POWER_INDEX].enabled = false;
+            else
+            {
+                s = stats[POWER_INDEX];
+                if (pc > 0f) s.text = '-' + string.Format("{0:0.##}", pc);
+                else s.text = '+' + string.Format("{0:0.##}", pc * (-1f));
+                DisplayAffection(POWER_INDEX);
                 if (!s.enabled) s.enabled = true;
             }
             // 1 - income
             pc = selectedStats.income;
-            s = stats[1];
+            s = stats[INCOME_INDEX];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[1] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[1] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
+            DisplayAffection(INCOME_INDEX);
             // 2 - food
             pc = selectedStats.foodProduction;
-            s = stats[2];
+            s = stats[FOOD_INDEX];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[2] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[2] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
+            DisplayAffection(FOOD_INDEX);
             // 3 - lifepower
             pc = selectedStats.lifepower;
-            s = stats[3];
+            s = stats[LIFEPOWER_INDEX];
             if (pc > 0f) s.text = '+' + string.Format("{0:0.##}", pc);
             else s.text = string.Format("{0:0.##}", pc);
-            if (affectionsList[3] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[3] == true) s.color = Color.green;
-                else s.color = Color.red;
-            }
+            DisplayAffection(LIFEPOWER_INDEX);
             // 4 - personnel & maxpersonnel
-            s = stats[4];
+            s = stats[PERSONNEL_INDEX];
             s.text = selectedStats.maxPersonnel.ToString();
-            if (affectionsList[4] == null) s.color = Color.white;
-            else
-            {
-                if (affectionsList[4] == false) s.color = Color.green; // inverted!
-                else s.color = Color.red;
-            }
+            DisplayAffection(PERSONNEL_INDEX);
             // 5 - housing           
-            s = stats[5];
+            s = stats[HOUSING_INDEX];
             if (selectedStats.housing == 0) s.enabled = false;
             else
             {
                 s.text = selectedStats.housing.ToString();
-                if (affectionsList[5] == null) s.color = Color.white;
-                else
-                {
-                    if (affectionsList[5] == true) s.color = Color.green;
-                    else s.color = Color.red;
-                }
+                DisplayAffection(HOUSING_INDEX);
                 if (!s.enabled) s.enabled = true;
             }
         }
@@ -495,7 +495,7 @@ namespace FoundationRoute
             else t.color = Color.white;
             // 5 - housing
             t = GetText(5);
-            a = hexBuilder.freeColonists;
+            a = hexBuilder.colonistsCount;
             b = hexBuilder.totalHousing;
             t.text = a.ToString() + '/' + b.ToString();
             t.color = a > b ? Color.red : Color.white;
@@ -520,7 +520,8 @@ namespace FoundationRoute
         {
             if (selectedHex != null && hexBuilder.SendColonistsForWork(selectedHex))
             {
-                 OpenHexWindow(selectedHex);
+                hexBuilder.RecalculateTotalParameters();
+                OpenHexWindow(selectedHex);               
             }
         }
         public void RemoveWorker()

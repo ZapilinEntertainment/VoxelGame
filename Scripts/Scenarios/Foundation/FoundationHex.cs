@@ -458,8 +458,11 @@ namespace FoundationRoute
         }
     }
     
-    public enum HexType : byte { Residential,ResidentialDense, ResidentialEco, Commercial, CommercialDense,
-    Fields, AdvancedFields, Forest, Mountain, Lake, Industrial, IndustrialExperimental, Powerplant, TotalCount, DummyRed, DummyBlue, DummyGreen }
+    public enum HexType : byte {
+        Fields,AdvancedFields,Lake,Forest,Mountain,
+        Residential,ResidentialDense, ResidentialEco, Commercial, CommercialDense,
+        Industrial, IndustrialExperimental, Powerplant,
+        TotalCount, DummyRed, DummyBlue, DummyGreen }
     public static class HexTypeExtension
     {
         public static HexSubtype DefineSubtype(this HexType htype)
@@ -549,12 +552,12 @@ namespace FoundationRoute
         private readonly ResourceContainer[] cost;
         public readonly HexType htype;
         public enum Stats : byte { PowerConsumption, Income, FoodProduction, LifepowerProduction, Personnel, Housing}
-        public int POWER_INDEX { get { return (int)Stats.PowerConsumption; } }
-        public int INCOME_INDEX { get { return (int)Stats.Income; } }
-        public int FOOD_INDEX { get { return (int)Stats.FoodProduction; } }
-        public int LIFEPOWER_INDEX { get { return (int)Stats.LifepowerProduction; } }
-        public int PERSONNEL_INDEX { get { return (int)Stats.Personnel; } }
-        public int HOUSING_INDEX { get { return (int)Stats.Housing; } }
+        public static int POWER_INDEX { get { return (int)Stats.PowerConsumption; } }
+        public static int INCOME_INDEX { get { return (int)Stats.Income; } }
+        public static int FOOD_INDEX { get { return (int)Stats.FoodProduction; } }
+        public static int LIFEPOWER_INDEX { get { return (int)Stats.LifepowerProduction; } }
+        public static int PERSONNEL_INDEX { get { return (int)Stats.Personnel; } }
+        public static int HOUSING_INDEX { get { return (int)Stats.Housing; } }
 
         protected override bool IsEqualNoCheck(object obj)
         {
@@ -676,7 +679,6 @@ namespace FoundationRoute
                     };
                     break;
                 case HexType.Forest:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 1.5f * pwr;                    
                     income = -2f * m;
                     lifepower = 10f * lp;
@@ -690,7 +692,6 @@ namespace FoundationRoute
                     };
                     break;
                 case HexType.Mountain:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 0f;                    
                     income = -2f * m;
                     lifepower = 7f * lp;
@@ -704,7 +705,6 @@ namespace FoundationRoute
                     };
                     break;
                 case HexType.Lake:
-                    maxPersonnel = 1 * ppl;
                     powerConsumption = 1f;                    
                     income = -2f * m;
                     lifepower = 12f * lp;
@@ -822,6 +822,7 @@ namespace FoundationRoute
             float[] multipliers = new float[6];
             multipliers[0] = 1f; multipliers[1] = 1f; multipliers[2] = 1f;
             multipliers[3] = 1f; multipliers[4] = 1f; multipliers[5] = 1f;
+            var basicStats = new HexBuildingStats(htype);
 
             if (neitypes.Count > 0)
             {
@@ -846,7 +847,7 @@ namespace FoundationRoute
                                         multipliers[LIFEPOWER_INDEX] *= (1f - lifepowerBoost / 2f);
                                         break;
                                     case HexSubtype.Nature:
-                                        multipliers[LIFEPOWER_INDEX] *= (htype == HexType.ResidentialEco) ? (1f + lifepowerBoost * 1.5f) : (1f + lifepowerBoost);
+                                        multipliers[LIFEPOWER_INDEX] *= (htype == HexType.ResidentialEco) ? 0.7f : 0.5f;
                                         break;
                                     default:
                                         {
@@ -892,23 +893,40 @@ namespace FoundationRoute
                         }
                         break;
                     case HexSubtype.Industrial:
-                        foreach (var n in neitypes)
+                        if (htype != HexType.Powerplant)
                         {
-                            if (n == HexType.Powerplant)
+                            foreach (var n in neitypes)
                             {
-                                if (htype != HexType.Powerplant) multipliers[POWER_INDEX] *= indPowerReducing;
-                            }
-                            else
-                            {
-                                if (n.DefineColorCode() == ColorCode.Blue)
+                                if (n == HexType.Powerplant)
                                 {
-                                    multipliers[INCOME_INDEX] *= incomeIndBoost;
+                                    multipliers[POWER_INDEX] *= indPowerReducing;
                                 }
+                                else
+                                {
+                                    if (n.DefineColorCode() == ColorCode.Blue)
+                                    {
+                                        multipliers[INCOME_INDEX] *= incomeIndBoost;
+                                    }
+                                    else
+                                    {
+                                        if (n == HexType.DummyRed)
+                                        {
+                                            multipliers[POWER_INDEX] *= 0.5f;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var n in neitypes)
+                            {
+                                if (n == HexType.Powerplant) continue;
                                 else
                                 {
                                     if (n == HexType.DummyRed)
                                     {
-                                        multipliers[POWER_INDEX] *= 0.5f;
+                                        multipliers[POWER_INDEX] *= 1.5f;
                                     }
                                 }
                             }
@@ -928,8 +946,12 @@ namespace FoundationRoute
                             {
                                 if (cc == ColorCode.Green)
                                 {
-                                    multipliers[FOOD_INDEX] *= 1.2f;
-                                    if (htype == HexType.Fields) multipliers[INCOME_INDEX] *= 1.1f;
+                                    if (htype == HexType.Fields | htype == HexType.AdvancedFields)
+                                    {
+                                        multipliers[FOOD_INDEX] *= 1.2f;
+                                        multipliers[INCOME_INDEX] *= 1.1f;
+                                    }
+                                    else multipliers[LIFEPOWER_INDEX] *= 1.2f;
                                     if (n == HexType.DummyGreen)
                                     {
                                         multipliers[LIFEPOWER_INDEX] *= 1.5f;
@@ -948,56 +970,48 @@ namespace FoundationRoute
             affections = new bool?[6];
             int i = POWER_INDEX;
             float m = multipliers[i];
+            bool x;
             if (m == 1f || _maxPowerConsumption == 0f) affections[i] = null;
             else
             {
-                if (m > 1f)
-                {
-                    affections[i] = false;
-                }
-                else affections[i] = true;
-                powerConsumption *= m;
+                x = _maxPowerConsumption > 0f;
+                if (m > 1f) affections[i] = !x;
+                else affections[i] = x;                
             }
-            //
+            _maxPowerConsumption = basicStats._maxPowerConsumption * m;
+           //
             i = INCOME_INDEX;
             m = multipliers[i];
             if (m == 1f || _maxIncome == 0f) affections[i] = null;
             else
             {
-                if (m > 1f)
-                {
-                    affections[i] = true;
-
-                }
-                else affections[i] = false;
-                income *= m;                
+                x = _maxIncome > 0;
+                if (m > 1f) affections[i] = x;
+                else affections[i] = !x;               
             }
+            _maxIncome = basicStats._maxIncome * m;
             //
             i = FOOD_INDEX;
             m = multipliers[i];
             if (m == 1f || _maxFoodProduction == 0f) affections[i] = null;
             else
             {
-                if (m > 1f)
-                {
-                    affections[i] = true;
-                }
-                else affections[i] = false;
-                foodProduction *= m;
+                x = _maxFoodProduction > 0;
+                if (m > 1f) affections[i] = x;
+                else affections[i] = !x;
             }
+            _maxFoodProduction = basicStats._maxFoodProduction * m;
             //
             i = LIFEPOWER_INDEX;
             m = multipliers[i];
             if (m == 1f || _maxLifepower == 0f) affections[i] = null;
             else
             {
-                if (m > 1f)
-                {
-                    affections[i] = true;
-                }
-                else affections[i] = false;
-                lifepower *= m;
+                x = _maxLifepower > 0;
+                if (m > 1f) affections[i] = x;
+                else affections[i] = !x;
             }
+            _maxLifepower = basicStats._maxLifepower * m;
             //
             i = PERSONNEL_INDEX;
             m = multipliers[i];
@@ -1009,8 +1023,8 @@ namespace FoundationRoute
                     affections[i] = false;
                 }
                 else affections[i] = true;
-                maxPersonnel = (int)(maxPersonnel * m);
             }
+            maxPersonnel = (int)(basicStats.maxPersonnel * m);
             //
             i = HOUSING_INDEX;
             m = multipliers[i];
@@ -1022,8 +1036,8 @@ namespace FoundationRoute
                     affections[i] = true;
                 }
                 else affections[i] = false;
-                housing = (int)(housing * m);
             }
+            housing = (int)(basicStats.housing * m);
         }
 
         public float GetMaxPowerConsumption() { return _maxPowerConsumption; }
@@ -1082,6 +1096,7 @@ namespace FoundationRoute
             hexBuilder = i_hexBuilder;
             hexStats = i_stats;
 
+            bool clickable = true;
             GameObject model, collider = gameObject;
             Transform t, mytransform = transform; 
             GameObject GetCube()
@@ -1397,6 +1412,7 @@ namespace FoundationRoute
                 case HexType.DummyGreen:
                 case HexType.DummyRed:
                     {
+                        clickable = false;
                         model = Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "nullhex"), mytransform);
                         t = model.transform;
                         t.localPosition = Vector3.zero;
@@ -1440,10 +1456,20 @@ namespace FoundationRoute
                         }
                     }
                     break;
+                default:
+                    {
+                        clickable = false;
+                        break;
+                    }
             }
 
             var me = this;
-            collider.GetComponentInChildren<ClickableObject>().AssignFunction(() => hexBuilder.uic.OpenHexWindow(me), hexBuilder.uic.CloseButton);
+            if (clickable) collider.GetComponentInChildren<ClickableObject>().AssignFunction(() => hexBuilder.uic.OpenHexWindow(me), hexBuilder.uic.CloseButton);
+            else
+            {
+                var co = collider.GetComponentInChildren<ClickableObject>();
+                if (co != null) Destroy(co);
+            }
         }
         private GameObject PrepareHexWalls()
         {

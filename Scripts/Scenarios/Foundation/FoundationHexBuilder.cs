@@ -17,6 +17,7 @@ namespace FoundationRoute
         public int colonistsCount { get; private set; }
         public int freeColonists { get; private set; }
         public int totalHousing { get; private set; }
+        public int hexLimit { get; private set; }
 
         private readonly GameObject hexMaquetteExample;
         public HexCanvasUIC uic { get; private set; }
@@ -30,7 +31,7 @@ namespace FoundationRoute
         private bool firstHex = true;
         private readonly float innerRadius, outerRadius;
         private const float CONST_0 = 1.73205f, ENERGY_CF = 1000f;
-        private const int RING_LIMIT = 4;
+        private const int RING_LIMIT = 4, BASIC_HEX_LIMIT = 10;
 
 
         private HexBuilder() { }// reserved
@@ -44,6 +45,7 @@ namespace FoundationRoute
             maquettesList = new Dictionary<HexPosition, GameObject>();
             innerRadius = 8f;
             outerRadius = innerRadius * 2f / CONST_0;
+            hexLimit = BASIC_HEX_LIMIT;
             if (uic == null)
             {
                 var t = Object.Instantiate(Resources.Load<GameObject>("UIPrefs/hexCanvas")).transform;
@@ -116,7 +118,10 @@ namespace FoundationRoute
                 var hex = LoadHexPref();
                 hex.Initialize(hpos, this, stats);
                 if (hpos.ringIndex > 0) hex.transform.position = GetHexWorldPosition(hpos) + Vector3.down * (Random.value * 2f);
-                else hex.transform.position = GetHexWorldPosition(hpos);
+                else
+                {
+                    hex.transform.position = GetHexWorldPosition(hpos);
+                }
                 // модуляции высоты?
                 hexList.Add(hpos.ToBytes(), hex);                
                 uic.RecalculateAvailabilityMask();
@@ -162,6 +167,7 @@ namespace FoundationRoute
             totalPersonnelInvolved = 0;
             totalPersonnelSlots = 0;
             totalHousing = 0;
+            int factoriesCount = 0;
             if (hexList.Count > 0)
             {
                 HexBuildingStats stats;
@@ -175,13 +181,14 @@ namespace FoundationRoute
                     totalPersonnelInvolved += stats.personnelInvolved;
                     totalPersonnelSlots += stats.maxPersonnel;
                     totalHousing += stats.housing;
+                    if (h.type == HexType.Industrial | h.type == HexType.IndustrialExperimental) factoriesCount++;
                 }
             }
+            hexLimit = BASIC_HEX_LIMIT * (1 + factoriesCount);
             freeColonists = colonistsCount - totalPersonnelInvolved;
             anchor?.SetEnergySurplus(-totalPowerConsumption * ENERGY_CF);
             uic.RedrawStatsPanel();
         }
-
         private void EverydayUpdate()
         {
             const float moneyCf = 100f;            
@@ -269,10 +276,12 @@ namespace FoundationRoute
         {
             colonistsCount++;
             freeColonists++;
+            RecalculateTotalParameters();
         }
         public void FreeColonistFromWork()
         {
             freeColonists++;
+            RecalculateTotalParameters();
         }
 
         #region save-load
@@ -301,6 +310,8 @@ namespace FoundationRoute
                 }
             }
             else fs.WriteByte(0);
+            //
+            fs.Write(System.BitConverter.GetBytes(colonistsCount),0,4);
         }
         public void Load(System.IO.FileStream fs)
         {
@@ -315,21 +326,23 @@ namespace FoundationRoute
             {
                 fs.Read(data, 0, 4);
                 count = System.BitConverter.ToInt32(data, 0);                
-                Hex h;
+                Hex h; HexPosition hpos;
+                bool secondRingHex = false;
                 for (i = 0; i < count; i++)
                 {
                     h = LoadHexPref();
                     h.Load(fs, this);
-                    hexList.Add(h.hexPosition.ToBytes(), h);
+                    hpos = h.hexPosition;
+                    hexList.Add(hpos.ToBytes(), h);
+                    if (hpos.ringIndex > 0) secondRingHex = true;
                     h.transform.position = GetHexWorldPosition(h.hexPosition);
                 }
-                if (firstHex)
+                if (secondRingHex && firstHex)
                 {
                     uic.EnableTotalStatsPanel();
                     firstHex = false;
                 }             
             }
-            RecalculateTotalParameters();
             // maquettes
             if (fs.ReadByte() == 1)
             {
@@ -340,6 +353,11 @@ namespace FoundationRoute
                     CreateHexMaquette(new HexPosition(fs.ReadByte(), fs.ReadByte()));
                 }
             }
+            //
+            fs.Read(data, 0, 4);
+            colonistsCount = System.BitConverter.ToInt32(data, 0);
+            RecalculateTotalParameters();
+            uic.RecalculateAvailabilityMask();
         }
         #endregion
     }

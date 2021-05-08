@@ -226,6 +226,7 @@ public sealed class AnchorBasement : WorkBuilding
                             }
                         }
                     }
+                    if (colony.citizenCount < colonistsArrived) colonistsArrived = colony.citizenCount;
                     break;
                 }
         }       
@@ -329,6 +330,7 @@ public sealed class AnchorBasement : WorkBuilding
         }
         d1 = transform.TransformDirection(d1);
         d2 = transform.TransformDirection(d2);
+        if (colonistsShip == null) LoadColonistsShip();
         colonistsShip.position = pierPosition + d1 * SHIP_SPAWN_DISTANCE + d2;
         colonistsShip.forward = -d1;
         distanceToPier = SHIP_SPAWN_DISTANCE;
@@ -497,7 +499,7 @@ public sealed class AnchorBasement : WorkBuilding
                     shipStatus = (ShipStatus)fs.ReadByte();
                     void LoadShipPosition()
                     {
-                        LoadColonistsShip();
+                       if (colonistsShip == null) LoadColonistsShip();
                         colonistsShip.position = new Vector3(
                             BitConverter.ToSingle(data, 0),
                             BitConverter.ToSingle(data, 4),
