@@ -349,6 +349,15 @@ public sealed class AnchorBasement : WorkBuilding
             sendSystemActivated = true;
         }
     }
+    public void SYSTEM_AddColonists(int x)
+    {
+        colonistsArrived += x;
+        if (!sendSystemActivated)
+        {
+            scenario.PrepareSettling();
+            sendSystemActivated = true;
+        }
+    }
 
     public void GetColonists(int x)
     {

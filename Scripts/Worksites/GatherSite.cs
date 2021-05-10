@@ -40,35 +40,43 @@ public class GatherSite : Worksite
         {
             while (i < strs.Count & iterations > 0)
             {
-                iterations--;
-                switch (strs[i].ID)
+                if (strs[i] == null)
                 {
-                    case Structure.PLANT_ID:
-                        Plant p = strs[i] as Plant;
-                        if (p != null)
-                        {
-                            p.Harvest(false);
-                            resourcesFound = true;
-                        }
-                        break;
-                    case Structure.CONTAINER_ID:
-                        HarvestableResource hr = strs[i] as HarvestableResource;
-                        if (hr != null)
-                        {
-                            hr.Harvest();
-                            resourcesFound = true;
-                        }
-                        break;
-                    case Structure.RESOURCE_STICK_ID:
-                        ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
-                        if (shr != null)
-                        {
-                            shr.Harvest();
-                            resourcesFound = true;
-                        }
-                        break;
+                    i++;
+                    continue;
                 }
-                i++;
+                else
+                {
+                    iterations--;
+                    switch (strs[i].ID)
+                    {
+                        case Structure.PLANT_ID:
+                            Plant p = strs[i] as Plant;
+                            if (p != null)
+                            {
+                                p.Harvest(false);
+                                resourcesFound = true;
+                            }
+                            break;
+                        case Structure.CONTAINER_ID:
+                            HarvestableResource hr = strs[i] as HarvestableResource;
+                            if (hr != null)
+                            {
+                                hr.Harvest();
+                                resourcesFound = true;
+                            }
+                            break;
+                        case Structure.RESOURCE_STICK_ID:
+                            ScalableHarvestableResource shr = strs[i] as ScalableHarvestableResource;
+                            if (shr != null)
+                            {
+                                shr.Harvest();
+                                resourcesFound = true;
+                            }
+                            break;
+                    }
+                    i++;
+                }
             }
             if (resourcesFound) destructionTimer = GameMaster.LABOUR_TICK * 10;
         }

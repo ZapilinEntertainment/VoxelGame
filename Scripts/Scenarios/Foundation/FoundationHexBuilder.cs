@@ -17,7 +17,10 @@ namespace FoundationRoute
         public int colonistsCount { get; private set; }
         public int freeColonists { get; private set; }
         public int totalHousing { get; private set; }
+        public int buildingsCount { get { int x = hexList.Count; return x > 6 ? x - 6 : 0; } }
         public int hexLimit { get; private set; }
+        public bool completed { get { return (totalPowerConsumption <= 0f) && (totalIncome > 0f) && (totalFoodProduction > 0f) && (totalLifepower > 0f); } }
+        public System.Action<int> colonistUpdateEvent;
 
         private readonly GameObject hexMaquetteExample;
         public HexCanvasUIC uic { get; private set; }
@@ -141,7 +144,7 @@ namespace FoundationRoute
                 }
                 //
                 RecalculateTotalParameters();
-                if (firstHex)
+                if (hpos.ringIndex > 0 && firstHex)
                 {
                     uic.EnableTotalStatsPanel();
                     firstHex = false;
@@ -192,11 +195,11 @@ namespace FoundationRoute
         private void EverydayUpdate()
         {
             const float moneyCf = 100f;            
-            float x = colony.FORCED_GetEnergyCrystals(totalIncome * moneyCf);
+            float x = colony.FORCED_GetEnergyCrystals(-totalIncome * moneyCf);
         }
 
         #region positioning
-        private Vector3 GetHexWorldPosition(HexPosition hpos)
+        public Vector3 GetHexWorldPosition(HexPosition hpos)
         {
             return GetHexLocalPosition(hpos) + zeroPoint; 
         }
@@ -277,6 +280,7 @@ namespace FoundationRoute
             colonistsCount++;
             freeColonists++;
             RecalculateTotalParameters();
+            colonistUpdateEvent?.Invoke(colonistsCount);
         }
         public void FreeColonistFromWork()
         {

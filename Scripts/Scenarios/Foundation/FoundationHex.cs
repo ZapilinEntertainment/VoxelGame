@@ -582,7 +582,7 @@ namespace FoundationRoute
                     income = -3f * m;
                     lifepower = -1f * lp;
                     foodProduction = -10f * f;
-                    housing = 10 * h;
+                    housing = 5 * h;
                     cost = new ResourceContainer[3]
                     {
                         new ResourceContainer(ResourceType.Concrete, 5f * costCf),
@@ -595,7 +595,7 @@ namespace FoundationRoute
                     income = -8f * m;
                     lifepower = -2f * lp;
                     foodProduction = -22f * f;
-                    housing = 15 * h;
+                    housing = 8 * h;
                     cost = new ResourceContainer[3]
                     {
                         new ResourceContainer(ResourceType.metal_P, 0.25f * costCf),
@@ -608,7 +608,7 @@ namespace FoundationRoute
                     income = -4f * m;
                     lifepower = 0f;
                     foodProduction = -9f * f;
-                    housing = 8 * h;
+                    housing = 3 * h;
                     cost = new ResourceContainer[5]
                     {
                         new ResourceContainer(ResourceType.Concrete, 0.8f * costCf),

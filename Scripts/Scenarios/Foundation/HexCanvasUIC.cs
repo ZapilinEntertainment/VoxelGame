@@ -62,9 +62,7 @@ namespace FoundationRoute
                 availabilityMask[(int)htype] = (a == null) || ((a == true) & (b == true | b == null));
             }
             //
-            int allCount = 0;
-            foreach (var i in buildingsCount) allCount += i;
-            if (allCount - 6 >= hexBuilder.hexLimit)
+            if (hexBuilder.buildingsCount >= hexBuilder.hexLimit)
             {
                 for (int i = 0; i < (int)HexType.TotalCount; i++)
                 {
@@ -243,6 +241,7 @@ namespace FoundationRoute
         {
             selectedHex = null;
             selectedPosition = hpos;
+            
             SwitchBuildmode(true);
             RedrawConstructionWindow();
             if (!constructionWindow.activeSelf) constructionWindow.SetActive(true);
@@ -325,6 +324,7 @@ namespace FoundationRoute
         }
         private void RedrawConstructionWindow()
         {
+            RecalculateAvailabilityMask();
             int selected = (int)selectedType;
             bool buildingAvailable = availabilityMask[selected], buildConditionsMet = true;
             for (int i = 0; i< (int)HexType.TotalCount; i++)
@@ -489,16 +489,25 @@ namespace FoundationRoute
             FillFloatVal(3);
             // 4 - personnel & maxpersonnel
             t = GetText(4);
-            int a = hexBuilder.totalPersonnelInvolved, b = hexBuilder.totalPersonnelSlots;
-            t.text = a.ToString() + '/' + b.ToString();
-            if (a > b) t.color = Color.yellow;
-            else t.color = Color.white;
-            // 5 - housing
+            int a = hexBuilder.freeColonists,b = hexBuilder.colonistsCount,  c = hexBuilder.totalHousing;
+            string sh, sa;
+            if (a == 0) sa = "<color=yellow>" + a.ToString() + " / " + b.ToString() + "</color>";
+            else sa = a.ToString() + " / " + b.ToString();
+
+            if (c == b) sh = "<color=yellow>" + c.ToString() + "</color>";
+            else
+            {
+                if (c < b) sh = "<color=red>" + c.ToString() + "</color>";
+                else sh = c.ToString();
+            }
+            t.text = sa  + " / " + sh;
+            // 5 - hexes
             t = GetText(5);
-            a = hexBuilder.colonistsCount;
-            b = hexBuilder.totalHousing;
+            a = hexBuilder.buildingsCount;
+            b = hexBuilder.hexLimit;
             t.text = a.ToString() + '/' + b.ToString();
-            t.color = a > b ? Color.red : Color.white;
+            if (a == b) t.color = Color.yellow;
+            else t.color = a > b ? Color.red : Color.white;
         }
 
         public void BuildButton(int i)

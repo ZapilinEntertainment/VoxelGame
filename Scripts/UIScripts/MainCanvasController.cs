@@ -9,14 +9,15 @@ public enum ProgressPanelMode : byte { Offline, Powerplant, Hangar, RecruitingCe
 public enum ActiveWindowMode : byte { NoWindow, TradePanel, StoragePanel, BuildPanel, SpecificBuildPanel, QuestPanel, GameMenu, ExpeditionPanel, LogWindow }
 
 
-sealed public class MainCanvasController : MonoBehaviour,IObserverController, ILocalizable
+sealed public class MainCanvasController : MonoBehaviour, IObserverController, ILocalizable
 {
     //prev UIController
     public GameObject rightPanel, upPanel, menuPanel, menuButton; // fill in the Inspector
     public Button closePanelButton; // fill in the Inspector
 
 #pragma warning disable 0649
-    [SerializeField] private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, leftPanel, 
+    [SerializeField]
+    private GameObject colonyPanel, tradePanel, hospitalPanel, progressPanel, storagePanel, leftPanel,
         colonyRenameButton, rightFastPanel, housingNotEnoughMarker, gearsProblemMarker; // fiti
     [SerializeField] private Text gearsText, happinessText, birthrateText, hospitalText, housingText, citizenString, energyString, energyCrystalsString, moneyFlyingText, progressPanelText, dataString;
     [SerializeField] private Image colonyToggleButton, storageToggleButton, layerCutToggleButton, storageOccupancyFullfill, progressPanelFullfill, foodIconFullfill;
@@ -31,7 +32,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     public delegate void StatusUpdateHandler();
     public event StatusUpdateHandler statusUpdateEvent;
     public ActiveWindowMode currentActiveWindowMode { get; private set; }
-    public ProgressPanelMode progressPanelMode { get; private set; }    
+    public ProgressPanelMode progressPanelMode { get; private set; }
     public Texture resourcesIcons { get; private set; }
     public Texture buildingsIcons { get; private set; }
     public Plane selectedPlane { get; private set; }
@@ -40,7 +41,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
 
     private Vector3 flyingMoneyOriginalPoint = Vector3.zero;
 
-  
+
 
     private const float DATA_UPDATE_TIME = 1, STATUS_UPDATE_TIME = 1;
     public int interceptingConstructPlaneID = -1;
@@ -52,7 +53,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
         saved_citizenCountBeforeStarvation, rpanel_textfield_userStructureID = -1;
-        
+
     private bool showMenuWindow = false, showColonyInfo = false, showStorageInfo = false,
         localized = false, storagePositionsPrepared = false, linksReady = false, starvationSignal = false;
     public List<int> activeFastButtons { get; private set; }
@@ -69,7 +70,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     private const int RPANEL_CUBE_DIG_BUTTON_INDEX = 3, RPANEL_TEXTFIELD_INDEX = 7;
     private const float HAPPINESS_LOW_VALUE = 0.3f, HAPPINESS_HIGH_VALUE = 0.8f, GEARS_LOW_VALUE = 1f;
 
-    public void Initialize( UIController uic)
+    public void Initialize(UIController uic)
     {
         uicontroller = uic;
         UIObserver.LinkToMainCanvasController(this);
@@ -77,7 +78,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         upPanel.SetActive(false);
         selectionFrame = Instantiate(Resources.Load<GameObject>("Prefs/structureFrame")).transform;
         selectionFrameMaterial = selectionFrame.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
-        selectionFrame.gameObject.SetActive(false);        
+        selectionFrame.gameObject.SetActive(false);
         resourcesIcons = Resources.Load<Texture>("Textures/resourcesIcons");
         buildingsIcons = Resources.Load<Texture>("Textures/buildingIcons");
         questUI = _questUI;
@@ -87,7 +88,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         if (!localized) LocalizeTitles();
         if (menuPanel.activeSelf) menuPanel.SetActive(false);
     }
-    public Transform GetMainCanvasTransform() 
+    public Transform GetMainCanvasTransform()
     {
         return gameCanvas;
     }
@@ -97,7 +98,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         colony = GameMaster.realMaster.colonyController;
         colony.LinkObserver(this);
         storage = colony.storage;
-        
+
         linksReady = true;
         leftPanel.SetActive(true);
         upPanel.SetActive(true);
@@ -118,7 +119,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             {
                 if (rpanel_textfield_userStructureID == Structure.XSTATION_3_ID)
                 {
-                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = XStation.GetInfo();            
+                    rightPanel.transform.GetChild(RPANEL_TEXTFIELD_INDEX).GetComponent<Text>().text = XStation.GetInfo();
                 }
                 else
                 {
@@ -171,7 +172,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                     }
                     else hpc = 1f;
                     if (colony.totalLivespace > 0) housingPercent = (int)hpc;
-                    housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" +  housingPercent.ToString() + "%)";
+                    housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + housingPercent.ToString() + "%)";
 
                     if (showingHospitalCf != colony.hospitals_coefficient)
                     {
@@ -277,123 +278,138 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
 
                 #region up panel values
                 bool valuesChanged = false;
-                    if (saved_freeWorkersCount != colony.freeWorkers)
+                if (saved_freeWorkersCount != colony.freeWorkers)
+                {
+                    saved_freeWorkersCount = colony.freeWorkers;
+                    valuesChanged = true;
+                }
+                if (saved_citizenCount != colony.citizenCount)
+                {
+                    saved_citizenCount = colony.citizenCount;
+                    valuesChanged = true;
+                }
+                if (saved_livespaceCount != colony.totalLivespace)
+                {
+                    saved_livespaceCount = colony.totalLivespace;
+                    valuesChanged = true;
+                }
+                if (valuesChanged)
+                {
+                    string hs;
+                    if (saved_livespaceCount == saved_citizenCount) hs = "<color=yellow>" + saved_livespaceCount.ToString() + "</color>";
+                    else
                     {
-                        saved_freeWorkersCount = colony.freeWorkers;
-                        valuesChanged = true;
+                        if (saved_livespaceCount < saved_citizenCount) hs = "<color=red>" + saved_livespaceCount.ToString() + "</color>";
+                        else hs = saved_livespaceCount.ToString();
                     }
-                    if (saved_citizenCount != colony.citizenCount)
-                    {
-                        saved_citizenCount = colony.citizenCount;
-                        valuesChanged = true;
-                    }
-                    if (saved_livespaceCount != colony.totalLivespace)
-                    {
-                        saved_livespaceCount = colony.totalLivespace;
-                        valuesChanged = true;
-                    }
-                    if (valuesChanged)
-                    {
-                        citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + saved_livespaceCount.ToString();
-                        housingNotEnoughMarker.SetActive(saved_citizenCount > saved_livespaceCount);
-                    }
-                    //
-
-                    gearsProblemMarker.SetActive(colony.gears_coefficient < GEARS_LOW_VALUE && ((colony.hq?.level ?? 0) > 1 ));
+                    citizenString.text = saved_freeWorkersCount.ToString() + " / " + saved_citizenCount.ToString() + " / " + hs;
+                    housingNotEnoughMarker.SetActive(saved_citizenCount > saved_livespaceCount);
+                }
                 //
-                    valuesChanged = false;
-                    if (saved_energyCount != colony.energyStored)
-                    {
-                        saved_energyCount = (int)colony.energyStored;
-                        valuesChanged = true;
-                    }
-                    if (saved_energyMax != colony.totalEnergyCapacity)
-                    {
-                        saved_energyMax = (int)colony.totalEnergyCapacity;
-                        valuesChanged = true;
-                    }
-                    float es = (int)(colony.energySurplus * 10) / 10;
-                    if (saved_energySurplus != es)
-                    {
-                        saved_energySurplus = es;
-                        valuesChanged = true;
-                    }
-                    if (valuesChanged & powerFailureTimer == 0)
-                    {
-                        string surplus = es.ToString();
-                        if (es > 0) surplus = '+' + surplus;
-                        energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
-                    }
 
-                    if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
+                gearsProblemMarker.SetActive(colony.gears_coefficient < GEARS_LOW_VALUE && ((colony.hq?.level ?? 0) > 1));
+                //
+                valuesChanged = false;
+                if (saved_energyCount != colony.energyStored)
+                {
+                    saved_energyCount = (int)colony.energyStored;
+                    valuesChanged = true;
+                }
+                if (saved_energyMax != colony.totalEnergyCapacity)
+                {
+                    saved_energyMax = (int)colony.totalEnergyCapacity;
+                    valuesChanged = true;
+                }
+                float es = (int)(colony.energySurplus * 10) / 10;
+                if (saved_energySurplus != es)
+                {
+                    saved_energySurplus = es;
+                    valuesChanged = true;
+                }
+                if (valuesChanged & powerFailureTimer == 0)
+                {
+                    string surplus = es.ToString();
+                    if (es > 0) surplus = '+' + surplus;
+                    energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
+                }
+
+                if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
+                {
+                    saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
+                    if (saved_energyCrystalsCount < 1000 && saved_energyCrystalsCount > -1000)
                     {
-                        saved_energyCrystalsCount = (int)colony.energyCrystalsCount;
-                        energyCrystalsString.text = saved_energyCrystalsCount.ToString();
-                    }
-                    //date
-                    if (dataString.enabled)
-                    {
-                        GameMaster gm = GameMaster.realMaster;
-                        string s;
-                        if (gm.year > 0)
-                        {
-                            s = Localization.GetWord(LocalizedWord.Year_short) + ' ' + gm.year.ToString() + ' '
-                                + Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
-                                + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
-                        }
-                        else
-                        {
-                            if (gm.month > 0)
-                            {
-                                s = Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
-                                + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
-                            }
-                            else
-                            {
-                                s = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
-                            }
-                        }
-                        s = colony.cityName + ", " + s;
-                        dataString.text = s;
-                    }
-                    //food val
-                    float foodValue = storage.GetResourceCount(ResourceType.Food);
-                    float foodMonth = colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
-                    if (foodValue > foodMonth)
-                    {
-                        if (foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(false);
+                        energyCrystalsString.text = saved_energyCrystalsCount.ToString();                        
                     }
                     else
                     {
-                        if (!foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(true);
-                        if (foodValue == 0)
+                        energyCrystalsString.text = string.Format("{0:0.#}", colony.energyCrystalsCount / 1000f) + 'k';
+                    }
+                    energyCrystalsString.color = saved_energyCrystalsCount > 0 ? Color.white : Color.red;
+                }
+                //date
+                if (dataString.enabled)
+                {
+                    GameMaster gm = GameMaster.realMaster;
+                    string s;
+                    if (gm.year > 0)
+                    {
+                        s = Localization.GetWord(LocalizedWord.Year_short) + ' ' + gm.year.ToString() + ' '
+                            + Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
+                            + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
+                    }
+                    else
+                    {
+                        if (gm.month > 0)
                         {
-                            if (!starvationSignal)
-                            {
-                                saved_citizenCountBeforeStarvation = colony.citizenCount;
-                                foodIconFullfill.color = Color.red;
-                                starvationSignal = true;
-                            }
-                            if (saved_citizenCountBeforeStarvation != 0)
-                            {
-                                foodIconFullfill.fillAmount = colony.citizenCount / saved_citizenCountBeforeStarvation;
-                            }
+                            s = Localization.GetWord(LocalizedWord.Month_short) + ' ' + gm.month.ToString() + ' '
+                            + Localization.GetWord(LocalizedWord.Day_short) + ' ' + gm.day.ToString();
                         }
                         else
                         {
-                            if (starvationSignal)
-                            {
-                                starvationSignal = false;
-                                foodIconFullfill.color = Color.white;
-                            }
-                            if (colony.citizenCount != 0)
-                            {
-                                foodIconFullfill.fillAmount = foodValue / foodMonth;
-                            }
+                            s = Localization.GetWord(LocalizedWord.Day) + ' ' + gm.day.ToString();
                         }
                     }
-                    #endregion
+                    s = colony.cityName + ", " + s;
+                    dataString.text = s;
                 }
+                //food val
+                float foodValue = storage.GetResourceCount(ResourceType.Food);
+                float foodMonth = colony.citizenCount * GameConstants.FOOD_CONSUMPTION * GameMaster.DAYS_IN_MONTH;
+                if (foodValue > foodMonth)
+                {
+                    if (foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(false);
+                }
+                else
+                {
+                    if (!foodIconFullfill.transform.parent.gameObject.activeSelf) foodIconFullfill.transform.parent.gameObject.SetActive(true);
+                    if (foodValue == 0)
+                    {
+                        if (!starvationSignal)
+                        {
+                            saved_citizenCountBeforeStarvation = colony.citizenCount;
+                            foodIconFullfill.color = Color.red;
+                            starvationSignal = true;
+                        }
+                        if (saved_citizenCountBeforeStarvation != 0)
+                        {
+                            foodIconFullfill.fillAmount = colony.citizenCount / saved_citizenCountBeforeStarvation;
+                        }
+                    }
+                    else
+                    {
+                        if (starvationSignal)
+                        {
+                            starvationSignal = false;
+                            foodIconFullfill.color = Color.white;
+                        }
+                        if (colony.citizenCount != 0)
+                        {
+                            foodIconFullfill.fillAmount = foodValue / foodMonth;
+                        }
+                    }
+                }
+                #endregion
+            }
             if (moneyFlySpeed != 0) // Почему не работает?
             {
                 Vector3 pos = moneyFlyingText.rectTransform.position;
@@ -439,7 +455,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             }
         }
     }
-    
+
     public void Raycasting()
     {
         if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null) return;
@@ -609,16 +625,16 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         {
             case ChosenObjectType.Plane:
                 {
-                    selectedFaceIndex = selectedPlane.faceIndex; 
+                    selectedFaceIndex = selectedPlane.faceIndex;
                     selectionFrame.position = selectedPlane.GetCenterPosition();
                     selectionFrame.rotation = Quaternion.Euler(selectedPlane.GetEulerRotationForQuad());
                     selectionFrame.localScale = new Vector3(PlaneExtension.INNER_RESOLUTION, 1, PlaneExtension.INNER_RESOLUTION);
                     sframeColor = new Vector3(140f / 255f, 1, 1);
 
                     workingObserver = selectedPlane.ShowOnGUI();
-                    FollowingCamera.main.SetLookPoint(selectedPlane.GetCenterPosition());                 
+                    FollowingCamera.main.SetLookPoint(selectedPlane.GetCenterPosition());
                 }
-                break;              
+                break;
 
             case ChosenObjectType.Structure:
                 if (!(chosenStructure is IPlanable))
@@ -702,7 +718,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                 case ActiveWindowMode.LogWindow:
                     AnnouncementCanvasController.DeactivateLogWindow();
                     break;
-                case ActiveWindowMode.GameMenu:                    
+                case ActiveWindowMode.GameMenu:
                     menuPanel.SetActive(false);
                     menuButton.GetComponent<Image>().overrideSprite = null;
                     menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
@@ -729,14 +745,14 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                 UISurfacePanelController.current?.ShutOff();
                 if (rightPanel.activeSelf) { rightPanel.SetActive(false); FollowingCamera.main.ResetTouchRightBorder(); }
                 if (rightFastPanel.activeSelf) rightFastPanel.SetActive(false);
-                if (leftPanel.activeSelf) leftPanel.SetActive(false);                
+                if (leftPanel.activeSelf) leftPanel.SetActive(false);
                 //if (Plane.surfaceObserver != null) Plane.surfaceObserver.ShutOff();
                 if (showColonyInfo) ColonyButton();
                 AnnouncementCanvasController.ChangeVisibility(false);
                 var ep = ExplorationPanelUI.current;
                 if (ep != null && ep.isActiveAndEnabled) ep.gameObject.SetActive(false);
-                
-                menuPanel.SetActive(true);                                  
+
+                menuPanel.SetActive(true);
             }
         }
         bool deactivating = (mode == ActiveWindowMode.NoWindow);
@@ -775,7 +791,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         upPanel.SetActive(true);
         colonyRenameButton.SetActive(true);
         AnnouncementCanvasController.ChangeVisibility(true);
-    }    
+    }
 
     public void MoneyChanging(float f)
     {
@@ -795,7 +811,8 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         }
         moneyFlyingText.enabled = true;
     }
-    public void StartPowerFailureTimer() {
+    public void StartPowerFailureTimer()
+    {
         powerFailureTimer = 1;
         energyString.text = Localization.GetPhrase(LocalizedPhrase.PowerFailure);
         if (powerFailureTimer <= 0)
@@ -865,7 +882,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             int housingPercent = 0;
             if (colony.totalLivespace > 0)
             {
-                housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);                
+                housingPercent = (int)(((float)colony.citizenCount / colony.totalLivespace) * 100f);
             }
             housingText.text = string.Format("{0:0.##}", colony.housingLevel) + " (" + housingPercent.ToString() + "%)";
             hospitalText.text = string.Format("{0:0.##}", showingHospitalCf * 100) + '%';
@@ -994,7 +1011,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             t.GetChild(0).GetComponent<RawImage>().enabled = false;
             t.GetChild(1).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Total) + ':';
             var tv = st.totalVolume; var mv = st.maxVolume;
-            t.GetChild(2).GetComponent<Text>().text = (tv < 1000f ? string.Format("{0:0.#}", tv) : string.Format("{0:0.#}", tv/1000f) + 'k' ) + " / "
+            t.GetChild(2).GetComponent<Text>().text = (tv < 1000f ? string.Format("{0:0.#}", tv) : string.Format("{0:0.#}", tv / 1000f) + 'k') + " / "
                 + ((mv < 1000f) ? string.Format("{0:0.#}", mv) : string.Format("{0:0.#}", mv / 1000f) + 'k');
             t.gameObject.SetActive(true);
             i++;
@@ -1034,7 +1051,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     }
 
     public void AddFastButton(Structure s)
-    {        
+    {
         GameObject buttonGO = null;
         if (activeFastButtons.Count == 0)
         {
@@ -1060,10 +1077,10 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
                 b.onClick.AddListener(() => { uicontroller.ChangeUIMode(UIMode.KnowledgeTab, true); });
                 break;
             case Structure.OBSERVATORY_ID:
-                b.onClick.AddListener(() => { uicontroller.ChangeUIMode(UIMode.GlobalMap,true); });
+                b.onClick.AddListener(() => { uicontroller.ChangeUIMode(UIMode.GlobalMap, true); });
                 break;
             case Structure.EXPEDITION_CORPUS_4_ID:
-                b.onClick.AddListener( () => { ExplorationPanelUI.Initialize(); } );
+                b.onClick.AddListener(() => { ExplorationPanelUI.Initialize(); });
                 break;
             default:
                 b.onClick.AddListener(() => { Select(s); });
@@ -1100,7 +1117,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
 
     #endregion
 
-   public void MenuButton()
+    public void MenuButton()
     {
         if (menuPanel.activeSelf) // SWITCH OFF
         {
@@ -1177,7 +1194,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
             case ProgressPanelMode.RecruitingCenter:
                 {
                     UIRecruitingCenterObserver urc = RecruitingCenter.rcenterObserver;
-                    if (urc == null || ( !urc.isObserving  | !urc.hiremode)) { DeactivateProgressPanel(progressPanelMode); return; }
+                    if (urc == null || (!urc.isObserving | !urc.hiremode)) { DeactivateProgressPanel(progressPanelMode); return; }
                     else
                     {
                         progressPanelIcon.transform.GetChild(0).gameObject.SetActive(false);
@@ -1228,7 +1245,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         {
             if (colony.birthrateMode == BirthrateMode.Lowered) x = 2;
         }
-        
+
         if (x != hospitalPanel_savedMode)
         {
             t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
@@ -1247,7 +1264,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
     {
         switch (i)
         {
-            case 0: 
+            case 0:
                 colony.SetBirthrateMode(BirthrateMode.Normal);
                 break;
             case 1:
@@ -1259,9 +1276,9 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         }
         Transform t = null;
         if (i != hospitalPanel_savedMode)
-        {            
+        {
             t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
-            if (t != null) t.GetComponent<Image>().overrideSprite = null;                     
+            if (t != null) t.GetComponent<Image>().overrideSprite = null;
         }
         hospitalPanel_savedMode = i;
         t = hospitalPanel.transform.GetChild(hospitalPanel_savedMode);
@@ -1304,7 +1321,7 @@ sealed public class MainCanvasController : MonoBehaviour,IObserverController, IL
         t.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Improved) + " (" + string.Format("{0:0.##}", ColonyController.IMPROVED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
         t.GetChild(2).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Lowered) + " (" + string.Format("{0:0.##}", ColonyController.LOWERED_BIRTHRATE_COEFFICIENT * 100f) + "%)";
 
-        menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);        
+        menuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
 
         t = rightPanel.transform;
         t.GetChild(RPANEL_CUBE_DIG_BUTTON_INDEX).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Dig);

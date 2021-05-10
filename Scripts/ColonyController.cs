@@ -120,6 +120,7 @@ public sealed class ColonyController : MonoBehaviour
     #region updating
     void Update()
     {
+        if (freeWorkers > citizenCount) freeWorkers = citizenCount;
         if (showingHappiness != happinessCoefficient)
         {
             showingHappiness = Mathf.Lerp(showingHappiness, happinessCoefficient, Time.deltaTime);

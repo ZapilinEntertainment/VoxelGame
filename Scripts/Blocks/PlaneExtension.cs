@@ -6,6 +6,7 @@ public sealed class PlaneExtension : MyObject
     public Grassland grassland { get; private set; }
     private readonly Plane myPlane;
     private List<Structure> structures;
+    public int structuresCount { get{if (structures == null) return 0; else return structures.Count; } }
     public FullfillStatus fulfillStatus
     {
         get; private set;
@@ -434,6 +435,79 @@ public sealed class PlaneExtension : MyObject
                 if (s.ID == pid) plist.Add(s as Plant);
             }
             if (plist.Count > 0) return plist.ToArray(); else return null;
+        }
+    }
+    public Structure GetRandomStructure()
+    {
+        bool secondAttempt = false;
+        START:
+        if (structures == null) return null;
+        else
+        {
+            int count = structures.Count;
+            Structure s;
+            if (count == 1) s = structures[0];
+            else s = structures[Random.Range(0, count)];
+            if (s == null)
+            {
+                if (!secondAttempt)
+                {
+                    secondAttempt = true;
+                    CheckStructuresList_NoInputCheck();
+                    goto START;
+                }
+                else return null;
+            }
+            else return s;
+        }
+    }
+    private void CheckStructuresList_NoInputCheck()
+    {
+        int recalculationPositions = 0;
+        foreach (var s in structures) { if (s == null || s.IsDestroyed()) recalculationPositions++; }
+        if (recalculationPositions > 0)
+        {
+            int strCount = structures.Count;
+            if (recalculationPositions == 1)
+            {
+                for (int i = 0; i < strCount; i++)
+                {
+                    if (structures[i] == null)
+                    {
+                        structures.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            else
+            {                
+                strCount -= recalculationPositions;
+                if (strCount == 0)
+                {
+                    structures = null;
+                    return;
+                }
+                else {
+                    var nlist = new Structure[strCount];
+                    int j = 0;
+                    for (int i = 0; i < strCount; i++)
+                    {
+                        if (structures[j] != null)
+                        {
+                            nlist[i] = structures[j];
+                            j++;
+                        }
+                        else
+                        {
+                            j++;
+                            while (structures[j] == null & j < strCount) j++;
+                            nlist[i] = structures[j];
+                            j++;
+                        }
+                    }
+                    structures = new List<Structure>(nlist);
+                }
+            }
         }
     }
 

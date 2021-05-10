@@ -5,7 +5,6 @@ public class CleanSite : Worksite {
 	public bool diggingMission {get;protected set;}
 	const int START_WORKERS_COUNT = 10;
     private const float DAMAGE_PER_TICK = 10f;
-    List<Structure> strlist;
     // public const int MAX_WORKERS = 32
 
     public CleanSite(Plane p, bool f_diggingMission) : base (p)
@@ -26,18 +25,9 @@ public class CleanSite : Worksite {
             StopWork(true);
 			return;
 		}
-        strlist = workplace.GetStructuresList();
-        if (strlist == null)
+        if (workplace.structuresCount == 0)
         {
-            if (diggingMission)
-            {
-                colony.RemoveWorksite(this);
-                DigSite ds = new DigSite(workplace, true, 0);
-                TransferWorkers(this, ds);
-                if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
-                StopWork(true);
-            }
-            else StopWork(true);
+            INLINE_FinishWorkSequence();
             return;
         }
         else INLINE_WorkCalculation();		
@@ -49,25 +39,45 @@ public class CleanSite : Worksite {
         while (iterations > 0)
         {
             iterations--;
-            Structure s = strlist[0];
-            if (s.ID == Structure.PLANT_ID)
+            Structure s = workplace.GetRandomStructure();
+            if (s = null)
             {
-                (s as Plant).Harvest(false);
+                INLINE_FinishWorkSequence();
+                return;
             }
             else
             {
-                HarvestableResource hr = s as HarvestableResource;
-                if (hr != null)
+                if (s.ID == Structure.PLANT_ID)
                 {
-                    hr.Harvest();
+                    (s as Plant).Harvest(false);
                 }
                 else
                 {
-                    s.ApplyDamage(DAMAGE_PER_TICK);
+                    HarvestableResource hr = s as HarvestableResource;
+                    if (hr != null)
+                    {
+                        hr.Harvest();
+                    }
+                    else
+                    {
+                        s.ApplyDamage(DAMAGE_PER_TICK);
+                    }
                 }
             }
         }
-        actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) + " :" + strlist.Count.ToString() + ")";
+        actionLabel = Localization.GetActionLabel(LocalizationActionLabels.CleanInProgress) + " (" + Localization.GetPhrase(LocalizedPhrase.ObjectsLeft) + " :" + workplace.structuresCount.ToString() + ")";
+    }
+    private void INLINE_FinishWorkSequence()
+    {
+        if (diggingMission)
+        {
+            colony.RemoveWorksite(this);
+            DigSite ds = new DigSite(workplace, true, 0);
+            TransferWorkers(this, ds);
+            if (showOnGUI) { ds.ShowOnGUI(); showOnGUI = false; }
+            StopWork(true);
+        }
+        else StopWork(true);
     }
 
     #region save-load mission

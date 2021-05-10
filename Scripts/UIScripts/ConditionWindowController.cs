@@ -57,8 +57,13 @@ public class ConditionWindowController : MonoBehaviour
             }
             else conditionLinesHolder.GetChild(i).gameObject.SetActive(false);
         }
-        actionButton.interactable = completedSteps == activeSlotsCount;
-        clickAction = i_clickAction;
+        if (i_clickAction != null)
+        {
+            actionButton.interactable = completedSteps == activeSlotsCount;
+            clickAction = i_clickAction;
+            actionButton.gameObject.SetActive(true);
+        }
+        else actionButton.gameObject.SetActive(false);
     }
     public void Refresh()
     {

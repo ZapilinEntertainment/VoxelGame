@@ -39,6 +39,17 @@ public class Plane : MyObject
             }
         }
     }
+    public int structuresCount
+    {
+        get
+        {
+            if (extension != null) return extension.structuresCount;
+            else
+            {
+                if (mainStructure == null) return 0; else return 1;
+            }
+        }
+    }
 
     public IPlanable host { get; protected set; }
     public Chunk myChunk { get { return host.GetBlock().myChunk; } }
@@ -281,6 +292,11 @@ public class Plane : MyObject
     {
         if (extension == null) return null;
         else return extension.GetPlants();
+    }
+    public Structure GetRandomStructure()
+    {
+        if (extension != null) return extension.GetRandomStructure();
+        else return mainStructure;
     }
 
     virtual public void ChangeMaterial(int newId, bool redrawCall)
