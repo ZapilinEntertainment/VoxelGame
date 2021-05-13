@@ -49,6 +49,7 @@ public abstract class Scenario : MyObject
 
     virtual public void StartScenario() { }
     virtual public void EndScenario() { }
+    virtual public void ClearScenarioDecorations() { }
     
     virtual public void OKButton() { }
     virtual public void UIConditionProceedButton() { }

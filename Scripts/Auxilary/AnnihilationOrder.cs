@@ -166,7 +166,10 @@ public class StructureAnnihilationOrder : MyObject
     {
         _vals = new bool[4] { sendMsg, compensateResources, ruins, true };
     }
-
+    private StructureAnnihilationOrder (bool sendMsg, bool chunkClearing)
+    {
+        _vals = new bool[4] { sendMsg, false, false, chunkClearing };
+    }
 
     public static StructureAnnihilationOrder GetReplacingOrder(bool compensation)
     {

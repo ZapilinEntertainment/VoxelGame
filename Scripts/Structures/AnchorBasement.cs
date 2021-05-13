@@ -374,7 +374,7 @@ public sealed class AnchorBasement : WorkBuilding
         {
             hexPref = Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "foundationHex");
         }
-        Transform t = Instantiate(hexPref).transform;
+        Transform t = Instantiate(hexPref, transform).transform;
         t.position = innerRingZeroPoint + Quaternion.AngleAxis(60f * ringPosition, Vector3.up) * (Vector3.forward * HEXSIZE * 2f);
         t.localScale = Vector3.one * 0.5f;
         string name;
@@ -399,6 +399,10 @@ public sealed class AnchorBasement : WorkBuilding
     private void OnDestroy()
     {
         if (colonistsShip != null) Destroy(colonistsShip.gameObject);
+        if (smallGear != null) Destroy(smallGear.gameObject);
+        if (bigGear != null) Destroy(bigGear.gameObject);
+        if (hexBasement != null) Destroy(hexBasement.gameObject);
+        if (endCrystal != null) Destroy(endCrystal.gameObject);
     }
 
     #region save-load system

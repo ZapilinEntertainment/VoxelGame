@@ -10,7 +10,7 @@ public interface IPlanable
     bool IsStructure();
     bool IsFaceTransparent(byte faceIndex);
     bool HavePlane(byte faceIndex);
-    bool TryGetPlane(byte faceIndex, out Plane result);    
+    bool TryGetPlane(byte faceIndex, out Plane result);
     bool IsCube();
     bool ContainSurface();
     bool ContainsStructures();
@@ -51,7 +51,7 @@ public static class IPlanableSupportClass
         }
         myBlock = chunk.AddBlock(cpos, s, false, checkPlanes);
         if (myBlock == null)
-        {            
+        {
             s.Delete(BlockAnnihilationOrder.ManualCreationError);
             Debug.LogException(new System.Exception("new IPlanable block cannot be created"));
             return;
@@ -81,7 +81,7 @@ public static class IPlanableSupportClass
                     }
                     else
                     {
-                        var p = createAction(i,false).GetVisualInfo(chunk, cpos);
+                        var p = createAction(i, false).GetVisualInfo(chunk, cpos);
                         if (p != null) data.Add(p);
                     }
                 }

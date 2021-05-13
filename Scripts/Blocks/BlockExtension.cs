@@ -3,7 +3,7 @@ using UnityEngine;
 public sealed class BlockExtension : MyObject, IPlanable
 {
     public Block myBlock { get; private set; }
-    private bool isNatural;
+    private bool isNatural, destroyed = false;
     public int materialID { get; private set; }
     private float fossilsVolume, volume;
     private byte existingPlanesMask;    //не может быть нулем, иначе extension не нужен
@@ -552,12 +552,13 @@ public sealed class BlockExtension : MyObject, IPlanable
 
 
 
-    public void Delete(BlockAnnihilationOrder order) { Annihilate(order); }
+    public void Delete(BlockAnnihilationOrder order) { if (!destroyed) Annihilate(order); }
     /// <summary>
     /// Do not use directly, use chunk.DeleteBlock
     /// </summary>
     public void Annihilate(BlockAnnihilationOrder order)
     {
+        if (!destroyed) destroyed = true;
         if (planes != null)
         {
             var pao = order.GetPlaneOrder();

@@ -701,18 +701,9 @@ public class Plane : MyObject
             if (extension != null) extension.Annihilate(order);
             else
             {
-                if (mainStructure != null)
-                {
-                    if (mainStructure is IPlanable)
-                    {
-                        mainStructure.ClearBasementLink(this);
-                        var b = host?.GetBlock();
-                        if (b != null) mainStructure.SectionDeleted(b.pos);
-                    }
-                    else mainStructure.Annihilate(order.GetStructuresOrder());
-                }
+                mainStructure?.Annihilate(order.GetStructuresOrder());
             }
-            if (!GameMaster.sceneClearing)
+            if (!order.chunkClearing)
             {
                 if (haveWorksite)
                 {

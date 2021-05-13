@@ -110,6 +110,7 @@ public sealed class Storage : MonoBehaviour {
 	}
     private void Overloading()
     {
+        if (GameMaster.loading) return;
         if (announcementTimer <= 0)
         {
             AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.StorageOverloaded));

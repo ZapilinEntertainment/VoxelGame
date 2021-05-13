@@ -1009,8 +1009,7 @@ public sealed partial class Chunk : MonoBehaviour
         lifePower = 0;
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
-        RenderDataFullRecalculation();
-        
+        RenderDataFullRecalculation();        
     }
 
     #region blocking

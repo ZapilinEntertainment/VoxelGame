@@ -194,6 +194,11 @@ public sealed class FoundationRouteScenario : Scenario
         t.LookAt(GameMaster.sceneCenter + Vector3.down * 5f);
         UIController.GetCurrent().ChangeUIMode(UIMode.Endgame, true);
     }
+    public override void ClearScenarioDecorations()
+    {
+        hexBuilder?.ClearDecorations();
+        if (scenarioUI != null) Object.Destroy(scenarioUI);
+    }
     //
     override public void OKButton()
     {

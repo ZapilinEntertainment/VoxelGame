@@ -38,7 +38,9 @@ public class TestMaster : MonoBehaviour
         {
             // FollowingCamera.main.CameraToStartPosition();           
             //GameMaster.realMaster.globalMap.TEST_MakeNewPoint(MapMarkerType.Star);
-            UIController.GetCurrent().GetMainCanvasController().questUI.StartEndQuest((byte)Knowledge.ResearchRoute.Foundation);
+            //UIController.GetCurrent().GetMainCanvasController().questUI.StartEndQuest((byte)Knowledge.ResearchRoute.Foundation);
+
+            
         }
         if (Input.GetKeyDown("x"))
         {
@@ -46,8 +48,10 @@ public class TestMaster : MonoBehaviour
             //TEST_PrepareForExpeditions();
             // GiveRoutePoints(Knowledge.ResearchRoute.Foundation, 2);
             //WritePuzzleColors();
-            GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_S, 10000);
-            GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_E, 10000);
+            //GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_S, 10000);
+            //GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_E, 10000);
+
+            GameMaster.realMaster.mainChunk.ClearChunk();
         }
         if (Input.GetKeyDown("c"))
         {

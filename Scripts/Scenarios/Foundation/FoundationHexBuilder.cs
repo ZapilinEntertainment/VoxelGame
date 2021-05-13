@@ -23,6 +23,7 @@ namespace FoundationRoute
         public System.Action<int> colonistUpdateEvent;
 
         private readonly GameObject hexMaquetteExample;
+        private Transform hexHolder;
         public HexCanvasUIC uic { get; private set; }
         private ColonyController colony;
         private AnchorBasement anchor;
@@ -34,7 +35,7 @@ namespace FoundationRoute
         private bool firstHex = true;
         private readonly float innerRadius, outerRadius;
         private const float CONST_0 = 1.73205f, ENERGY_CF = 1000f;
-        private const int RING_LIMIT = 4, BASIC_HEX_LIMIT = 10;
+        private const int RING_LIMIT = 4, BASIC_HEX_LIMIT = 10, TOTAL_HEXES = 54;
 
 
         private HexBuilder() { }// reserved
@@ -46,6 +47,8 @@ namespace FoundationRoute
             maquettesPool = new List<GameObject>();
             poolLength = 0;
             maquettesList = new Dictionary<HexPosition, GameObject>();
+            hexHolder = new GameObject("hexHolder").transform;
+            hexHolder.position = Vector3.zero;
             innerRadius = 8f;
             outerRadius = innerRadius * 2f / CONST_0;
             hexLimit = BASIC_HEX_LIMIT;
@@ -115,7 +118,8 @@ namespace FoundationRoute
                     var m = maquettesList[hpos];
                     m.SetActive(false);
                     maquettesList.Remove(hpos);
-                    maquettesPool.Add(m);
+                    if (maquettesPool.Count + buildingsCount <= TOTAL_HEXES) maquettesPool.Add(m);
+                    else Object.Destroy(m);
                 }
                 //
                 var hex = LoadHexPref();
@@ -130,7 +134,8 @@ namespace FoundationRoute
                 uic.RecalculateAvailabilityMask();
                 //+spread affection on neighbours:
                 HexPosition npos;
-                if (hexList.Count > 1) {
+                int count = hexList.Count;
+                if (count > 1) {
                     bool?[] aff;
                     for (byte i = 0; i < 6; i++)
                     {
@@ -141,6 +146,10 @@ namespace FoundationRoute
                             hexList[bb].hexStats.ApplyNeighboursAffection(GetNeighboursHexTypes(npos), out aff);
                         }
                     }
+                }
+                else
+                {
+                    if (count == TOTAL_HEXES) DeleteMaquettes();
                 }
                 //
                 RecalculateTotalParameters();
@@ -261,7 +270,7 @@ namespace FoundationRoute
 
         private Hex LoadHexPref()
         {
-            return Object.Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "foundationHex")).AddComponent<Hex>();
+            return Object.Instantiate(Resources.Load<GameObject>(FoundationRouteScenario.resourcesPath + "foundationHex"), hexHolder).AddComponent<Hex>();
         }
         public bool SendColonistsForWork(Hex h)
         {
@@ -286,6 +295,30 @@ namespace FoundationRoute
         {
             freeColonists++;
             RecalculateTotalParameters();
+        }
+
+        public void ClearDecorations()
+        {
+            DeleteMaquettes();
+            maquettesList = null;
+            Object.Destroy(hexHolder.gameObject);
+        }
+        private void DeleteMaquettes()
+        {
+            if (maquettesPool.Count > 0)
+            {
+                foreach (var mq in maquettesPool)
+                {
+                    Object.Destroy(mq);
+                }
+            }
+            if (maquettesList.Count > 0)
+            {
+                foreach (var mq in maquettesList.Values)
+                {
+                    Object.Destroy(mq);
+                }
+            }
         }
 
         #region save-load

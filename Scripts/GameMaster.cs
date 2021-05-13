@@ -99,7 +99,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool weNeedNoResources { get; private set; }
     private static GameStartSettings test_gameStartSettings = //null;
        // GameStartSettings.GetDefaultStartSettings();
-        GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved");
+        GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved3");
     //
   
    // SCENERY CHANGING
@@ -427,7 +427,13 @@ public sealed class GameMaster : MonoBehaviour
         {
             Destroy(Zeppelin.current.gameObject);
         }
+        if (executingScenario != null)
+        {
+            executingScenario.ClearScenarioDecorations();
+            executingScenario = null;
+        }
         mainChunk?.ClearChunk();
+        Ship.DeleteShips();
         // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
         ResetComponentsStaticValues();
         colonyController?.ResetToDefaults(); // подчищает все списки

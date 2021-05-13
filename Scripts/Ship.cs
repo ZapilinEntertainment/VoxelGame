@@ -21,6 +21,7 @@ public sealed class Ship : MonoBehaviour {
 	private float speed = 0, awaitingTimer = 0;    
 	private Dock destination;
     private Vector3 exitDirection;
+    private static List<Ship> ships;
 
     private const float START_SPEED = 10, DISTANCE_TO_ISLAND = 80, AWAITING_TIME = 90;
 
@@ -28,6 +29,8 @@ public sealed class Ship : MonoBehaviour {
 		level = _level;
 		type = _type;
 		volume = _volume;
+        if (ships == null) ships = new List<Ship>() { this };
+        else ships.Add(this);
 	}
 
 	public void SetDestination(Dock d) {
@@ -247,6 +250,15 @@ public sealed class Ship : MonoBehaviour {
             dpointSet = true;
         }
         else dpointSet = false;
+    }
+
+    public static void DeleteShips()
+    {
+        if (ships != null && ships.Count > 0)
+        {
+            foreach (var s in ships) Destroy(s);            
+        }
+        ships = null;
     }
 
     #region save-load system
