@@ -2,7 +2,7 @@
 using UnityEngine;
 public sealed class BlockExtension : MyObject, IPlanable
 {
-    public readonly Block myBlock;
+    public Block myBlock { get; private set; }
     private bool isNatural;
     public int materialID { get; private set; }
     private float fossilsVolume, volume;
@@ -199,7 +199,7 @@ public sealed class BlockExtension : MyObject, IPlanable
             { // удаление
                 if ( (existingPlanesMask & x) != 0)
                 {
-                    if (planes.ContainsKey(i)) planes[i].Annihilate(compensateStructures);
+                    if (planes.ContainsKey(i)) planes[i].Annihilate(PlaneAnnihilationOrder.DeletedBySystem(compensateStructures));
                 }
             }
             else
@@ -213,6 +213,8 @@ public sealed class BlockExtension : MyObject, IPlanable
 
     public bool TryToRebasement() { return false; }
     #region interface
+    public bool HaveBlock() { return myBlock != null; }
+    public void NullifyBlockLink() { myBlock = null; }
     public bool IsIPlanable() { return true; }
     public bool IsStructure() { return false; }
     public bool IsFaceTransparent(byte faceIndex)
@@ -513,7 +515,7 @@ public sealed class BlockExtension : MyObject, IPlanable
                 GameMaster.realMaster.colonyController.RemoveWorksite(p);
                 p.SetWorksitePresence(false);
             }
-             myBlock.myChunk.DeleteBlock(myBlock.pos, true);
+             myBlock.myChunk.DeleteBlock(myBlock.pos, BlockAnnihilationOrder.BlockWasDiggedOut);
             return 0f;
         }
         else
@@ -550,12 +552,16 @@ public sealed class BlockExtension : MyObject, IPlanable
 
 
 
-    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins) { Annihilate(compensateResources); }
+    public void Delete(BlockAnnihilationOrder order) { Annihilate(order); }
     /// <summary>
     /// Do not use directly, use chunk.DeleteBlock
     /// </summary>
-    public void Annihilate(bool compensateStructures)
+    public void Annihilate(BlockAnnihilationOrder order)
     {
-        if (planes != null) foreach (var px in planes) px.Value.Annihilate(compensateStructures);
+        if (planes != null)
+        {
+            var pao = order.GetPlaneOrder();
+            foreach (var px in planes) px.Value.Annihilate(pao);
+        }
     }
 }

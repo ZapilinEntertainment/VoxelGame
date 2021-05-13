@@ -140,11 +140,11 @@ public class Powerplant : WorkBuilding
         UIObserver.mycanvas.DeactivateProgressPanel(ProgressPanelMode.Powerplant);
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

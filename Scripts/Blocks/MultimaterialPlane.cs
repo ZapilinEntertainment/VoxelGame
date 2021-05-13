@@ -76,9 +76,9 @@ public class MultimaterialPlane : Plane
         return null;        
     }
 
-    override public void Annihilate(bool compensateStructures)
+    override public void Annihilate(PlaneAnnihilationOrder order)
     {
-        base.Annihilate(compensateStructures);
+        base.Annihilate(order);
         if (model != null) Object.Destroy(model);
     }
 }

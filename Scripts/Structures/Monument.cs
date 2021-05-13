@@ -263,15 +263,15 @@ public sealed class Monument : Building
         return monumentObserver;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (basement != null)
+        if (basement != null && order.doSpecialChecks)
         {
             basement.myChunk.GetBlock(basement.pos.OneBlockHigher())?.DropBlockerLink(this);
         }
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareBuildingForDestruction(order);
         if (subscribedToRestoreBlockersEvent)
         {
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;

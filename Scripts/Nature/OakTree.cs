@@ -450,9 +450,7 @@ public sealed class OakTree : Plant
             modelHolder = null;
             spriter = null;
         }
-        //if (!replenish) 
-        Annihilate(true, false, false); // реплениш отключен, тк глючит - не успевает поставить спрайтер до обновления
-        //else ResetToDefaults();
+        Annihilate(PlantAnnihilationOrder.Gathered);
     }
     override public void Dry(bool sendMessageToGrassland)
     {
@@ -493,7 +491,7 @@ public sealed class OakTree : Plant
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
@@ -503,7 +501,7 @@ public sealed class OakTree : Plant
             if (basementNotNull) { basement.visibilityChangedEvent -= this.SetVisibility; }
             oaksCount--;
         }
-        if (!clearFromSurface)
+        if (!order.sendMessageToBasement)
         {
             basement = null;
             basementNotNull = false;

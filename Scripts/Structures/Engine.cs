@@ -65,23 +65,26 @@ public class Engine : Building
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
-        if (engineID != -1)
+        if (order.doSpecialChecks)
         {
-            GameMaster.realMaster.globalMap.RemoveEngine(engineID);
-        }
-        if (basement != null)
-        {
-            var bpos = basement.pos;
-            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
-            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            if (engineID != -1)
+            {
+                GameMaster.realMaster.globalMap.RemoveEngine(engineID);
+            }
+            if (basement != null)
+            {
+                var bpos = basement.pos;
+                basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
+                basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            }
         }
         if (subscribedToRestoreBlockersUpdate)
         {
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
-        base.Annihilate(clearFromSurface, returnResources, leaveRuins);
+        base.Annihilate(order);
     }
 }

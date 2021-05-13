@@ -159,7 +159,7 @@ public sealed class Block : MyObject {
                     Object.Destroy(blockingMarker);
                     blockingMarker = null;
                 }
-                if (extension == null) myChunk.DeleteBlock(pos, false);
+                if (extension == null) myChunk.DeleteBlock(pos, BlockAnnihilationOrder.BlockersClearOrder);
             }
         }
     }    
@@ -296,16 +296,22 @@ public sealed class Block : MyObject {
     /// <summary>
     /// Don not use directly, use chunk.DeleteBlock() instead
     /// </summary>
-    public void Annihilate(bool compensateStructures)
+    public void Annihilate(BlockAnnihilationOrder order)
     {
         //#block annihilate
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;
-        extension?.Annihilate(compensateStructures);
+        extension?.Annihilate(order);
         if (mainStructure != null)
         {
-            if (mainStructureIsABlocker) mainStructure.SectionDeleted(pos);
-            else mainStructure.Annihilate(true, compensateStructures, false); 
+            if (mainStructureIsABlocker)
+            {
+                if (!order.chunkClearing) mainStructure.SectionDeleted(pos);
+            }
+            else
+            {
+                mainStructure.Annihilate(StructureAnnihilationOrder.ChunkClearing);
+            }
             mainStructure = null;
         }
     }

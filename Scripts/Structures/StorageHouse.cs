@@ -56,13 +56,13 @@ public class StorageHouse : Building {
 	}
 
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) basement = null;
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
+        if (!order.sendMessageToBasement) basement = null;
+        PrepareBuildingForDestruction(order);
+        if (order.doSpecialChecks) GameMaster.realMaster.colonyController.storage.RemoveWarehouse(this);
         Destroy(gameObject);
     }
 }

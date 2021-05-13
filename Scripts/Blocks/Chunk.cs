@@ -74,6 +74,7 @@ public sealed partial class Chunk : MonoBehaviour
     public bool needSurfacesUpdate = false; // hot
     public byte prevBitmask = 63;
     public float lifePower = 0;
+    public bool chunkClearing { get; private set; }
     public static byte chunkSize { get; private set; }
     //private bool allGrasslandsCreated = false;
 
@@ -477,7 +478,7 @@ public sealed partial class Chunk : MonoBehaviour
         if (b != null)
         {
             if (b.ContainSurface()) needSurfacesUpdate = true;
-            DeleteBlock(b.pos, !i_natural);
+            DeleteBlock(b.pos, BlockAnnihilationOrder.ReplacedBySystem(!i_natural));
             planesCheck = true;
         }
         b = new Block(this, i_pos, ms);
@@ -505,8 +506,8 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (p.isSurface && p2.isSurface)
                 {
-                    p.Annihilate(!i_naturalGeneration);
-                    p2.Annihilate(!i_naturalGeneration);
+                    p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                    p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                 }
             }
         }
@@ -516,8 +517,8 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (p.isSurface && p2.isSurface)
                 {
-                    p.Annihilate(!i_naturalGeneration);
-                    p2.Annihilate(!i_naturalGeneration);
+                    p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                    p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                 }
             }
         }
@@ -527,8 +528,8 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (p.isSurface && p2.isSurface)
                 {
-                    p.Annihilate(!i_naturalGeneration);
-                    p2.Annihilate(!i_naturalGeneration);
+                    p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                    p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                 }
             }
         }
@@ -538,8 +539,8 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (p.isSurface && p2.isSurface)
                 {
-                    p.Annihilate(!i_naturalGeneration);
-                    p2.Annihilate(!i_naturalGeneration);
+                    p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                    p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                 }
             }
         }
@@ -551,8 +552,8 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     if (p.isSurface && p2.isSurface)
                     {
-                        p.Annihilate(!i_naturalGeneration);
-                        p2.Annihilate(!i_naturalGeneration);
+                        p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                        p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                     }
                 }
                 else
@@ -561,7 +562,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         if (p.isSurface && p2.isSurface)
                         {
-                            p2.Annihilate(!i_naturalGeneration);
+                            p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                         }
                     }
                 }
@@ -575,8 +576,8 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     if (p.isSurface && p2.isSurface)
                     {
-                        p.Annihilate(!i_naturalGeneration);
-                        p2.Annihilate(!i_naturalGeneration);
+                        p.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
+                        p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                     }
                 }
                 else
@@ -585,7 +586,7 @@ public sealed partial class Chunk : MonoBehaviour
                     {
                         if (p.isSurface && p2.isSurface)
                         {
-                            p2.Annihilate(!i_naturalGeneration);
+                            p2.Annihilate(PlaneAnnihilationOrder.DeletedBySystem(!i_naturalGeneration));
                         }
                     }
                 }
@@ -765,7 +766,7 @@ public sealed partial class Chunk : MonoBehaviour
         ChunkPos cpos;
         foreach (var s in surfaces)
         {
-            cpos = s.GetChunkPosition();
+            cpos = s.pos;
             if (cpos.x == x && cpos.z == z)
             {
                 if (cpos.y > maxY)
@@ -801,7 +802,7 @@ public sealed partial class Chunk : MonoBehaviour
                 if (p.fulfillStatus == FullfillStatus.Full) continue;
                 else
                 {
-                    cpos = p.GetChunkPosition();
+                    cpos = p.pos;
                     a = cpos.x - origin.x;
                     b = cpos.y - origin.y;
                     c = cpos.z - origin.z;
@@ -949,7 +950,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
     }
 
-    public void DeleteBlock(ChunkPos pos, bool compensateStructures)
+    public void DeleteBlock(ChunkPos pos, BlockAnnihilationOrder order)
     {
         // в сиквеле стоит пересмотреть всю иерархию классов ><
         //12.06 нет, я так не думаю
@@ -970,7 +971,7 @@ public sealed partial class Chunk : MonoBehaviour
         if (b.ContainSurface()) needSurfacesUpdate = true;
         var affectionMask = b.GetAffectionMask();
         blocks.Remove(b.pos);
-        b.Annihilate(compensateStructures);        
+        b.Annihilate(order);        
         RemoveBlockVisualisers(b.pos);
         if (PoolMaster.useIlluminationSystem) RecalculateIlluminationAtPoint(pos);
         if (affectionMask != 0)
@@ -988,16 +989,19 @@ public sealed partial class Chunk : MonoBehaviour
         chunkRenderUpdateRequired = true;
     }
     public void ClearChunk()
-    {
+    {        
         int count = blocks.Count;
         if (count > 0)
         {
+            chunkClearing = true;
             var bcl = new Block[count];
             blocks.Values.CopyTo(bcl, 0);
+            var order = BlockAnnihilationOrder.ChunkClearingOrder;
             for (int i = 0; i< count; i++)
             {
-                bcl[i].Annihilate(false);
+                bcl[i].Annihilate(order);
             }
+            chunkClearing = false;
         }
         blocks = new Dictionary<ChunkPos, Block>();
         surfaces = null;
@@ -1006,6 +1010,7 @@ public sealed partial class Chunk : MonoBehaviour
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RenderDataFullRecalculation();
+        
     }
 
     #region blocking
@@ -1432,7 +1437,7 @@ public sealed partial class Chunk : MonoBehaviour
                 if (clearMainStructureField) b.DropBlockerLink(s);
                 // поле mainStructure чистится, чтобы блок не посылал SectionDeleted обратно структуре
                 blocks.Remove(b.pos);
-                b.Annihilate(false);                
+                b.Annihilate(BlockAnnihilationOrder.BlockersClearOrder);                
                 actions = true;
             }
         }

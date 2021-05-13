@@ -34,8 +34,8 @@ public class Structure : MonoBehaviour
     // score calculator
 
     public const int UNKNOWN_ID = -1, PLANT_ID = 1, DRYED_PLANT_ID = 2, RESOURCE_STICK_ID = 3, HEADQUARTERS_ID = 4, SETTLEMENT_CENTER_ID = 5,
-    TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, MINE_ELEVATOR_ID = 9, LIFESTONE_ID = 10, TENT_ID = 11,
-    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17, MINE_ID = 18, SMELTERY_1_ID = 19,
+    TREE_OF_LIFE_ID = 6, STORAGE_0_ID = 7, CONTAINER_ID = 8, LIFESTONE_ID = 10, TENT_ID = 11,
+    DOCK_ID = 13, ENERGY_CAPACITOR_1_ID = 14, FARM_1_ID = 15, SETTLEMENT_STRUCTURE_ID = 16, LUMBERMILL_1_ID = 17,  SMELTERY_1_ID = 19,
     WIND_GENERATOR_1_ID = 20, BIOGENERATOR_2_ID = 22, HOSPITAL_ID = 21, MINERAL_POWERPLANT_2_ID = 23, ORE_ENRICHER_2_ID = 24,
     WORKSHOP_ID = 25, MINI_GRPH_REACTOR_3_ID = 26, FUEL_FACILITY_ID = 27, GRPH_REACTOR_4_ID = 28, PLASTICS_FACTORY_3_ID = 29,
     SUPPLIES_FACTORY_4_ID = 30, GRPH_ENRICHER_3_ID = 31, XSTATION_3_ID = 32, QUANTUM_ENERGY_TRANSMITTER_5_ID = 33,
@@ -48,6 +48,7 @@ public class Structure : MonoBehaviour
         CONTROL_CENTER_ID = 69, HOTEL_BLOCK_6_ID = 70, HOUSING_MAST_6_ID = 71, DOCK_ADDON_1_ID = 72, DOCK_ADDON_2_ID = 73, DOCK_2_ID = 74, DOCK_3_ID = 75,
         OBSERVATORY_ID = 76, ARTIFACTS_REPOSITORY_ID = 77, MONUMENT_ID = 78, CRYSTALLISER_ID = 79, CRYSTAL_MAST_ID = 80, ANCHOR_MAST_ID = 81, HANGING_TMAST_ID = 82,
         RESOURCE_FILTER_ID = 83, PROTECTION_CORE_ID = 84;
+    //free ids 9,18
     public const int TOTAL_STRUCTURES_COUNT = 79, STRUCTURE_SERIALIZER_LENGTH = 16;
     public const string STRUCTURE_COLLIDER_TAG = "Structure", BLOCKPART_COLLIDER_TAG = "BlockpartCollider";
 
@@ -65,8 +66,6 @@ public class Structure : MonoBehaviour
                 s = new GameObject("Column"); break;
             case RESOURCE_STICK_ID:
                 s = new GameObject("Scalable harvestable resource"); break;
-            case MINE_ELEVATOR_ID:
-                s = new GameObject("Mine elevator"); break;
             case HEADQUARTERS_ID:
                 s = new GameObject("HQ"); break;
             case TREE_OF_LIFE_ID:
@@ -101,8 +100,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_BLOCK_ID:
             case FARM_BLOCK_ID:
                 s = new GameObject("FarmBlock"); break;
-            case MINE_ID:
-                s = new GameObject("Mine"); break;
             case SMELTERY_1_ID:
             case SMELTERY_2_ID:
             case SMELTERY_3_ID:            
@@ -209,8 +206,6 @@ public class Structure : MonoBehaviour
             case STORAGE_BLOCK_ID:
             case STORAGE_0_ID: return new Rect(5 * p, 7 * p, p, p);
             case CONTAINER_ID: return new Rect(4 * p, 7 * p, p, p);
-            case MINE_ID:
-            case MINE_ELEVATOR_ID: return new Rect(6 * p, 7 * p, p, p);
             case SETTLEMENT_CENTER_ID:
             case SETTLEMENT_STRUCTURE_ID:
             case HOUSE_BLOCK_ID:
@@ -280,9 +275,6 @@ public class Structure : MonoBehaviour
         {
             case COLUMN_ID: return typeof(Platform);
             case RESOURCE_STICK_ID: return typeof(ScalableHarvestableResource);
-            case MINE_ID:
-                return typeof(Mine);
-            case MINE_ELEVATOR_ID: return typeof(MineElevator);
             case HEADQUARTERS_ID: return typeof(HeadQuarters);
             case TREE_OF_LIFE_ID:
             case LIFESTONE_ID: return typeof(LifeSource);
@@ -511,7 +503,6 @@ public class Structure : MonoBehaviour
             case STORAGE_0_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Storage_level_0")); break;
             case STORAGE_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_1")); break;
             case STORAGE_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Storage_level_2")); break;
-            case MINE_ELEVATOR_ID: model = Instantiate(Resources.Load<GameObject>("Structures/MineElevator")); break;
             case LIFESTONE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/LifeStone")); break;
             case TENT_ID: model = Instantiate(Resources.Load<GameObject>("Structures/House_level_0")); break;
             case DOCK_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/dock_level_1")); break;
@@ -527,7 +518,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_2")); break;
             case LUMBERMILL_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_3")); break;
             case COVERED_LUMBERMILL: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Lumbermill_level_4")); break;
-            case MINE_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Mine_level_1")); break;
             case SMELTERY_1_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_1")); break;
             case SMELTERY_2_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_2")); break;
             case SMELTERY_3_ID: model = Instantiate(Resources.Load<GameObject>("Structures/Buildings/Smeltery_level_3")); break;
@@ -588,7 +578,7 @@ public class Structure : MonoBehaviour
     public void SetHP(float t)
     {
         hp = t;
-        if (hp == 0) Annihilate(true, false, true);
+        if (hp == 0) Annihilate(StructureAnnihilationOrder.DamageDestruction);
     }
     public bool IsDestroyed() { return destroyed; }    
     virtual public bool IsIPlanable() { return false; }
@@ -690,14 +680,6 @@ public class Structure : MonoBehaviour
                     maxHp = 10;
                     rotate90only = false;
                     isArtificial = false;
-                    
-                }
-                break;
-            case MINE_ELEVATOR_ID:
-                {
-                    maxHp = 100;
-                    rotate90only = true;
-                    isArtificial = true;
                     
                 }
                 break;
@@ -811,13 +793,6 @@ public class Structure : MonoBehaviour
             case LUMBERMILL_BLOCK_ID:
                 {
                     maxHp = 4000;
-                    rotate90only = true;
-                    isArtificial = true;                    
-                }
-                break;
-            case MINE_ID:
-                {
-                    maxHp = 500;
                     rotate90only = true;
                     isArtificial = true;                    
                 }
@@ -1144,9 +1119,7 @@ public class Structure : MonoBehaviour
                 return 2;
             case SETTLEMENT_CENTER_ID:
                 return 4;
-            case MINE_ELEVATOR_ID:
             case FARM_1_ID:
-            case MINE_ID:
             case FARM_2_ID:
             case LUMBERMILL_1_ID:
             case LUMBERMILL_2_ID:
@@ -1238,7 +1211,7 @@ public class Structure : MonoBehaviour
     {
         if (destroyed | indestructible) return;
         hp -= d;
-        if (hp <= 0) Annihilate(true, false, true);
+        if (hp <= 0) Annihilate(StructureAnnihilationOrder.DamageDestruction);
     }
 
     virtual public void SectionDeleted(ChunkPos pos) { } // для структур, имеющих влияние на другие блоки; сообщает, что одна секция отвалилась
@@ -1276,9 +1249,9 @@ public class Structure : MonoBehaviour
     }    
    
     // в финальном виде копипастить в потомков
-    protected void PrepareStructureForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    protected void PrepareStructureForDestruction(StructureAnnihilationOrder order)
     {
-        if (returnResources)
+        if (order.returnResources)
         {
             ResourceContainer[] resourcesLeft = ResourcesCost.GetCost(ID);
             if (resourcesLeft.Length > 0 & GameMaster.realMaster.demolitionLossesPercent != 1)
@@ -1290,7 +1263,7 @@ public class Structure : MonoBehaviour
                 GameMaster.realMaster.colonyController.storage.AddResources(resourcesLeft);
             }
         }
-        if (clearFromSurface)
+        if (order.sendMessageToBasement)
         {
             if (basement != null)
             {
@@ -1299,11 +1272,13 @@ public class Structure : MonoBehaviour
                     basement.myChunk.ChunkUpdateEvent -= ChunkUpdated;
                     subscribedToChunkUpdate = false;
                 }
-                basement.extension?.RemoveStructure(this);
-
-                if (leaveRuins && !GameMaster.sceneClearing)
+                if (order.doSpecialChecks)
                 {
-                    basement.FORCED_GetExtension().ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
+                    basement.RemoveStructure(this);
+                    if (order.leaveRuins)
+                    {
+                        basement.FORCED_GetExtension().ScatterResources(surfaceRect, ResourceType.mineral_F, CalculateRuinsVolume());
+                    }
                 }
             }
         }
@@ -1330,14 +1305,15 @@ public class Structure : MonoBehaviour
         else return 0;
     }
 
-    virtual public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    virtual public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareStructureForDestruction(order);
         basement = null;
         Destroy(gameObject);
     }
+
 
     #region save-load system
     public static void LoadStructures(int count, System.IO.FileStream fs, Plane p)
@@ -1441,3 +1417,4 @@ public class Structure : MonoBehaviour
     }
     #endregion
 }
+

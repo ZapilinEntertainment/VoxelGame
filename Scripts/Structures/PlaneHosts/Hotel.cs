@@ -185,19 +185,18 @@ public sealed class Hotel : Building, IPlanable
         else return true;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
-        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
-        else
+        if (!destroyed)
         {
-            var b = myBlock;
-            myBlock = null;
-            b.myChunk.DeleteBlock(b.pos, compensateResources);
+            IPlanableSupportClass.Annihilate(this, order);
         }
     }
 
     #region interface
-    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    public bool HaveBlock() { return myBlock != null; }
+    public void NullifyBlockLink() { myBlock = null; }
+    public void Delete(BlockAnnihilationOrder bo)
     {
         if (destroyed) return;
         else destroyed = true;
@@ -206,9 +205,10 @@ public sealed class Hotel : Building, IPlanable
             GameMaster.realMaster.everydayUpdate -= EverydayUpdate;
             subscribedToUpdate = false;            
         }
-        hotels.Remove(this);
-        PrepareBuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
-        if (lodgersCount > 0) DistributeLodgers(lodgersCount);
+        var so = bo.GetStructureOrder();
+        if (so.doSpecialChecks) hotels.Remove(this);
+        PrepareBuildingForDestruction(so);
+        if (so.doSpecialChecks && lodgersCount > 0) DistributeLodgers(lodgersCount);
         basement = null;
         Destroy(gameObject);
     }

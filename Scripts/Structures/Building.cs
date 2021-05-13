@@ -249,7 +249,6 @@ public class Building : Structure
             case EXPEDITION_CORPUS_4_ID:
             case RECRUITING_CENTER_4_ID:
             case GRPH_ENRICHER_3_ID:
-            case MINE_ID:
             case MINERAL_POWERPLANT_2_ID:
             case WORKSHOP_ID:
             case BIOGENERATOR_2_ID: return 20f;
@@ -313,8 +312,6 @@ public class Building : Structure
 
             case SUPPLIES_FACTORY_4_ID: return -25f;
             case SUPPLIES_FACTORY_5_ID: return -40f;
-
-            case MINE_ID: return -2f;
 
             case SMELTERY_1_ID: return -8f;
             case SMELTERY_2_ID:
@@ -542,13 +539,6 @@ public class Building : Structure
                 {
                     canBePowerSwitched = true;
                     level = 5;
-                }
-                break;
-            case MINE_ID:
-                {
-                    upgradedIndex = 0;
-                    canBePowerSwitched = true;
-                    level = 1;
                 }
                 break;
             case SMELTERY_1_ID:
@@ -883,16 +873,16 @@ public class Building : Structure
         return cost;
     }
 
-    protected void PrepareBuildingForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    protected void PrepareBuildingForDestruction(StructureAnnihilationOrder order)
     {
-        if (connectedToPowerGrid) GameMaster.realMaster.colonyController.DisconnectFromPowerGrid(this);
-        PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (order.doSpecialChecks && connectedToPowerGrid) GameMaster.realMaster.colonyController.DisconnectFromPowerGrid(this);
+        PrepareStructureForDestruction(order);
     }
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;        
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareBuildingForDestruction(order);
         Destroy(gameObject);
     }
 

@@ -414,27 +414,33 @@ public sealed class Hangar : WorkBuilding
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+        bool SPECIAL_CHECKS = order.doSpecialChecks;
+        if (SPECIAL_CHECKS)
         {
-            basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
-            dependentBlocksList.Clear();
+            if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+            {
+                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
+                dependentBlocksList.Clear();
+            }
         }
         if (showOnGUI & !correctLocation) PoolMaster.current.DisableFlightZone();
-        if (!clearFromSurface) basement = null;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (hangarsList.Contains(this)) hangarsList.Remove(this);
-
+        if (!order.sendMessageToBasement) basement = null;
+        PrepareWorkbuildingForDestruction(order);
+        if (SPECIAL_CHECKS)
+        {
+            if (hangarsList.Contains(this)) hangarsList.Remove(this);
+            listChangesMarkerValue++;
+        }
         if (hangarsList.Count == 0 & hangarObserver != null) Destroy(hangarObserver);
         if (subscribedToRestoreBlockersEvent)
         {
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersEvent = false;
-        }
-        listChangesMarkerValue++;
+        }        
         Destroy(gameObject);
     }
 

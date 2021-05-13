@@ -67,12 +67,12 @@ public class Hospital : WorkBuilding {
         return workbuildingObserver;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface , returnResources, leaveRuins);
-        colony.DeleteHospital(this);
+        PrepareWorkbuildingForDestruction(order);
+        if (order.doSpecialChecks) colony.DeleteHospital(this);
         Destroy(gameObject);
     }
 

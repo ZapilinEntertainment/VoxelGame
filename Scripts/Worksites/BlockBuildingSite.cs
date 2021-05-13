@@ -112,7 +112,7 @@ public class BlockBuildingSite : Worksite
                         Structure s = strs[i];
                         if (s.isArtificial)
                         {
-                            s.Annihilate(true, true, false);
+                            s.Annihilate(StructureAnnihilationOrder.GrindedByWorksite);
                             return;
                         }
                         else
@@ -120,9 +120,8 @@ public class BlockBuildingSite : Worksite
                             if (s.ID == Structure.PLANT_ID)
                             {
                                 (s as Plant).Harvest(false);
-                                if (s != null) s.Annihilate(true, false, false);
                             }
-                            else s.Annihilate(true, true, false);
+                            else s.Annihilate(StructureAnnihilationOrder.GrindedByWorksite);
                             deletedStructures++;
                             if (deletedStructures >= 4) break; // не больше 4-х удалений за тик
                         }
@@ -146,7 +145,7 @@ public class BlockBuildingSite : Worksite
                     case Block.DOWN_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1); break;
                 }
                 workplace.myChunk.AddBlock(cpos, rtype.ID, false, true);
-                pe.ClearSurface(false, false, true);
+                pe.ClearSurface(PlaneAnnihilationOrder.BlockbuildingPartsReplacement);
                 StopWork(true);
                 return;
             }

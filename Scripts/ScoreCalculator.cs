@@ -48,7 +48,6 @@
         structuresCost[Structure.HEADQUARTERS_ID] = 10 * val;
         structuresCost[Structure.TREE_OF_LIFE_ID] = 1000 * val;
         structuresCost[Structure.CONTAINER_ID] = val / 10f;
-        structuresCost[Structure.MINE_ELEVATOR_ID] = val / 4f;
         structuresCost[Structure.TENT_ID] = 0;
         structuresCost[Structure.DOCK_ID] = val * 100;
         structuresCost[Structure.ENERGY_CAPACITOR_1_ID] = 2 * val;
@@ -57,7 +56,6 @@
         structuresCost[Structure.WIND_GENERATOR_1_ID] = val * 4;
         structuresCost[Structure.FARM_1_ID] = val * 6;
         structuresCost[Structure.BIOGENERATOR_2_ID] = val * 6;
-        structuresCost[Structure.MINE_ID] = val * 8;
         structuresCost[Structure.SMELTERY_1_ID] = val * 8;             
         structuresCost[Structure.HOSPITAL_ID] = val * 25;
         structuresCost[Structure.MINERAL_POWERPLANT_2_ID] = val * 12;

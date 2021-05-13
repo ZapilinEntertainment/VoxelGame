@@ -76,12 +76,12 @@ public sealed class LifeSource : Structure {
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed | GameMaster.sceneClearing) return;
         else destroyed = true;        
-        PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (basement != null )
+        PrepareStructureForDestruction(order);
+        if (basement != null && order.doSpecialChecks)
         {
             basement.myChunk.GetNature().RemoveLifesource(this);
             basement.ChangeMaterial(ResourceType.DIRT_ID, true);

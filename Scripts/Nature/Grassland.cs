@@ -310,7 +310,7 @@ public sealed class Grassland
                     p.Dry(false);
                 }
             }
-            Annihilate(false, true);
+            Annihilate(GrasslandAnnihilationOrder.SelfDestruction);
         }       
         canBeBoosted = true;
     }
@@ -356,20 +356,24 @@ public sealed class Grassland
             }
         }
     }
-    public void Annihilate(bool plantsDestruction, bool sendMessageToPlane)
+    public void Annihilate(GrasslandAnnihilationOrder order)
     {
-        if (plantsDestruction)
+        if (order.destroyPlants)
         {
             var plist = plane.GetPlants();
             if (plist != null)
             {
+                var so = order.GetStructureOrder();
                 for (int i = 0; i < plist.Length; i++)
                 {
-                    plist[i].Annihilate(true, false, false);
+                    plist[i].Annihilate(so);
                 }
             }
         }
-        nature.RemoveGrassland(this);
-        if (sendMessageToPlane) plane?.RemoveGrassland(this, false);
+        if (order.doSpecialChecks)
+        {
+            nature.RemoveGrassland(this);
+            if (order.sendMessageToPlane) plane?.RemoveGrassland(this, false);
+        }
     }    
 }

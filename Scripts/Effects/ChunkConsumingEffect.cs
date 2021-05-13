@@ -113,7 +113,7 @@ public class ChunkConsumingEffect : MonoBehaviour {
             b = bd.Value;
             if (b.IsCube())
             {
-                chunk.DeleteBlock(b.pos, false);
+                chunk.DeleteBlock(b.pos, BlockAnnihilationOrder.SystemDestruction);
                 SpawnEffectCube(b.pos.ToWorldSpace(), true);
                 return;
             }
@@ -129,7 +129,7 @@ private void SpawnCube_BottomToUp()
             b = bd.Value;
             if (b.IsCube())
             {
-                chunk.DeleteBlock(b.pos, false);
+                chunk.DeleteBlock(b.pos, BlockAnnihilationOrder.SystemDestruction);
                 SpawnEffectCube(b.pos.ToWorldSpace(), false);
                 return;
             }

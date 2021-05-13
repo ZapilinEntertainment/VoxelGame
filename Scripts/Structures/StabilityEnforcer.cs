@@ -112,13 +112,13 @@ public sealed class StabilityEnforcer : WorkBuilding
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate) Unsubscribe();
-        if (affectionID != -1)
+        if (affectionID != -1 && order.doSpecialChecks)
         {
             GameMaster.realMaster.environmentMaster.RemoveStabilityModifier(affectionID);
             affectionID = -1;

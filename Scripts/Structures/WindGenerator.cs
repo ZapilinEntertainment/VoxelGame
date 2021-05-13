@@ -79,12 +79,12 @@ public class WindGenerator : Building {
 		}
 	}
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { basement = null; }
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (!order.sendMessageToBasement) { basement = null; }
+        PrepareBuildingForDestruction(order);
         if (subscribedToWindUpdate)
         {
             GameMaster.realMaster.environmentMaster.WindUpdateEvent -= this.WindUpdate;

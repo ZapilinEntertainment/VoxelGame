@@ -147,12 +147,12 @@ public sealed class RecruitingCenter : WorkBuilding {
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (recruitingCentersList.Contains(this)) recruitingCentersList.Remove(this);
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (order.doSpecialChecks && recruitingCentersList.Contains(this)) recruitingCentersList.Remove(this);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

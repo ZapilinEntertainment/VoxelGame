@@ -98,6 +98,7 @@ public sealed class GameMaster : MonoBehaviour
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
     private static GameStartSettings test_gameStartSettings = //null;
+       // GameStartSettings.GetDefaultStartSettings();
         GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved");
     //
   

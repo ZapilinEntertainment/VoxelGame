@@ -237,11 +237,11 @@ public sealed class HeadQuarters : Building
         return buildingObserver;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareBuildingForDestruction(order);
         // removed colony.RemoveHousing because of dropping hq field
         if (subscribedToRestoreBlockersEvent)
         {

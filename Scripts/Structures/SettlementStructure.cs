@@ -153,11 +153,11 @@ public sealed class SettlementStructure : Structure
         else PoolMaster.SwitchMaterialsToOffline(myRenderers);
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareStructureForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareStructureForDestruction(order);
         basement = null;
         if (settlement != null) settlement.needRecalculation = true;
         Destroy(gameObject);

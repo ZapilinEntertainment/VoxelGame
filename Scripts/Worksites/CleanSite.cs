@@ -40,7 +40,7 @@ public class CleanSite : Worksite {
         {
             iterations--;
             Structure s = workplace.GetRandomStructure();
-            if (s = null)
+            if (s == null)
             {
                 INLINE_FinishWorkSequence();
                 return;

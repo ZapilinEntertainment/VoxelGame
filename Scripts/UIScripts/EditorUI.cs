@@ -162,7 +162,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
                     break;
                 case ClickAction.DeleteBlock:
                     {
-                        chunk.DeleteBlock(b.pos, false);
+                        chunk.DeleteBlock(b.pos, BlockAnnihilationOrder.SystemDestruction);
                         action = true;
                         break;
                     }
@@ -210,7 +210,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
                             int length = pts?.Length ?? 0;
                             if (length > 0)
                             {
-                                pts[Random.Range(0, length)].Annihilate(true, true, false);
+                                pts[Random.Range(0, length)].Annihilate(PlantAnnihilationOrder.Dryed);
                             }
                             else p.GetGrassland()?.Dry();
                         }
@@ -241,7 +241,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
                         {
                             if (p.mainStructure != null)
                             {
-                                p.mainStructure.Annihilate(true, false, false);
+                                p.mainStructure.Annihilate(StructureAnnihilationOrder.SystemDestruction);
                                 return;
                             }
                             else
@@ -252,7 +252,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
                                 {
                                     if (s.ID == sid)
                                     {
-                                        s.Annihilate(true, false, false);
+                                        s.Annihilate(StructureAnnihilationOrder.SystemDestruction);
                                         return;
                                     }
                                 }

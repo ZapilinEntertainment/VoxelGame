@@ -122,7 +122,7 @@ public class UIStructureObserver : UIObserver {
 	}
 
 	public void Demolish() {
-		observingStructure.Annihilate(true, true, false);
+		observingStructure.Annihilate(StructureAnnihilationOrder.ManualDestructed);
         SelfShutOff();
 	}
     public void CheckName() {

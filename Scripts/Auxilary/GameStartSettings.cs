@@ -16,6 +16,7 @@ public sealed class GameStartSettings : MyObject
         var cgs = new GameStartSettings();
         cgs.gameMode = GameMode.Survival;
         cgs.chunkGenerationSettings = ChunkGenerationSettings.GetDefaultSettings();
+        cgs.subIndex0 = (byte)StartFoundingType.Zeppelin;
         return cgs;
     }
     public static GameStartSettings GetEditorStartSettings(byte i_size)

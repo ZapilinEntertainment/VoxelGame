@@ -232,7 +232,7 @@ public sealed class UISurfacePanelController : UIObserver {
 		else {
             if (observingSurface.host.IsStructure()) {
                 //IPlanable
-                ((observingSurface.host) as Structure).Annihilate(true, true, false);
+                ((observingSurface.host) as Structure).Annihilate(StructureAnnihilationOrder.ManualDestructed);
                 SelfShutOff();                
                 return;
             }

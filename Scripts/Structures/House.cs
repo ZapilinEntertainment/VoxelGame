@@ -34,17 +34,20 @@ public class House : Building {
         GameMaster.realMaster.colonyController.housingRecalculationNeeded = true;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface,returnResources,leaveRuins);
-        GameMaster.realMaster.colonyController.DeleteHousing(this);
-        if (ID == HOUSING_MAST_6_ID & basement != null)
+        PrepareBuildingForDestruction(order);
+        if (order.doSpecialChecks)
         {
-            var bpos = basement.pos;
-            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
-            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            GameMaster.realMaster.colonyController.DeleteHousing(this);
+            if (ID == HOUSING_MAST_6_ID & basement != null)
+            {
+                var bpos = basement.pos;
+                basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
+                basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            }
         }
         Destroy(gameObject);
     }

@@ -315,10 +315,10 @@ public class HarvestableResource : Structure
     public void Harvest()
     {
         resourceCount = GameMaster.realMaster.colonyController.storage.AddResource(mainResource, resourceCount);
-        if (resourceCount <= 0) Annihilate(true, false, false); // может быть переполнение и не все соберется
+        if (resourceCount <= 0) Annihilate(StructureAnnihilationOrder.SystemDestruction); // может быть переполнение и не все соберется
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
@@ -327,7 +327,7 @@ public class HarvestableResource : Structure
             lodComponent.PrepareToDestroy();
             lodComponent = null;
         }
-        PrepareStructureForDestruction(clearFromSurface,returnResources,leaveRuins);
+        PrepareStructureForDestruction(order);
         basement = null;
         Destroy(gameObject);
     }

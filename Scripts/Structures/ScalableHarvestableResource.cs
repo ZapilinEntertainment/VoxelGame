@@ -48,7 +48,7 @@ public sealed class ScalableHarvestableResource : Structure {
         {            
             if (resourceCount == 0)
             {
-                Annihilate(true, false, false);
+                Annihilate(StructureAnnihilationOrder.SystemDestruction);
                 return;
             }
             else
@@ -151,19 +151,19 @@ public sealed class ScalableHarvestableResource : Structure {
 	}
 	public void Harvest() {
 		resourceCount = (byte)GameMaster.realMaster.colonyController.storage.AddResource(mainResource,resourceCount);
-        if (resourceCount == 0) Annihilate(true, false, false);
+        if (resourceCount == 0) Annihilate(StructureAnnihilationOrder.SystemDestruction);
         else SetModel();
 	}
     
-	override public void Annihilate( bool clearFromSurface, bool returnResources, bool leaveRuins ) { // for pooling
+	override public void Annihilate(StructureAnnihilationOrder order) { // for pooling
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) basement = null;
+        if (!order.sendMessageToBasement) basement = null;
         else
         {
             basement.RemoveStructure(this);
         }
-		if (returnResources) GameMaster.realMaster.colonyController.storage.AddResource(mainResource, resourceCount);
+		if (order.returnResources) GameMaster.realMaster.colonyController.storage.AddResource(mainResource, resourceCount);
         Destroy(gameObject);
     }
 

@@ -142,13 +142,6 @@ public abstract class WorkBuilding : Building, ILabourable
                     gearsDamage *= 1.3f;
                 }
                 break;
-            case MINE_ID:
-                {
-                    workComplexityCoefficient = GameConstants.GetWorkComplexityCf(WorkType.Mining);
-                    maxWorkers = 60;
-                    gearsDamage *= 1.5f;
-                }
-                break;
             case SMELTERY_1_ID:
                 {                    
                     maxWorkers = 40;
@@ -440,17 +433,17 @@ public abstract class WorkBuilding : Building, ILabourable
         //copied to factory.levelup
     }
 
-    protected void PrepareWorkbuildingForDestruction(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    protected void PrepareWorkbuildingForDestruction(StructureAnnihilationOrder order)
     {
         if (workersCount != 0) colony.AddWorkers(workersCount);
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareBuildingForDestruction(order);
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface,returnResources, leaveRuins);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

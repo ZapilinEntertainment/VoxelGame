@@ -178,13 +178,13 @@ public class Farm : WorkBuilding
         else return true;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { basement = null; }
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if ((basement != null & clearFromSurface) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ChangeMaterial(ResourceType.DIRT_ID, true);
+        if (!order.sendMessageToBasement) { basement = null; }
+        PrepareWorkbuildingForDestruction(order);
+        if (order.doSpecialChecks && (basement != null & order.sendMessageToBasement) && basement.materialID == ResourceType.FERTILE_SOIL_ID) basement.ChangeMaterial(ResourceType.DIRT_ID, true);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;

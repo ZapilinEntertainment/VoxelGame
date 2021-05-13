@@ -52,8 +52,24 @@ public class Plane : MyObject
     }
 
     public IPlanable host { get; protected set; }
-    public Chunk myChunk { get { return host.GetBlock().myChunk; } }
-    public ChunkPos pos { get { return host.GetBlock().pos; } }
+    public Chunk myChunk { get {
+            var b = host.GetBlock();
+            if (b == null)
+            {
+                Debug.Log(StackTraceUtility.ExtractStackTrace());
+                return GameMaster.realMaster.mainChunk;
+            }
+            else return host.GetBlock().myChunk;
+            } }
+    public ChunkPos pos { get {
+            var b = host.GetBlock();
+            if (b == null)
+            {
+                Debug.Log(StackTraceUtility.ExtractStackTrace());
+                return ChunkPos.zer0;
+            }
+            else  return host.GetBlock().pos;
+        } }
     public event System.Action<VisibilityMode, bool> visibilityChangedEvent;
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
@@ -63,7 +79,7 @@ public class Plane : MyObject
     protected override bool IsEqualNoCheck(object obj)
     {
         var p = (Plane)obj;
-        return faceIndex == p.faceIndex && pos == p.pos && materialID == p.materialID && meshType == p.meshType && destroyed == p.destroyed;
+        return faceIndex == p.faceIndex && materialID == p.materialID && meshType == p.meshType && destroyed == p.destroyed;
     }
     public override int GetHashCode()
     {
@@ -249,10 +265,10 @@ public class Plane : MyObject
         {            
             if (extension != null)
             {
-                extension.Annihilate(false);
+                extension.Annihilate(PlaneAnnihilationOrder.ExtensionRemovedByFullScaledStructure);
                 extension = null;
             }
-            mainStructure?.Annihilate(false, true, false);
+            mainStructure?.Annihilate(StructureAnnihilationOrder.GetReplacingOrder(mainStructure.isArtificial));
             mainStructure = s;
             var t = s.transform;
             t.parent = host.GetBlock().myChunk.transform;
@@ -489,7 +505,6 @@ public class Plane : MyObject
         }
     }
 
-    public ChunkPos GetChunkPosition() { return host.GetBlock().pos; }
     public Vector3 GetCenterPosition()
     {
         Vector3 centerPos = host.GetBlock().pos.ToWorldSpace();
@@ -678,12 +693,12 @@ public class Plane : MyObject
         return observer;
     }
 
-    virtual public void Annihilate(bool compensateStructures)
+    virtual public void Annihilate(PlaneAnnihilationOrder order)
     {
         if (!destroyed)
         {
             destroyed = true;
-            if (extension != null) extension.Annihilate(compensateStructures);
+            if (extension != null) extension.Annihilate(order);
             else
             {
                 if (mainStructure != null)
@@ -694,7 +709,7 @@ public class Plane : MyObject
                         var b = host?.GetBlock();
                         if (b != null) mainStructure.SectionDeleted(b.pos);
                     }
-                    else mainStructure.Annihilate(false, compensateStructures, false);
+                    else mainStructure.Annihilate(order.GetStructuresOrder());
                 }
             }
             if (!GameMaster.sceneClearing)

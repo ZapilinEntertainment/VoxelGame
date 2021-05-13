@@ -29,12 +29,12 @@ public sealed class PsychokineticGenerator : WorkBuilding
         return n;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (hmodifier_id != -1) colony.RemoveHappinessModifier(hmodifier_id);
+        PrepareWorkbuildingForDestruction(order);
+        if (hmodifier_id != -1 && order.doSpecialChecks) colony.RemoveHappinessModifier(hmodifier_id);
         Destroy(gameObject);
     }
 

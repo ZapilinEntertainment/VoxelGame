@@ -8,7 +8,7 @@
         {
             var c = current;
             current = null;
-            c.Annihilate(true, true, false);
+            c.Annihilate(StructureAnnihilationOrder.ManualDestructed);
         }
         SetWorkbuildingData(b, pos);
         if (!subscribedToUpdate)
@@ -28,11 +28,11 @@
         return wo;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
@@ -41,10 +41,13 @@
         if (current == this)
         {
             current = null;
-            var observer = colony.observer;
-            if (observer != null && observer.activeFastButtons.Contains(ID))
+            if (order.doSpecialChecks)
             {
-                observer.RemoveFastButton(this);
+                var observer = colony.observer;
+                if (observer != null && observer.activeFastButtons.Contains(ID))
+                {
+                    observer.RemoveFastButton(this);
+                }
             }
         }
         Destroy(gameObject);

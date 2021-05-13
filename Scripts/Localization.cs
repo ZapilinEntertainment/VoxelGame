@@ -217,7 +217,6 @@ public static partial class Localization
                     case Structure.STORAGE_2_ID: return "Склад";
                     case Structure.STORAGE_BLOCK_ID: return "Блок склада";
                     case Structure.CONTAINER_ID: return "Контейнер";
-                    case Structure.MINE_ELEVATOR_ID: return "Подъёмник шахты";
                     case Structure.LIFESTONE_ID: return "Камень жизни";
                     case Structure.TENT_ID: return "Палатка";
                     case Structure.HOUSE_BLOCK_ID: return "Жилой блок";
@@ -237,7 +236,6 @@ public static partial class Localization
                     case Structure.LUMBERMILL_3_ID: return "Лесопилка";
                     case Structure.COVERED_LUMBERMILL: return "Лесопилка закрытого типа";
                     case Structure.LUMBERMILL_BLOCK_ID: return "Блок лесопилки";
-                    case Structure.MINE_ID: return "Шахта";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID: return "Плавильня";
@@ -295,7 +293,6 @@ public static partial class Localization
                     case Structure.STORAGE_2_ID: return "Warehouse";
                     case Structure.STORAGE_BLOCK_ID: return "Storage block";
                     case Structure.CONTAINER_ID: return "Container";
-                    case Structure.MINE_ELEVATOR_ID: return "Mine elevator";
                     case Structure.LIFESTONE_ID: return "Life stone";
                     case Structure.TENT_ID: return "Tent";
                     case Structure.HOUSE_BLOCK_ID: return "Residential Block";
@@ -315,7 +312,6 @@ public static partial class Localization
                     case Structure.LUMBERMILL_3_ID: return "Lumbermill";
                     case Structure.COVERED_LUMBERMILL: return "Covered lumbermill";
                     case Structure.LUMBERMILL_BLOCK_ID: return "Lumbermill Block";
-                    case Structure.MINE_ID: return "Mine Entrance";
                     case Structure.SMELTERY_1_ID: return "Smeltery";
                     case Structure.SMELTERY_2_ID: return "Smeltery";
                     case Structure.SMELTERY_3_ID: return "Smelting Facility";
@@ -409,7 +405,6 @@ public static partial class Localization
                     case Structure.LUMBERMILL_3_ID: return "Выращивает и рубит деревья. Потребляет жизненную энергию острова.";
                     case Structure.COVERED_LUMBERMILL:
                     case Structure.LUMBERMILL_BLOCK_ID: return "Постоянно производит некоторое количество древесины. Не потребляет жизненную энергию острова.";
-                    case Structure.MINE_ID: return "Добыча полезных ископаемых закрытым методом.";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID:
@@ -496,7 +491,6 @@ public static partial class Localization
                     case Structure.LUMBERMILL_3_ID: return "Grows and cuts trees. Consumes island lifepower.";
                     case Structure.COVERED_LUMBERMILL:
                     case Structure.LUMBERMILL_BLOCK_ID: return "Constantly produces wood. Doesn't consume lifepower.";
-                    case Structure.MINE_ID: return "Extracts fossils in closed way.";
                     case Structure.SMELTERY_1_ID:
                     case Structure.SMELTERY_2_ID:
                     case Structure.SMELTERY_3_ID:

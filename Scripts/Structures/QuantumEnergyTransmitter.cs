@@ -19,7 +19,7 @@
         }   
         if (current != null)
         {
-            current.Annihilate(true, true, false);
+            current.Annihilate(StructureAnnihilationOrder.ManualDestructed);
         }
         current = this;
         colony = GameMaster.realMaster.colonyController;
@@ -51,11 +51,11 @@
         isEnergySupplied = true; connectedToPowerGrid = true;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareStructureForDestruction(clearFromSurface,returnResources, leaveRuins);
+        PrepareStructureForDestruction(order);
         if (current == this)
         {
             colony.accumulateEnergy = true;

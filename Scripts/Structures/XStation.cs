@@ -35,7 +35,7 @@ public sealed class XStation : WorkBuilding {
         SetWorkbuildingData(b, pos);
         if (current != null)
         {
-            if (current != null) current.Annihilate(true, true, false);
+            if (current != null) current.Annihilate(StructureAnnihilationOrder.ManualDestructed);
         }
         else GameMaster.staticResetFunctions += ResetStaticData;
         current = this;
@@ -142,12 +142,12 @@ public sealed class XStation : WorkBuilding {
             ;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) { basement = null; }
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (!order.sendMessageToBasement) { basement = null; }
+        PrepareWorkbuildingForDestruction(order);
         if (current == this) current = null;
         if (indicatorPrepared & markerEnabled)
         {

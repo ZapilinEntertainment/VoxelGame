@@ -259,7 +259,7 @@ public sealed class Dock : WorkBuilding {
 
         if (basement == null) {
             Debug.Log("error in dock position!");
-            Annihilate(false, true, false);
+            Annihilate(StructureAnnihilationOrder.HasNoBasementError);
             return;
             // why this is even here?
         }
@@ -560,20 +560,27 @@ public sealed class Dock : WorkBuilding {
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+        bool SPECIAL_CHECKS = order.doSpecialChecks;
+        if (SPECIAL_CHECKS)
         {
-            basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
-            dependentBlocksList.Clear();            
+            if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
+            {
+                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
+                dependentBlocksList.Clear();
+            }
         }
         if (showOnGUI & isCorrectLocated) PoolMaster.current.DisableFlightZone();
-        if (!clearFromSurface) { basement = null; }
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        colony.RemoveDock(this);
-        if (maintainingShip & servicingShip != null) servicingShip.Undock();
+        if (!order.sendMessageToBasement) { basement = null; }
+        PrepareWorkbuildingForDestruction(order);
+        if (SPECIAL_CHECKS)
+        {
+            colony.RemoveDock(this);
+            if (maintainingShip & servicingShip != null) servicingShip.Undock();
+        }
         if (colony.docks.Count == 0 & dockObserver != null) Destroy(dockObserver);
         if (subscribedToRestoreBlockersEvent)
         {

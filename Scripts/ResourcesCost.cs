@@ -51,11 +51,6 @@
                 new ResourceContainer(ResourceType.Plastics, 100), new ResourceContainer(ResourceType.metal_E, 10)
             };
                 break;
-            case Structure.MINE_ID:
-                cost = new ResourceContainer[] {
-                new ResourceContainer(ResourceType.metal_M, 4), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.Plastics, 4)
-            };
-                break;
             case Structure.WIND_GENERATOR_1_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 12), new ResourceContainer(ResourceType.metal_M, 4), new ResourceContainer(ResourceType.metal_E, 2)

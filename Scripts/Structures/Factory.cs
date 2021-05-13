@@ -321,18 +321,17 @@ public class Factory : WorkBuilding
     }
 
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        SetRecipe(Recipe.NoRecipe);
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        if (order.returnResources) SetRecipe(Recipe.NoRecipe);
+        PrepareWorkbuildingForDestruction(order);
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
         }
-        //throw new System.Exception("factory destroyed");
         Destroy(gameObject);
     }
 }

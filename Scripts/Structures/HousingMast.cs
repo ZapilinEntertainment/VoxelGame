@@ -65,17 +65,21 @@ public class HousingMast : House
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        GameMaster.realMaster.colonyController.DeleteHousing(this);
-        if (basement != null)
+        PrepareBuildingForDestruction(order);
+        var rm = GameMaster.realMaster;
+        if (order.doSpecialChecks)
         {
-            var bpos = basement.pos;
-            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
-            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            rm.colonyController.DeleteHousing(this);
+            if (basement != null)
+            {
+                var bpos = basement.pos;
+                basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
+                basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            }
         }
         if (subscribedToRestoreBlockersUpdate)
         {

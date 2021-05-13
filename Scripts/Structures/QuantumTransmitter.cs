@@ -96,14 +96,17 @@ public sealed class QuantumTransmitter : Building {
         return transmissionID;
     } 
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) basement = null;
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (transmittersList.Contains(this)) transmittersList.Remove(this);
-        if (transmissionID != NO_TRANSMISSION_VALUE) Expedition.ChangeTransmissionStatus(transmissionID, null);
+        if (!order.sendMessageToBasement) basement = null;
+        PrepareBuildingForDestruction(order);
+        if (order.doSpecialChecks)
+        {
+            if (transmittersList.Contains(this)) transmittersList.Remove(this);
+            if (transmissionID != NO_TRANSMISSION_VALUE) Expedition.ChangeTransmissionStatus(transmissionID, null);
+        }
         Destroy(gameObject);
     }
 

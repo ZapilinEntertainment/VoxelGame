@@ -87,11 +87,11 @@ public class ReactorBlock : Powerplant, IPlanable
             }
         }
     }
-    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    public void Delete(BlockAnnihilationOrder bo)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        PrepareWorkbuildingForDestruction(bo.GetStructureOrder());
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
@@ -100,7 +100,8 @@ public class ReactorBlock : Powerplant, IPlanable
         //
         if (planes != null)
         {
-            foreach (var p in planes) p.Value.Annihilate(compensateResources);
+            var po = bo.GetPlaneOrder();
+            foreach (var p in planes) p.Value.Annihilate(po);
         }
         //
         Destroy(gameObject);
@@ -131,7 +132,7 @@ public class ReactorBlock : Powerplant, IPlanable
     //
     override public void SectionDeleted(ChunkPos pos)
     {
-        if (basement == null && !TryToRebasement()) Annihilate(false, false, false);
+        if (basement == null && !TryToRebasement()) Annihilate(StructureAnnihilationOrder.blockHaveNoSupport);
     }
     public bool TryToRebasement()
     {
@@ -196,21 +197,20 @@ public class ReactorBlock : Powerplant, IPlanable
     {
         if (destroyed | indestructible) return;
         hp -= d;
-        if (hp <= 0) Delete(true, false, true);
+        if (hp <= 0) Delete(BlockAnnihilationOrder.DamageDestruction);
     }
-    override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
-        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
-        else
+        if (!destroyed)
         {
-            var b = myBlock;
-            myBlock = null;
-            b.myChunk.DeleteBlock(b.pos, compensateResources);
+            IPlanableSupportClass.Annihilate(this, order);
         }
     }
     #endregion
 
     #region interface 
+    public bool HaveBlock() { return myBlock != null; }
+    public void NullifyBlockLink() { myBlock = null; }
     override public bool IsIPlanable() { return true; }
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)

@@ -108,33 +108,33 @@ public abstract class Plant : Structure {
     {
         if (destroyed | indestructible) return;
         hp -= d;
-        if (hp <= 0) if (hp > -100f) Dry(true); else Annihilate(true, false, false);
+        if (hp <= 0) if (hp > -100f) Dry(true); else Annihilate(StructureAnnihilationOrder.SystemDestruction);
     }    
 
 	virtual public void Harvest(bool replenish) {
         // сбор ресурсов и перепосадка
-        Annihilate(true, false, false);
+        Annihilate(PlantAnnihilationOrder.Gathered);
 	}
     virtual public void Dry(bool sendMessageToGrassland)
     {
-        Annihilate(true, sendMessageToGrassland, false);
+        Annihilate(new PlantAnnihilationOrder(sendMessageToGrassland));
     }
-    protected void PreparePlantForDestruction(bool clearFromSurface, bool sendMessageToGrassland)
+    protected void PreparePlantForDestruction(StructureAnnihilationOrder order)
     {
-        PrepareStructureForDestruction(clearFromSurface, false, false);
-        if (sendMessageToGrassland)
+        PrepareStructureForDestruction(order);
+        if (order.sendMessageToGrassland && order.doSpecialChecks)
         {
             if (basement != null && basement.haveGrassland) basement.GetGrassland().needRecalculation = true;
         }
     }
-    override public void Annihilate(bool clearFromSurface, bool sendMessageToGrassland, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) {
+        if (!order.sendMessageToBasement) {
             basement = null;
         }
-        PreparePlantForDestruction(clearFromSurface, sendMessageToGrassland);
+        PreparePlantForDestruction(order);
         basement = null;
         Destroy(gameObject);
     }   

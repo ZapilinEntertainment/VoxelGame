@@ -1006,7 +1006,7 @@ public sealed class Settlement : House
     }
 
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
@@ -1017,9 +1017,10 @@ public sealed class Settlement : House
             bool atLeastOneWasDestroyed = false;
             foreach (var s in slist)
             {
+                var norder = order.ChangeMessageSending(false);
                 if (s != null && s.ID == SETTLEMENT_STRUCTURE_ID)
                 {
-                    s.Annihilate(false, returnResources, leaveRuins);
+                    s.Annihilate(norder);
                     atLeastOneWasDestroyed = true;
                 }
             }
@@ -1028,20 +1029,23 @@ public sealed class Settlement : House
             colony.housingRecalculationNeeded = true;
             colony.powerGridRecalculationNeeded = true;
         }
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        GameMaster.realMaster.colonyController.DeleteHousing(this);
+        PrepareBuildingForDestruction(order);        
         if (subscribedToUpdate)
         {
             GameMaster.realMaster.labourUpdateEvent -= LabourUpdate;
             subscribedToUpdate = false;
             settlements.Remove(this);
         }
-        maxAchievedLevel = 1;
-        if (settlements.Count > 0)
+        if (order.doSpecialChecks)
         {
-            foreach (var s in settlements)
+            GameMaster.realMaster.colonyController.DeleteHousing(this);
+            maxAchievedLevel = 1;
+            if (settlements.Count > 0)
             {
-                if (s.level > maxAchievedLevel) maxAchievedLevel = s.level;
+                foreach (var s in settlements)
+                {
+                    if (s.level > maxAchievedLevel) maxAchievedLevel = s.level;
+                }
             }
         }
         Destroy(gameObject);

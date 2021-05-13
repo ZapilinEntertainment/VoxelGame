@@ -18,12 +18,15 @@ public interface IPlanable
     bool TryToRebasement();
     byte GetAffectionMask();
 
+    bool HaveBlock();
+    void NullifyBlockLink();
+
     //returns false if transparent or wont be instantiated
     bool InitializePlane(byte faceIndex);
     void DeactivatePlane(byte faceIndex);
 
     void Damage(float f, byte faceIndex);
-    void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins);
+    void Delete(BlockAnnihilationOrder order);
 
     void SavePlanesData(System.IO.FileStream fs);
     void LoadPlanesData(System.IO.FileStream fs);
@@ -49,7 +52,7 @@ public static class IPlanableSupportClass
         myBlock = chunk.AddBlock(cpos, s, false, checkPlanes);
         if (myBlock == null)
         {            
-            s.Delete(true, true, false);
+            s.Delete(BlockAnnihilationOrder.ManualCreationError);
             Debug.LogException(new System.Exception("new IPlanable block cannot be created"));
             return;
         }
@@ -86,5 +89,17 @@ public static class IPlanableSupportClass
             return data;
         }
         else return null;
+    }
+
+    public static void Annihilate(IPlanable obj, StructureAnnihilationOrder order)
+    {
+        var bo = order.GetOrderForIPlanable();
+        if (!obj.HaveBlock()) obj.Delete(bo);
+        else
+        {
+            var b = obj.GetBlock();
+            obj.NullifyBlockLink();
+            b.myChunk.DeleteBlock(b.pos, bo);
+        }
     }
 }

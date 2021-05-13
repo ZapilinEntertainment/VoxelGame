@@ -27,16 +27,16 @@ public class DockAddon : Building {
         }
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
         bool initiateCheckRequest = true;
         ChunkPos cpos = ChunkPos.zer0;
-        if (basement != null)  cpos = basement.pos;
+        if (basement != null )  cpos = basement.pos;
         else initiateCheckRequest = false;
-        PrepareBuildingForDestruction(clearFromSurface,returnResources,leaveRuins);
-        if (initiateCheckRequest) AddonCheckRequest(cpos);
+        PrepareBuildingForDestruction(order);
+        if (initiateCheckRequest & order.doSpecialChecks) AddonCheckRequest(cpos);
         
         Destroy(gameObject);
     }

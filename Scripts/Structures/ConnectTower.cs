@@ -5,15 +5,15 @@
     {
         if (b == null) return;
         SetBuildingData(b, pos);
-        if (current != null & current != this) current.Annihilate(true, true, false);
+        if (current != null & current != this) current.Annihilate(StructureAnnihilationOrder.ManualDestructed);
         current = this;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareBuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
+        PrepareBuildingForDestruction(order);
         if (current == this) current = null;
         Destroy(gameObject);
     }

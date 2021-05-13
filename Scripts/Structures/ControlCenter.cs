@@ -55,20 +55,23 @@ public class ControlCenter : Building
         }
     }
 
-    public override void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    public override void Annihilate(StructureAnnihilationOrder order)
     {
-        if (ID == CONTROL_CENTER_ID) GameMaster.realMaster.globalMap?.UnregisterEngineControlCenter(this);
-        if (basement != null)
+        if (order.doSpecialChecks)
         {
-            var bpos = basement.pos;
-            basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
-            basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            if (ID == CONTROL_CENTER_ID) GameMaster.realMaster.globalMap?.UnregisterEngineControlCenter(this);
+            if (basement != null)
+            {
+                var bpos = basement.pos;
+                basement.myChunk.GetBlock(bpos.OneBlockHigher())?.DropBlockerLink(this);
+                basement.myChunk.GetBlock(bpos.TwoBlocksHigher())?.DropBlockerLink(this);
+            }
         }
         if (subscribedToRestoreBlockersUpdate)
         {
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
-        base.Annihilate(clearFromSurface, returnResources, leaveRuins);
+        base.Annihilate(order);
     }
 }

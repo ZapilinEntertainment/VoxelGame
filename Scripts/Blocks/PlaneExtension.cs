@@ -295,23 +295,26 @@ public sealed class PlaneExtension : MyObject
             AddCellStructure(s);
             return;
         }
+        
         if (fulfillStatus != FullfillStatus.Empty)
         {
             SurfaceRect sr = s.surfaceRect;
             int i = 0;
             if (sr == SurfaceRect.full)
             {// destroy everything there
-                ClearSurface(false, true, false); // false так как не нужна лишняя проверка
+                ClearSurface(PlaneAnnihilationOrder.ClearByStructure);
             }
             else
             {
+                Structure se;
                 while (i < structures.Count)
                 {
-                    if (structures[i] != null)
+                    se = structures[i];
+                    if (se != null)
                     {
-                        if (structures[i].surfaceRect.Intersect(sr))
+                        if (se.surfaceRect.Intersect(sr))
                         {
-                            structures[i].Annihilate(false, true, !s.isArtificial);
+                            se.Annihilate(StructureAnnihilationOrder.GetReplacingOrder(se.isArtificial));
                         }
                     }
                     i++;
@@ -331,20 +334,22 @@ public sealed class PlaneExtension : MyObject
         if (map[x * INNER_RESOLUTION + z] == true)
         {
             int i = 0;
+            Structure es;
             while (i < structures.Count)
             {
-                if (structures[i] == null) { structures.RemoveAt(i); continue; }
-                SurfaceRect sr = structures[i].surfaceRect;
+                es = structures[i];
+                if (es == null) { structures.RemoveAt(i); continue; }
+                SurfaceRect sr = es.surfaceRect;
                 if (sr.x <= x & sr.z <= z & sr.x + sr.size > x & sr.z + sr.size > z)
                 {
-                    if (structures[i].indestructible)
+                    if (es.indestructible)
                     {
-                        s.Annihilate(false, false, false);
+                        s.Annihilate(StructureAnnihilationOrder.SystemDestruction);
                         return;
                     }
                     else
                     {
-                        structures[i].Annihilate(false, false, false);
+                        es.Annihilate(StructureAnnihilationOrder.GetReplacingOrder(es.isArtificial));
                         break;
                     }
                 }
@@ -369,7 +374,7 @@ public sealed class PlaneExtension : MyObject
         }
     }
 
-	public void ClearSurface(bool check, bool returnResources, bool deleteExtensionLink)
+	public void ClearSurface(PlaneAnnihilationOrder order)
     {
         if (structures == null)
         {
@@ -380,18 +385,21 @@ public sealed class PlaneExtension : MyObject
         {
             if (structures.Count > 0)
             {
+                Structure se;
+                StructureAnnihilationOrder strOrder = order.GetStructuresOrder();
                 for (int i = 0; i < structures.Count; i++)
                 {
-                    structures[i]?.Annihilate(false, returnResources, false); // чтобы не вызывали removeStructure здесь
-                    if (structures == null) break;
+                    se = structures[i];
+                    if (se != null) 
+                    se.Annihilate(strOrder); 
                 }
                 structures = null;
-                grassland?.Annihilate(false, false);
+                grassland?.Annihilate(order.GetGrasslandOrder());
             }
-            if (check) RecalculateSurface();
+            if (order.recalculateSurface) RecalculateSurface();
             else
             {
-                if (deleteExtensionLink) myPlane.NullifyExtensionLink(this);
+                if (order.deleteExtensionLink) myPlane.NullifyExtensionLink(this);
             }
         }
     }
@@ -533,7 +541,7 @@ public sealed class PlaneExtension : MyObject
     {
         if (grassland != null && grassland == g)
         {
-            if (sendAnnihilationRequest) g.Annihilate(true, false);
+            if (sendAnnihilationRequest) g.Annihilate(GrasslandAnnihilationOrder.DestroyedByPlane);
             else grassland = null;
         }
     }
@@ -541,7 +549,7 @@ public sealed class PlaneExtension : MyObject
     {
         if (grassland != null)
         {
-            grassland.Annihilate(true, false);
+            grassland.Annihilate(GrasslandAnnihilationOrder.DestroyedByPlane);
             grassland = null;
             myPlane.ChangeMaterial(ResourceType.DIRT_ID, true);
         }
@@ -875,10 +883,10 @@ public sealed class PlaneExtension : MyObject
         return surfaceObserver;
     }
 
-    public void Annihilate(bool compensateStructures)
+    public void Annihilate(PlaneAnnihilationOrder order)
     {
-        if (grassland != null) grassland.Annihilate(false, false);
-        ClearSurface(false, compensateStructures, true);
+        if (!order.chunkClearing && grassland != null) grassland.Annihilate(order.GetGrasslandOrder());
+        ClearSurface(order);
     } 
 }
 

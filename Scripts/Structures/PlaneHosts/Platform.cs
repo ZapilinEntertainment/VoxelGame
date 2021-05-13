@@ -56,23 +56,21 @@ public class Platform : Structure, IPlanable
         return upperPlane;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
-        if (destroyed) return;
-        if (myBlock == null) Delete(clearFromSurface, compensateResources, leaveRuins);
-        else
+        if (!destroyed)
         {
-            var b = myBlock;
-            myBlock = null;
-            b.myChunk.DeleteBlock(b.pos, compensateResources);
+            IPlanableSupportClass.Annihilate(this, order);
         }
     }
     #region interface
-    public void Delete(bool clearFromSurface, bool compensateResources, bool leaveRuins)
+    public bool HaveBlock() { return myBlock != null; }
+    public void NullifyBlockLink() { myBlock = null; }
+    public void Delete(BlockAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareStructureForDestruction(clearFromSurface, compensateResources, leaveRuins);
+        PrepareStructureForDestruction(order.GetStructureOrder());
         basement = null;
         Destroy(gameObject);
     }

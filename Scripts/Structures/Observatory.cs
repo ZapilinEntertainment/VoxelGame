@@ -191,12 +191,12 @@ public sealed class Observatory : WorkBuilding
         }
     }    
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        PrepareWorkbuildingForDestruction(clearFromSurface, returnResources, leaveRuins);
-        if (basement != null)
+        PrepareWorkbuildingForDestruction(order);
+        if (basement != null && order.doSpecialChecks)
         {
             if (blockedBlocks != null)
             {
@@ -213,7 +213,7 @@ public sealed class Observatory : WorkBuilding
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
-        colony?.observer?.RemoveFastButton(this);
+        if (order.doSpecialChecks) colony?.observer?.RemoveFastButton(this);
         alreadyBuilt = false;
         Destroy(gameObject);
     }

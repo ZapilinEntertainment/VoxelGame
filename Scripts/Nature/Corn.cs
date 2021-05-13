@@ -57,7 +57,7 @@ sealed public class Corn : Plant {
 	override public void Harvest(bool replenish) {
 		GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.Food, GATHER);
         if (replenish) SetStage(0);
-        else Annihilate(true, false, false);
+        else Annihilate(PlantAnnihilationOrder.Gathered);
 	}
     override public bool IsFullGrown()
     {
@@ -79,12 +79,12 @@ sealed public class Corn : Plant {
         st.timer = 5;
     }
 
-    override public void Annihilate(bool clearFromSurface, bool returnResources, bool leaveRuins)
+    override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (destroyed) return;
         else destroyed = true;
-        if (!clearFromSurface) basement = null;
-        PreparePlantForDestruction(clearFromSurface, returnResources);
+        if (!order.sendMessageToBasement) basement = null;
+        PreparePlantForDestruction(order);
         Destroy(gameObject);
     }
 }

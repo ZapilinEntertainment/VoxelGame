@@ -515,6 +515,27 @@ namespace FoundationRoute
                 default: return ColorCode.NoColor;
             }
         }
+        public static Rect GetHexIconRect(this HexType htype)
+        {
+            float x = 0.25f;
+            switch (htype)
+            {
+                case HexType.Powerplant: return new Rect(x, 3f * x, x, x);
+                case HexType.IndustrialExperimental: return new Rect(0f, 3f * x, x, x);
+                case HexType.Industrial: return new Rect(3f * x, 2f * x, x, x);
+                case HexType.CommercialDense: return new Rect(2f * x, 2f * x, x, x);
+                case HexType.Commercial: return new Rect(x, 2f * x, x, x);
+                case HexType.ResidentialEco: return new Rect(0f, 2f * x, x, x);
+                case HexType.ResidentialDense: return new Rect(3f * x, x, x, x);
+                case HexType.Residential: return new Rect(2f * x, x, x, x);
+                case HexType.AdvancedFields: return new Rect(x, x, x, x);
+                case HexType.Fields: return new Rect(0f, x, x, x);
+                case HexType.Mountain: return new Rect(3f * x, 0f, x, x);
+                case HexType.Lake: return new Rect(2f * x, 0f, x,x);
+                case HexType.Forest: return new Rect(x, 0f, x, x);
+                default: return new Rect(0f, 0, x, x);
+            }
+        }
     }
     public enum HexSubtype: byte { NoSubtype, Residential, Commercial, Industrial, Nature}
     public enum ColorCode : byte { NoColor, Red, Green,Blue}
