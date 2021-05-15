@@ -304,6 +304,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/Ships/passengerShip_1")).GetComponent<Ship>();
+                        s.Initialize();
                         if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
@@ -331,6 +332,7 @@ public sealed class PoolMaster : MonoBehaviour {
                             default:  s = Instantiate(Resources.Load<GameObject>("Prefs/Ships/lightCargoShip")).GetComponent<Ship>();
                                 break;
                         }
+                        s.Initialize();
                         if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
@@ -353,6 +355,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/Ships/privateShip")).GetComponent<Ship>();
+                        s.Initialize();
                         if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;
@@ -375,6 +378,7 @@ public sealed class PoolMaster : MonoBehaviour {
                     if (!found)
                     {
                         s = Instantiate(Resources.Load<GameObject>("Prefs/Ships/lightWarship")).GetComponent<Ship>();
+                        s.Initialize();
                         if (currentMaterialsPack != MaterialsPack.Standart) ReplaceMaterials(s.gameObject, currentMaterialsPack);
                     }
                     break;

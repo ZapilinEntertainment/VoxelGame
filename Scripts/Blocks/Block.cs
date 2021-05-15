@@ -130,6 +130,7 @@ public sealed class Block : MyObject {
         SpriteRenderer sr = blockingMarker.AddComponent<SpriteRenderer>();
         sr.sprite = PoolMaster.GetStarSprite(true);
         sr.sharedMaterial = PoolMaster.starsBillboardMaterial;
+        blockingMarker.transform.parent = myChunk.markersHolder;
         blockingMarker.transform.localPosition = pos.ToWorldSpace();
     }
     public bool IsBlocker()

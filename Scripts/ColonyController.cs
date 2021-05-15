@@ -983,7 +983,7 @@ public sealed class ColonyController : MonoBehaviour
     public float GetAscensionCf()
     {
         float maxVal = GameConstants.ASCENSION_VERYLOW;
-        var lvl = hq.level;
+        var lvl = hq?.level ?? 0;
         if (lvl > 1)
         {
             switch (lvl)

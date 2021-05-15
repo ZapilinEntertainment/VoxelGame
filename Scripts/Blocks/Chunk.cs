@@ -123,6 +123,7 @@ public sealed partial class Chunk : MonoBehaviour
         }
         LIGHT_DECREASE_PER_BLOCK = 1 - 1f / (PoolMaster.MAX_MATERIAL_LIGHT_DIVISIONS + 1);
         distancesArray = new float[chunkSize, chunkSize, chunkSize];
+        InitializeMarkersHolder();
 
         GameMaster.layerCutHeight = chunkSize;
         GameMaster.prevCutHeight = chunkSize;
@@ -1004,6 +1005,9 @@ public sealed partial class Chunk : MonoBehaviour
             chunkClearing = false;
         }
         blocks = new Dictionary<ChunkPos, Block>();
+        Destroy(markersHolder?.gameObject);
+        markersHolder = null;
+        InitializeMarkersHolder();
         surfaces = null;
         Destroy(nature);
         lifePower = 0;
@@ -1501,6 +1505,8 @@ public sealed partial class Chunk : MonoBehaviour
                 {
                     blocks.Add(b.pos, b);
                     //b.TryGetStructuresList(ref prevstrs);
+                    //if (prevstrs != null && prevstrs.Count > 0) Debug.Log(prevstrs[0]?.name ?? "none");
+                   // else Debug.Log("no structures");
                 }
                 else
                 {

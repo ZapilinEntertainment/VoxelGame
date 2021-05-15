@@ -5,7 +5,7 @@ public class DockAddon : Building {
     {
         if (b == null) return;
         SetBuildingData(b, pos);
-        AddonCheckRequest(b.pos);
+        if (!GameMaster.loading) AddonCheckRequest(b.pos);
     }
     private void AddonCheckRequest(ChunkPos cpos)
     {
@@ -33,7 +33,7 @@ public class DockAddon : Building {
         else destroyed = true;
         bool initiateCheckRequest = true;
         ChunkPos cpos = ChunkPos.zer0;
-        if (basement != null )  cpos = basement.pos;
+        if (basement != null & order.doSpecialChecks)  cpos = basement.pos;
         else initiateCheckRequest = false;
         PrepareBuildingForDestruction(order);
         if (initiateCheckRequest & order.doSpecialChecks) AddonCheckRequest(cpos);

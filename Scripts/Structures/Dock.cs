@@ -119,7 +119,7 @@ public sealed class Dock : WorkBuilding {
     }
 
     override public void LabourUpdate () {
-        if ( !isEnergySupplied ) return;
+        if ( !isEnergySupplied | destroyed) return;
 		if ( maintainingShip ) {
             if (loadingTimer > 0f)
             {
@@ -258,10 +258,9 @@ public sealed class Dock : WorkBuilding {
         }
 
         if (basement == null) {
-            Debug.Log("error in dock position!");
+            Debug.Log(StackTraceUtility.ExtractStackTrace());
             Annihilate(StructureAnnihilationOrder.HasNoBasementError);
             return;
-            // why this is even here?
         }
         if (basement.faceIndex == Block.SURFACE_FACE_INDEX)
         {
@@ -338,7 +337,7 @@ public sealed class Dock : WorkBuilding {
     }
     override public void ChunkUpdated()
     {
-        if (isCorrectLocated) return;
+        if (isCorrectLocated | destroyed) return;
         else CheckPositionCorrectness();
     }
     public override void SectionDeleted(ChunkPos pos)

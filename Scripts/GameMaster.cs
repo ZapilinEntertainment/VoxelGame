@@ -97,10 +97,11 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private static GameStartSettings test_gameStartSettings = //null;
-       // GameStartSettings.GetDefaultStartSettings();
-        GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved3");
+    private static GameStartSettings test_gameStartSettings = null;
+    // GameStartSettings.GetDefaultStartSettings();
+    // GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved3");
     //
+    private static bool DEBUG_STOP = false;
   
    // SCENERY CHANGING
     public static void StartNewGame(GameStartSettings gss)
@@ -454,7 +455,7 @@ public sealed class GameMaster : MonoBehaviour
     #region updates
     private void Update()
     {
-        if (loading) return;
+        if (loading | gameSpeed == 0) return;
 
         //if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
         //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();       
@@ -514,7 +515,7 @@ public sealed class GameMaster : MonoBehaviour
         {
             pauseRequests++;
             Time.timeScale = 0;
-            gameSpeed = 0;
+            gameSpeed = 0;            
         }
         else
         {
@@ -777,7 +778,7 @@ public sealed class GameMaster : MonoBehaviour
             {
                 errorReason = "global map error";
                 goto FAIL;
-            }
+            }           
 
             environmentMaster.Load(fs);
             if (loadingFailed)
@@ -800,7 +801,7 @@ public sealed class GameMaster : MonoBehaviour
                 goto FAIL;
             }
             //
-            if (colonyController == null) PrepareColonyController(false);
+            if (colonyController == null) PrepareColonyController(false);            
             //
             if (mainChunk == null)
             {
@@ -816,9 +817,8 @@ public sealed class GameMaster : MonoBehaviour
             {
                 if (blockersRestoreEvent != null) blockersRestoreEvent();
             }
-
-
-            Settlement.TotalRecalculation(); // Totaru Annihirationu no imoto-chan
+           
+            Settlement.TotalRecalculation(); // Totaru Annihiration no imoto-chan
             if (loadingFailed)
             {
                 errorReason = "settlements load failure";
@@ -865,6 +865,9 @@ public sealed class GameMaster : MonoBehaviour
             //Debug.Log("docks");
             colonyController.SYSTEM_DocksRecalculation();
             //Debug.Log("end");
+
+            DEBUG_STOP = true;
+
             return true;
         }
         else

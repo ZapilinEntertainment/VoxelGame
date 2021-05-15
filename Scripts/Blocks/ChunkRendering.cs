@@ -139,11 +139,21 @@ public sealed partial class Chunk : MonoBehaviour {
     private List<MeshVisualizeInfo> redrawRequiredTypes; // <- будут перерисованы и снова скомбинированы
     private GameObject combinedShadowCaster;
     private GameObject[] renderersHolders; // 6 холдеров для каждой стороны куба + 1 нестандартная
+    public Transform markersHolder { get; private set; }
     private float[,,] distancesArray;
 
     public const byte UP_LIGHT = 255, BOTTOM_LIGHT = 128;
     // visibility distances
     public const float SMALL_OBJECTS_HIDE_DISTANCE_SQR = 128, MEDIUM_OBJECTS_LOD_DISTANCE_SQR = 200, HUGE_OBJECTS_LOD_DISTANCE_SQR = 600;
+
+    private void InitializeMarkersHolder()
+    {
+        if (markersHolder != null) return;
+        markersHolder = new GameObject("markersHolder").transform;
+        markersHolder.transform.parent = transform;
+        markersHolder.transform.localPosition = Vector3.zero;
+        markersHolder.transform.localRotation = Quaternion.identity;
+    }
 
     public void RenderDataFullRecalculation()
     {
@@ -651,6 +661,7 @@ public sealed partial class Chunk : MonoBehaviour {
     }
     public void CameraUpdate()
     {
+        if (GameMaster.loading) return;
         Vector3 cpos = transform.InverseTransformPoint(FollowingCamera.camPos);
         Vector3 v = Vector3.one * (-1);
         float size = chunkSize * Block.QUAD_SIZE;

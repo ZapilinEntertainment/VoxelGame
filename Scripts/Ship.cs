@@ -25,7 +25,7 @@ public sealed class Ship : MonoBehaviour {
 
     private const float START_SPEED = 10, DISTANCE_TO_ISLAND = 80, AWAITING_TIME = 90;
 
-    void Awake() {
+    public void Initialize() {
 		level = _level;
 		type = _type;
 		volume = _volume;
@@ -256,7 +256,12 @@ public sealed class Ship : MonoBehaviour {
     {
         if (ships != null && ships.Count > 0)
         {
-            foreach (var s in ships) Destroy(s);            
+            var sa = ships.ToArray();
+            for (int i = 0; i < sa.Length; i++)
+            {
+                if (sa[i] != null)   Destroy(sa[i].gameObject);
+            }
+            sa = null;
         }
         ships = null;
     }

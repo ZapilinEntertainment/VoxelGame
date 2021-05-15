@@ -71,6 +71,7 @@ public class Platform : Structure, IPlanable
         if (destroyed) return;
         else destroyed = true;
         PrepareStructureForDestruction(order.GetStructureOrder());
+        upperPlane?.Annihilate(order.GetPlaneOrder());
         basement = null;
         Destroy(gameObject);
     }

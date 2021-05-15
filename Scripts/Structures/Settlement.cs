@@ -24,13 +24,14 @@ public sealed class Settlement : House
 
     static Settlement()
     {
-        GameMaster.staticResetFunctions += ResetStaticData;
+        GameMaster.staticResetFunctions += SettlementResetStaticData;
         settlements = new List<Settlement>();
         maxAchievedLevel = 1;
     }
-    public static void ResetStaticData()
+    public static void SettlementResetStaticData()
     {
-        settlements = new List<Settlement>();
+        if (settlements == null) settlements = new List<Settlement>();
+        else settlements.Clear();
         gardensCf = 0f;
         shopsCf = 0f;
         maxAchievedLevel = 1;
@@ -42,6 +43,8 @@ public sealed class Settlement : House
         float centerEnergySurplus = GetEnergySurplus(SETTLEMENT_CENTER_ID),
             partEnergyConsumption = GetEnergySurplus(SETTLEMENT_STRUCTURE_ID);
         SettlementStructure s2;
+        settlements.Clear();
+        settlements = GameMaster.realMaster.colonyController.GetBuildings<Settlement>();
         if (settlements.Count > 0)
         {            
             foreach (var center in settlements)
@@ -1010,7 +1013,7 @@ public sealed class Settlement : House
     {
         if (destroyed) return;
         else destroyed = true;
-        if (basement != null)
+        if (basement != null & order.doSpecialChecks)
         {
             ignoreRecalculationRequests = true;
             var slist = basement.GetStructuresList();

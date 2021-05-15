@@ -135,8 +135,11 @@ public class Plane : MyObject
         }
         switch (data[8])
         {
-            case 1: PlaneExtension.Load(fs, p); break;
-            case 2: Structure.LoadStructure(fs, p); break;
+            case 1:
+                PlaneExtension.Load(fs, p); break;
+            case 2:
+                Structure.LoadStructure(fs, p);
+                break;
         }
         return p;
     }

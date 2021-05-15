@@ -458,7 +458,7 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
 
     public void Raycasting()
     {
-        if (GameMaster.gameSpeed == 0 | colony == null || colony.hq == null) return;
+        if (GameMaster.gameSpeed == 0 || colony == null || colony.hq == null) return;
         // кастует луч, проверяет, выделен ли уже этот объект, если нет - меняет режим через ChangeChosenObject
         if (FollowingCamera.touchscreen)
         {
