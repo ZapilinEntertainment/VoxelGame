@@ -706,6 +706,7 @@ public sealed class GameMaster : MonoBehaviour
             executingScenario.Save(fs);
         }
         else fs.WriteByte(0);
+        FollowingCamera.main.Save(fs);
 
         fs.Position = 0;
         double hashsum = GetHashSum(fs, false);
@@ -847,6 +848,7 @@ public sealed class GameMaster : MonoBehaviour
             Knowledge.Load(fs);
             b = fs.ReadByte();
             if (b == 1) executingScenario = Scenario.StaticLoad(fs);
+            FollowingCamera.main.Load(fs);
             fs.Close();
 
             FollowingCamera.main.WeNeedUpdate();
@@ -865,6 +867,8 @@ public sealed class GameMaster : MonoBehaviour
             //Debug.Log("docks");
             colonyController.SYSTEM_DocksRecalculation();
             //Debug.Log("end");
+
+            
 
             DEBUG_STOP = true;
 

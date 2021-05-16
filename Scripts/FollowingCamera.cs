@@ -6,9 +6,9 @@ using UnityEngine;
 public sealed class FollowingCamera : MonoBehaviour {
     public static FollowingCamera main { get; private set; }
     public static Camera cam { get; private set; }
-    public static Transform camTransform; // unprotected - HOT - means using very often
-    public static Transform camBasisTransform { get; private set; }
-    public static Vector3 camPos; // unprotected - HOT
+    private static Transform camTransform;
+    private static Transform camBasisTransform;
+    public static Vector3 camPos { get; private set; }
     public static bool touchscreen { get; private set; }
 
     public float rotationSpeed = 65, zoomSpeed = 50, moveSpeed = 30;   
@@ -18,10 +18,11 @@ public sealed class FollowingCamera : MonoBehaviour {
 	float moveSmoothAcceleration= 0.03f;
     private float touchRightBorder = Screen.width;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
-	[SerializeField] private Vector3 camPoint = new Vector3(0,3,-3);
+	private readonly Vector3 DEFAULT_CAM_POINT = new Vector3(0,3,-3);
 
 	Vector3 lookPoint;
-	private bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false, useEnvironmentalCamera = false;
+	private bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false, useEnvironmentalCamera = false,
+        positionLoaded = false;
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
     [SerializeField] private bool initializeEnvCameraOnStart = false;
@@ -72,7 +73,8 @@ public sealed class FollowingCamera : MonoBehaviour {
 
     private void Start()
     {
-        CameraToStartPosition();
+        if (!positionLoaded) CameraToStartPosition();
+        else positionLoaded = false;
         //        
         controllerStickOriginalPos = new Vector2(controllerBack.position.y, controllerBack.position.y); // ?
         camMoveVector = Vector2.zero;
@@ -81,7 +83,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     }
     public void CameraToStartPosition()
     {
-        camTransform.position = transform.position + transform.TransformDirection(camPoint);
+        camTransform.position = transform.position + transform.TransformDirection(DEFAULT_CAM_POINT);
         camTransform.LookAt(transform.position);
 
         var cpos = GameMaster.sceneCenter;
@@ -234,11 +236,18 @@ public sealed class FollowingCamera : MonoBehaviour {
             {
                 StopCameraMovement();
                 float zl = cam.transform.localPosition.magnitude;
-                float x = (1.1f - zl / (MAX_FAR - MAX_ZOOM));
-                float zoomSmoothCoefficient = 1f / (x * x);
-                float zspeed = zoomSpeed * Time.deltaTime * (1 + 2 * zoomSmoothCoefficient) * delta * (-1);               
-                float m = Mathf.Clamp(zl + zspeed, MAX_ZOOM, MAX_FAR);
-                cam.transform.localPosition *= (m / zl);               
+                if (zl != 0)
+                {
+                    float x = (1.1f - zl / (MAX_FAR - MAX_ZOOM));
+                    float zoomSmoothCoefficient = 1f / (x * x);
+                    float zspeed = zoomSpeed * Time.deltaTime * (1 + 2 * zoomSmoothCoefficient) * delta * (-1);
+                    float m = Mathf.Clamp(zl + zspeed, MAX_ZOOM, MAX_FAR);
+                    cam.transform.localPosition *= (m / zl);
+                }
+                else
+                {
+                    cam.transform.localPosition = Vector3.zero;
+                }
             }
         }
 
@@ -288,7 +297,19 @@ public sealed class FollowingCamera : MonoBehaviour {
 		lookPoint = point;        
         if (lookPoint != transform.position) changingBasePos = true;
         verticalMovement = null;
+        if (camTransform.localPosition == Vector3.zero)
+        {
+            camTransform.position = transform.position + transform.TransformDirection(DEFAULT_CAM_POINT);
+            camTransform.LookAt(transform.position);
+        } 
 	}
+    public void SetObservingPosition(Vector3 point, Vector3 direction)
+    {
+        camBasisTransform.position = point;
+        camBasisTransform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(direction, Vector3.up));
+        camTransform.localPosition = Vector3.zero;
+        camTransform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+    }
 
     private void StopCameraMovement()
     {
@@ -402,4 +423,40 @@ public sealed class FollowingCamera : MonoBehaviour {
             useEnvironmentalCamera = false;
         }
     }
+
+    #region save-load
+    public void Save(System.IO.FileStream fs)
+    {
+        var v = camBasisTransform.position;
+        fs.Write(System.BitConverter.GetBytes(v.x),0,4);
+        fs.Write(System.BitConverter.GetBytes(v.y), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(v.z), 0, 4);
+        v = camBasisTransform.rotation.eulerAngles;
+        fs.Write(System.BitConverter.GetBytes(v.x), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(v.y), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(v.z), 0, 4);
+        //
+        fs.Write(System.BitConverter.GetBytes(camPos.x), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(camPos.y), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(camPos.z), 0, 4);
+        v = camTransform.rotation.eulerAngles;
+        fs.Write(System.BitConverter.GetBytes(v.x), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(v.y), 0, 4);
+        fs.Write(System.BitConverter.GetBytes(v.z), 0, 4);
+    }
+    public void Load(System.IO.FileStream fs)
+    {
+        const int length = 48;
+        var data = new byte[length];
+        fs.Read(data, 0, length);
+        int i = 0;
+        float d (in int x) { return System.BitConverter.ToSingle(data, x); }
+        Vector3 v(in int x) { return new Vector3(d(x), d(x + 4), d(x + 8));}
+        camBasisTransform.position = v(i); i += 12;
+        camBasisTransform.rotation = Quaternion.Euler(v(i)); i += 12;
+        camTransform.position = v(i); i += 12;
+        camTransform.rotation = Quaternion.Euler(v(i));
+        positionLoaded = true;
+    }
+    #endregion
 }

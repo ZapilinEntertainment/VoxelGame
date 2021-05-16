@@ -298,7 +298,7 @@
             case Structure.FOUNDATION_BLOCK_5_ID:
                 cost = new ResourceContainer[]{
                 new ResourceContainer(ResourceType.metal_K, 300), new ResourceContainer(ResourceType.metal_M, 100), new ResourceContainer(ResourceType.metal_E, 50),
-                new ResourceContainer(ResourceType.Concrete, 800),
+                new ResourceContainer(ResourceType.Concrete, 400),
             };
                 break;
             case Structure.CONNECT_TOWER_6_ID:

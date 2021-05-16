@@ -137,7 +137,7 @@ public sealed class Nature : MonoBehaviour
             for(i = 0; i< count; i++)
             {
                 g = Grassland.Load(fs, myChunk);
-                grasslands.Add(g);
+                if (g != null) grasslands.Add(g); // Найти почему происходит ошибка!
             }            
             var iddata = new byte[4];
             fs.Read(iddata, 0, 4);

@@ -189,9 +189,10 @@ public sealed class FoundationRouteScenario : Scenario
         GameMaster.realMaster.UnbindScenario(this);
         scenarioUI?.ScenarioEnds(this);
         //
-        var t = FollowingCamera.camTransform;
-        t.position = hexBuilder.GetHexWorldPosition(new HexPosition(3, Random.Range(0, 18))) + Vector3.up * 5f;
-        t.LookAt(GameMaster.sceneCenter + Vector3.down * 5f);
+        FollowingCamera.main.SetObservingPosition(
+            hexBuilder.GetHexWorldPosition(new HexPosition(3, Random.Range(0, 18))) + Vector3.up * 5f,
+          (GameMaster.sceneCenter + Vector3.down * 5f - FollowingCamera.camPos) * -1
+        );
         UIController.GetCurrent().ChangeUIMode(UIMode.Endgame, true);
     }
     public override void ClearScenarioDecorations()
