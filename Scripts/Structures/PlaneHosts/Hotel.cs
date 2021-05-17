@@ -277,6 +277,7 @@ public sealed class Hotel : Building, IPlanable
     }
     public Block GetBlock() { return myBlock; }
     public bool IsCube() { return false; }
+    public bool IsSurface() { return false; }
     public bool TryToRebasement()
     {
         if (myBlock == null) return false;

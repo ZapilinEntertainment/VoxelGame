@@ -269,6 +269,10 @@ public sealed class BlockExtension : MyObject, IPlanable
         byte fullmask = Block.CUBE_MASK;
         return ((fullmask & existingPlanesMask) == fullmask);
     }
+    public bool IsSurface()
+    {
+        return existingPlanesMask == (1 << Block.SURFACE_FACE_INDEX);
+    }
     public bool ContainSurface()
     {
         if (planes == null) return false;

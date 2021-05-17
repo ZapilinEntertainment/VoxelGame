@@ -234,6 +234,7 @@ public sealed class StorageBlock : StorageHouse, IPlanable
     }
     public Block GetBlock() { return myBlock; }
     public bool IsCube() { return true; }
+    public bool IsSurface() { return false; }
     public bool ContainSurface()
     {
         return planes?.ContainsKey(Block.UP_FACE_INDEX) ?? false;

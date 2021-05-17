@@ -758,7 +758,18 @@ public sealed partial class Chunk : MonoBehaviour
 
     #region taking surfaces
     public int GetSurfacesCount() { return surfaces?.Length ?? 0; }
-    public Plane[] GetSurfaces() { return surfaces; }
+    public Plane[] GetSurfaces() {        
+        if (surfaces != null)
+        {
+            int x = 0;
+            foreach (var s in surfaces)
+            {
+                if (s == null || s.destroyed) x++;
+            }
+            if (x != 0) Debug.Log(x.ToString() + " errors in surfaces list");
+        }        
+        return surfaces;
+    }
     public Plane GetHighestSurfacePlane(int x, int z)
     {
         if (surfaces == null || x < 0 || z < 0 || x >= chunkSize || z >= chunkSize) return null;
@@ -1058,7 +1069,6 @@ public sealed partial class Chunk : MonoBehaviour
         {
             if (blocks.ContainsKey(pos)) return false;
         }
-        // все проверки пройдены
         Block b;
         foreach (ChunkPos pos in positions)
         {

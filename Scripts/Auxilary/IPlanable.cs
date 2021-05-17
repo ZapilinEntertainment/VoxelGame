@@ -12,6 +12,7 @@ public interface IPlanable
     bool HavePlane(byte faceIndex);
     bool TryGetPlane(byte faceIndex, out Plane result);
     bool IsCube();
+    bool IsSurface();
     bool ContainSurface();
     bool ContainsStructures();
     bool TryGetStructuresList(ref List<Structure> result);

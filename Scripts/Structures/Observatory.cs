@@ -11,9 +11,9 @@ public sealed class Observatory : WorkBuilding
 
     static Observatory()
     {
-        GameMaster.staticResetFunctions += ResetStaticData;
+        GameMaster.staticResetFunctions += ResetObservatoryStaticData;
     }
-    public static void ResetStaticData()
+    public static void ResetObservatoryStaticData()
     {
         alreadyBuilt = false;
     }
@@ -30,7 +30,7 @@ public sealed class Observatory : WorkBuilding
         }
         else
         {
-            if (p.pos.y != Chunk.chunkSize - 2)
+            if (p.pos.y < Chunk.chunkSize / 2)
             {
                 reason = Localization.GetRefusalReason(RefusalReason.UnacceptableHeight);
                 return false;
@@ -39,66 +39,31 @@ public sealed class Observatory : WorkBuilding
             {
                 if (!p.GetBlock().HavePlane(Block.CEILING_FACE_INDEX))
                 {
-                    var blocks = p.myChunk.blocks;
-                    ChunkPos pos = p.pos;
-                    if (p.faceIndex != Block.SURFACE_FACE_INDEX) pos = pos.OneBlockHigher();
-                    int size = Chunk.chunkSize;
-
-                    int i = 0;
-                    if (pos.y < size - 1)
+                    var pos = p.pos;
+                    if (pos.y < Chunk.chunkSize - 1)
                     {
-                        if (pos.y > 1)
+                        if (p.faceIndex == Block.UP_FACE_INDEX) pos = pos.OneBlockHigher();
+                        var chunk = p.myChunk;
+                        var pos2 = pos.OneBlockForward();
+                        Block b;
+                        bool Blocked(in ChunkPos cpos)
                         {
-                            for (; i < pos.y - 1; i++)
+                            b = chunk.GetBlock(cpos);
+                            if (b == null) return chunk.IsAnyStructureInABlockSpace(cpos);
+                            else
                             {
-                                ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                                if (blocks.ContainsKey(cpos) && blocks[cpos].IsCube()) goto CHECK_FAILED;
+                                return (!b.IsBlocker() && !b.IsSurface());
                             }
                         }
-                        for (i = pos.y + 1; i < size; i++)
-                        {
-                            ChunkPos cpos = new ChunkPos(pos.x, i, pos.z);
-                            if (blocks.ContainsKey(cpos) && blocks[cpos].IsCube()) goto CHECK_FAILED;
-                        }
-                        i = 0;
-                    }
-                    bool[] checkArray = new bool[] { true, true, true, true, true, true, true, true };
-                    //  0  1  2
-                    //  3     4
-                    //  5  6  7
-                    if (pos.x == 0)
-                    {
-                        checkArray[0] = false;
-                        checkArray[3] = false;
-                        checkArray[5] = false;
-                    }
-                    else
-                    {
-                        if (pos.x == size - 1)
-                        {
-                            checkArray[2] = false;
-                            checkArray[4] = false;
-                            checkArray[7] = false;
-                        }
-                    }
-                    if (pos.z == 0)
-                    {
-                        checkArray[5] = false;
-                        checkArray[6] = false;
-                        checkArray[7] = false;
-                    }
-                    else
-                    {
-                        if (pos.z == size - 1)
-                        {
-                            checkArray[0] = false;
-                            checkArray[1] = false;
-                            checkArray[2] = false;
-                        }
-                    }
-                    foreach (bool ca in checkArray)
-                    {
-                        if (ca == false) goto CHECK_FAILED;
+                        if (Blocked(pos2.OneBlockLeft())) goto CHECK_FAILED;
+                        if (Blocked(pos2)) goto CHECK_FAILED;
+                        if (Blocked(pos2.OneBlockRight())) goto CHECK_FAILED;
+                        if (Blocked(pos.OneBlockLeft())) goto CHECK_FAILED;
+                        if (Blocked(pos.OneBlockRight())) goto CHECK_FAILED;
+                        pos2 = pos.OneBlockBack();
+                        if (Blocked(pos2.OneBlockLeft())) goto CHECK_FAILED;
+                        if (Blocked(pos2)) goto CHECK_FAILED;
+                        if (Blocked(pos2.OneBlockRight())) goto CHECK_FAILED;
                     }
                     return true;
                 }

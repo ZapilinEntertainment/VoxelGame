@@ -401,7 +401,12 @@ public class Plane : MyObject
     }
     virtual public bool IsSuitableForGrassland()
     {
-        return (mainStructure == null || mainStructure.surfaceRect != SurfaceRect.full) && Nature.IsPlaneSuitableForGrassland(this);
+        if (Nature.IsPlaneSuitableForGrassland(this))
+        {
+            if (mainStructure == null) return true;
+            else return mainStructure.surfaceRect != SurfaceRect.full;
+        }
+        else return false;
     }
     public bool AssignGrassland(Grassland g)
     {

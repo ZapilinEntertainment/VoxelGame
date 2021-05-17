@@ -436,7 +436,7 @@ public static partial class Localization
                     case Structure.HOTEL_BLOCK_6_ID: return "Принимает гостей колонии и приносит прибыль раз в день";
                     case Structure.CONNECT_TOWER_6_ID: return "<В разработке>";
                     case Structure.XSTATION_3_ID: return "Собирает информацию об окружающей среде, измеряет уровень Стабильности, предсказывает надвигающиеся угрозы.";
-                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена на максимальной высоте. В радиусе одного блока не должно быть других блоков и поверхностей. Может быть построена только одна обсерватория.";
+                    case Structure.OBSERVATORY_ID: return "Отслеживает события в ближайшем пространстве. Должна быть построена в верхней половине острова и в радиусе одного блока не должно быть других блоков и структур. Может быть построена только одна обсерватория.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Даёт доступ к хранилищу найденных артефактов.";
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
@@ -523,7 +523,7 @@ public static partial class Localization
                     case Structure.HOTEL_BLOCK_6_ID: return "Houses guests and pays earnings everyday.";
                     case Structure.CONNECT_TOWER_6_ID: return "<In development>";
                     case Structure.XSTATION_3_ID: return "Gathering environmental intelligence, measures Stability level, predicting threats.";
-                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on maximum height. Only one observatory can be built.";
+                    case Structure.OBSERVATORY_ID: return "Observing near space for events. Must have empty space in 1 block radius, and be built on higher half of the island. Only one observatory can be built.";
                     case Structure.ARTIFACTS_REPOSITORY_ID: return "Gives access to your non-using artifacts";
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";

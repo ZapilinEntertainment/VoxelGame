@@ -187,6 +187,9 @@ public sealed class Block : MyObject {
     {
         return GetPlanesHost()?.IsCube() ?? false;
     }
+    public bool IsSurface() {
+        return GetPlanesHost()?.IsSurface() ?? false;
+    }
     public bool ContainSurface()
     {
         return GetPlanesHost()?.ContainSurface() ?? false;

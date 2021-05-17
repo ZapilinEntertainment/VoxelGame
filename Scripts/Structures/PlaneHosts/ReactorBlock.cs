@@ -213,6 +213,7 @@ public class ReactorBlock : Powerplant, IPlanable
     public void NullifyBlockLink() { myBlock = null; }
     override public bool IsIPlanable() { return true; }
     public bool IsStructure() { return true; }
+    public bool IsSurface() { return false; }
     public bool IsFaceTransparent(byte faceIndex)
     {
         return false;

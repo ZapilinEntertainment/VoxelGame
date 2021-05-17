@@ -99,7 +99,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool weNeedNoResources { get; private set; }
     private static GameStartSettings test_gameStartSettings = null;
     // GameStartSettings.GetDefaultStartSettings();
-    // GameStartSettings.GetLoadingSettings(GameMode.Survival,"saved3");
+     //GameStartSettings.GetLoadingSettings(GameMode.Survival,"test");
     //
     private static bool DEBUG_STOP = false;
   

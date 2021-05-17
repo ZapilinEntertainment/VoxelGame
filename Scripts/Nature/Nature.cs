@@ -11,7 +11,7 @@ public sealed class Nature : MonoBehaviour
 
     private bool prepared = false, sideGrasslandsSupport = false, ceilGrasslandsSupport = false;
     private float lifepower, lifepowerSurplus, grasslandCreateTimer, grasslandsUpdateTimer;
-    private int lastUpdateIndex = 0;
+    private int lastUpdateIndex = 0, lastDonoredIndex = 0;
     private EnvironmentMaster env;
     private Chunk myChunk;
     private GameMaster gm;
@@ -30,7 +30,8 @@ public sealed class Nature : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4); // 4 - 7
         fs.Write(System.BitConverter.GetBytes(grasslandsUpdateTimer), 0, 4); // 8 - 11
         fs.Write(System.BitConverter.GetBytes(lastUpdateIndex), 0, 4); //12 - 15
-        int count = 0; // 16 - 19
+        fs.Write(System.BitConverter.GetBytes(lastDonoredIndex), 0, 4); //16 - 19
+        int count = 0; // 20 - 23
         if (grasslands != null)
         {
             foreach(var g in grasslands)
@@ -124,14 +125,15 @@ public sealed class Nature : MonoBehaviour
         lifepowerSupport = env.lifepowerSupport;
         myChunk = c;
         //
-        var data = new byte[20];
+        var data = new byte[24];
         fs.Read(data, 0, data.Length);
         lifepower = System.BitConverter.ToSingle(data, 0);
         grasslandCreateTimer = System.BitConverter.ToSingle(data, 4);
         grasslandsUpdateTimer = System.BitConverter.ToSingle(data, 8);
         lastUpdateIndex = System.BitConverter.ToInt32(data, 12);
+        lastDonoredIndex = System.BitConverter.ToInt32(data, 16);
         //
-        int count = System.BitConverter.ToInt32(data, 16), i;
+        int count = System.BitConverter.ToInt32(data, 20), i;
         grasslands = null;
         if (count != 0)
         {
@@ -225,6 +227,7 @@ public sealed class Nature : MonoBehaviour
             case PoolMaster.MATERIAL_GRASS_40_ID:
             case PoolMaster.MATERIAL_GRASS_60_ID:
             case PoolMaster.MATERIAL_GRASS_80_ID:
+            case ResourceType.LUMBER_ID:
                 return true;
             default: return false;
         }
@@ -326,6 +329,7 @@ public sealed class Nature : MonoBehaviour
 
     private void Update()
     {
+
         if (GameMaster.loading) return;
         if (!prepared) {
             Prepare(GameMaster.realMaster.mainChunk);
@@ -373,12 +377,16 @@ public sealed class Nature : MonoBehaviour
                 {
                     if (lifepower < 1000f && grasslands != null)
                     {
-                        grasslands[Random.Range(0, grasslands.Count )].Dry();
-                        lifepower += 1000f;
-                        needRecalculation = true;
+                        var g = grasslands[Random.Range(0, grasslands.Count)];
+                        if (g != null && !g.deleted)
+                        {
+                            g.Dry();
+                            lifepower += 1000f;
+                            needRecalculation = true;
+                        }
                         return;
                     }
-                }
+                }                
                 grasslandCreateTimer = GRASSLAND_CREATE_CHECK_TIME;
             }
             grasslandsUpdateTimer -= t;
@@ -389,9 +397,13 @@ public sealed class Nature : MonoBehaviour
                     int count = grasslands.Count;
                     if (lastUpdateIndex >= count) lastUpdateIndex = 0;
                     var g = grasslands[lastUpdateIndex];
-                    g.Update();
-                    lifepower -= GRASSLAND_UPDATE_COST * g.level;
-                    lastUpdateIndex++;
+                    if (g != null)
+                    {
+                        g.Update();
+                        lifepower -= GRASSLAND_UPDATE_COST * g.level;
+                        lastUpdateIndex++;
+                    }
+                    else needRecalculation = true;
                 }
                 grasslandsUpdateTimer = GRASSLAND_UPDATE_TIME;
             }
@@ -423,7 +435,8 @@ public sealed class Nature : MonoBehaviour
             {
                 foreach (var g in grasslands)
                 {
-                    lifepowerSurplus += g.GetLifepowerSurplus();
+                    if (g == null) Debug.Log("grasslands list error");
+                    else lifepowerSurplus += g.GetLifepowerSurplus();
                 }
             }
         }
@@ -500,9 +513,17 @@ public sealed class Nature : MonoBehaviour
         }
     }
 
-    public void CreateGrassland(float cost)
+    public void CreateGrassland(float supplyEnergy)
     {
-        var g = grasslands[Random.Range(0, grasslands.Count)];
+        int totalCount = grasslands.Count;
+        if (lastDonoredIndex >= totalCount) lastDonoredIndex = 0;
+
+        var g = grasslands[lastDonoredIndex];
+        if (g == null)
+        {
+            needRecalculation = true;
+            return;
+        }
         var fi = g.faceIndex;
         List<Plane> candidates = new List<Plane>();
         Block b, myBlock = g.plane.GetBlock(); Plane p; ChunkPos cpos = g.pos;
@@ -644,10 +665,17 @@ public sealed class Nature : MonoBehaviour
         {
             bool IsNotSuitable(Plane px) { return !px.IsSuitableForGrassland(); }
             candidates.RemoveAll(IsNotSuitable);
-            p = candidates[Random.Range(0, candidates.Count)];
-            g = Grassland.CreateAt(p,false);
-            if (g!= null) SupportCreatedGrassland(g, cost);
+            if (candidates.Count > 0)
+            {
+                p = candidates[Random.Range(0, candidates.Count)];
+                if (p != null)
+                {
+                    g = Grassland.CreateAt(p, false);
+                    if (g != null) SupportCreatedGrassland(g, supplyEnergy);
+                }                
+            }
         }
+        lastDonoredIndex++;
     }
     public void AddGrassland(Grassland g)
     {
