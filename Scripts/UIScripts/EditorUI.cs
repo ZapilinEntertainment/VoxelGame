@@ -172,8 +172,8 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
                         if (p != null && !p.haveGrassland && p.isQuad && p.isSurface)
                         {
                             if (p.materialID != ResourceType.DIRT_ID) p.ChangeMaterial(ResourceType.DIRT_ID, false);
-                            Grassland g;
-                            if (p.TryCreateGrassland(out g) && g != null)
+                            var g = Grassland.CreateAt(p,true);
+                            if ( g != null)
                             {
                                 g.FORCED_AddLifepower(LIFEPOWER_PORTION * 10);
                             }

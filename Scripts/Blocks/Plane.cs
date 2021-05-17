@@ -70,6 +70,7 @@ public class Plane : MyObject
             }
             else  return host.GetBlock().pos;
         } }
+    public PlanePos planePos { get { return new PlanePos(pos, faceIndex); } }
     public event System.Action<VisibilityMode, bool> visibilityChangedEvent;
 
     public static readonly MeshType defaultMeshType = MeshType.Quad;
@@ -398,26 +399,20 @@ public class Plane : MyObject
     {
         return host?.GetBlock();
     }
-    public bool TryCreateGrassland(out Grassland g)
+    virtual public bool IsSuitableForGrassland()
     {
-        if (mainStructure != null && mainStructure.surfaceRect == SurfaceRect.full)
+        return (mainStructure == null || mainStructure.surfaceRect != SurfaceRect.full) && Nature.IsPlaneSuitableForGrassland(this);
+    }
+    public bool AssignGrassland(Grassland g)
+    {
+        bool noExtension = extension == null;
+        var b = FORCED_GetExtension().AssignGrassland(g);
+        if (!b && noExtension)
         {
-            g = null;
+            extension = null;
             return false;
         }
-        else
-        {
-            if (Nature.IsPlaneSuitableForGrassland(this))
-            {
-                if (extension == null) FORCED_GetExtension();
-                return extension.TryCreateGrassland(out g);
-            }
-            else
-            {
-                g = null;
-                return false;
-            }
-        }
+        else return true;
     }
     public Grassland GetGrassland()
     {

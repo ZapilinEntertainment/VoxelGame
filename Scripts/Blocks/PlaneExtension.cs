@@ -523,19 +523,14 @@ public sealed class PlaneExtension : MyObject
     {
         return grassland != null;
     }
-    public bool TryCreateGrassland(out Grassland g)
+    public bool AssignGrassland(Grassland g)
     {
-        if (grassland != null)
+        if (grassland == null)
         {
-            g = null;
-            return false;
-        }
-        else
-        {
-            g = new Grassland(myPlane);
             grassland = g;
             return true;
         }
+        else return false;
     }
     public void RemoveGrassland(Grassland g, bool sendAnnihilationRequest)
     {

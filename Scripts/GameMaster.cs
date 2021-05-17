@@ -867,9 +867,7 @@ public sealed class GameMaster : MonoBehaviour
             //Debug.Log("docks");
             colonyController.SYSTEM_DocksRecalculation();
             //Debug.Log("end");
-
             
-
             DEBUG_STOP = true;
 
             return true;

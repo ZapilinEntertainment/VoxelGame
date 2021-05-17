@@ -69,3 +69,18 @@
         return '(' + x.ToString() + ' ' + y.ToString() + ' ' + z.ToString() + ')';
     }
 }
+
+public struct PlanePos
+{
+    public ChunkPos cpos;
+    public byte faceIndex;
+
+    public PlanePos(ChunkPos i_pos, byte i_face)
+    {
+        cpos = i_pos;
+        faceIndex = i_face;
+    }
+
+    public static bool operator ==(PlanePos lhs, PlanePos rhs) { return lhs.Equals(rhs); }
+    public static bool operator !=(PlanePos lhs, PlanePos rhs) { return !(lhs.Equals(rhs)); }
+}

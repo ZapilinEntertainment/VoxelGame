@@ -57,8 +57,7 @@ public class Farm : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        var gl = basement.GetGrassland();
-        if (gl == null) basement.TryCreateGrassland(out gl);
+        if (basement.GetGrassland() == null) Grassland.CreateAt(basement, true);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
 
         var emaster = GameMaster.realMaster.environmentMaster;
@@ -162,8 +161,19 @@ public class Farm : WorkBuilding
         if (totalCost > 0)
         {
             var gl = basement.GetGrassland();
-            if (gl == null) basement.TryCreateGrassland(out gl);
-            gl.TakeLifepower(totalCost);
+            if (gl == null)
+            {
+                if (basement.IsSuitableForGrassland())
+                {
+                    gl = Grassland.CreateAt(basement, false);
+                    gl?.TakeLifepower(totalCost);
+                }
+                else
+                {
+                    SetActivationStatus(false, true);
+                }
+            }
+            
         }
 
     }
@@ -216,7 +226,7 @@ public class Farm : WorkBuilding
         fs.Read(data, 0, data.Length);
         lastPlantIndex = System.BitConverter.ToInt32(data, 0);
         var gl = basement.GetGrassland();
-        if (gl == null) basement.TryCreateGrassland(out gl);
+        if (gl == null) Grassland.CreateAt(basement, true);
     }
     #endregion
 }

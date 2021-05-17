@@ -50,8 +50,9 @@ public class TestMaster : MonoBehaviour
             //WritePuzzleColors();
             //GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_S, 10000);
             //GameMaster.realMaster.colonyController.storage.AddResource(ResourceType.metal_E, 10000);
+            //GameMaster.realMaster.mainChunk.ClearChunk();
 
-            GameMaster.realMaster.mainChunk.ClearChunk();
+            //FollowingCamera.main.SetObservingPosition(Vector3.zero, facingObj.position);
         }
         if (Input.GetKeyDown("c"))
         {

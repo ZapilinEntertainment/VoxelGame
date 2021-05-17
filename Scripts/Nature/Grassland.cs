@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public sealed class Grassland 
+public sealed class Grassland : MyObject
 {    
     public Plane plane { get; private set; }
     private Nature nature;
     private PlantCategory[] categoriesCatalog;
     private Plant[] plants;
     public bool canBeBoosted { get; private set; }
+    public bool deleted { get; private set; }
     public bool needRecalculation = false;
     public readonly int ID;
     private bool ignoreRecalculationsRequest = false;
@@ -26,16 +27,13 @@ public sealed class Grassland
     public const float BOOST_VALUE = 5f, CREATE_COST_VAL = 10f;
     public byte faceIndex { get { if (plane != null) return plane.faceIndex; else return Block.UP_FACE_INDEX; } }
     public ChunkPos pos { get { if (plane != null) return plane.pos; else return ChunkPos.zer0; } }
+    public PlanePos planePos { get { return new PlanePos(pos, faceIndex); } }
     private static int nextID = 1;
 
-    public override bool Equals(object obj)
+    protected override bool IsEqualNoCheck(object obj)
     {
-        // Check for null values and compare run-time types.
-        if (obj == null || GetType() != obj.GetType())
-            return false;
-
-        Grassland p = (Grassland)obj;
-        return p.ID == ID && plane == p.plane;
+        var g = obj as Grassland;
+        return (ID == g.ID) && (planePos == g.planePos);
     }
     public override int GetHashCode()
     {
@@ -44,11 +42,11 @@ public sealed class Grassland
 
     #region save-load
     public void Save(System.IO.FileStream fs)
-    {
-        var ppos = plane.pos;
-        fs.WriteByte(ppos.x); // 0
-        fs.WriteByte(ppos.y); // 1
-        fs.WriteByte(ppos.z); //2
+    {        
+        var cpos = plane.pos;
+        fs.WriteByte(cpos.x); // 0
+        fs.WriteByte(cpos.y); // 1
+        fs.WriteByte(cpos.z); //2
         fs.WriteByte(plane.faceIndex); //3 
         fs.Write(System.BitConverter.GetBytes(ID), 0, 4); // 4 - 7
         //
@@ -61,8 +59,11 @@ public sealed class Grassland
     public static Grassland Load(System.IO.FileStream fs, Chunk c)
     {
         var data = new byte[16];
-        fs.Read(data, 0, data.Length);        
-        var b = c.GetBlock(data[0], data[1], data[2]);
+        fs.Read(data, 0, data.Length);
+
+        var chunkPos = new ChunkPos(data[0], data[1], data[2]);
+
+        var b = c.GetBlock(chunkPos);
         if (b != null)
         {
             Plane p;
@@ -90,7 +91,15 @@ public sealed class Grassland
     }
     #endregion 
 
-    public Grassland(Plane p) 
+    public static Grassland CreateAt(Plane p, bool checks)
+    {
+        if (p == null || p.destroyed || (checks && !p.IsSuitableForGrassland())) return null;
+        else
+        {
+            return new Grassland(p);            
+        }
+    }
+    private Grassland(Plane p) 
     {
         ID = nextID++;
         INLINE_Constructor(p);
@@ -102,15 +111,16 @@ public sealed class Grassland
     }
     private void INLINE_Constructor(Plane p)
     {
-        plane = p;
+        deleted = false;
+        plane = p; plane.AssignGrassland(this);
         nature = p.myChunk.GetNature();
         categoriesCatalog = new PlantCategory[MAX_CATEGORIES_COUNT];
         categoriesCatalog[0] = (PlantCategory)Random.Range(0, 3);
         categoriesCatalog[1] = (PlantCategory)Random.Range(0, 3);
         categoriesCatalog[2] = (PlantCategory)Random.Range(0, 3);
-        plane.SetMeshRotation((byte)Random.Range(0, 4), false);
-        nature.AddGrassland(this);
+        plane.SetMeshRotation((byte)Random.Range(0, 4), false);       
         Recalculation();
+        nature.AddGrassland(this);
     }
 
     private byte GetMaxPlantsCount()
@@ -358,6 +368,8 @@ public sealed class Grassland
     }
     public void Annihilate(GrasslandAnnihilationOrder order)
     {
+        if (deleted) return;
+        else deleted = true;
         if (order.destroyPlants)
         {
             var plist = plane.GetPlants();
