@@ -439,7 +439,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
                 }
                 if (islandStability < 1f)
                 {
-                    float lcf = colonyController.GetLevelCf();
+                    float lcf = colonyController.GetLevelSoftingCf();
                     float step = lcf > 1f ? 0f : CITY_CHANGE_HEIGHT_STEP * (1f - islandStability) * t * (1f - lcf);
                     if (step != 0f)
                     {

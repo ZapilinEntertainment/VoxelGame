@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 public class Structure : MonoBehaviour
 {
-    protected Plane basement;
+    public Plane basement { get; protected set; }
     public SurfaceRect surfaceRect { get; protected set; }
     public bool isArtificial { get; protected set; } // fixed in ID - используется при проверках на снос
     public bool placeInCenter { get; protected set; } // fixed in ID 

@@ -461,7 +461,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
             }
         }
         //
-        ascensionLabel.text = ((int)(knowledge.GetAscension() * 100f)).ToString() + '%';
+        ascensionLabel.text = ((int)(knowledge.GetCompleteness() * 100f)).ToString() + '%';
 
         lastChMarkerValue = knowledge.changesMarker;
     }

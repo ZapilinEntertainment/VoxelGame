@@ -18,7 +18,7 @@ public sealed class ColonyController : MonoBehaviour
     public float hospitals_coefficient { get; private set; }
     public float happinessCoefficient { get; private set; }
     public float workers_coefficient { get; private set; }
-    public bool accumulateEnergy = true, buildingsWaitForReconnection = false;    
+    public bool accumulateEnergy = true, buildingsWaitForReconnection = false;
 
     public float energyStored { get; private set; }
     public float energySurplus { get; private set; }
@@ -69,7 +69,8 @@ public sealed class ColonyController : MonoBehaviour
         tickTimer, birthrateCoefficient = 0f,
         targetHappiness,
         happinessIncreaseMultiplier = 1f, happinessDecreaseMultiplier = 1f, showingHappiness;
-    private bool thisIsFirstSet = true, ignoreHousingRecalculationRequest = false;    
+    private bool thisIsFirstSet = true, ignoreHousingRecalculationRequest = false;
+    private Func<float> getNatureCf;
 
     public const byte MAX_HOUSING_LEVEL = 5;
     public const float LOWERED_BIRTHRATE_COEFFICIENT = 0.5f, IMPROVED_BIRTHRATE_COEFFICIENT = 1.5f;
@@ -223,7 +224,7 @@ public sealed class ColonyController : MonoBehaviour
             }
 
             //
-            float lvlCf =GetLevelCf();
+            float lvlCf =GetLevelSoftingCf();
             //
             //HEALTHCARE
             if (hospitalCoverageRecalculationNeeded) RecalculateHospitals();
@@ -924,7 +925,18 @@ public sealed class ColonyController : MonoBehaviour
             }
             hq = new_hq;
         }
+        GameMaster.realMaster.globalMap.LinkColonyController(this);
+
         QuestUI.current.CheckQuestsAccessibility(!GameMaster.loading);
+        TrySetNatureCfLink();
+    }
+    private void TrySetNatureCfLink()
+    {
+        if (hq != null)
+        {
+            var n = hq.basement.myChunk.GetNature();
+            if (n != null) getNatureCf = n.GetNatureCf;
+        }
     }
 
     public void AddEnergyCrystals(float v)
@@ -966,7 +978,7 @@ public sealed class ColonyController : MonoBehaviour
     }
 
     #region parameters
-    public float GetLevelCf()
+    public float GetLevelSoftingCf()
     {
         return 1 - (hq.level - GameConstants.HQ_MAX_LEVEL / 2) / GameConstants.HQ_MAX_LEVEL;
         // 1 - 1.33
@@ -980,29 +992,44 @@ public sealed class ColonyController : MonoBehaviour
     {
         return Path.LifePath;
     }
-    public float GetAscensionCf()
+    public float GetPeopleCf()
     {
-        float maxVal = GameConstants.ASCENSION_VERYLOW;
-        var lvl = hq?.level ?? 0;
-        if (lvl > 1)
+        if (starvation) return 0f;
+        else { return citizenCount > 10000 ? 1f : (float)citizenCount / 10000f; }
+    }
+    public float GetTechCf()
+    {
+        float x = 0f;
+        x += 0.25f * ((float)hq.level / (float)GameConstants.HQ_MAX_LEVEL);
+        //
+        const float ENERGY_MAX = 50000f;
+        if (energyStored > ENERGY_MAX) x += 0.25f; else x += 0.25f * (energyStored / ENERGY_MAX);
+        //
+        x += 0.25f * ((float)docksLevel / 3f);
+        //
+        //have engine contorl tower?
+        //
+        return x;
+    }
+    public float GetCrystalCf()
+    {
+        const float CRYSTALS_MAX = 10000;
+        if (energyCrystalsCount > CRYSTALS_MAX) return 1f;
+        else
         {
-            switch (lvl)
-            {
-                case 2:
-                case 3:
-                    maxVal = GameConstants.ASCENSION_LOW; break;
-                case 4: maxVal = GameConstants.ASCENSION_MEDIUM;break;
-                case 5:
-                case 6:
-                    maxVal = GameConstants.ASCENSION_HIGH;
-                    break;
-            }
+            if (energyCrystalsCount < 0f) return 0f;
+            else return energyCrystalsCount / CRYSTALS_MAX;
         }
-        if (HaveBuilding(Structure.MONUMENT_ID)) maxVal += 10f;
-        if (HaveBuilding(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID)) maxVal += 10f;
-        //if (HaveBuilding(Structure.ASCENSION_ENGINE)) maxVal += 10f;
-        if (happinessCoefficient > maxVal) return maxVal;
-        else return happinessCoefficient;
+    }
+    public float GetNatureCf()
+    {
+        if (getNatureCf != null) return getNatureCf();
+        else
+        {
+            TrySetNatureCfLink();
+            if (getNatureCf != null) return getNatureCf();
+            else return 0f;
+        }
     }
     #endregion
 

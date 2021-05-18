@@ -335,19 +335,7 @@ public class Quest : MyObject
                         break;
                     case ProgressQuestID.Progress_Reactor:
                         {
-                            List<Building> powerGrid = colony.powerGrid;
-                            foreach (Building b in powerGrid)
-                            {
-                                if (b == null) continue;
-                                else
-                                {
-                                    if (b.ID == Structure.GRPH_REACTOR_4_ID || b.ID == Structure.REACTOR_BLOCK_5_ID)
-                                    {
-                                        MakeQuestCompleted();
-                                        break;
-                                    }
-                                }
-                            }
+                            if (colony.HaveBuilding(Structure.GRPH_REACTOR_4_ID) | colony.HaveBuilding(Structure.REACTOR_BLOCK_5_ID)) MakeQuestCompleted();
                         }
                         break;
                     case ProgressQuestID.Progress_FirstExpedition:

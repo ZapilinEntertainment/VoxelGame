@@ -29,7 +29,7 @@ public sealed class UIExpeditionObserver : UIObserver
     private bool ignoreCrewDropdown = false;
     private bool? preparingMode = null;
     private byte lastChangesMarkerValue = 0;
-    private int lastCrewListMarker = 0, lastShuttlesListMarker = 0;
+    private int lastCrewListMarker = 0, lastShuttlesListMarker = 0, statedCrystalsCount = 0, statedSuppliesCount = Expedition.MIN_SUPPLIES_COUNT;
     private Expedition.ExpeditionStage lastDrawnStage;
     private ColonyController colony;
     private Expedition observingExpedition;
@@ -145,7 +145,7 @@ public sealed class UIExpeditionObserver : UIObserver
 
     private void RedrawWindow()
     {
-        int statedCrystalsCount = 0, statedSuppliesCount = Expedition.MIN_SUPPLIES_COUNT;
+        
         Color redcolor = Color.red, whitecolor = Color.white;
         GameObject g;
         if (observingExpedition == null)

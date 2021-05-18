@@ -27,7 +27,7 @@ public sealed class GlobalMap : MonoBehaviour
     public RingSector[] mapSectors { get; private set; } // нумерация от внешнего к внутреннему
 
     private bool prepared = false;
-    private EnvironmentMaster envMaster;
+    private EnvironmentMaster envMaster;  
     private Environment _outerSpaceEnvironment;
     private bool SYSTEM_envWasCalculatedThisTick = false;
     public System.Action<MapPoint> pointsExploringEvent;
@@ -42,7 +42,7 @@ public sealed class GlobalMap : MonoBehaviour
 
     public const byte RINGS_COUNT = 5; // dependence : Environment.GetEnvironment
     private const byte MAX_OBJECTS_COUNT = 50;
-    private const float MAX_RINGS_ROTATION_SPEED = 1, STAR_CREATE_CHANCE = 0.05f, RING_RESIST_CF = 0.02f, ASCENSION_UPDATE_TIME = 10f;
+    private const float MAX_RINGS_ROTATION_SPEED = 1, RING_RESIST_CF = 0.02f, ASCENSION_UPDATE_TIME = 10f;
     private float[] rotationSpeed;
     public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
@@ -53,6 +53,7 @@ public sealed class GlobalMap : MonoBehaviour
     //
     private BitArray starsTypesArray;
     private bool createNewStars = true;
+    private ColonyController colonyController;
 
     private void Start()
     {
@@ -117,6 +118,7 @@ public sealed class GlobalMap : MonoBehaviour
     {
         envMaster = em;
     }
+    public void LinkColonyController(ColonyController c) { colonyController = c; }
     private void RecalculateStarsArray()
     {
         int length = (int)Environment.EnvironmentPreset.TotalCount;
@@ -231,72 +233,15 @@ public sealed class GlobalMap : MonoBehaviour
 
     private RingSector CreateNewSector(int i)
     {
-        var availableTypes = new List<MapPointType>() { MapPointType.Resources};
-        if (createNewStars && Random.value < STAR_CREATE_CHANCE) availableTypes.Add(MapPointType.Star);
-        byte stage;
-        if (ascension <= GameConstants.ASCENSION_MEDIUM )
-        {
-            if (ascension <= GameConstants.ASCENSION_VERYLOW) stage = 0;
-            else
-            {
-                if (ascension > GameConstants.ASCENSION_LOW) stage = 2;
-                else stage = 1;
-            }
-        }
-        else
-        {
-            if (ascension > GameConstants.ASCENSION_VERYHIGH) stage = 5;
-            else
-            {
-                if (ascension > GameConstants.ASCENSION_HIGH) stage = 4;
-                else stage = 3;
-            }
-        }
-        switch (stage)
-        {
-            case 0:
-            case 1: // less than 0.3
-                availableTypes.Add(MapPointType.Wreck);
-                availableTypes.Add(MapPointType.SOS);
-                break;
-            case 2: // 0.3 - 0.5
-                availableTypes.Add(MapPointType.Wreck);
-                availableTypes.Add(MapPointType.SOS);
-                availableTypes.Add(MapPointType.Station);
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                break;
-            case 3: // 0.5 - 0.7
-                availableTypes.Add(MapPointType.Station);
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                availableTypes.Add(MapPointType.Portal);
-                break;
-            case 4: // 0.7 - 0.9
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                availableTypes.Add(MapPointType.Portal);
-                availableTypes.Add(MapPointType.Wonder);
-                availableTypes.Add(MapPointType.Wiseman);
-                break;
-            case 5: // more than 0.9
-                availableTypes.Add(MapPointType.Wonder);
-                availableTypes.Add(MapPointType.Wiseman);
-                break;
-        }
-        //     
-
+        MapPointType type = ProgressionMaster.DefineMapPointType(this);
         var pos = GetSectorPosition(i);
-        int x = Random.Range(0, availableTypes.Count);
-        var inpos = GetSectorPosition(i);
-        byte ring = DefineRing(pos.y);
         RingSector rs;
-        if (availableTypes[x] != MapPointType.Star)
+        if (type != MapPointType.Star)
         {            
             MapPoint centralPoint = MapPoint.CreatePointOfType(
                 pos.x,
                 pos.y,
-                availableTypes[x]
+                type
                 );
             rs = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
             AddPoint(centralPoint, true);
@@ -617,9 +562,9 @@ public sealed class GlobalMap : MonoBehaviour
         {
             updateTimer = ASCENSION_UPDATE_TIME;
             
-            ascensionTarget = GameMaster.realMaster.colonyController?.GetAscensionCf() ?? 0f;
+            ascensionTarget = ProgressionMaster.DefineAscension(colonyController);
             a = GetGlobalMapAscension(); if (ascensionTarget > a) ascensionTarget = a;
-            a = Knowledge.GetCurrent()?.GetAscension() ?? 0f; if (ascensionTarget > a) ascensionTarget = a;
+            a = Knowledge.GetCurrent()?.GetCompleteness() ?? 0f; if (ascensionTarget > a) ascensionTarget = a;
         }
         if (ascension != ascensionTarget) ascension = Mathf.MoveTowards(ascension, ascensionTarget, GameConstants.ASCENSION_CHANGE_SPEED * t * (1.5f - GameMaster.stability));
         float ascensionChange = prefAsc - ascension;

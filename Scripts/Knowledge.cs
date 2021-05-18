@@ -794,7 +794,7 @@ public sealed class Knowledge
         }
         else return 0f;
     }
-    public float GetAscension()
+    public float GetCompleteness()
     {
         int openedCount = 0;
         foreach (var b in buttonsColorCodesArray)

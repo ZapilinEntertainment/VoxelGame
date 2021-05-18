@@ -22,7 +22,8 @@ public sealed class Nature : MonoBehaviour
     private int nextLPowerAffectionID = 1;
 
     private const float GRASSLAND_CREATE_COST = 100f, GRASSLAND_UPDATE_COST = 2f, GRASSLAND_CREATE_CHECK_TIME = 10f, GRASSLAND_UPDATE_TIME = 1f,
-        MONUMENT_AFFECTION_CF = 10f;
+        MONUMENT_AFFECTION_CF = 10f, LIFEPOWER_STORAGE_LIMIT = 100000f;
+    private const int MAXIMUM_LIFESOURCES_COUNT = 100;
     #region save-load
     public void Save(System.IO.FileStream fs)
     {
@@ -342,6 +343,10 @@ public sealed class Nature : MonoBehaviour
             //if (Input.GetKeyDown("x"))  Debug.Log(lifepowerSurplus);
             var t = Time.deltaTime;
             lifepower += t * lifepowerSurplus * GameMaster.gameSpeed;
+            int lfc = lifesources?.Count + 1 ?? 1;
+            if (lfc > MAXIMUM_LIFESOURCES_COUNT) lfc = MAXIMUM_LIFESOURCES_COUNT;
+            float x = LIFEPOWER_STORAGE_LIMIT * lfc;
+            if (lifepower > x) lifepower = x;
 
             grasslandCreateTimer -= t;
             if (grasslandCreateTimer <= 0f)
@@ -780,5 +785,25 @@ public sealed class Nature : MonoBehaviour
 
         }
         Debug.Log("nature - no grassland duplicates");
+    }
+
+
+    public float GetNatureCf()
+    {
+        float x = 0f;
+        const float p = 0.5f;
+        if (grasslands != null)
+        {
+            int c = grasslands.Count;
+            const float MAX_GLS = 100f;
+            if (c > MAX_GLS) x += p;
+            else x += ((float)c / MAX_GLS) * p;            
+        }
+        //
+        float MAX_LP = LIFEPOWER_STORAGE_LIMIT ;
+        if (lifepower > MAX_LP) x += p;
+        else x += p * lifepower / MAX_LP;
+        //
+        return x;
     }
 }
