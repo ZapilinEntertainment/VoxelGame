@@ -205,6 +205,18 @@ public sealed class Storage : MonoBehaviour {
     {
         return TryGetResources(rtype.ID, count);
     }
+    public bool TryGetResources(ResourceContainer[] cost)
+    {
+        foreach (var rc in cost)
+        {
+            if (standartResources[rc.resourceID] < rc.volume) return false;
+        }
+        foreach (var rc in cost)
+        {
+            standartResources[rc.resourceID] -= rc.volume;
+        }
+        return true;
+    }
     public void GetResources(ResourceContainer[] cost)
     {
         if (cost == null || cost.Length == 0) return;

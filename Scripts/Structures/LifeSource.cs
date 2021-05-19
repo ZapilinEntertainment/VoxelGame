@@ -22,7 +22,7 @@ public sealed class LifeSource : Structure {
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
             {
-                chunk.ClearBlocksList(this, dependentBlocks, true);
+                chunk.ClearBlockersList(this, dependentBlocks, true);
             }
             dependentBlocks = new List<Block>();
             var positions = new List<ChunkPos>
@@ -57,7 +57,7 @@ public sealed class LifeSource : Structure {
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
             {
-                chunk.ClearBlocksList(this, dependentBlocks, true);
+                chunk.ClearBlockersList(this, dependentBlocks, true);
             }
             dependentBlocks = new List<Block>();
             var positions = new List<ChunkPos>
@@ -107,7 +107,7 @@ public sealed class LifeSource : Structure {
             }
             if (dependentBlocks != null)
             {
-                basement.myChunk.ClearBlocksList(this, dependentBlocks, true);
+                basement.myChunk.ClearBlockersList(this, dependentBlocks, true);
             }
         }
         if (subscribedToRestoreBlockersUpdate)

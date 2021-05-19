@@ -578,6 +578,11 @@ public class Quest : MyObject
                                 if (colony.GetBuildingsCount(Structure.HOTEL_BLOCK_6_ID) > 0) MakeQuestCompleted();
                                 break;
                             }
+                        case Knowledge.FoundationRouteBoosters.HousingMastBoost:
+                            {
+                                if (colony.GetBuildingsCount(Structure.HOUSING_MAST_6_ID) > 0) MakeQuestCompleted();
+                                break;
+                            }
                     }
                     break;
                 }
@@ -997,8 +1002,8 @@ public class Quest : MyObject
                         case Knowledge.PollenRouteBoosters.AscensionBoost:
                             {
                                 var asc = GameMaster.realMaster.globalMap.ascension;
-                                if (asc >= Knowledge.R_P_ASCENSIOND_COND) MakeQuestCompleted();
-                                else stepsAddInfo[0] = ((int)(asc * 100f)).ToString() + ((int)(Knowledge.R_P_ASCENSIOND_COND * 100f)).ToString();
+                                if (asc >= GameConstants.ASCENSION_HIGH) MakeQuestCompleted();
+                                else stepsAddInfo[0] = ((int)(asc * 100f)).ToString() + "% /" + ((int)(GameConstants.ASCENSION_HIGH * 100f)).ToString() +'%';
                                 break;
                             }
                         case Knowledge.PollenRouteBoosters.BiomeBoost:

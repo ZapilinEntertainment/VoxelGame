@@ -249,7 +249,11 @@ public class UIController : MonoBehaviour
         }
         
     }
-    
+    public void GameWasReloaded()
+    {
+        knowledgeTabUI?.RefreshKnowledgeLink();
+        globalMapCanvasController?.SetGlobalMap(GameMaster.realMaster.globalMap);
+    }
 
     public void GameOver( GameEndingType endType, ulong score )
     {        

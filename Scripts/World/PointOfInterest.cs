@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class PointOfInterest : MapPoint
 {
-    protected float richness, danger, mysteria, friendliness;
+    public float richness { get; protected set; }
+    protected float danger, mysteria, friendliness;
     protected ChallengeField[,] challengeArray;
 
     public readonly float difficulty;
@@ -13,11 +14,11 @@ public class PointOfInterest : MapPoint
     private const float ONE_STEP_CRYSTALS = 10f, ONE_STEP_XP = 10f;
 
     public PointOfInterest(int i_id) : base(i_id) {
-        difficulty = RecalculateDifficulty();
+        difficulty = CalculateDifficulty();
     }
     public PointOfInterest(float i_angle, float i_height, MapPointType mtype, Path i_path) : base(i_angle, i_height, mtype)
     {
-        difficulty = RecalculateDifficulty();
+        difficulty = CalculateDifficulty();
         path = i_path;
     }
 
@@ -107,9 +108,12 @@ public class PointOfInterest : MapPoint
         return Random.value < danger;
     }
 
-    protected float RecalculateDifficulty()
+    protected float CalculateDifficulty()
     {
-        float locationDifficulty = 0f;
+        (float min, float max) localDifficulty = (0f,0f);
+        (float min, float max) lowDiffuculty = (0.05f,0.25f), 
+            normalDifficulty = (0.25f, 0.75f), 
+            highDifficulty = (0.75f, 1f);
         switch (type)
         {
             case MapPointType.Unknown:
@@ -117,14 +121,14 @@ public class PointOfInterest : MapPoint
                 danger = Random.value;
                 mysteria = 1f;
                 friendliness = Random.value;
-                locationDifficulty = Random.value;
+                localDifficulty = (0f,1f);
                 break;
             case MapPointType.MyCity:
                 richness = 0.05f;
                 danger = 0f;
                 mysteria = 0.01f;
                 friendliness = GameMaster.realMaster.environmentMaster.environmentalConditions;
-                locationDifficulty = 0f;
+                localDifficulty = (0f, 0f);
                 break;
             // SUNPOINT:
             //case MapMarkerType.Star:  
@@ -139,42 +143,42 @@ public class PointOfInterest : MapPoint
                 danger = Random.value * 0.2f;
                 mysteria = Random.value * 0.5f;
                 friendliness = Random.value;
-                locationDifficulty = 0.2f + Random.value * 0.2f;
+                localDifficulty = lowDiffuculty;
                 break;
             case MapPointType.Wreck:
                 richness = 0.3f + Random.value * 0.5f;
                 danger = 0.3f + Random.value * 0.2f;
                 mysteria = 0.1f * Random.value;
                 friendliness = Random.value * 0.8f;
-                locationDifficulty = 0.7f + Random.value * 0.2f;
+                localDifficulty = highDifficulty;
                 break;
             case MapPointType.FlyingExpedition:
                 richness = 0f;
                 danger = 0f;
                 mysteria = 0f;
                 friendliness = 1f;
-                locationDifficulty = 0f;
+                localDifficulty = (0f,0f);
                 break; // flyingExpedition.expedition.sectorCollapsingTest
             case MapPointType.Island:
                 richness = 0.2f + Random.value * 0.7f;
                 danger = Random.value * 0.5f;
                 mysteria = 0.2f + Random.value * 0.5f;
                 friendliness = Random.value * 0.7f + 0.3f;
-                locationDifficulty = Random.value * 0.4f + 0.4f * danger;
+                localDifficulty = normalDifficulty;
                 break;
             case MapPointType.SOS:
                 richness = 0f;
                 danger = 0.2f + 0.8f * Random.value;
                 mysteria = Random.value * 0.3f;
                 friendliness = Random.value * 0.5f + 0.5f;
-                locationDifficulty = Random.value * 0.5f + 0.25f;
+                localDifficulty = highDifficulty;
                 break;
             case MapPointType.Portal:
                 richness = 0.1f;
                 danger = 0.3f + Random.value;
                 mysteria = 0.3f + Random.value * 0.7f;
                 friendliness = Random.value;
-                locationDifficulty = Random.value * 0.6f + 0.4f;
+                localDifficulty = highDifficulty;
                 break;
             case MapPointType.QuestMark:
                 // устанавливается квестом                
@@ -184,32 +188,38 @@ public class PointOfInterest : MapPoint
                 danger = 0.1f * Random.value;
                 mysteria = 0.1f * Random.value;
                 friendliness = Random.value * 0.7f + 0.3f;
-                locationDifficulty = 0.3f * Random.value;
+                localDifficulty = lowDiffuculty;
                 break;
             case MapPointType.Wiseman:
                 richness = 0.1f;
                 danger = 0.1f * Random.value;
                 mysteria = Random.value;
                 friendliness = Random.value * 0.3f + 0.7f;
-                locationDifficulty = Random.value * (1 - friendliness);
+                localDifficulty = normalDifficulty;
                 break;
             case MapPointType.Wonder:
                 richness = 0.3f + Random.value * 0.7f;
                 danger = 0.1f * Random.value;
                 mysteria = 0.5f + Random.value * 0.5f;
                 friendliness = Random.value;
-                locationDifficulty = Random.value;
+                localDifficulty = highDifficulty;
                 break;
             case MapPointType.Resources:
                 richness = 0.5f + Random.value * 0.5f;
                 danger = Random.value * 0.3f;
                 mysteria = 0.1f * Random.value;
                 friendliness = Random.value * 0.6f;
-                locationDifficulty = 0.25f + 0.25f * Random.value;
+                localDifficulty = highDifficulty;
                 break;
         }
-        float _difficulty = ((danger + mysteria + locationDifficulty - friendliness) * 0.5f + Random.value * 0.5f) * (1f + GameMaster.realMaster.GetDifficultyCoefficient()) * 0.5f;
-        if (_difficulty < 0f) _difficulty = 0f; // ну мало ли
+        float _difficulty = 0f;
+        if (localDifficulty.max == localDifficulty.min) _difficulty = localDifficulty.max;
+        else
+        {
+            float modifiers = GameMaster.realMaster.globalMap.ascension+ danger - friendliness + (1f -height) ;
+            _difficulty = localDifficulty.min + (Random.value * (localDifficulty.max - localDifficulty.min)) + modifiers * 0.25f;
+        }
+        if (_difficulty < localDifficulty.min) _difficulty = localDifficulty.min;
         else if (_difficulty > 1f) _difficulty = 1f;
         return _difficulty;
     }
@@ -451,9 +461,33 @@ public class PointOfInterest : MapPoint
                                 { // puzzle parts
                                     v = (v - sum) / (1f - sum);
                                     if (v > 0.5f)
-                                    {
-                                        //details                                       
-                                        challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, ProgressionMaster.DefinePuzzlePartColorcode(this));
+                                    {                                    
+                                        //details                                        
+                                        float redChance = 0.33f, greenChance = 0.33f, blueChance = 0.33f,
+                                            cyanChance = mysteria / 10f + difficulty / 10f,
+                                            blackChance = difficulty / 50f,
+                                            whiteChance = difficulty / 25f + Random.value * friendliness * 0.25f;
+                                        sum = redChance + greenChance + blueChance + cyanChance + blueChance + whiteChance;
+
+                                        v = (v - 0.5f) * 2f * sum;
+                                        if (v < redChance + greenChance + blueChance)
+                                        {
+                                            if (v < redChance) { challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.REDCOLOR_CODE); }
+                                            else
+                                            {
+                                                if (v < redChance + greenChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.GREENCOLOR_CODE);
+                                                else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.BLUECOLOR_CODE);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (whiteChance == 0) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
+                                            else
+                                            {
+                                                if (v > redChance + greenChance + blueChance + whiteChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
+                                                else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.WHITECOLOR_CODE);
+                                            }
+                                        }
                                     }
                                     else
                                     { // route points                                        

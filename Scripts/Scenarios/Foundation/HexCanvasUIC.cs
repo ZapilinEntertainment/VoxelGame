@@ -517,9 +517,13 @@ namespace FoundationRoute
         }
         public void BuildButton()
         {
-            var ns = selectedStats.GetNoPersonnelCopy();
-            hexBuilder.CreateHex(selectedPosition, ns);
-            constructionWindow.SetActive(false);
+            if (colony.storage.TryGetResources(selectedStats.GetCost()))
+            {
+                var ns = selectedStats.GetNoPersonnelCopy();
+                hexBuilder.CreateHex(selectedPosition, ns);
+                constructionWindow.SetActive(false);
+            }
+            else RedrawConstructionWindow();
         }
         public void CloseButton() {
             constructionWindow.SetActive(false);

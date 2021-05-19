@@ -49,8 +49,8 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
     private float showingGearsCf, showingHappinessCf, showingBirthrate, showingHospitalCf,
     updateTimer, moneyFlySpeed = 0;
     private byte showingStorageOccupancy, selectedFaceIndex = 10;
-    private float saved_energySurplus, statusUpdateTimer = 0, powerFailureTimer = 0;
-    private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCount, saved_energyMax, saved_energyCrystalsCount,
+    private float statusUpdateTimer = 0, powerFailureTimer = 0;
+    private int saved_citizenCount, saved_freeWorkersCount, saved_livespaceCount, saved_energyCrystalsCount,
         hospitalPanel_savedMode, exCorpus_savedCrewsCount, exCorpus_savedShuttlesCount, exCorpus_savedTransmittersCount, lastStorageOperationNumber,
         saved_citizenCountBeforeStarvation, rpanel_textfield_userStructureID = -1;
 
@@ -309,29 +309,7 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
 
                 gearsProblemMarker.SetActive(colony.gears_coefficient < GEARS_LOW_VALUE && ((colony.hq?.level ?? 0) > 1));
                 //
-                valuesChanged = false;
-                if (saved_energyCount != colony.energyStored)
-                {
-                    saved_energyCount = (int)colony.energyStored;
-                    valuesChanged = true;
-                }
-                if (saved_energyMax != colony.totalEnergyCapacity)
-                {
-                    saved_energyMax = (int)colony.totalEnergyCapacity;
-                    valuesChanged = true;
-                }
-                float es = (int)(colony.energySurplus * 10) / 10;
-                if (saved_energySurplus != es)
-                {
-                    saved_energySurplus = es;
-                    valuesChanged = true;
-                }
-                if (valuesChanged & powerFailureTimer == 0)
-                {
-                    string surplus = es.ToString();
-                    if (es > 0) surplus = '+' + surplus;
-                    energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
-                }
+                if (powerFailureTimer == 0) DrawEnergyString();
 
                 if (saved_energyCrystalsCount != (int)colony.energyCrystalsCount)
                 {
@@ -449,10 +427,21 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
             if (powerFailureTimer <= 0)
             {
                 powerFailureTimer = 0;
-                string surplus = saved_energySurplus.ToString();
-                if (saved_energySurplus > 0) surplus = '+' + surplus;
-                energyString.text = saved_energyCount.ToString() + " / " + saved_energyMax.ToString() + " (" + surplus + ')';
+                DrawEnergyString();
             }
+        }
+    }
+    private void DrawEnergyString()
+    {
+        int es = (int)colony.energySurplus, emax = (int)colony.totalEnergyCapacity;
+        string surplus = es.ToString();
+        if (es > 0) surplus = '+' + surplus;
+        energyString.text = ((int)colony.energyStored).ToString() + " / " + emax.ToString() + " (" + surplus + ')';
+        if (es < 0) energyString.color = Color.yellow;
+        else
+        {
+            if (!colony.accumulateEnergy) energyString.color = Color.cyan;
+            else energyString.color = Color.white;
         }
     }
 
@@ -813,8 +802,9 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
     }
     public void StartPowerFailureTimer()
     {
-        powerFailureTimer = 1;
+        powerFailureTimer = 1f;
         energyString.text = Localization.GetPhrase(LocalizedPhrase.PowerFailure);
+        energyString.color = Color.red;
         if (powerFailureTimer <= 0)
         {
             if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.PowerFailure);

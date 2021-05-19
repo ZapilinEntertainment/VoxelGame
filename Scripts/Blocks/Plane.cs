@@ -257,6 +257,11 @@ public class Plane : MyObject
         s?.SetBasement(this);
         return s;
     }
+    public void SYSTEM_AssignMainStructure(Structure s)
+    {
+        // anchor basement
+        mainStructure = s;
+    }
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)

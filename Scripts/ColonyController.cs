@@ -428,6 +428,18 @@ public sealed class ColonyController : MonoBehaviour
         if (x > freeWorkers) x = freeWorkers;
         freeWorkers = freeWorkers - x + w.AddWorkers(x);
     }
+    public void ConsumeWorkers(int x)
+    {
+        if (freeWorkers > x) {
+            freeWorkers -= x;
+            citizenCount -= x;
+        }
+        else
+        {
+            citizenCount -= freeWorkers;
+            freeWorkers = 0;
+        }
+    }
 
     #region ListsManagement
 
@@ -934,7 +946,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (hq != null)
         {
-            var n = hq.basement.myChunk.GetNature();
+            var n = hq.basement?.myChunk.GetNature();
             if (n != null) getNatureCf = n.GetNatureCf;
         }
     }
@@ -963,6 +975,16 @@ public sealed class ColonyController : MonoBehaviour
         energyCrystalsCount -= v;
         if (v >= 1 && observer != null) observer.MoneyChanging(-v);
         return v;
+    }
+
+    public bool TryGetEnergy(float volume)
+    {
+        if (energyStored >= volume)
+        {
+            energyStored -= volume;
+            return true;
+        }
+        else return false;
     }
 
     public void SetBirthrateMode(BirthrateMode bm)

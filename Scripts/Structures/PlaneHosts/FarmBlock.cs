@@ -81,6 +81,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
                         case MeshType.FarmFace: p.ChangeMesh(MeshType.FarmSide); break;
                         case MeshType.LumbermillFace: p.ChangeMesh(MeshType.LumbermillSide); break;
                         case MeshType.FarmSide: p.ChangeMesh(MeshType.IndustryHeater0); break;
+                        case MeshType.LumbermillSide: p.ChangeMesh(MeshType.IndustryHeater0); break;
                         case MeshType.IndustryHeater0: p.ChangeMesh(MeshType.IndustryHeater1); break;
                         case MeshType.IndustryHeater1: p.ChangeMesh(MeshType.BigWindow); break;
                         case MeshType.BigWindow: p.ChangeMesh(MeshType.SmallWindows); break;

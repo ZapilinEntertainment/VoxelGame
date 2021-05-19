@@ -20,7 +20,7 @@ public sealed class FoundationRouteScenario : Scenario
     private ConditionWindowController settleWindow;
 
     private const byte WINDOW_INFO_0 = 1, WINDOW_INFO_1 =2, QUEST_INFO_0 = 3, QUEST_INFO_1 = 4;
-    private const int ANCHOR_LAUNCH_ENERGYCOST = 20000, //70 
+    private const int ANCHOR_LAUNCH_ENERGYCOST = 70000,
         COST_RESOURCE_ID = ResourceType.SUPPLIES_ID, COLONISTS_SEND_COST = 10000;
     public const int COLONISTS_SEND_LIMIT = 1000;    
     public static readonly string resourcesPath = "Prefs/Special/FoundationRoute/"; 
@@ -40,32 +40,7 @@ public sealed class FoundationRouteScenario : Scenario
     public override void StartScenario()
     {
         PrepareUI();
-        currentStep = FoundationScenarioStep.Begin;        
-        /*
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 0));
-        hexBuilder.CreateHexMaquette(new HexPosition(1,2));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 4));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 6));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 8));
-        hexBuilder.CreateHexMaquette(new HexPosition(1, 10));
-         */
-        colony.storage.AddResource(ResourceType.Stone, 25000f);
-        colony.storage.AddResource(ResourceType.metal_M, 5000f);
-        colony.storage.AddResource(ResourceType.metal_N, 600f);
-        colony.storage.AddResource(ResourceType.Dirt, 25000f);
-        colony.storage.AddResource(ResourceType.mineral_F, 6000f);
-
-
-        void crh(HexPosition hpos, HexType htype)
-        {
-            hexBuilder.CreateHex(hpos, new HexBuildingStats(htype));
-        }
-        /*
-              crh(new HexPosition(1, 0), HexType.Forest);
-              crh(new HexPosition(1, 1), HexType.Mountain);
-              crh(new HexPosition(1, 2), HexType.Lake);
-              */
-
+        currentStep = FoundationScenarioStep.Begin;      
         StartSubscenario();
     }
     private void StartSubscenario()
@@ -335,7 +310,7 @@ public sealed class FoundationRouteScenario : Scenario
                         break;
                     case 3:
                         conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.metal_M, 5700f);
-                        conditions[1] = SimpleCondition.GetShuttlesCondition(1); // 10
+                        conditions[1] = SimpleCondition.GetShuttlesCondition(10);
                         conditions[2] = SimpleCondition.GetDummyCondition(true); 
                         // 4 рейса с оборудованием
                         break;
@@ -460,11 +435,15 @@ public sealed class FoundationRouteScenario : Scenario
         {
             if (stage == 1)
             {
-                stage++;
-                scenarioQuest.MakeQuestCompleted();
-                scenarioUI.DisableConditionPanel(0);
-                anchorBasement.StartActivating();
-                completed = true;
+                if (colony.TryGetEnergy(ANCHOR_LAUNCH_ENERGYCOST))
+                {
+                    stage++;
+                    scenarioQuest.MakeQuestCompleted();
+                    scenarioUI.DisableConditionPanel(0);
+                    anchorBasement.StartActivating();
+                    completed = true;
+                }
+                else conditionWindow.Refresh();
             }
         }
         public override void Save(FileStream fs)
@@ -518,32 +497,36 @@ public sealed class FoundationRouteScenario : Scenario
         }
 
         public override void UIConditionProceedButton()
-        {           
-            byte ringStage = stage;
-            stage++;
-            ringStage--;          
-            scenarioQuest.stepsAddInfo[0] = ringStage.ToString() + "/6";            
-            if (ringStage < 5)
+        {
+            if (conditionQuest.ConsumeAndFinish())
             {
-                anchorBasement.AddInnerSector(ringStage);
-                conditionQuest.StopQuest(false);
-                StartSectorBuildingQuest(0, (byte)(ringStage + 1), this.UIConditionProceedButton);
-            } 
-            else
-            {
-                if (ringStage == 5)
+                byte ringStage = stage;
+                stage++;
+                ringStage--;
+                scenarioQuest.stepsAddInfo[0] = ringStage.ToString() + "/6";
+                if (ringStage < 5)
                 {
-                    scenario.SetHexBuilder();
-                    anchorBasement.AddInnerSector(5);
-                    scenarioUI.DisableConditionPanel(0);
+                    anchorBasement.AddInnerSector(ringStage);
                     conditionQuest.StopQuest(false);
-                    conditionQuest = null;
-                    scenarioQuest.MakeQuestCompleted();                   
-                    stage++;
-                    scenarioUI.ChangeAnnouncementText(localizer.GetAnnounceTitle(FoundationScenarioStep.InnerRingBuilding, WINDOW_INFO_1));
-                    scenarioUI.ShowAnnouncePanel();
+                    StartSectorBuildingQuest(0, (byte)(ringStage + 1), this.UIConditionProceedButton);
+                }
+                else
+                {
+                    if (ringStage == 5)
+                    {
+                        scenario.SetHexBuilder();
+                        anchorBasement.AddInnerSector(5);
+                        scenarioUI.DisableConditionPanel(0);
+                        conditionQuest.StopQuest(false);
+                        conditionQuest = null;
+                        scenarioQuest.MakeQuestCompleted();
+                        stage++;
+                        scenarioUI.ChangeAnnouncementText(localizer.GetAnnounceTitle(FoundationScenarioStep.InnerRingBuilding, WINDOW_INFO_1));
+                        scenarioUI.ShowAnnouncePanel();
+                    }
                 }
             }
+            else conditionWindow.Refresh();
         }
         public override void Save(FileStream fs)
         {
@@ -639,33 +622,37 @@ public sealed class FoundationRouteScenario : Scenario
 
         public override void UIConditionProceedButton()
         {
-            scenarioQuest.stepsAddInfo[0] = (stage+1).ToString() + "/6";
-            HexType htype;
-            int x = stage % 3;
-            if (x == 0) htype = HexType.DummyRed;
-            else
+            if (conditionQuest.ConsumeAndFinish())
             {
-                if (x == 1) htype = HexType.DummyGreen;
-                else htype = HexType.DummyBlue;
-            }
-            scenario.hexBuilder.CreateHex(new HexPosition(0, stage), htype);
+                scenarioQuest.stepsAddInfo[0] = (stage + 1).ToString() + "/6";
+                HexType htype;
+                int x = stage % 3;
+                if (x == 0) htype = HexType.DummyRed;
+                else
+                {
+                    if (x == 1) htype = HexType.DummyGreen;
+                    else htype = HexType.DummyBlue;
+                }
+                scenario.hexBuilder.CreateHex(new HexPosition(0, stage), htype);
 
-            if (stage < 5)
-            {                   
-                conditionQuest.StopQuest(false);
-                StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
-                stage++;
+                if (stage < 5)
+                {
+                    conditionQuest.StopQuest(false);
+                    StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
+                    stage++;
+                }
+                else
+                {
+                    completed = true;
+                    stage++;
+                    scenarioQuest.MakeQuestCompleted();
+                    conditionQuest.StopQuest(false);
+                    scenarioUI.DisableConditionPanel(0);
+                    conditionQuest = null;
+                    scenario.Next();
+                }
             }
-            else
-            {
-                completed = true;
-                stage++;
-                scenarioQuest.MakeQuestCompleted();
-                conditionQuest.StopQuest(false);
-                scenarioUI.DisableConditionPanel(0);
-                conditionQuest = null;
-                scenario.Next();
-            }
+            else conditionWindow.Refresh();
         }
         public override void Save(FileStream fs)
         {

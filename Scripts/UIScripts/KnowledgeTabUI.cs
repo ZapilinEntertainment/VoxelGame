@@ -241,6 +241,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         return new Rect(y * 0.1f, x * 0.1f, 0.1f, 0.1f);
     }
 
+
     public Transform GetMainCanvasTransform()
     {
         return maincanvas;
@@ -353,6 +354,11 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         }
         infoPanel.GetChild(infoPanel.transform.childCount - 1).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Return);
         prepared = true;
+    }
+    public void RefreshKnowledgeLink()
+    {
+        knowledge = Knowledge.GetCurrent();
+        if (isActiveAndEnabled) Redraw();
     }
 
     public void Redraw()

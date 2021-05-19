@@ -718,7 +718,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool LoadGame() { return LoadGame("autosave"); }
     public bool LoadGame(string fullname)
     {
-        bool debug_noresource = weNeedNoResources;
+        bool debug_noresource = weNeedNoResources, refreshUI = false;
         FileStream fs = File.Open(fullname, FileMode.Open);        
         double realHashSum = GetHashSum(fs, true);
         var data = new byte[8];
@@ -742,6 +742,7 @@ public sealed class GameMaster : MonoBehaviour
             if (sessionPrepared)
             {
                 ClearPreviousSessionData();
+                refreshUI = true;
             }
             else PrepareSession();
             //start reading
@@ -867,7 +868,9 @@ public sealed class GameMaster : MonoBehaviour
             //Debug.Log("docks");
             colonyController.SYSTEM_DocksRecalculation();
             //Debug.Log("end");
-            
+
+            if (refreshUI) UIController.GetCurrent().GameWasReloaded();
+
             DEBUG_STOP = true;
 
             return true;

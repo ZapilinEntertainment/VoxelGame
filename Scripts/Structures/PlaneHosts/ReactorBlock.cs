@@ -82,6 +82,7 @@ public class ReactorBlock : Powerplant, IPlanable
                         case MeshType.ReactorSide_1: p.ChangeMesh(MeshType.DoubleWindows); break;
                         case MeshType.DoubleWindows: p.ChangeMesh(MeshType.IndustryHeater0); break;
                         case MeshType.IndustryHeater0: p.ChangeMesh(MeshType.IndustryHeater1); break;
+                        case MeshType.IndustryHeater1: p.ChangeMesh(MeshType.ReactorSide_0); break;
                     }
                 }
             }

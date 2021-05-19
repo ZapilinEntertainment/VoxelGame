@@ -22,6 +22,7 @@ public sealed class AnchorBasement : WorkBuilding
     private float poweringProgress = 0f, shipSpeed = 0f, distanceToPier = 0f, shipTimer = 0f;
     public int colonistsArrived { get; private set; }
     private byte innerSectorsBuilt = 0;
+    private List<Block> blockersList;
     public const float POWER_CONSUMPTION = -1500f, MAX_EXCESS_POWER = 15000f;
     private const float HEXSIZE = 4f, INNER_RING_HEIGHT = -25f, OUTER_RING_HEIGHT = -29f,  PIER_HEIGHT = -10f,
         PADS_LIFT_SPEED = 2f, SHIP_WIDTH = 4f, SHIP_SPAWN_DISTANCE = 200f, SHIP_MAX_SPEED = 50f, SHIP_ACCELERATION = 2f, SHIP_AWAITING_TIME = 10f,
@@ -29,10 +30,63 @@ public sealed class AnchorBasement : WorkBuilding
     private const int MIN_COLONISTS_COUNT = 400, MAX_COLONISTS_COUNT = 2000;
     private readonly Color maxColor = new Color(1f, 0.74f, 0f), minColor = new Color(0f, 1f,1f);
 
+
     public static bool CheckSpecialBuildingCondition(Plane p, ref string refusalReason)
     {
-        if (p.faceIndex == Block.DOWN_FACE_INDEX) return true;
-        return false;
+        if (p.faceIndex == Block.DOWN_FACE_INDEX)
+        {
+            var pos = p.pos;
+            var pos2 = pos.OneBlockForward();
+            var chunk = p.myChunk;
+            Block b = chunk.GetBlock(pos2.OneBlockLeft());  if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos2);  if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos2.OneBlockRight()); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos.OneBlockLeft()); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos.OneBlockRight()); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            pos2 = pos.OneBlockBack();
+            b = chunk.GetBlock(pos2.OneBlockLeft()); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos2); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+            b = chunk.GetBlock(pos2.OneBlockRight()); if (b == null || b.IsBlocker()) goto NO_BASEMENT;
+
+            pos = pos.OneBlockDown();            
+            bool Blocked(in ChunkPos cpos)
+            {
+                b = chunk.GetBlock(cpos);
+                if (b == null) return chunk.IsAnyStructureInABlockSpace(cpos);
+                else
+                {
+                    return (!b.IsBlocker() && !b.IsSurface());
+                }
+            }
+            
+            pos2 = pos.OneBlockForward();           
+            if (Blocked(pos2.OneBlockLeft())) goto CHECK_FAILED;
+            if (Blocked(pos2)) goto CHECK_FAILED;
+            if (Blocked(pos2.OneBlockRight())) goto CHECK_FAILED;
+            if (Blocked(pos.OneBlockLeft())) goto CHECK_FAILED;
+            if (Blocked(pos.OneBlockRight())) goto CHECK_FAILED;
+            pos2 = pos.OneBlockBack();
+            if (Blocked(pos2.OneBlockLeft())) goto CHECK_FAILED;
+            if (Blocked(pos2)) goto CHECK_FAILED;
+            if (Blocked(pos2.OneBlockRight())) goto CHECK_FAILED;
+
+            if (!chunk.BlocksCast(pos.OneBlockDown(), Vector3Int.down, false, false))
+            {
+                return true;
+            }
+
+            CHECK_FAILED:
+            refusalReason = Localization.GetRefusalReason(RefusalReason.NoEmptySpace);
+            return false;
+            NO_BASEMENT:
+            refusalReason = Localization.GetRefusalReason(RefusalReason.Need3x3Basement);
+            return false;
+        }
+        else
+        {
+            refusalReason = "wrong plane!";
+            return false;
+        }
     }
 
     public override bool CanBeRotated() { return false; }
@@ -49,6 +103,13 @@ public sealed class AnchorBasement : WorkBuilding
         endCrystal.GetComponent<Rotator>().SetRotationVector(Vector3.up * 25f);
         pierPosition = new Vector3(transform.position.x, PIER_HEIGHT, transform.position.z);
         PrepareMainLine();
+        var chunk = basement.myChunk;
+        var mpos = basement.pos;
+        chunk.TryBlockVerticalCorridor(mpos.OneBlockDown(), false, this, ref blockersList, false);
+        //
+        if (!GameMaster.loading) ProtectBasementBlocks();
+        else GameMaster.realMaster.afterloadRecalculationEvent += this.ProtectBasementBlocks;
+
     }
     public void SetEnergySurplus(float x)
     {
@@ -87,7 +148,6 @@ public sealed class AnchorBasement : WorkBuilding
                 mainLine.endColor = Color.Lerp(minColor, maxColor, 0.8f);
                 mainLine.startWidth = 0.6f;
                 mainLine.endWidth = 0.6f;
-                mainLine.SetPosition(1, endCrystal.transform.position);
                 break;
             case ActivityStage.InnerRingBuilding:
             case ActivityStage.PierPreparing:
@@ -95,10 +155,10 @@ public sealed class AnchorBasement : WorkBuilding
                 mainLine.startColor = maxColor;
                 mainLine.endColor = maxColor;
                 mainLine.startWidth = 1.2f;
-                mainLine.endWidth = 1.2f;
-                mainLine.SetPosition(1, endCrystal.transform.position);
+                mainLine.endWidth = 1.2f;                
                 break;
         }
+        if (endCrystal != null) mainLine.SetPosition(1, endCrystal.transform.position);
     }
 
     public void Update()
@@ -359,6 +419,25 @@ public sealed class AnchorBasement : WorkBuilding
         }
     }
 
+    private void ProtectBasementBlocks()
+    {
+        if (basement == null || destroyed) return;
+        ChunkPos pos = basement.pos, pos2 = pos.OneBlockForward();
+        var chunk = basement.myChunk;
+        byte face = basement.faceIndex;
+        Plane p = null;
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        pos2 = pos.OneBlockBack();
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        GameMaster.realMaster.afterloadRecalculationEvent -= this.ProtectBasementBlocks;
+    }
+
     public void GetColonists(int x)
     {
         if (colonistsArrived >= x)
@@ -376,6 +455,7 @@ public sealed class AnchorBasement : WorkBuilding
         }
         Transform t = Instantiate(hexPref, transform).transform;
         t.position = innerRingZeroPoint + Quaternion.AngleAxis(60f * ringPosition, Vector3.up) * (Vector3.forward * HEXSIZE * 2f);
+        t.rotation = Quaternion.identity;
         t.localScale = Vector3.one * 0.5f;
         string name;
         var x = ringPosition % 3;
@@ -394,6 +474,15 @@ public sealed class AnchorBasement : WorkBuilding
         t2.localPosition = Vector3.zero;
         t2.localRotation = Quaternion.Euler(0f, 60f * ringPosition, 0f);
         innerSectorsBuilt = (byte)(ringPosition + 1);
+    }
+
+    public override void Annihilate(StructureAnnihilationOrder order)
+    {
+        if (order.doSpecialChecks && blockersList != null)
+        {
+            basement?.myChunk.ClearBlockersList(this, blockersList, true);
+        }
+        base.Annihilate(order);
     }
 
     private void OnDestroy()

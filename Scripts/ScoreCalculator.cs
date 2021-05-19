@@ -125,7 +125,6 @@
                     score += resourcesCosts[r_id] * b.GetVolume();
                 }
             }
-            score += c.lifePower;
         }
         var slist = UnityEngine.Object.FindObjectsOfType<Structure>();
         if (slist != null)

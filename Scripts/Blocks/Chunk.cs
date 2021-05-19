@@ -73,7 +73,6 @@ public sealed partial class Chunk : MonoBehaviour
     public Dictionary<ChunkPos, Block> blocks;
     public bool needSurfacesUpdate = false; // hot
     public byte prevBitmask = 63;
-    public float lifePower = 0;
     public bool chunkClearing { get; private set; }
     public static byte chunkSize { get; private set; }
     //private bool allGrasslandsCreated = false;
@@ -1021,7 +1020,6 @@ public sealed partial class Chunk : MonoBehaviour
         InitializeMarkersHolder();
         surfaces = null;
         Destroy(nature);
-        lifePower = 0;
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RenderDataFullRecalculation();        
@@ -1440,7 +1438,70 @@ public sealed partial class Chunk : MonoBehaviour
         chunkDataUpdateRequired = true;
         return true;
     }
-    public void ClearBlocksList(Structure s, List<Block> list, bool clearMainStructureField)
+    public bool TryBlockVerticalCorridor(ChunkPos pos, bool goingUp, Structure client, ref List<Block> dependentBlocksList, bool drawMarkers)
+    {        
+        if (goingUp)
+        {            
+            if (pos.y == chunkSize)
+            {
+                dependentBlocksList = new List<Block>();
+                return true;
+            }
+            else
+            {
+                ChunkPos pos2;
+                for (int y = pos.y; y< chunkSize; y++)
+                {
+                    pos2 = new ChunkPos(pos.x, y, pos.z);
+                    if (blocks.ContainsKey(pos2))
+                    {
+                        return false;
+                    }                    
+                }
+                dependentBlocksList = new List<Block>();
+                Block bk;
+                for (int y = pos.y; y < chunkSize; y++)
+                {
+                    pos2 = new ChunkPos(pos.x, y, pos.z);
+                    bk = new Block(this, pos2, client, drawMarkers);
+                    blocks.Add(pos2, bk);
+                    dependentBlocksList.Add(bk);
+                }
+                return true;
+            }
+        }
+        else
+        {
+            if (pos.y == 255)
+            {
+                dependentBlocksList = new List<Block>();
+                return true;
+            }
+            else
+            {
+                var pos2 = pos;
+                for (int y = pos.y; y >= 0; y--)
+                {
+                    pos2 = new ChunkPos(pos.x, y, pos.z);
+                    if (blocks.ContainsKey(pos2))
+                    {
+                        return false;
+                    }
+                }
+                dependentBlocksList = new List<Block>();
+                Block bk;
+                for (int y = pos.y; y >= 0; y--)
+                {
+                    pos2 = new ChunkPos(pos.x, y, pos.z);
+                    bk = new Block(this, pos2, client, drawMarkers);
+                    blocks.Add(pos2, bk);
+                    dependentBlocksList.Add(bk);
+                }
+                return true;
+            }
+        }
+    }
+    public void ClearBlockersList(Structure s, List<Block> list, bool clearMainStructureField)
     {
         bool actions = false;
         foreach (Block b in list)
@@ -1542,11 +1603,6 @@ public sealed partial class Chunk : MonoBehaviour
         if (GameMaster.realMaster.IsInTestMode) Debug.Log("chunk load success");
     }
     #endregion
-
-    void OnGUI()
-    { //test
-        GUI.Label(new Rect(0, 32, 64, 32), lifePower.ToString());
-    }
 
     private void OnDestroy()
     {

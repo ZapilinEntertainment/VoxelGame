@@ -165,7 +165,7 @@ public sealed class Hangar : WorkBuilding
             }
             if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
             {
-                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
+                basement.myChunk.ClearBlockersList(this, dependentBlocksList, true);
                 dependentBlocksList.Clear();
             }
         }
@@ -249,7 +249,7 @@ public sealed class Hangar : WorkBuilding
         {
             if (dependentBlocksList.Count > 0)
             {
-                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
+                basement.myChunk.ClearBlockersList(this, dependentBlocksList, true);
                 dependentBlocksList.Clear();
             }
         }
@@ -423,7 +423,7 @@ public sealed class Hangar : WorkBuilding
         {
             if (basement != null & dependentBlocksList != null && dependentBlocksList.Count != 0)
             {
-                basement.myChunk.ClearBlocksList(this, dependentBlocksList, true);
+                basement.myChunk.ClearBlockersList(this, dependentBlocksList, true);
                 dependentBlocksList.Clear();
             }
         }

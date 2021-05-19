@@ -139,6 +139,49 @@ public sealed class ConditionQuest : Quest
         uiRepresentationFunction?.Invoke();
         if (completeQuestWhenPossible && completed == cdCount) MakeQuestCompleted();
     }
+    public bool ConsumeAndFinish()
+    {
+        if (completed) return true;
+        CheckQuestConditions();
+        bool x = true;
+        foreach (var s in stepsFinished) { if (!s) x = false; }
+        if (!x) return false;
+        else
+        {
+            foreach (var sc in conditions)
+            {
+                switch (sc.type)
+                {
+                    //no gears
+                    //no crews
+                    // no shuttles
+                    case ConditionType.ResourceCountCheck:
+                        {
+                            colony.storage.GetResources(sc.index, sc.value);
+                            break;
+                        }
+                    case ConditionType.MoneyCheck:
+                        {
+                            colony.GetEnergyCrystals(sc.value);
+                            break;
+                        }
+                    case ConditionType.FreeWorkersCheck:
+                        {
+                            colony.ConsumeWorkers(sc.index);
+                            break;
+                        }
+                    case ConditionType.StoredEnergyCondition:
+                        {
+                            colony.TryGetEnergy(sc.value);
+                            break;
+                        }
+                }
+            }
+            MakeQuestCompleted();
+            StopQuest(true);
+            return true;
+        }
+    }
 
     public void BindUIUpdateFunction(System.Action f)
     {
@@ -212,6 +255,7 @@ public struct SimpleCondition
         index = i_index;
         value = i_val;
     }
+    //condition quest check condition & condition quest consume and finish
 
     public static SimpleCondition GetResourceCondition(ResourceType rtype, float volume)
     {

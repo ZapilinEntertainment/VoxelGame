@@ -55,8 +55,7 @@ public sealed class Knowledge
     #region boosting
     //foundation:
     public const float R_F_HAPPINESS_COND = 0.8f, R_E_ENERGY_STORED_COND = 10000f, R_E_GEARS_COND = 3.5f, R_P_FUEL_CONDITION = 1000f,
-        R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f,
-        R_P_ASCENSIOND_COND = 0.85f;
+        R_M_MONUMENTS_AFFECTION_CONDITION = Monument.MAX_AFFECTION_VALUE / 2f, R_B_GRASSLAND_RATIO_COND = 0.7f ;
     public const int R_F_POPULATION_COND = 2500, R_F_IMMIGRANTS_CONDITION = 1000, R_F_QUEST_POPULATION_COND = 10000, R_CW_GRASSLAND_COUNT_COND = 6, R_CW_STREAMGENS_COUNT_COND = 8,
         R_CW_CREWS_COUNT_COND = 4, R_E_FACTORYCUBES_COUNT = 4, R_C_MONEY_COND = 5000, R_M_MONUMENTS_COUNT_COND = 2, R_M_SUCCESSFUL_EXPEDITIONS_COUNT_COND = 30;
     public const byte R_F_SETTLEMENT_LEVEL_COND = 6, R_CW_GRASSLAND_LEVEL_COND = 4, R_CW_CREW_LEVEL_COND = 3, 
@@ -521,7 +520,7 @@ public sealed class Knowledge
         
         //pollen route - 1 position
         if (!BoostCounted(PollenRouteBoosters.AscensionBoost)) {
-            if (gm.globalMap.ascension >= R_P_ASCENSIOND_COND)
+            if (gm.globalMap.ascension >= GameConstants.ASCENSION_HIGH)
             {
                 CountRouteBonus(PollenRouteBoosters.AscensionBoost);
             }
@@ -656,6 +655,64 @@ public sealed class Knowledge
         changesMarker++;
     }
 
+   
+
+    public void AddPuzzlePart(byte colorcode)
+    {
+        if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255)
+        {
+            puzzlePartsCount[colorcode]++;
+            changesMarker++;
+        }
+    }
+    public void AddPuzzlePart(byte colorcode, int count)
+    {
+        if (count <= 0) return;
+        if (colorcode < puzzlePartsCount.Length)
+        {
+            int x = puzzlePartsCount[colorcode] + count;
+            if (x >= 255) puzzlePartsCount[colorcode] = 255;
+            else puzzlePartsCount[colorcode] = (byte)x;
+            changesMarker++;
+        }
+    }
+    public void AddRewardResearchPoints(PointOfInterest poi)
+    {
+        AddResearchPoints(GetBoostedRoute(poi), 8f * poi.difficulty);
+    }
+    public void AddResearchPoints (ResearchRoute route, float pts)
+    {
+        if (route == ResearchRoute.Himitsu) return;
+        byte routeIndex = (byte)route;
+        float f = routePoints[routeIndex] + pts;
+        float maxvalue = STEPVALUES[STEPS_COUNT - 1];
+        if (f >= maxvalue)
+        {
+            routePoints[routeIndex] = maxvalue;
+            for (byte step = 0; step < STEPS_COUNT; step++)
+            {
+                if (buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
+                {
+                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
+                    changesMarker++;
+                }                    
+            }
+        }
+        else
+        {
+            byte step = 0;
+            while (step < STEPS_COUNT && f >= STEPVALUES[step])
+            {
+                if ( buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
+                {
+                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
+                    changesMarker++;
+                }
+                step++;
+            }
+            routePoints[routeIndex] = f;
+        }
+    }
     public byte GenerateCellColor(byte route, byte step)
     {
         float[] varieties; // r g b c
@@ -727,63 +784,6 @@ public sealed class Knowledge
         {
             if (v < borders[2]) return BLUECOLOR_CODE;
             else return CYANCOLOR_CODE;
-        }
-    }   
-
-    public void AddPuzzlePart(byte colorcode)
-    {
-        if (colorcode < puzzlePartsCount.Length && puzzlePartsCount[colorcode] < 255)
-        {
-            puzzlePartsCount[colorcode]++;
-            changesMarker++;
-        }
-    }
-    public void AddPuzzlePart(byte colorcode, int count)
-    {
-        if (count <= 0) return;
-        if (colorcode < puzzlePartsCount.Length)
-        {
-            int x = puzzlePartsCount[colorcode] + count;
-            if (x >= 255) puzzlePartsCount[colorcode] = 255;
-            else puzzlePartsCount[colorcode] = (byte)x;
-            changesMarker++;
-        }
-    }
-    public void AddRewardResearchPoints(PointOfInterest poi)
-    {
-        AddResearchPoints(GetBoostedRoute(poi), 8f * poi.difficulty);
-    }
-    public void AddResearchPoints (ResearchRoute route, float pts)
-    {
-        if (route == ResearchRoute.Himitsu) return;
-        byte routeIndex = (byte)route;
-        float f = routePoints[routeIndex] + pts;
-        float maxvalue = STEPVALUES[STEPS_COUNT - 1];
-        if (f >= maxvalue)
-        {
-            routePoints[routeIndex] = maxvalue;
-            for (byte step = 0; step < STEPS_COUNT; step++)
-            {
-                if (buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
-                {
-                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
-                    changesMarker++;
-                }                    
-            }
-        }
-        else
-        {
-            byte step = 0;
-            while (step < STEPS_COUNT && f >= STEPVALUES[step])
-            {
-                if ( buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] == WHITECOLOR_CODE)
-                {
-                    buttonsColorCodesArray[routeButtonsIndexes[routeIndex, step]] = GenerateCellColor(routeIndex, step);
-                    changesMarker++;
-                }
-                step++;
-            }
-            routePoints[routeIndex] = f;
         }
     }
     public float GetResearchProgress(int i)
@@ -1230,6 +1230,7 @@ public sealed class Knowledge
         {
             pins[i] = fs.ReadByte() == 1;
         }
+        if (current != null) current = null;
         current = new Knowledge(pins);
         //
         current.routePoints = new float[ROUTES_COUNT];

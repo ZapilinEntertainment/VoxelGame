@@ -1,4 +1,6 @@
-﻿public static class ProgressionMaster
+﻿using UnityEngine;
+using System.Collections.Generic;
+public static class ProgressionMaster
 {
     private const float STAR_CREATE_CHANCE = 0.05f;
 
@@ -30,209 +32,166 @@
         return a;
     }
 
-    public static MapPointType DefineMapPointType(GlobalMap gmap)
+    public static void DefinePointOfInterest(GlobalMap gmap, out MapPointType mtype, out Path path)
     {
-        var availableTypes = new List<MapPointType>() { MapPointType.Resources };
-        if (createNewStars && Random.value < STAR_CREATE_CHANCE) availableTypes.Add(MapPointType.Star);
-        byte stage;
-        if (ascension <= GameConstants.ASCENSION_MEDIUM)
+        var ascension = gmap.ascension;
+
+        ((MapPointType pointType, Path path) pointInfo, float probability)[] probabilities;
+        if (ascension <= GameConstants.ASCENSION_LOW)
         {
-            if (ascension <= GameConstants.ASCENSION_VERYLOW) stage = 0;
-            else
-            {
-                if (ascension > GameConstants.ASCENSION_LOW) stage = 2;
-                else stage = 1;
-            }
+            const float p = 1f;
+            probabilities = new ((MapPointType, Path), float)[5];
+            probabilities[0] = ((MapPointType.Island, Path.TechPath), p);
+            probabilities[1] = ((MapPointType.Wreck, Path.TechPath), p / 2f);
+            probabilities[2] = ((MapPointType.Wreck, Path.NoPath), p / 2f);
+            probabilities[3] = ((MapPointType.Resources, Path.SecretPath), p);
+            probabilities[4] = ((MapPointType.Island, Path.LifePath), p);
         }
         else
         {
-            if (ascension > GameConstants.ASCENSION_VERYHIGH) stage = 5;
+            if (ascension < GameConstants.ASCENSION_HIGH)
+            {
+                const float p = 1f;
+                probabilities = new ((MapPointType, Path), float)[6];
+                probabilities[0] = ((MapPointType.Station, Path.TechPath), p / 2f);
+                probabilities[1] = ((MapPointType.Station, Path.NoPath), p / 2f);
+                probabilities[2] = ((MapPointType.SOS, Path.TechPath), p / 2f);
+                probabilities[3] = ((MapPointType.SOS, Path.NoPath), p / 2f);
+                probabilities[4] = ((MapPointType.Island, Path.SecretPath), p);
+                probabilities[5] = ((MapPointType.Portal, Path.LifePath), p);
+            }
             else
             {
-                if (ascension > GameConstants.ASCENSION_HIGH) stage = 4;
-                else stage = 3;
+                const float p = 1f;
+                probabilities = new ((MapPointType, Path), float)[4];
+                probabilities[0] = ((MapPointType.Colony, Path.NoPath), p);
+                probabilities[1] = ((MapPointType.Wiseman, Path.TechPath), p);
+                probabilities[2] = ((MapPointType.Wonder, Path.TechPath), p);
+                probabilities[3] = ((MapPointType.Wonder, Path.LifePath), p);
             }
-        }
-        float r = Random.value;
-        int rx = (int)(r / 0.2f);
-        switch (stage)
-        {
-            case 0:
-            case 1: // less than 0.3
-                availableTypes.Add(MapPointType.Wreck);
-                availableTypes.Add(MapPointType.SOS);
-                break;
-            case 2: // 0.3 - 0.5
-                availableTypes.Add(MapPointType.Wreck);
-                availableTypes.Add(MapPointType.SOS);
-                availableTypes.Add(MapPointType.Station);
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                break;
-            case 3: // 0.5 - 0.7
-                availableTypes.Add(MapPointType.Station);
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                availableTypes.Add(MapPointType.Portal);
-                break;
-            case 4: // 0.7 - 0.9
-                availableTypes.Add(MapPointType.Island);
-                availableTypes.Add(MapPointType.Colony);
-                availableTypes.Add(MapPointType.Portal);
-                availableTypes.Add(MapPointType.Wonder);
-                availableTypes.Add(MapPointType.Wiseman);
-                break;
-            case 5: // more than 0.9
-                availableTypes.Add(MapPointType.Wonder);
-                availableTypes.Add(MapPointType.Wiseman);
-                break;
         }
         //     
-
-        var pos = GetSectorPosition(i);
-        int x = Random.Range(0, availableTypes.Count);
-    }
-    public static byte DefinePuzzlePartColorcode(PointOfInterest poi)
-    {
-        float redChance = 0.33f, greenChance = 0.33f, blueChance = 0.33f,
-                                            cyanChance = mysteria / 10f + difficulty / 10f,
-                                            blackChance = difficulty / 50f,
-                                            whiteChance = difficulty / 25f + Random.value * friendliness * 0.25f;
-        sum = redChance + greenChance + blueChance + cyanChance + blueChance + whiteChance;
-
-        v = (v - 0.5f) * 2f * sum;
-        if (v < redChance + greenChance + blueChance)
+        float sum = 0f;
+        foreach (var p in probabilities) sum += p.probability;
+        float r = Random.value;
+        float x = Random.value * sum, d;
+        if (r > 0.5f)
         {
-            if (v < redChance) { challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.REDCOLOR_CODE); }
-            else
+            d = sum;
+            for (int i = probabilities.Length - 1; i>=0; i--)
             {
-                if (v < redChance + greenChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.GREENCOLOR_CODE);
-                else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.BLUECOLOR_CODE);
+                d -= probabilities[i].probability;
+                if (x >= d)
+                {
+                    mtype = probabilities[i].pointInfo.pointType;
+                    path = probabilities[i].pointInfo.path;
+                    return;
+                }
             }
         }
         else
         {
-            if (whiteChance == 0) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
-            else
+            d = 0f;
+            for (int i = 0; i < probabilities.Length; i++)
             {
-                if (v > redChance + greenChance + blueChance + whiteChance) challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.CYANCOLOR_CODE);
-                else challengeArray[x, y] = new ChallengeField(ChallengeType.PuzzlePart, Knowledge.WHITECOLOR_CODE);
+                d += probabilities[i].probability;
+                if (x <= d)
+                {
+                    mtype = probabilities[i].pointInfo.pointType;
+                    path = probabilities[i].pointInfo.path;
+                    return;
+                }
             }
         }
+
+        mtype = MapPointType.Unknown;
+        path = Path.NoPath;
     }
+    
     public static ChallengeField GetRouteBoostCell(PointOfInterest poi, float mysteria)
     {
-        ChallengeType[] ctypes = new ChallengeType[3];
-        bool moreMystic = mysteria > 0.5f, moreSpecific = false;
-        switch (type)
+        //
+        ChallengeType ctype = ChallengeType.NoChallenge;
+        switch (poi.type)
         {
-            case MapPointType.Station:
+            case MapPointType.Island:
                 {
-                    moreSpecific = friendliness > 0.5f;
-                    ctypes[0] = ChallengeType.CrystalPts;
-                    ctypes[1] = ChallengeType.MonumentPts;
-                    ctypes[2] = ChallengeType.FoundationPts;
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: ctype = ChallengeType.FoundationPts; break;
+                        case Path.SecretPath: ctype = ChallengeType.CrystalPts; break;
+                        case Path.LifePath: ctype = ChallengeType.BlossomPts; break;                        
+                    }
                     break;
                 }
             case MapPointType.Wreck:
-                {
-                    moreSpecific = difficulty > 0.5f;
-                    ctypes[0] = ChallengeType.EnginePts;
-                    ctypes[1] = ChallengeType.PollenPts;
-                    ctypes[2] = ChallengeType.CloudWhalePts;
-                    break;
-                }
-            case MapPointType.Island:
-                {
-                    moreSpecific = richness > 0.5f;
-                    ctypes[0] = ChallengeType.BlossomPts;
-                    ctypes[1] = ChallengeType.PollenPts;
-                    ctypes[2] = ChallengeType.CloudWhalePts;
-                    break;
-                }
             case MapPointType.SOS:
                 {
-                    moreSpecific = danger > 0.5f;
-                    ctypes[0] = ChallengeType.CloudWhalePts;
-                    ctypes[1] = ChallengeType.EnginePts;
-                    ctypes[2] = ChallengeType.PipesPts;
+                    switch (poi.path)
+                    {
+                        case Path.TechPath:
+                        case Path.NoPath: ctype = ChallengeType.EnginePts; break;
+                    }
                     break;
                 }
-            case MapPointType.Portal:
+            case MapPointType.Station:
                 {
-                    moreSpecific = difficulty > 0.5f;
-                    ctypes[0] = ChallengeType.PipesPts;
-                    ctypes[1] = ChallengeType.CrystalPts;
-                    ctypes[2] = ChallengeType.EnginePts;
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: 
+                        case Path.NoPath: ctype = ChallengeType.FoundationPts; break;
+                    }
                     break;
                 }
             case MapPointType.Colony:
                 {
-                    moreSpecific = richness > 0.5f;
-                    ctypes[0] = ChallengeType.FoundationPts;
-                    ctypes[1] = ChallengeType.MonumentPts;
-                    ctypes[2] = ChallengeType.CrystalPts;
+                    switch (poi.path)
+                    {
+                        case Path.NoPath: ctype = ChallengeType.FoundationPts; break;
+                    }
                     break;
                 }
-            case MapPointType.Wiseman:
+            case MapPointType.Portal:
                 {
-                    moreSpecific = friendliness < 0.5f;
-                    ctypes[0] = ChallengeType.PollenPts;
-                    ctypes[1] = ChallengeType.PipesPts;
-                    ctypes[2] = ChallengeType.BlossomPts;
+                    switch (poi.path)
+                    {
+                        case Path.LifePath: ctype = ChallengeType.BlossomPts; break;
+                    }
+                    break;
+                }
+            case MapPointType.Resources:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.SecretPath: ctype = ChallengeType.CrystalPts; break;
+                    }
                     break;
                 }
             case MapPointType.Wonder:
                 {
-                    moreSpecific = Random.value > 0.5f;
-                    ctypes[0] = ChallengeType.MonumentPts;
-                    ctypes[1] = ChallengeType.BlossomPts;
-                    ctypes[2] = ChallengeType.FoundationPts;
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: ctype = ChallengeType.CrystalPts; break;
+                        case Path.LifePath: ctype = ChallengeType.BlossomPts; break;
+                    }
+                    break;
+                }
+            case MapPointType.Wiseman:
+                {
+                    switch (poi.path)
+                    {
+                        case Path.TechPath: ctype = ChallengeType.EnginePts; break;
+                    }
                     break;
                 }
 
-            case MapPointType.Star:
-            case MapPointType.QuestMark:
-            case MapPointType.Resources:
-            case MapPointType.FlyingExpedition:
-            case MapPointType.Unknown:
-            case MapPointType.MyCity:
-                {
-                    moreSpecific = true;
-                    v *= 2f;
-                    if (v > 0.5f)
-                    {
-                        if (v < 0.25f) ctypes[0] = ChallengeType.FoundationPts;
-                        else ctypes[0] = ChallengeType.EnginePts;
-                    }
-                    else
-                    {
-                        if (v > 0.75f) ctypes[0] = ChallengeType.BlossomPts;
-                        else ctypes[0] = ChallengeType.CrystalPts;
-                    }
-                    ctypes[1] = Random.value > 0.5f ? ChallengeType.CloudWhalePts : ChallengeType.MonumentPts;
-                    ctypes[2] = Random.value > 0.5f ? ChallengeType.PipesPts : ChallengeType.PollenPts;
-                    break;
-                }
         }
-        byte val = (byte)(1f + richness / 0.25f + difficulty / 0.25f);
-        if (moreMystic & moreSpecific)
+        //
+        if (ctype != ChallengeType.NoChallenge)
         {
-            if (v < 0.4f) challengeArray[x, y] = new ChallengeField(ctypes[0], val);
-            else
-            {
-                if (v > 0.7f) challengeArray[x, y] = new ChallengeField(ctypes[1], val);
-                else challengeArray[x, y] = new ChallengeField(ctypes[2], val);
-            }
+            return new ChallengeField(ctype, (byte)(1f + poi.richness / 0.25f + poi.difficulty / 0.25f));
         }
-        else
-        {
-            if (v < 0.4f) challengeArray[x, y] = new ChallengeField(ctypes[0], val);
-            else
-            {
-                if (moreMystic) challengeArray[x, y] = new ChallengeField(ctypes[1], val);
-                else challengeArray[x, y] = new ChallengeField(ctypes[2], val);
-            }
-        }
+        else return new ChallengeField();
     }
+
 }

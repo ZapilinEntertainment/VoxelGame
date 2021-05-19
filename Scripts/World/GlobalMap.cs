@@ -44,7 +44,7 @@ public sealed class GlobalMap : MonoBehaviour
     private const byte MAX_OBJECTS_COUNT = 50;
     private const float MAX_RINGS_ROTATION_SPEED = 1, RING_RESIST_CF = 0.02f, ASCENSION_UPDATE_TIME = 10f;
     private float[] rotationSpeed;
-    public readonly float[] ringsBorders = new float[] { 1, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
+    public readonly float[] ringsBorders = new float[] { 1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.1f };
     public readonly float[] sectorsDegrees = new float[] { 22.5f, 30, 30, 45, 90 };
 
     //affection value?
@@ -233,18 +233,15 @@ public sealed class GlobalMap : MonoBehaviour
 
     private RingSector CreateNewSector(int i)
     {
-        MapPointType type = ProgressionMaster.DefineMapPointType(this);
+        MapPointType type; Path p;
+        ProgressionMaster.DefinePointOfInterest(this, out type, out p);
         var pos = GetSectorPosition(i);
         RingSector rs;
         if (type != MapPointType.Star)
-        {            
-            MapPoint centralPoint = MapPoint.CreatePointOfType(
-                pos.x,
-                pos.y,
-                type
-                );
-            rs = new RingSector(centralPoint, Environment.GetEnvironment(ascension, pos.y));
-            AddPoint(centralPoint, true);
+        {           
+            var poi = new PointOfInterest(pos.x, pos.y, type, p);
+            rs = new RingSector(poi, Environment.GetEnvironment(ascension, pos.y));
+            AddPoint(poi, true);
         }
         else
         {

@@ -781,7 +781,7 @@
                                     case Knowledge.PollenRouteBoosters.AscensionBoost:
                                         {
                                             name = "Pollen Route";
-                                            description = "Ascend and Rise";
+                                            description = "Achieve High Ascension level.";
                                             q.steps[0] = "Ascension level: ";
                                             break;
                                         }

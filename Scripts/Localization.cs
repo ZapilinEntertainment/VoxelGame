@@ -31,7 +31,8 @@ public enum GameAnnouncements : ushort
     AlreadyHaveEndquest
 };
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
-public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished, MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight}
+public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished,
+    MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight, Need3x3Basement}
 public enum ExpeditionComposingErrors : byte { ShuttleUnavailable, CrewUnavailable, NotEnoughFuel}
 public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination, Returned, Ready }
 
@@ -832,7 +833,7 @@ public static partial class Localization
 
     public static string GetExpeditionName(Expedition e)
     {
-        if (e == null) return string.Empty;
+        if (e == null || e.crew == null) return string.Empty;
         else
         {
             switch (currentLanguage)
@@ -2892,6 +2893,7 @@ public static partial class Localization
                         case RefusalReason.NoEmptySpace: return "Нет свободного пространства";
                         case RefusalReason.AlreadyBuilt: return "Уже построено";
                         case RefusalReason.UnacceptableHeight: return "Неподходящая высота";
+                        case RefusalReason.Need3x3Basement: return "Нужно основание 3x3";
                     }
                 }
             case Language.English:
@@ -2915,6 +2917,7 @@ public static partial class Localization
                         case RefusalReason.NoEmptySpace: return "No empty space";
                         case RefusalReason.AlreadyBuilt: return "Already built";
                         case RefusalReason.UnacceptableHeight: return "Height is not suitable";
+                        case RefusalReason.Need3x3Basement: return "Need 3x3 basement";
                     }
                 }
         }

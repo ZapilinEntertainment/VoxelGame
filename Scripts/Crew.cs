@@ -328,20 +328,7 @@ public sealed class Crew : MonoBehaviour {
     public void LevelUp()
     {
         level++;
-        int newPts = 2;
-        if (level > 4)
-        {
-            if (level < 13)
-            {
-                if (level < 9) newPts = 3; else newPts = 4;
-            }
-            else
-            {
-                if (level > 16) newPts = 5; else newPts = 6;
-            }
-        }
-        if (freePoints + newPts < 255) freePoints += (byte)newPts;
-        else freePoints = 255;
+        if (freePoints < 255) freePoints++;
         SetChanceMod(true);
     }
     public int GetExperienceCap()

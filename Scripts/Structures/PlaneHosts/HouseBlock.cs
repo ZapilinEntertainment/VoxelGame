@@ -82,6 +82,7 @@ public sealed class HouseBlock : House, IPlanable
                         case MeshType.Housing_2: p.ChangeMesh(MeshType.SimpleHeater_0); break;
                         case MeshType.SimpleHeater_0: p.ChangeMesh(MeshType.BigWindow); break;
                         case MeshType.BigWindow: p.ChangeMesh(MeshType.SmallWindows); break;
+                        case MeshType.SmallWindows: p.ChangeMesh(MeshType.Housing_0); break;
                     }
                 }
             }

@@ -165,7 +165,7 @@ public sealed class Observatory : WorkBuilding
         {
             if (blockedBlocks != null)
             {
-                basement.myChunk.ClearBlocksList(this, blockedBlocks, true);
+                basement.myChunk.ClearBlockersList(this, blockedBlocks, true);
             }
         }
         if (subscribedToUpdate)
