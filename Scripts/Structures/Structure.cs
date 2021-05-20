@@ -15,7 +15,7 @@ public class Structure : MonoBehaviour
     public int ID { get; protected set; }    
     public byte modelRotation { get; protected set; }
 
-    protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false;
+    protected bool destroyed = false, subscribedToUpdate = false, subscribedToChunkUpdate = false, temporarilyInvisible = false;
     protected VisibilityMode visibilityMode;
     protected uint skinIndex = 0;
 
@@ -1220,13 +1220,17 @@ public class Structure : MonoBehaviour
     public void SetVisibility(VisibilityMode vmode) { SetVisibility(vmode, false); }
     public void SetVisibility(VisibilityMode vmode, bool refreshAnyway)
     {
-        if (visibilityMode != vmode | refreshAnyway) INLINE_SetVisibility(vmode);
+        if (visibilityMode != vmode | refreshAnyway)
+        {
+            if (vmode == VisibilityMode.LayerCutCancel && visibilityMode != VisibilityMode.LayerCutHide) return;
+            INLINE_SetVisibility(vmode);
+        }
     }
     protected virtual void INLINE_SetVisibility(VisibilityMode vmode)
     {
-        if (visibilityMode == VisibilityMode.Invisible)
+        if (vmode == VisibilityMode.Invisible | vmode == VisibilityMode.LayerCutHide)
         {
-            visibilityMode = VisibilityMode.Invisible;
+            visibilityMode = vmode;
             if (transform.childCount != 0) transform.GetChild(0).gameObject.SetActive(false);
         }
         else

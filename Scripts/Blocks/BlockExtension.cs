@@ -6,7 +6,7 @@ public sealed class BlockExtension : MyObject, IPlanable
     private bool isNatural, destroyed = false;
     public int materialID { get; private set; }
     private float fossilsVolume, volume;
-    private byte existingPlanesMask;    //не может быть нулем, иначе extension не нужен
+    private byte existingPlanesMask; //не может быть нулем, иначе extension не нужен
     private Dictionary<byte, Plane> planes;
     public const float MAX_VOLUME = 4096;
     //private const byte SURFACE_MASK = (1 << Block.SURFACE_FACE_INDEX) + ( 1 << Block.UP_FACE_INDEX);
@@ -215,6 +215,7 @@ public sealed class BlockExtension : MyObject, IPlanable
     #region interface
     public bool HaveBlock() { return myBlock != null; }
     public void NullifyBlockLink() { myBlock = null; }
+    public void IPlanable_SetVisibility(VisibilityMode vmode) { } // not for this element
     public bool IsIPlanable() { return true; }
     public bool IsStructure() { return false; }
     public bool IsFaceTransparent(byte faceIndex)
@@ -355,6 +356,7 @@ public sealed class BlockExtension : MyObject, IPlanable
             return mask;
         }
     }
+    public byte GetExistingPlanesMask() { return existingPlanesMask; }
 
     //returns true if plane exists and opaque
     public bool InitializePlane(byte faceIndex)
@@ -448,7 +450,7 @@ public sealed class BlockExtension : MyObject, IPlanable
             int pmask = 0;
             foreach (var p in planes.Values)
             {
-                if (vmode != VisibilityMode.Invisible)
+                if (vmode != VisibilityMode.Invisible & vmode != VisibilityMode.LayerCutHide)
                 {
                     pmask = (1 << p.faceIndex);
                     if ((pmask & vismask) != 0) p.SetVisibilityMode(vmode, forcedRefresh);

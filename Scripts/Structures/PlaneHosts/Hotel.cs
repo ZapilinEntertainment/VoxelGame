@@ -14,9 +14,9 @@ public sealed class Hotel : Building, IPlanable
 
     static Hotel()
     {
-        GameMaster.staticResetFunctions += ResetStaticData;
+        GameMaster.staticResetFunctions += ResetHotelStaticData;
     }
-    public static void ResetStaticData()
+    public static void ResetHotelStaticData()
     {
         hotels = new List<Hotel>();
     }
@@ -185,6 +185,7 @@ public sealed class Hotel : Building, IPlanable
         else return true;
     }
 
+    protected override void INLINE_SetVisibility(VisibilityMode vmode) { }
     override public void Annihilate(StructureAnnihilationOrder order)
     {
         if (!destroyed)
@@ -196,6 +197,15 @@ public sealed class Hotel : Building, IPlanable
     #region interface
     public bool HaveBlock() { return myBlock != null; }
     public void NullifyBlockLink() { myBlock = null; }
+    public void IPlanable_SetVisibility(VisibilityMode vmode) {
+        if (vmode != visibilityMode )
+        {
+            if (upperPlane != null) upperPlane.SetVisibilityMode(vmode);
+            if (bottomPlane != null) bottomPlane.SetVisibilityMode(vmode);
+            transform.GetChild(0).gameObject.SetActive(vmode != VisibilityMode.Invisible & vmode != VisibilityMode.LayerCutHide);
+            visibilityMode = vmode;
+        }
+    } 
     public void Delete(BlockAnnihilationOrder bo)
     {
         if (destroyed) return;

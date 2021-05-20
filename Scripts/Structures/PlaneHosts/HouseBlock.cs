@@ -208,6 +208,14 @@ public sealed class HouseBlock : House, IPlanable
     #region interface 
     public bool HaveBlock() { return myBlock != null; }
     public void NullifyBlockLink() { myBlock = null; }
+    public void IPlanable_SetVisibility(VisibilityMode vmode)
+    {
+        if (vmode != visibilityMode && planes != null && planes.Count != 0)
+        {
+            foreach (var p in planes.Values) p.SetVisibilityMode(vmode);
+            visibilityMode = vmode;
+        }
+    }
     override public bool IsIPlanable() { return true; }
     public bool IsStructure() { return true; }
     public bool IsFaceTransparent(byte faceIndex)

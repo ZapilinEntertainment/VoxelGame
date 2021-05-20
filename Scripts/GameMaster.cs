@@ -97,9 +97,9 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private static GameStartSettings test_gameStartSettings = null;
-    // GameStartSettings.GetDefaultStartSettings();
-     //GameStartSettings.GetLoadingSettings(GameMode.Survival,"test");
+    private static GameStartSettings test_gameStartSettings = //null;
+     //GameStartSettings.GetHQStartSettings();
+     GameStartSettings.GetLoadingSettings(GameMode.Survival,"test");
     //
     private static bool DEBUG_STOP = false;
   

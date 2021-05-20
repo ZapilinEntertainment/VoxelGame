@@ -6,6 +6,7 @@ public class Platform : Structure, IPlanable
 {
     private Block myBlock;
     private Plane upperPlane;
+    GameObject model;
 
     override protected void SetModel() { }
     override public void SetModelRotation(int r)
@@ -19,8 +20,7 @@ public class Platform : Structure, IPlanable
         //        
         basement = p;
         if (transform.childCount == 0)
-        {
-            GameObject model;
+        {            
             var fi = basement.faceIndex;
             if (fi == Block.SURFACE_FACE_INDEX || fi == Block.UP_FACE_INDEX || fi == Block.CEILING_FACE_INDEX || fi == Block.DOWN_FACE_INDEX)
             {
@@ -66,6 +66,22 @@ public class Platform : Structure, IPlanable
     #region interface
     public bool HaveBlock() { return myBlock != null; }
     public void NullifyBlockLink() { myBlock = null; }
+    public void IPlanable_SetVisibility(VisibilityMode vmode) {
+        if (visibilityMode == vmode) return;
+        if (upperPlane != null) upperPlane.SetVisibilityMode(vmode);
+        if (model != null)
+        {
+            if (vmode == VisibilityMode.Invisible | vmode == VisibilityMode.LayerCutHide)
+            {
+                model.SetActive(false);
+            }
+            else
+            {
+                    model.SetActive(true);
+            }
+        }
+        visibilityMode = vmode;
+    } // no multimaterial planes
     public void Delete(BlockAnnihilationOrder order)
     {
         if (destroyed) return;

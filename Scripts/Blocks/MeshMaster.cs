@@ -270,6 +270,9 @@ public static class MeshMaster
             case PoolMaster.MATERIAL_WHITEWALL_ID:
                 borders = new Vector2[] { new Vector2(2 * piece, piece), new Vector2(2 * piece, 2 * piece), new Vector2(3 * piece, 2 * piece), new Vector2(3 * piece, piece) };
                 break;
+            case PoolMaster.CUTTED_LAYER_TEXTURE:
+                borders = new Vector2[] { new Vector2(0f, 0f), new Vector2(0f, piece), new Vector2(piece, piece), new Vector2(piece, 0f) };
+                break;
             default: borders = new Vector2[] { Vector2.zero, Vector2.one, Vector2.right, Vector2.up }; break;
         }
 

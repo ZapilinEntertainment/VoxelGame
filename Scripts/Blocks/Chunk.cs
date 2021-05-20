@@ -146,6 +146,7 @@ public sealed partial class Chunk : MonoBehaviour
         if (chunkRenderUpdateRequired) RenderStatusUpdate();
         if (PoolMaster.shadowCasting & shadowsUpdateRequired) ShadowsUpdate();
         if (needSurfacesUpdate) RecalculateSurfacesList();
+        if (needCameraUpdate) CameraUpdate();
     }
 
     public Nature GetNature()
@@ -390,9 +391,7 @@ public sealed partial class Chunk : MonoBehaviour
             {
                 if (fb.Value.TryGetPlane(upcode, out p))
                 {
-                    Block b;
-                    Plane p2;
-                    if (blocks.TryGetValue(fb.Key.OneBlockHigher(), out b) && b.TryGetPlane(Block.DOWN_FACE_INDEX, out p2) && !p2.isTransparent)
+                    if (IsUnderOtherBlock(p))
                     {
                         fb.Value.DeactivatePlane(Block.UP_FACE_INDEX);
                     }

@@ -25,7 +25,6 @@ public sealed class Block : MyObject {
         }
     }   
 
-
     override protected bool IsEqualNoCheck(object x)
     {
         // проверки не нужны
@@ -281,8 +280,14 @@ public sealed class Block : MyObject {
 
     public void SetVisibilityMode(VisibilityMode vm) { SetVisibilityMode(vm, false); }
     public void SetVisibilityMode(VisibilityMode vm, bool forcedRefresh)
-    {
+    {        
         if (visibilityMode != vm | forcedRefresh) {
+
+            if (visibilityMode == VisibilityMode.LayerCutHide)
+            {
+                if (vm != VisibilityMode.LayerCutCancel) return;
+            }
+
             visibilityMode = vm;
             if (extension != null)
             {
@@ -290,7 +295,11 @@ public sealed class Block : MyObject {
             }
             else
             {
-                mainStructure?.SetVisibility(vm, forcedRefresh);
+                if (mainStructure != null)
+                {
+                    if (mainStructure.IsIPlanable()) (mainStructure as IPlanable).IPlanable_SetVisibility(vm);
+                    else  mainStructure.SetVisibility(vm, forcedRefresh);
+                }
             }
         }
     }

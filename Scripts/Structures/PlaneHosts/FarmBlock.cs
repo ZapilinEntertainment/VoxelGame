@@ -112,9 +112,14 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
 
     #region cubeStructures standart functions
     protected override void SetModel() { }
-    protected override void INLINE_SetVisibility(VisibilityMode vmode)
+    protected override void INLINE_SetVisibility(VisibilityMode vmode) { } //ignore structures visibility
+    public void IPlanable_SetVisibility(VisibilityMode vmode)
     {
-        // нужно переопределение, чтобы не действовали функции предков
+        if (vmode != visibilityMode && planes != null && planes.Count != 0)
+        {
+            foreach (var p in planes.Values) p.SetVisibilityMode(vmode);
+            visibilityMode = vmode;
+        }
     }
 
     // side-models only

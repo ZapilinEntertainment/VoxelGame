@@ -127,10 +127,12 @@ public sealed class BlockpartVisualizeInfo
     }
 }
 
-public enum VisibilityMode : byte { DrawAll, SmallObjectsLOD, MediumObjectsLOD, HugeObjectsLOD, Invisible}
+//ПОРЯДОК ВАЖЕН! Большинство проверок строятся на числовом сравнении!
+public enum VisibilityMode : byte { DrawAll,LayerCutCancel, SmallObjectsLOD, MediumObjectsLOD, HugeObjectsLOD, LayerCutHide,Invisible, }
 
 public sealed partial class Chunk : MonoBehaviour {
     public byte[,,] lightMap { get; private set; }
+    public bool needCameraUpdate = false;
 
     private float LIGHT_DECREASE_PER_BLOCK;
     private bool chunkDataUpdateRequired = false, borderDrawn = false, shadowsUpdateRequired, chunkRenderUpdateRequired = false;
@@ -200,13 +202,13 @@ public sealed partial class Chunk : MonoBehaviour {
     public byte GetVisibilityMask(ChunkPos cpos) { return GetVisibilityMask(cpos.x, cpos.y, cpos.z); }
     public byte GetVisibilityMask(int x, int y, int z)
     {
-        if (x < 0 || x >= chunkSize || y < 0 || y >= chunkSize || z < 0 || z >= chunkSize) return 255;
-        if (y > GameMaster.layerCutHeight) return 0;
+        if (y >= GameMaster.layerCutHeight) return 0;
+        if (x < 0 || x >= chunkSize || y < 0 || y >= chunkSize || z < 0 || z >= chunkSize) return 255;        
         else
         {
             byte vmask = 255;
             Block bx = GetBlock(x, y, z + 1);
-            byte fwd = 1 << Block.FWD_FACE_INDEX, right = 1 << Block.RIGHT_FACE_INDEX,
+            const byte fwd = 1 << Block.FWD_FACE_INDEX, right = 1 << Block.RIGHT_FACE_INDEX,
                 back = 1 << Block.BACK_FACE_INDEX, left = 1 << Block.LEFT_FACE_INDEX,
                 up = 1 << Block.UP_FACE_INDEX, down = 1 << Block.DOWN_FACE_INDEX,
                 surf = 1 << Block.SURFACE_FACE_INDEX, ceil = 1 << Block.CEILING_FACE_INDEX;
@@ -232,7 +234,7 @@ public sealed partial class Chunk : MonoBehaviour {
             }
             // up and down
             bx = GetBlock(x, y + 1, z);
-            if (bx != null && !bx.IsFaceTransparent(Block.DOWN_FACE_INDEX))
+            if (GameMaster.layerCutHeight > y + 1 && bx != null && !bx.IsFaceTransparent(Block.DOWN_FACE_INDEX) )
             {
                 vmask -= up;
             }
@@ -249,6 +251,23 @@ public sealed partial class Chunk : MonoBehaviour {
             }
             return vmask;
         }
+    }
+    public bool IsUnderOtherBlock(Plane p)
+    {
+        Block b;
+        ChunkPos pos = p.pos;
+        byte face = p.faceIndex;
+        switch (p.faceIndex)
+        {
+            case Block.FWD_FACE_INDEX: pos = pos.OneBlockForward(); face = Block.BACK_FACE_INDEX; break;
+            case Block.RIGHT_FACE_INDEX: pos = pos.OneBlockRight(); face = Block.LEFT_FACE_INDEX; break;
+            case Block.BACK_FACE_INDEX: pos = pos.OneBlockBack(); face = Block.FWD_FACE_INDEX; break;
+            case Block.LEFT_FACE_INDEX: pos = pos.OneBlockLeft();face = Block.RIGHT_FACE_INDEX; break;
+            case Block.UP_FACE_INDEX: pos = pos.OneBlockHigher(); face = Block.DOWN_FACE_INDEX; break;
+            case Block.DOWN_FACE_INDEX: pos = pos.OneBlockDown();face = Block.UP_FACE_INDEX; break;
+            default: return false;               
+        }
+        return (blocks.TryGetValue(pos, out b) && !b.IsFaceTransparent(face));
     }
 
     public void RecalculateVisibilityAtPoint(ChunkPos cpos, byte affectionMask)
@@ -605,6 +624,12 @@ public sealed partial class Chunk : MonoBehaviour {
     public void LayersCut()
     {
         int layerCutHeight = GameMaster.layerCutHeight;
+        bool visible = true;
+        foreach (var b in blocks.Values)
+        {
+            visible = b.pos.y < layerCutHeight;
+            b.SetVisibilityMode(visible ? VisibilityMode.LayerCutCancel : VisibilityMode.LayerCutHide);
+        }
         RenderDataFullRecalculation();
     }
     public void SetShadowCastingMode(bool x)
@@ -725,10 +750,7 @@ public sealed partial class Chunk : MonoBehaviour {
                 //end
             }
         }
-    }
-    public void BlocksVisibilityRefresh()
-    {
-
+        needCameraUpdate = false;
     }
 
 

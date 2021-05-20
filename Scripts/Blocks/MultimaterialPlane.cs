@@ -26,12 +26,12 @@ public class MultimaterialPlane : Plane
     private void PrepareModel()
     {
         model = MeshMaster.InstantiateAdvancedMesh(meshType);
-        model.transform.parent = myChunk.GetRenderersHolderTransform(faceIndex);
+        model.transform.parent = myChunk.transform;
         model.transform.localPosition = GetCenterPosition();
         model.transform.localRotation = Quaternion.Euler(GetEulerRotationForBlockpart() + Vector3.forward * 90f * meshRotation);
         model.AddComponent<StructurePointer>().SetStructureLink((Structure)host, faceIndex);
         if (!isActive) PoolMaster.SwitchMaterialToOffline(model.GetComponentInChildren<Renderer>());
-        model.SetActive(visibilityMode != VisibilityMode.Invisible);
+        model.SetActive(visibilityMode != VisibilityMode.Invisible & visibilityMode != VisibilityMode.LayerCutHide);
     }
     public void ChangeMesh(MeshType mtype)
     {
@@ -59,16 +59,21 @@ public class MultimaterialPlane : Plane
     override public void ChangeMaterial(int newId, bool redrawCall) { }  
     override public void SetVisibilityMode(VisibilityMode vmode, bool forcedRefresh)
     {
-        var pvm = vmode;
-        base.SetVisibilityMode(pvm, forcedRefresh);
-        if (visibilityMode == VisibilityMode.Invisible)
+        if (vmode == visibilityMode && !forcedRefresh) return;
+        if (vmode == VisibilityMode.Invisible | vmode == VisibilityMode.LayerCutHide)
         {
             if (model != null) model.SetActive(false);
         }
         else
         {
-            if (pvm == VisibilityMode.Invisible && model == null) PrepareModel(); 
+            if (visibilityMode == VisibilityMode.Invisible | visibilityMode == VisibilityMode.LayerCutHide)
+            {
+                if (model == null) PrepareModel();
+                else model.SetActive(true);
+            }
         }
+        visibilityMode = vmode;
+        base.SetVisibilityMode(visibilityMode, true);
     }
     override public BlockpartVisualizeInfo GetVisualInfo(Chunk chunk, ChunkPos cpos)
     {

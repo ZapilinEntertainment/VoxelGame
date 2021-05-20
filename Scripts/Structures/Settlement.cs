@@ -45,7 +45,7 @@ public sealed class Settlement : House
         SettlementStructure s2;
         settlements.Clear();
         settlements = GameMaster.realMaster.colonyController.GetBuildings<Settlement>();
-        if (settlements.Count > 0)
+        if (settlements != null && settlements.Count > 0)
         {            
             foreach (var center in settlements)
             {

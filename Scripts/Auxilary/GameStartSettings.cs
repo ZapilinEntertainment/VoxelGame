@@ -74,6 +74,12 @@ public sealed class GameStartSettings : MyObject
         gss.difficulty = Difficulty.Utopia;
         return gss;
     }
+    public static GameStartSettings GetHQStartSettings()
+    {
+        var gss = GetDefaultStartSettings();
+        gss.subIndex0 = (byte)StartFoundingType.Headquarters;
+        return gss;
+    }
 
     public bool NeedLoading() { return loadGame; }
     public GameMode DefineGameMode()

@@ -21,6 +21,7 @@ public interface IPlanable
 
     bool HaveBlock();
     void NullifyBlockLink();
+    void IPlanable_SetVisibility(VisibilityMode vmode); // cause of multimaterial planes, which is not in chunk render system
 
     //returns false if transparent or wont be instantiated
     bool InitializePlane(byte faceIndex);

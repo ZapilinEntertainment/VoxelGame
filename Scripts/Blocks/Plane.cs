@@ -241,8 +241,17 @@ public class Plane : MyObject
     {
         if (visibilityMode != vmode | forcedRefresh)
         {
+            if (vmode != VisibilityMode.LayerCutCancel & visibilityMode == VisibilityMode.LayerCutHide) return;
             visibilityMode = vmode;
             visibilityChangedEvent?.Invoke(visibilityMode, forcedRefresh);
+            if (extension != null && (vmode == VisibilityMode.Invisible | vmode == VisibilityMode.LayerCutCancel | vmode == VisibilityMode.LayerCutHide))
+            {
+                var slist = extension.GetStructuresList();
+                if (slist != null && slist.Count != 0) {
+                    foreach (var s in slist) { s?.SetVisibility(vmode); }
+                        }
+            }
+            if (mainStructure != null && !mainStructure.IsIPlanable()) mainStructure.SetVisibility(vmode, forcedRefresh);
         }
     }
     public void SetBasisVisibility()
@@ -473,13 +482,24 @@ public class Plane : MyObject
         if ( materialID == PoolMaster.NO_MATERIAL_ID | meshType == MeshType.NoMesh) return null;
         else
         {
-            return new BlockpartVisualizeInfo(cpos,
-                new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID), 
-                GetLightValue(chunk, cpos, faceIndex)),
-                meshType,
-                materialID,
-                meshRotation
-                );
+            if (faceIndex == Block.UP_FACE_INDEX && cpos.y + 1 >= GameMaster.layerCutHeight && chunk.IsUnderOtherBlock(this) )
+            {
+                return new BlockpartVisualizeInfo(cpos,
+                    new MeshVisualizeInfo(faceIndex, MaterialType.Basic, GetLightValue(chunk, cpos, faceIndex)),
+                    meshType,
+                    PoolMaster.CUTTED_LAYER_TEXTURE,
+                    meshRotation
+                    );
+            }
+            else
+            {
+                return new BlockpartVisualizeInfo(cpos,
+                    new MeshVisualizeInfo(faceIndex, PoolMaster.GetMaterialType(materialID),GetLightValue(chunk, cpos, faceIndex)),
+                    meshType,
+                    materialID,
+                    meshRotation
+                    );
+            }
         }
     }
     public static byte GetLightValue(Chunk chunk, ChunkPos cpos, byte faceIndex)
