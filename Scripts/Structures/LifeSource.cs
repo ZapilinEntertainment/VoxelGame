@@ -19,6 +19,37 @@ public sealed class LifeSource : Structure {
         if (!GameMaster.loading) { 
             // #blocking
             Chunk chunk = basement.myChunk;
+            ChunkPos cpos = basement.pos; 
+            void CheckAndCreate(in ChunkPos position)
+            {
+                Plane p;
+                Block b = chunk.GetBlock(position);
+                if (b == null)
+                {
+                    b = chunk.AddBlock(position, ResourceType.DIRT_ID, true, true);
+                    if (b == null) return;
+                }
+                p = b.FORCED_GetPlane(Block.UP_FACE_INDEX);
+                if (p != null)
+                {
+                    if (chunk.IsUnderOtherBlock(p))
+                    {
+                        chunk.DeleteBlock(position.OneBlockForward(), BlockAnnihilationOrder.SystemDestruction);
+                    }
+                    var g = chunk.GetNature()?.CreateGrassland(p, 2000f);
+                    g?.SYSTEM_UseLifepower();
+                    p.BlockByStructure(this);
+                }
+            }
+            ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1);  if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1);  if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndCreate(cpos2);
+            //
             byte x = basement.pos.x, y = (byte)(basement.pos.y + 1), z = basement.pos.z;
             if (dependentBlocks != null)
             {
@@ -83,6 +114,23 @@ public sealed class LifeSource : Structure {
         PrepareStructureForDestruction(order);
         if (basement != null && order.doSpecialChecks)
         {
+            Chunk chunk = basement.myChunk;
+            ChunkPos cpos = basement.pos;
+            Plane p;
+            void CheckAndUnblock(in ChunkPos position)
+            {
+                Block bx = chunk.GetBlock(position);
+                if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.UnblockFromStructure(this);
+            }
+            ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+
             basement.myChunk.GetNature().RemoveLifesource(this);
             basement.ChangeMaterial(ResourceType.DIRT_ID, true);
             if (GameMaster.realMaster.gameMode != GameMode.Editor)

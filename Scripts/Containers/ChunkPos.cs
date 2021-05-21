@@ -44,6 +44,13 @@
     {
         return new ChunkPos(x, y - 1, z);
     }
+    public bool isOkay
+    {
+        get {
+            var cs = Chunk.chunkSize;
+            return x < cs && x != 255 && y <cs && y != 255 && z != 255 && z < cs;
+        }
+    }
 
     public static bool operator ==(ChunkPos lhs, ChunkPos rhs) { return lhs.Equals(rhs); }
     public static bool operator !=(ChunkPos lhs, ChunkPos rhs) { return !(lhs.Equals(rhs)); }

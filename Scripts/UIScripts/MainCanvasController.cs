@@ -485,7 +485,12 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
                             Plane p;
                             if (b.TryGetPlane(selectedFaceIndex, out p) && !p.myChunk.IsUnderOtherBlock(p))
                             {
-                                Select(p);
+                                if (p.mainStructure != null && p.mainStructureIsABlocker)
+                                {
+                                    Select(p.mainStructure);
+                                    return;
+                                }
+                                else  Select(p);
                             }
                             else ChangeChosenObject(ChosenObjectType.None);
                         }

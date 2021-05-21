@@ -104,8 +104,22 @@ public sealed class AnchorBasement : WorkBuilding
         pierPosition = new Vector3(transform.position.x, PIER_HEIGHT, transform.position.z);
         PrepareMainLine();
         var chunk = basement.myChunk;
-        var mpos = basement.pos;
-        chunk.TryBlockVerticalCorridor(mpos.OneBlockDown(), false, this, ref blockersList, false);
+        var cpos = basement.pos;
+        Plane p;
+        void CheckAndBlock(in ChunkPos position)
+        {
+            Block bx = chunk.GetBlock(position);
+            if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.BlockByStructure(this);
+        }
+        ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+        chunk.TryBlockVerticalCorridor(cpos.OneBlockDown(), false, this, ref blockersList, false);
         //
         if (!GameMaster.loading) ProtectBasementBlocks();
         else GameMaster.realMaster.afterloadRecalculationEvent += this.ProtectBasementBlocks;
@@ -426,15 +440,15 @@ public sealed class AnchorBasement : WorkBuilding
         var chunk = basement.myChunk;
         byte face = basement.faceIndex;
         Plane p = null;
-        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
         pos2 = pos.OneBlockBack();
-        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
-        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.SYSTEM_AssignMainStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
         GameMaster.realMaster.afterloadRecalculationEvent -= this.ProtectBasementBlocks;
     }
 
@@ -478,9 +492,25 @@ public sealed class AnchorBasement : WorkBuilding
 
     public override void Annihilate(StructureAnnihilationOrder order)
     {
-        if (order.doSpecialChecks && blockersList != null)
+        if (order.doSpecialChecks && blockersList != null && basement != null)
         {
-            basement?.myChunk.ClearBlockersList(this, blockersList, true);
+            var chunk = basement.myChunk;
+            chunk.ClearBlockersList(this, blockersList, true);
+            var cpos = basement.pos;
+            Plane p;
+            void CheckAndUnblock(in ChunkPos position)
+            {
+                Block bx = chunk.GetBlock(position);
+                if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.UnblockFromStructure(this);
+            }
+            ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
         }
         base.Annihilate(order);
     }

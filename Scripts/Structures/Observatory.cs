@@ -88,8 +88,30 @@ public sealed class Observatory : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
+        if (!subscribedToChunkUpdate)
+        {
+            basement.myChunk.ChunkUpdateEvent += this.ChunkUpdated;
+            subscribedToChunkUpdate = true;
+        }
         if (!GameMaster.loading)
         {
+            Chunk chunk = basement.myChunk;
+            ChunkPos cpos = basement.pos;
+            Plane p;
+            void CheckAndBlock(in ChunkPos position)
+            {
+                Block bx = chunk.GetBlock(position);
+                if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.BlockByStructure(this);
+            }
+            ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
+            //
             List<ChunkPos> positionsList = new List<ChunkPos>();
             int x = b.pos.x, z = b.pos.z, y = b.pos.y + 1;
             positionsList = new List<ChunkPos>()
@@ -126,6 +148,12 @@ public sealed class Observatory : WorkBuilding
         basement.myChunk.BlockRegion(positionsList, this, ref blockedBlocks);
         GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
         subscribedToRestoreBlockersUpdate = false;
+    }
+    public override void ChunkUpdated()
+    {
+        if (GameMaster.loading) return;
+        // проверка на блокирование вновь появившихся блоков окружения
+
     }
 
     protected override void LabourResult(int iterations)
@@ -167,6 +195,28 @@ public sealed class Observatory : WorkBuilding
             {
                 basement.myChunk.ClearBlockersList(this, blockedBlocks, true);
             }
+            Chunk chunk = basement.myChunk;
+            ChunkPos cpos = basement.pos;
+            Plane p;
+            void CheckAndUnblock(in ChunkPos position)
+            {
+                Block bx = chunk.GetBlock(position);
+                if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.UnblockFromStructure(this);
+            }
+            ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+            cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
+
+            if (subscribedToChunkUpdate)
+            {
+                chunk.ChunkUpdateEvent -= this.ChunkUpdated;
+                subscribedToChunkUpdate = false;
+            }
         }
         if (subscribedToUpdate)
         {
@@ -178,6 +228,7 @@ public sealed class Observatory : WorkBuilding
             GameMaster.realMaster.blockersRestoreEvent -= RestoreBlockers;
             subscribedToRestoreBlockersUpdate = false;
         }
+       
         if (order.doSpecialChecks) colony?.observer?.RemoveFastButton(this);
         alreadyBuilt = false;
         Destroy(gameObject);

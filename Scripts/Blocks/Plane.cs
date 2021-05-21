@@ -10,7 +10,8 @@ public class Plane : MyObject
     public byte faceIndex { get; protected set; }
     public MeshType meshType { get; protected set; }
     protected byte meshRotation;
-    public Structure mainStructure { get; protected set; }    
+    public Structure mainStructure { get; protected set; }   
+    public bool mainStructureIsABlocker { get; protected set; }
     public PlaneExtension extension { get; protected set; }
     public FullfillStatus fulfillStatus
     {
@@ -110,7 +111,7 @@ public class Plane : MyObject
         }
         else
         {
-            if (mainStructure != null)
+            if (mainStructure != null && !mainStructureIsABlocker)
             {
                 var data = mainStructure.Save().ToArray();
                 fs.WriteByte(2);
@@ -251,7 +252,7 @@ public class Plane : MyObject
                     foreach (var s in slist) { s?.SetVisibility(vmode); }
                         }
             }
-            if (mainStructure != null && !mainStructure.IsIPlanable()) mainStructure.SetVisibility(vmode, forcedRefresh);
+            if (mainStructure != null && !mainStructureIsABlocker && !mainStructure.IsIPlanable()) mainStructure.SetVisibility(vmode, forcedRefresh);
         }
     }
     public void SetBasisVisibility()
@@ -266,17 +267,37 @@ public class Plane : MyObject
         s?.SetBasement(this);
         return s;
     }
-    public void SYSTEM_AssignMainStructure(Structure s)
+    public void BlockByStructure(Structure s)
     {
         // anchor basement
-        mainStructure = s;
+        if (mainStructure == null)
+        {
+            if (extension != null)
+            {
+                extension.Annihilate(PlaneAnnihilationOrder.ExtensionRemovedByFullScaledStructure);
+            }
+            mainStructure = s;
+            mainStructureIsABlocker = true;
+        }
+    }
+    public void UnblockFromStructure(Structure s)
+    {
+        if (mainStructureIsABlocker && mainStructure == s)
+        {
+            mainStructure = null;
+            mainStructureIsABlocker = false;
+        }
     }
     public void AddStructure(Structure s)
     {
         if (s.surfaceRect != SurfaceRect.full)
         {            
             FORCED_GetExtension().AddStructure(s);
-            if (s.placeInCenter) mainStructure = s;
+            if (s.placeInCenter)
+            {
+                mainStructure = s;
+                mainStructureIsABlocker = false;
+            }
             return;
         }
         else
@@ -286,8 +307,13 @@ public class Plane : MyObject
                 extension.Annihilate(PlaneAnnihilationOrder.ExtensionRemovedByFullScaledStructure);
                 extension = null;
             }
-            mainStructure?.Annihilate(StructureAnnihilationOrder.GetReplacingOrder(mainStructure.isArtificial));
+            if (mainStructure != null)
+            {
+                if (!mainStructureIsABlocker) mainStructure.Annihilate(StructureAnnihilationOrder.GetReplacingOrder(mainStructure.isArtificial));
+                else mainStructure.SectionDeleted(pos);
+            }
             mainStructure = s;
+            mainStructureIsABlocker = false;
             var t = s.transform;
             t.parent = host.GetBlock().myChunk.transform;
             if (!(s.IsIPlanable())) t.rotation = Quaternion.Euler(GetEulerRotationForQuad());
@@ -729,7 +755,11 @@ public class Plane : MyObject
             if (extension != null) extension.Annihilate(order);
             else
             {
-                mainStructure?.Annihilate(order.GetStructuresOrder());
+                if (mainStructure != null)
+                {
+                    if (!mainStructureIsABlocker) mainStructure.Annihilate(order.GetStructuresOrder());
+                    else mainStructure.SectionDeleted(pos);
+                }
             }
             if (!order.chunkClearing)
             {

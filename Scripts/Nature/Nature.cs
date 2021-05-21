@@ -465,6 +465,11 @@ public sealed class Nature : MonoBehaviour
     {
         lifepower += f;
     }
+    public void ConsumeLifepower(float f)
+    {
+        lifepower -= f;
+        if (lifepower < -1000f) lifepower = -1000f;
+    }
     public void AddLifesource(LifeSource ls)
     {
         if (lifesources == null)
@@ -673,14 +678,20 @@ public sealed class Nature : MonoBehaviour
             if (candidates.Count > 0)
             {
                 p = candidates[Random.Range(0, candidates.Count)];
-                if (p != null)
-                {
-                    g = Grassland.CreateAt(p, false);
-                    if (g != null) SupportCreatedGrassland(g, supplyEnergy);
-                }                
+                CreateGrassland(p, supplyEnergy);       
             }
         }
         lastDonoredIndex++;
+    }
+    public Grassland CreateGrassland(Plane p, in float supplyEnergy)
+    {
+        Grassland g = null;
+        if (p != null)
+        {
+            g = Grassland.CreateAt(p, false);
+            if (g != null) SupportCreatedGrassland(g, supplyEnergy);
+        }
+        return g;
     }
     public void AddGrassland(Grassland g)
     {

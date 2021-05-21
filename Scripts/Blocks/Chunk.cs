@@ -433,7 +433,7 @@ public sealed partial class Chunk : MonoBehaviour
     public Block AddBlock(ChunkPos f_pos, int i_materialID, bool i_naturalGeneration, bool redrawCall)
     {
         int x = f_pos.x, y = f_pos.y, z = f_pos.z;
-        if ((x >= chunkSize) || (y >= chunkSize) || (z >= chunkSize) || (x == 255) || (y == 255) || (z == 255))
+        if (!f_pos.isOkay)
         {
             Debug.LogException(new System.Exception("Chunk - cannot create chunk with such coordinates"));
             return null;

@@ -581,7 +581,8 @@ public sealed class FoundationRouteScenario : Scenario
                 case 2:                    
                     scenarioUI.DisableSpecialButton();
                     stage++;
-                    scenario.Next();
+                    if (!GameMaster.loading) GameMaster.realMaster.SaveGame("FoundationRoute - autosave");
+                    scenario.Next();                    
                     break;
             }
         }

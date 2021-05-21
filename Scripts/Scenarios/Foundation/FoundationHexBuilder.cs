@@ -203,8 +203,20 @@ namespace FoundationRoute
         }
         private void EverydayUpdate()
         {
-            const float moneyCf = 100f;            
-            float x = colony.FORCED_GetEnergyCrystals(-totalIncome * moneyCf);
+            const float moneyCf = 100f, foodCf = 1000f, natureCf = 100f;            
+            colony.FORCED_GetEnergyCrystals(-totalIncome * moneyCf);
+            var rm = GameMaster.realMaster;
+            if (totalFoodProduction < 0)
+            {
+                colony.storage.GetResources(ResourceType.Food, totalFoodProduction * foodCf * rm.gameRules.foodSpendRate);
+            }
+            else colony.storage.AddResource(ResourceType.Food, totalFoodProduction * foodCf);
+            var n = rm.mainChunk.GetNature();
+            if (n != null)
+            {
+                if (totalLifepower > 0f) n.AddLifepower(totalLifepower * natureCf);
+                else n.ConsumeLifepower(totalLifepower * natureCf);
+            }
         }
 
         #region positioning
