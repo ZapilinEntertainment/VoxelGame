@@ -175,9 +175,8 @@ public sealed class DockSystem
                 }
 		case ShipType.Cargo:
                 {
-                    float buyPrioritiesPool = 0, sellPrioritiesPool = 0;
+                    int totalPositions = 0;
                     List<int> buyPositions = new List<int>(), sellPositions = new List<int>();
-                    float[] demands = ResourceType.demand;
                     for (int i = 0; i < ResourceType.TYPES_COUNT; i++)
                     {
                         if (isForSale[i] == null) continue;
@@ -186,7 +185,7 @@ public sealed class DockSystem
                             if (storage.GetResourceCount(i) > minValueForTrading[i])
                             {
                                 sellPositions.Add(i);
-                                sellPrioritiesPool += demands[i];
+                                totalPositions++;
                             }
                         }
                         else // покупаемый островом ресурс
@@ -194,44 +193,44 @@ public sealed class DockSystem
                             if (storage.GetResourceCount(i) <= minValueForTrading[i])
                             {
                                 buyPositions.Add(i);
-                                buyPrioritiesPool += demands[i];
+                                totalPositions++;
                             }
                         }
                     }
-                    
+
+                    float pc =  tradeVolume * 1f / (float)totalPositions;
+                    float v, a;
                     if (buyPositions.Count > 0)
                     {
-                        float boughtVolume = 0;
-                        float v, a;
                         foreach (int id in buyPositions)
                         {
-                            v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            v = pc * (0.9f + 0.2f * Random.value);
                             a = storage.GetResourceCount(id);
                             if (a + v > minValueForTrading[id]) v = minValueForTrading[id] - a;
-                            if (v != 0)  boughtVolume += d.BuyResource(ResourceType.GetResourceTypeById(id), v);
+                            if (v > 0)
+                            {
+                                d.BuyResource(ResourceType.GetResourceTypeById(id), v);
+                                rewardValue += 0.2f;
+                            }
                         }
-                        tradeVolume += boughtVolume;
-                        if (tradeVolume == 0) rewardValue += 0.25f; else rewardValue += 0.5f;
                     }
-                    
+                    else rewardValue += 0.1f;
+
                     if (sellPositions.Count > 0)
                     {
-                        double v;
-                        float a;
                         foreach (int id in sellPositions)
                         {
-                            v = demands[id] / buyPrioritiesPool * tradeVolume;
+                            v = pc * (0.9f + 0.2f * Random.value);
                             a = storage.GetResourceCount(id);
-                            if (a- v < minValueForTrading[id]) v = a - minValueForTrading[id];
-                            float v2 = (float)(demands[id] / sellPrioritiesPool * tradeVolume);
-                            if (v2 != 0)
+                            if (a - v <= minValueForTrading[id]) v = a - minValueForTrading[id];
+                            if (v > 0)
                             {
-                                d.SellResource(ResourceType.GetResourceTypeById(id), v2);
-                                rewardValue += 0.5f;
+                                d.SellResource(ResourceType.GetResourceTypeById(id), v);
+                                rewardValue += 0.2f;
                             }
-                            else rewardValue += 0.25f;
                         }
                     }
+                    else rewardValue += 0.1f;
 
                     if (d.ID != Structure.DOCK_ID)
                     {

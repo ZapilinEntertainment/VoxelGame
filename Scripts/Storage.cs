@@ -2,7 +2,7 @@
 using UnityEngine;
 
 public sealed class Storage : MonoBehaviour {
-    public double totalVolume { get; private set; }
+    public float totalVolume { get; private set; }
 	public float  maxVolume { get; private set; }
 	public List<StorageHouse> warehouses { get; private set; }
     private float[] standartResources;
@@ -57,6 +57,11 @@ public sealed class Storage : MonoBehaviour {
 	/// <param name="rtype">Rtype.</param>
 	/// <param name="count">Count.</param>
 	public float AddResource(ResourceType rtype, float count) {
+        if (count < 0)
+        {
+            Debug.Log("wrong operation: " + StackTraceUtility.ExtractStackTrace());
+            return count;
+        }
 		if (totalVolume >= maxVolume )
         {
             Overloading();
@@ -76,7 +81,8 @@ public sealed class Storage : MonoBehaviour {
 		standartResources[ rtype.ID ] += loadedCount;
 		totalVolume += loadedCount;
         operationsDone++;
-		return (count - loadedCount);
+        if (count > loadedCount) return count - loadedCount;
+        else return 0f;
 	}
 	/// <summary>
 	/// Attention: container will be destroyed after resources transfer!
@@ -313,6 +319,11 @@ public sealed class Storage : MonoBehaviour {
         {
             fs.Read(val, 0, 4);
             f = System.BitConverter.ToSingle(val,0);
+            if (f < 0)
+            {
+                Debug.Log("error in resource " + i.ToString() + ", count is " + f.ToString());
+                f = 0;
+            }
             standartResources[i] = f;
             totalVolume += f;
         }

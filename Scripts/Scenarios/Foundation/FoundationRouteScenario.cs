@@ -580,9 +580,9 @@ public sealed class FoundationRouteScenario : Scenario
                     break;
                 case 2:                    
                     scenarioUI.DisableSpecialButton();
-                    stage++;
+                    stage++;                    
+                    scenario.Next();
                     if (!GameMaster.loading) GameMaster.realMaster.SaveGame("FoundationRoute - autosave");
-                    scenario.Next();                    
                     break;
             }
         }
@@ -665,7 +665,7 @@ public sealed class FoundationRouteScenario : Scenario
             if (nstage != 0)
             {
                 stage = nstage;
-                if (stage < 6) StartSectorBuildingQuest(1, stage, this.UIConditionProceedButton);
+                if (stage < 6) StartSectorBuildingQuest(1, (byte)(stage-1), this.UIConditionProceedButton);
             }
         }
     }
@@ -733,6 +733,7 @@ public sealed class FoundationRouteScenario : Scenario
                         ignoreCitizenUpdate = false;
                     }
                 }
+                savedCitizensCount = colony.citizenCount;
             }
         }
         public override void OKButton()
@@ -803,7 +804,7 @@ public sealed class FoundationRouteScenario : Scenario
         public string islandStatsLabel { get { return lines[60]; } }
         public string lowerlandStatsLabel { get { return lines[61]; } }
 
-        private string finishQuestText { get { return lines[57] + ' ' + FDR_Finish.COLONISTS_GOAL.ToString() + lines[58]; } }
+        private string finishQuestText { get { return lines[57] + ' ' + FDR_Finish.COLONISTS_GOAL.ToString() +' '+ lines[58]; } }
 
         public Localizer()
         {

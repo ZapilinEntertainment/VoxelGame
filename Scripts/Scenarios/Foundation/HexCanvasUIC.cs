@@ -72,12 +72,18 @@ namespace FoundationRoute
                 CheckConditions(HexType.IndustrialExperimental);
             }
             else
-            {               
+            {
+                availabilityMask[(byte)HexType.Residential] = true;
                 CheckConditions(HexType.ResidentialDense);
                 CheckConditions(HexType.ResidentialEco);
+                availabilityMask[(byte)HexType.Commercial] = true;
                 CheckConditions(HexType.CommercialDense);
+                availabilityMask[(byte)HexType.Fields] = true;
                 CheckConditions(HexType.AdvancedFields);
+                availabilityMask[(byte)HexType.Lake] = true;
+                availabilityMask[(byte)HexType.Forest] = true;
                 CheckConditions(HexType.Mountain);
+                availabilityMask[(byte)HexType.Industrial] = true;
                 CheckConditions(HexType.IndustrialExperimental);
                 CheckConditions(HexType.Powerplant);
             }
@@ -445,7 +451,7 @@ namespace FoundationRoute
                     costLines[4].gameObject.SetActive(false);
                 }
 
-                if (buildConditionsMet & (costConditionsMet == rcount))
+                if (buildConditionsMet & (costConditionsMet == rcount) & buildingAvailable == true)
                 {
                     buildButton.interactable = true;
                     buildButton.GetComponentInChildren<Text>().color = Color.white;

@@ -14,7 +14,7 @@ public sealed class UIFactoryObserver : UIObserver, ILocalizable
 #pragma warning restore 0649
     public Factory observingFactory { get; private set; }
     private int showingProductionValue;
-    private bool advancedFactoryMode = false;
+    private bool advancedFactoryMode = false, ignoreSetRecipeCall = false;
 
     public static UIFactoryObserver InitializeFactoryObserverScript()
     {
@@ -34,11 +34,12 @@ public sealed class UIFactoryObserver : UIObserver, ILocalizable
         if (uwb == null) uwb = UIWorkbuildingObserver.InitializeWorkbuildingObserverScript();
         else uwb.gameObject.SetActive(true);
         observingFactory = f; isObserving = true;
+        ignoreSetRecipeCall = true;
         advancedFactoryMode = f is AdvancedFactory;
         uwb.SetObservingPlace(observingFactory);
 
         Recipe[] recipes = observingFactory.GetFactoryRecipes();
-        recipesDropdown.enabled = true;       
+        recipesDropdown.enabled = false;       
        
         int positionInDropdown = 0;
         if (recipes.Length == 1 && recipes[0] == Recipe.NoRecipe)
@@ -84,6 +85,7 @@ public sealed class UIFactoryObserver : UIObserver, ILocalizable
         }
         recipesDropdown.value = positionInDropdown;
         RedrawRecipeData();
+        recipesDropdown.enabled = true;
         //       
         modesDropdown.value = (int)observingFactory.productionMode;
         if (observingFactory.productionMode == FactoryProductionMode.NoLimit)
@@ -96,10 +98,13 @@ public sealed class UIFactoryObserver : UIObserver, ILocalizable
             limitInputField.text = showingProductionValue.ToString();
             limitPanel.SetActive(true);
         }
+        //
+        ignoreSetRecipeCall = false;
     }
 
     public void SetRecipe(int x)
     {
+        if (ignoreSetRecipeCall) return;
         observingFactory.SetRecipe(x);
         RedrawRecipeData();
     }

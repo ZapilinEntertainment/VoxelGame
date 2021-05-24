@@ -715,7 +715,7 @@ namespace FoundationRoute
                 case HexType.Mountain:
                     powerConsumption = 0f;                    
                     income = -2f * m;
-                    lifepower = 7f * lp;
+                    lifepower = 10f * lp;
                     foodProduction = f;
                     housing = 1 * h;
                     cost = new ResourceContainer[3]
@@ -728,8 +728,8 @@ namespace FoundationRoute
                 case HexType.Lake:
                     powerConsumption = 1f;                    
                     income = -2f * m;
-                    lifepower = 12f * lp;
-                    foodProduction = 7f * f;
+                    lifepower = 10f * lp;
+                    foodProduction = 10f * f;
                     housing = 1 * h;
                     cost = new ResourceContainer[3]
                     {
@@ -742,7 +742,7 @@ namespace FoundationRoute
                     maxPersonnel = 10 * ppl;
                     powerConsumption = 30f * pwr;                    
                     income = 5f * m;
-                    lifepower = -30f * lp;
+                    lifepower = -25f * lp;
                     foodProduction = -2f * f;
                     housing = 0;
                     cost = new ResourceContainer[4]

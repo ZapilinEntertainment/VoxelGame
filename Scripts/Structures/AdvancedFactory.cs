@@ -58,7 +58,7 @@ public sealed class AdvancedFactory : Factory
     }
     override protected void LabourResult(int iterations)
     {
-        if (iterations < 1) return;
+        if (GameMaster.loading | iterations < 1) return;
         workflow -= iterations;
         Storage storage = colony.storage;
         float i1 = storage.GetResourceCount(recipe.input) + inputResourcesBuffer,

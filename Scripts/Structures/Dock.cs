@@ -20,13 +20,12 @@ public sealed class Dock : WorkBuilding {
             return LOADING_TIME * (16f - level - 10f * GameMaster.realMaster.tradeVesselsTrafficCoefficient);
         }
     }
-    private float loadingTimer = 0f, availableVolume = 0f;    
+    private float loadingTimer = 0f;    
 	private int preparingResourceIndex;
     private Ship servicingShip;
     private List<Block> dependentBlocksList;
 
     public const int SMALL_SHIPS_PATH_WIDTH = 2, MEDIUM_SHIPS_PATH_WIDTH = 3, HEAVY_SHIPS_PATH_WIDTH = 4;
-    private const float WORK_PER_WORKER = 10f;
 
 	override public void Prepare() {
 		PrepareWorkbuilding();
@@ -208,7 +207,6 @@ public sealed class Dock : WorkBuilding {
     }
     private void FinishShipService(Ship s)
     {
-        availableVolume = workersCount * WORK_PER_WORKER;
         DockSystem.GetCurrent().HandleShip(this, s, colony);
         servicingShip = null;
         maintainingShip = false;
@@ -463,32 +461,30 @@ public sealed class Dock : WorkBuilding {
     }  
     public void SellResource(ResourceType rt, float volume)
     {
-        if (availableVolume <= 0f) return;
         var colony = GameMaster.realMaster.colonyController;
-        if (volume > availableVolume) volume = availableVolume;
         float vol = colony.storage.GetResources(rt, volume);
         float money = vol * ResourceType.prices[rt.ID] * GameMaster.sellPriceCoefficient;
         colony.AddEnergyCrystals(money);
         colony.gears_coefficient -= gearsDamage * vol;
-        availableVolume -= vol;
-        AnnouncementCanvasController.MakeAnnouncement(Localization.GetSellMsg(rt, vol, money));
+        if (vol > 99f) AnnouncementCanvasController.MakeAnnouncement(Localization.GetSellMsg(rt, vol, money));
     }
     public float BuyResource(ResourceType rt, float volume)
     {
-        if (availableVolume <= 0f) return 0f;
-        if (volume > availableVolume) volume = availableVolume;
         var colony = GameMaster.realMaster.colonyController;
+        if (colony.energyCrystalsCount <= 0f) return 0f;
         float p = ResourceType.prices[rt.ID], money = 0f;
         if (p != 0)
         {
             money = colony.GetEnergyCrystals(volume * ResourceType.prices[rt.ID]);
-            volume = money / ResourceType.prices[rt.ID];            
-            if (volume == 0) return 0f;
-            else AnnouncementCanvasController.MakeAnnouncement(Localization.GetBuyMsg(rt, volume, money));
+            volume = money / ResourceType.prices[rt.ID];
+            if (volume <= 0f) return 0f;
+            else
+            {
+                if (volume > 99f) AnnouncementCanvasController.MakeAnnouncement(Localization.GetBuyMsg(rt, volume, money));
+            }
         }
         colony.storage.AddResource(rt, volume);
         colony.gears_coefficient -= gearsDamage * volume;
-        availableVolume -= volume;
         return volume;
     }  
 

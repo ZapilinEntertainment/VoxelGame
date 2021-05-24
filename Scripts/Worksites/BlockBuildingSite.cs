@@ -142,7 +142,7 @@ public class BlockBuildingSite : Worksite
                     case Block.BACK_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); break;
                     case Block.LEFT_FACE_INDEX: cpos = new ChunkPos(cpos.x - 1, cpos.y, cpos.z); break;
                     case Block.UP_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y + 1, cpos.z); break;
-                    case Block.DOWN_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y - 1, cpos.z + 1); break;
+                    case Block.DOWN_FACE_INDEX: cpos = new ChunkPos(cpos.x, cpos.y - 1, cpos.z); break;
                 }
                 workplace.myChunk.AddBlock(cpos, rtype.ID, false, true);
                 pe.ClearSurface(PlaneAnnihilationOrder.BlockbuildingPartsReplacement);

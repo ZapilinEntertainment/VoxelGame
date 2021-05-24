@@ -113,7 +113,7 @@ public class Factory : WorkBuilding
 
     override protected void LabourResult(int iterations)
     {
-        if (iterations < 1) return;
+        if ( GameMaster.loading | iterations < 1) return;
         workflow -= iterations;
         Storage storage = colony.storage;
         if (storage.GetResourceCount(recipe.input) + inputResourcesBuffer >= recipe.inputValue)
@@ -246,50 +246,7 @@ public class Factory : WorkBuilding
         if (isActive) upgraded.SetActivationStatus(true, true);
         if (returnToUI) upgraded.ShowOnGUI();
         GameMaster.realMaster.eventTracker?.BuildingUpgraded(this);
-    }
-
-
-    #region save-load system
-    public override List<byte> Save()
-    {
-        var data = base.Save();
-        data.AddRange(SerializeFactory());
-        return data;
-    }
-    virtual protected List<byte> SerializeFactory()
-    {
-        var data = new List<byte>() { (byte)productionMode };
-        data.AddRange(System.BitConverter.GetBytes(recipe.ID));
-        data.AddRange(System.BitConverter.GetBytes(inputResourcesBuffer));
-        data.AddRange(System.BitConverter.GetBytes(outputResourcesBuffer));
-        data.AddRange(System.BitConverter.GetBytes(productionModeValue));
-        //SERIALIZER_LENGTH = 17;
-        return data;
-        //changed copy to AdvancedFactory
-    }
-
-    override public void Load(System.IO.FileStream fs, Plane sblock)
-    {
-        LoadStructureData(fs, sblock);
-        LoadBuildingData(fs);
-        var data = new byte[WORKBUILDING_SERIALIZER_LENGTH + FACTORY_SERIALIZER_LENGTH];
-        fs.Read(data, 0, data.Length);
-        LoadFactoryData(data, WORKBUILDING_SERIALIZER_LENGTH);
-        LoadWorkBuildingData(data, 0);
-        //changed copy to AdvancedFactory
-    }
-
-    virtual protected int LoadFactoryData(byte[] data, int startIndex)
-    {
-        SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
-        inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);
-        outputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 9);
-        productionMode = (FactoryProductionMode)data[startIndex];
-        productionModeValue = System.BitConverter.ToInt32(data, startIndex + 13);
-        return startIndex + 17;
-        //change copy to AdvancedFactory
-    }
-    #endregion
+    } 
 
     public Recipe[] GetFactoryRecipes()
     {
@@ -334,4 +291,46 @@ public class Factory : WorkBuilding
         }
         Destroy(gameObject);
     }
+
+    #region save-load system
+    public override List<byte> Save()
+    {
+        var data = base.Save();
+        data.AddRange(SerializeFactory());
+        return data;
+    }
+    virtual protected List<byte> SerializeFactory()
+    {
+        var data = new List<byte>() { (byte)productionMode };
+        data.AddRange(System.BitConverter.GetBytes(recipe.ID));
+        data.AddRange(System.BitConverter.GetBytes(inputResourcesBuffer));
+        data.AddRange(System.BitConverter.GetBytes(outputResourcesBuffer));
+        data.AddRange(System.BitConverter.GetBytes(productionModeValue));
+        //SERIALIZER_LENGTH = 17;
+        return data;
+        //changed copy to AdvancedFactory
+    }
+
+    override public void Load(System.IO.FileStream fs, Plane sblock)
+    {
+        LoadStructureData(fs, sblock);
+        LoadBuildingData(fs);
+        var data = new byte[WORKBUILDING_SERIALIZER_LENGTH + FACTORY_SERIALIZER_LENGTH];
+        fs.Read(data, 0, data.Length);
+        LoadFactoryData(data, WORKBUILDING_SERIALIZER_LENGTH);
+        LoadWorkBuildingData(data, 0);
+        //changed copy to AdvancedFactory
+    }
+
+    virtual protected int LoadFactoryData(byte[] data, int startIndex)
+    {
+        SetRecipe(Recipe.GetRecipeByNumber(System.BitConverter.ToInt32(data, startIndex + 1)));
+        inputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 5);
+        outputResourcesBuffer = System.BitConverter.ToSingle(data, startIndex + 9);
+        productionMode = (FactoryProductionMode)data[startIndex];
+        productionModeValue = System.BitConverter.ToInt32(data, startIndex + 13);
+        return startIndex + 17;
+        //change copy to AdvancedFactory
+    }
+    #endregion
 }

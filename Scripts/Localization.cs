@@ -2988,7 +2988,7 @@ public static partial class Localization
             case Language.Russian:
                 return "Купили \"" + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
             default:
-                return "Bought " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " have bougth for a " + string.Format("{0:0.##}", price);
+                return "Bought " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " for a " + string.Format("{0:0.##}", price);
         }
     }
     public static string GetSellMsg(ResourceType rtype, float count, float price)

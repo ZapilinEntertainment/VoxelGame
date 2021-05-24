@@ -458,7 +458,6 @@ public sealed class GameMaster : MonoBehaviour
         if (loading | gameSpeed == 0) return;
 
         //if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
-        //if (Input.GetKeyDown("n")) globalMap.ShowOnGUI();       
         gameSpeed = _gameSpeed;
     }
     private void FixedUpdate()

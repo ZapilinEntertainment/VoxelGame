@@ -229,6 +229,7 @@ public sealed class Nature : MonoBehaviour
             case PoolMaster.MATERIAL_GRASS_60_ID:
             case PoolMaster.MATERIAL_GRASS_80_ID:
             case ResourceType.LUMBER_ID:
+            case ResourceType.PLASTICS_ID:
                 return true;
             default: return false;
         }
