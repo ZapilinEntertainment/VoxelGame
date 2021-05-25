@@ -23,6 +23,7 @@ public sealed class Knowledge
     public byte[] puzzlePartsCount { get; private set; }
     public byte[] buttonsColorCodesArray{get; private set;}
     public int changesMarker { get; private set; }
+    private int executingRouteIndex = -1;
 
     private byte[] routeBonusesMask = new byte[ROUTES_COUNT]; // учет полученных бонусов
 
@@ -878,6 +879,14 @@ public sealed class Knowledge
             return IsRouteUnblocked(i) && (!QuestUI.IsEndquestInProgress());
         }
         else return false;
+    }
+    public int GetExecutingScenarioIndex()
+    {
+        return executingRouteIndex;
+    }
+    public void SetExecutingScenarioIndex(int i)
+    {
+        executingRouteIndex = i;
     }
 
     public void AddUnblockedBuildings(byte face, ref List<int> bdlist)

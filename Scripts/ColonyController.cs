@@ -937,7 +937,7 @@ public sealed class ColonyController : MonoBehaviour
             }
             hq = new_hq;
         }
-        GameMaster.realMaster.globalMap.LinkColonyController(this);
+        GameMaster.realMaster.globalMap?.LinkColonyController(this);
 
         QuestUI.current.CheckQuestsAccessibility(!GameMaster.loading);
         TrySetNatureCfLink();
@@ -946,7 +946,7 @@ public sealed class ColonyController : MonoBehaviour
     {
         if (hq != null)
         {
-            var n = hq.basement?.myChunk.GetNature();
+            var n = hq.basement?.myChunk.InitializeNature();
             if (n != null) getNatureCf = n.GetNatureCf;
         }
     }

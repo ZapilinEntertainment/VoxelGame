@@ -109,7 +109,7 @@ public sealed class AnchorBasement : WorkBuilding
         void CheckAndBlock(in ChunkPos position)
         {
             Block bx = chunk.GetBlock(position);
-            if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.BlockByStructure(this);
+            if (bx != null && bx.TryGetPlane(Block.UP_FACE_INDEX, out p)) p.BlockByStructure(this,true);
         }
         ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
         cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z + 1); if (cpos2.isOkay) CheckAndBlock(cpos2);
@@ -440,15 +440,15 @@ public sealed class AnchorBasement : WorkBuilding
         var chunk = basement.myChunk;
         byte face = basement.faceIndex;
         Plane p = null;
-        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this,true); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
+        if (chunk.GetBlock(pos.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
+        if (chunk.GetBlock(pos.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
         pos2 = pos.OneBlockBack();
-        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
-        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this); }
+        if (chunk.GetBlock(pos2.OneBlockLeft())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
+        if (chunk.GetBlock(pos2)?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
+        if (chunk.GetBlock(pos2.OneBlockRight())?.TryGetPlane(face, out p) ?? false) { p.BlockByStructure(this, true); }
         GameMaster.realMaster.afterloadRecalculationEvent -= this.ProtectBasementBlocks;
     }
 

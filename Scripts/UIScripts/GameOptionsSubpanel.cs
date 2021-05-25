@@ -12,6 +12,7 @@ public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
     private SaveSystemUI saveSystem;
     private const int SAVE_BTN_INDEX = 0, LOAD_BTN_INDEX = 1, OPTIONS_BTN_INDEX = 2, ADVICE_BTN_INDEX = 3, MAIN_MENU_BTN_INDEX = 4, EXIT_BTN_INDEX = 5;
+    private string autosaveExitName { get { return "autosave_exit"; } }
 
     private void Start()
     {
@@ -64,7 +65,7 @@ public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
     }
     private void ReturnToMainMenu()
     {
-        if (GameMaster.realMaster.colonyController != null && GameMaster.realMaster.CanWeSaveTheGame()) GameMaster.realMaster.SaveGame("autosave");
+        TryToSave_Exit();
         SetMenuPanelSelection(MenuSection.NoSelection);
         GameMaster.ReturnToMainMenu();
     }
@@ -81,9 +82,13 @@ public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
     }
     private void ExitGame()
     {
-        if (GameMaster.realMaster.colonyController != null) GameMaster.realMaster.SaveGame("autosave");
+        TryToSave_Exit();
         SetMenuPanelSelection(MenuSection.NoSelection);
         Application.Quit();
+    }
+    private void TryToSave_Exit()
+    {
+        if (GameMaster.realMaster.colonyController != null && GameMaster.realMaster.CanWeSaveTheGame()) GameMaster.realMaster.SaveGame(autosaveExitName);
     }
 
     void SetMenuPanelSelection(MenuSection ms)

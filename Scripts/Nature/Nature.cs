@@ -140,20 +140,9 @@ public sealed class Nature : MonoBehaviour
         {
             grasslands = new List<Grassland>();
             var checkList = new HashSet<PlanePos>();
-            Grassland g;
-            PlanePos ppos;
             for(i = 0; i< count; i++)
             {
-                g = Grassland.Load(fs, myChunk);                
-                if (g != null)
-                {
-                    ppos = g.planePos;
-                    if (!checkList.Contains(ppos))
-                    {
-                        grasslands.Add(g);
-                        checkList.Add(ppos);
-                    }
-                }
+                Grassland.Load(fs, myChunk);                
             }            
             var iddata = new byte[4];
             fs.Read(iddata, 0, 4);
@@ -250,6 +239,7 @@ public sealed class Nature : MonoBehaviour
         treeTypes = new List<PlantType>() { PlantType.OakTree };
         lifepower = 100f;
         lifepowerSurplus = 2f;
+        grasslandCreateTimer = GRASSLAND_CREATE_CHECK_TIME;
         gm = GameMaster.realMaster;
     }
     private void EnvironmentSetting(Environment e)
@@ -331,8 +321,8 @@ public sealed class Nature : MonoBehaviour
 
     private void Update()
     {
-
         if (GameMaster.loading) return;
+
         if (!prepared) {
             Prepare(GameMaster.realMaster.mainChunk);
             return;
@@ -368,7 +358,7 @@ public sealed class Nature : MonoBehaviour
                             for (int i = 0; i < slist.Length; i++)
                             {
                                 p = slist[i];
-                                if (p.IsSuitableForGrassland()) ilist.Add(i);
+                                if (p != null && p.IsSuitableForGrassland()) ilist.Add(i);
                             }
                             if (ilist.Count != 0)
                             {
@@ -400,8 +390,7 @@ public sealed class Nature : MonoBehaviour
             {
                 if (grasslands != null)
                 {
-                    int count = grasslands.Count;
-                    if (lastUpdateIndex >= count) lastUpdateIndex = 0;
+                    if (lastUpdateIndex >= grasslands.Count) lastUpdateIndex = 0;
                     var g = grasslands[lastUpdateIndex];
                     if (g != null)
                     {
@@ -817,5 +806,10 @@ public sealed class Nature : MonoBehaviour
         else x += p * lifepower / MAX_LP;
         //
         return x;
+    }
+
+    private void OnDestroy()
+    {
+        if (env != null) env.environmentChangingEvent -= EnvironmentSetting;
     }
 }

@@ -31,7 +31,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
     private static int puzzleTexSize;
 
     private static readonly Rect plainSide = new Rect(0f, 0f, 0.5f, 0.5f), pinSide = new Rect(0f, 0.5f, 0.5f, 0.5f), cutSide = new Rect(0.5f, 0.5f, 0.5f, 0.5f);
-    private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), invisibleColor = new Color(0f, 0f, 0f, 0f);
+    private readonly Color unsufficientColor = new Color(0.67f, 0.06f, 0.06f, 1f), invisibleColor = new Color(0f, 0f, 0f, 0f), fulfilledRouteBackgroundColor = new Color(0.5f, 0.5f,0.5f, 1f);
     private const float DISAPPEAR_SPEED = 1.5f;
     private const int PLAIN = 0, PIN = 1, CUT = 2;
 
@@ -420,9 +420,11 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
 
         // BACKGROUND and ENDQUEST buttons
         bool buttonAvailable = false;
+        int eri = knowledge.GetExecutingScenarioIndex();
         for (i = 0; i< Knowledge.ROUTES_COUNT; i++)
-        {            
-            routeBackgrounds[i].color = Color.Lerp(invisibleColor, Color.white, knowledge.GetResearchProgress(i));
+        {
+            if (i != eri) routeBackgrounds[i].color = Color.Lerp(invisibleColor, fulfilledRouteBackgroundColor, knowledge.GetResearchProgress(i));
+            else routeBackgrounds[i].color = Color.white;
             buttonAvailable = knowledge.IsEndquestButtonAvailable(i);
             if (buttonAvailable)
             {
@@ -573,6 +575,8 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
         unblockAnnouncePanel.SetAsLastSibling();
         unblockAnnouncePanel.gameObject.SetActive(true);
     }
+
+   
 
     private void OnDisable()
     {

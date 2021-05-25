@@ -89,9 +89,14 @@ public sealed class Zeppelin : MonoBehaviour {
                     {
                         hq.SetModelRotation(2);
                         hq.SetBasement(landingSurface, PixelPosByte.zero);
-                        var p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockRight());
+                        var chunk = landingSurface.myChunk;
+                        var npos = landingSurface.pos.OneBlockRight();
+                        var p2 = chunk.GetSurfacePlane(npos);
+                        if (p2 == null) p2 = chunk.GetBlock(npos).FORCED_GetPlane(Block.UP_FACE_INDEX);
                         storage = p2.CreateStructure(Structure.STORAGE_0_ID);
-                        p2 = landingSurface.myChunk.GetSurfacePlane(landingSurface.pos.OneBlockLeft());
+                        npos = landingSurface.pos.OneBlockLeft();
+                        p2 = chunk.GetSurfacePlane(npos);
+                        if (p2 == null) p2 = chunk.GetBlock(npos).FORCED_GetPlane(Block.UP_FACE_INDEX);
                         setCenter = p2.CreateStructure(Structure.SETTLEMENT_CENTER_ID);
                     }
                     var et = GameMaster.realMaster.eventTracker;
@@ -121,6 +126,7 @@ public sealed class Zeppelin : MonoBehaviour {
                 Chunk chunk = GameMaster.realMaster.mainChunk;
                 ChunkRaycastHit crh = chunk.GetBlock(rh.point, rh.normal);                
                 Block b = crh.block;
+
                 if (b != null && crh.faceIndex == Block.UP_FACE_INDEX)
                 {
                     landingSurface = null;
@@ -129,12 +135,18 @@ public sealed class Zeppelin : MonoBehaviour {
                     int x = b.pos.x, y = b.pos.y, z = b.pos.z;
                     bool[] suitable = new bool[5];
                     suitable[2] = true;
+
+                    bool Check(Plane p)
+                    {
+                        return p != null && p.isQuad && !p.isInvicible && p.mainStructure == null && !chunk.IsUnderOtherBlock(p);
+                    }
                     // direction 0 - fwd    
                     {
-                        minusOneBlock = chunk.GetSurfacePlane(x, y, z - 1); suitable[1] = (minusOneBlock != null) ;
-                        minusTwoBlock = chunk.GetSurfacePlane(x, y, z - 2); suitable[0] = (minusTwoBlock != null);
-                        plusOneBlock = chunk.GetSurfacePlane(x, y, z + 1); suitable[3] = (plusOneBlock != null);
-                        plusTwoBlock = chunk.GetSurfacePlane(x, y, z + 2); suitable[4] = (plusTwoBlock != null);
+                        
+                        minusOneBlock = chunk.GetSurfacePlane(x, y, z - 1); suitable[1] = Check(minusOneBlock) ;
+                        minusTwoBlock = chunk.GetSurfacePlane(x, y, z - 2); suitable[0] = Check(minusTwoBlock);
+                        plusOneBlock = chunk.GetSurfacePlane(x, y, z + 1); suitable[3] = Check(plusOneBlock);
+                        plusTwoBlock = chunk.GetSurfacePlane(x, y, z + 2); suitable[4] = Check(plusTwoBlock);
                         if (suitable[1])
                         {
                             if (suitable[0])
@@ -168,10 +180,10 @@ public sealed class Zeppelin : MonoBehaviour {
                     }
                     //direction 2 - right
                     {
-                        minusOneBlock = chunk.GetSurfacePlane(x - 1, y, z); suitable[1] = (minusOneBlock != null) && (minusOneBlock is Plane);
-                        minusTwoBlock = chunk.GetSurfacePlane(x - 2, y, z - 2); suitable[0] = (minusTwoBlock != null) && (minusTwoBlock is Plane);
-                        plusOneBlock = chunk.GetSurfacePlane(x + 1, y, z); suitable[3] = (plusOneBlock != null) && (plusOneBlock is Plane);
-                        plusTwoBlock = chunk.GetSurfacePlane(x + 2, y, z + 2); suitable[4] = (plusTwoBlock != null) && (plusTwoBlock is Plane);
+                        minusOneBlock = chunk.GetSurfacePlane(x - 1, y, z); suitable[1] = Check(minusOneBlock);
+                        minusTwoBlock = chunk.GetSurfacePlane(x - 2, y, z - 2); suitable[0] = Check(minusTwoBlock);
+                        plusOneBlock = chunk.GetSurfacePlane(x + 1, y, z); suitable[3] = Check(plusOneBlock);
+                        plusTwoBlock = chunk.GetSurfacePlane(x + 2, y, z + 2); suitable[4] = Check(plusTwoBlock);
                         if (suitable[1])
                         {
                             if (suitable[0])

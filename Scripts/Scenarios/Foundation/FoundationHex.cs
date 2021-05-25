@@ -794,6 +794,12 @@ namespace FoundationRoute
                         foodProduction = 0f;
                         housing = 0;
                         cost = new ResourceContainer[0];
+                        switch (type)
+                        {
+                            case HexType.DummyRed: powerConsumption = -2f; break;
+                            case HexType.DummyBlue: income = 2f;break;
+                            case HexType.DummyGreen: foodProduction = 2f; break;
+                        }
                         break;
                     }
             }

@@ -145,7 +145,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
 
     public void AddDecoration(float size, GameObject dec)
     {
-        var mv = globalMap.cityFlyDirection;
+        var mv = globalMap?.cityFlyDirection ?? Vector3.forward;
         var v = new Vector3(mv.x, 0, mv.z).normalized;
         v *= -1;
         dec.layer = CLOUD_LAYER_INDEX;

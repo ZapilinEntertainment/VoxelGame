@@ -440,7 +440,7 @@ public sealed class PlaneExtension : MyObject
             var pid = Structure.PLANT_ID;
             foreach (var s in structures)
             {
-                if (s.ID == pid) plist.Add(s as Plant);
+                if (s!= null && s.ID == pid) plist.Add(s as Plant);
             }
             if (plist.Count > 0) return plist.ToArray(); else return null;
         }

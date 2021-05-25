@@ -137,7 +137,7 @@ public sealed class Monument : Building
                 {
                     case Path.LifePath:
                         {
-                            var nature = GameMaster.realMaster.mainChunk.GetNature();
+                            var nature = GameMaster.realMaster.mainChunk.InitializeNature();
                             if (affectionID == -1)
                             {
                                 affectionID = nature.AddLifepowerAffection(affectionValue);
@@ -179,7 +179,7 @@ public sealed class Monument : Building
         {
             switch (affectionPath)
             {
-                case Path.LifePath: GameMaster.realMaster.mainChunk.GetNature()?.RemoveLifepowerAffection(affectionID); break;
+                case Path.LifePath: GameMaster.realMaster.mainChunk.InitializeNature()?.RemoveLifepowerAffection(affectionID); break;
                 case Path.TechPath: GameMaster.realMaster.environmentMaster?.RemoveStabilityModifier(affectionID); break;
                 case Path.SecretPath: GameMaster.realMaster.globalMap.RemoveWorldAffection(affectionID); break;
             }

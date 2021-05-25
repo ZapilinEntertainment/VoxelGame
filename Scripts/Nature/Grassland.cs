@@ -113,7 +113,7 @@ public sealed class Grassland : MyObject
     {
         deleted = false;
         plane = p; plane.AssignGrassland(this);
-        nature = p.myChunk.GetNature();
+        nature = p.myChunk.InitializeNature();
         categoriesCatalog = new PlantCategory[MAX_CATEGORIES_COUNT];
         categoriesCatalog[0] = (PlantCategory)Random.Range(0, 3);
         categoriesCatalog[1] = (PlantCategory)Random.Range(0, 3);
@@ -196,7 +196,7 @@ public sealed class Grassland : MyObject
             if (creating)
             {
                 var pcat = categoriesCatalog[Random.Range(0, MAX_CATEGORIES_COUNT)];
-                var p = Plant.GetNewPlant(nature.GetPlantType(pcat));                
+                var p = Plant.GetNewPlant(PlantType.OakTree);//nature.GetPlantType(pcat));                
                 lifepower -= CREATE_COST_VAL * nature.lifepowerSupport;
                 p?.SetBasement(plane);  //перерасчет вызовет сама plane             
             }
@@ -224,8 +224,9 @@ public sealed class Grassland : MyObject
         //#update inners ~
         var luv = GetLevelUpValue();
         plants = plane.GetPlants();
-        int actionsCountNeeded = 0;
-        if (plants != null) actionsCountNeeded = GetMaxPlantsCount() - plants.Length;
+        int actionsCountNeeded = GetMaxPlantsCount();
+        if (plants != null) actionsCountNeeded -= plants.Length;
+
         while (lifepower > 0f)
         {
             if (actionsCountNeeded <= 0 && level < MAX_LEVEL && lifepower > luv)

@@ -29,17 +29,17 @@
 -/-
 [024]Interface
 [025]Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.
-[026]This values displays Power situation. They are power stored / power capacity / power surplus. All buildings require power supply, and it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
+[026]This values displays Power situation. They are power stored / power capacity / power surplus. Most buildings require power supply, and if it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
 -/-
 [027]Electricity production
-[028]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
+[028]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. Look for a Stream Generator in the buildings list and construct it.
 [029]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
 [030]Build Stream generator
 [031]Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
 [032]Stream generator built 
 -/-
 [033]Gather resources
-[034]After had constructed the power generator, you shall build a food source for colonists. But start resources as for Stream Generator not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
+[034]After had constructed the power generator, you shall build a food source for colonists. But start resources not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber from that cell. You can add more workers to a worksite by press the plus button at the right part of the appeared worksite window.
 [035]Gather lumber
 [036]Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
 [037]Lumber collected 

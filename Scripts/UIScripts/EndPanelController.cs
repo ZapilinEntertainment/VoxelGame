@@ -9,7 +9,7 @@ public class EndPanelController : MonoBehaviour
     [SerializeField] private Button continueGameButton, returnToMenuButton;
     [SerializeField] private RawImage backgroundImage;
 
-    public void Prepare(GameEndingType endType, ulong score)
+    public void Prepare(GameEndingType endType, uint score)
     {
         string reason = Localization.GetEndingTitle(endType);
         var rmaster = GameMaster.realMaster;
@@ -18,11 +18,14 @@ public class EndPanelController : MonoBehaviour
             case GameEndingType.FoundationRoute:
                 {
                     endLabel.text = reason;
-                    scoreLabel.text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+                    scoreLabel.text = Localization.GetWord(LocalizedWord.Score) + ": " + score.ToString();
                     returnToMenuButton.onClick.AddListener(GameMaster.ReturnToMainMenu);
                     returnToMenuButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.MainMenu);
+
                     continueGameButton.onClick.AddListener(rmaster.ContinueGameAfterEnd);
                     continueGameButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Continue);
+                    //
+                    continueGameButton.gameObject.SetActive(false);
                     break;
                 }
             case GameEndingType.ColonyLost:
@@ -32,7 +35,7 @@ public class EndPanelController : MonoBehaviour
             default:
                 {
                     endLabel.text = reason;
-                    scoreLabel.text = Localization.GetWord(LocalizedWord.Score) + ": " + ((int)score).ToString();
+                    scoreLabel.text = Localization.GetWord(LocalizedWord.Score) + ": " + score.ToString();
                     backgroundImage.texture = Resources.Load<Texture>("Textures/gameover_texture");
                     continueGameButton.enabled = false;
                     returnToMenuButton.enabled = false;

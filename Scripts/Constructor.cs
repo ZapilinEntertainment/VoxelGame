@@ -146,8 +146,7 @@ public abstract class Constructor
         int size = chunkSize;
         int[,,] dat = new int[size, size, size];
         dat[0, 0, 0] = ResourceType.STONE_ID;
-        GameObject g = new GameObject("chunk");
-        Chunk c = g.AddComponent<Chunk>();
+        var c = Chunk.InitializeChunk();
         c.Rebuild(dat);
         //NatureCreation(c);
         //CheckForLandingPosition(c);

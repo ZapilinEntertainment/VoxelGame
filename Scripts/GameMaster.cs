@@ -97,9 +97,10 @@ public sealed class GameMaster : MonoBehaviour
     public bool IsInTestMode { get { return testMode; } }
     [SerializeField] private float _gameSpeed = 1f;
     public bool weNeedNoResources { get; private set; }
-    private static GameStartSettings test_gameStartSettings = //null;
+    private static GameStartSettings test_gameStartSettings = null;
      //GameStartSettings.GetHQStartSettings();
-     GameStartSettings.GetLoadingSettings(GameMode.Survival,"test");
+     //GameStartSettings.GetLoadingSettings(GameMode.Survival,"test");
+     //GameStartSettings.GetTutorialSettings();
     //
     private static bool DEBUG_STOP = false;
   
@@ -192,9 +193,8 @@ public sealed class GameMaster : MonoBehaviour
            pm.Load();
         }
         if (gameMode == GameMode.Survival)
-        {            
-            if (globalMap == null) globalMap = gameObject.AddComponent<GlobalMap>();
-            globalMap.Prepare();            
+        {
+            globalMap = InitializeGlobalMap();       
         }
         if (environmentMaster == null) environmentMaster = new GameObject("Environment master").AddComponent<EnvironmentMaster>();
         environmentMaster.Prepare();
@@ -237,7 +237,7 @@ public sealed class GameMaster : MonoBehaviour
                             mainChunk = Constructor.ConstructChunk(cgs);
                             var slist = mainChunk.GetSurfaces();
                             if (slist != null) geologyModule.SpreadMinerals(slist);
-                            mainChunk.GetNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
+                            mainChunk.InitializeNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
                         }
                     }
                     //
@@ -313,8 +313,8 @@ public sealed class GameMaster : MonoBehaviour
                                     case EmbeddedScenarioType.Tutorial:
                                         {
                                             gameRules = GameRules.GetTutorialRules();
-                                            LoadTerrain(SaveSystemUI.GetTerrainSaveFullpath(startSettings.GetSavename()));
-                                            TutorialUI.Initialize();
+                                            LoadTerrainFromAssets(TutorialScenarioNS.TutorialScenario.tutorialTerrainName);
+                                            TutorialScenarioNS.TutorialUI.Initialize();
                                             break;
                                         }
                                 }
@@ -349,13 +349,24 @@ public sealed class GameMaster : MonoBehaviour
             {
                 if (PlayerPrefs.HasKey(keyname)) gameID = PlayerPrefs.GetInt(keyname);
                 else gameID = Random.Range(int.MinValue, int.MaxValue);
-                int g2 = gameID;
+                int g2 = gameID++;
+                if (g2 == -1) g2++;
                 if (g2 == int.MaxValue) g2 = int.MinValue; else g2++;
                 PlayerPrefs.SetInt(keyname, g2);
                 PlayerPrefs.Save();
             }
         }
         return colonyController;
+    }
+    public GlobalMap InitializeGlobalMap()
+    {
+        if (globalMap != null) return globalMap;
+        else
+        {
+            globalMap = gameObject.AddComponent<GlobalMap>();
+            globalMap.Prepare();
+            return globalMap;
+        }
     }
 
     private void SetDefaultValues()
@@ -617,7 +628,7 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (gameStatus == GameStatus.Ended) return;
         gameStatus = GameStatus.Ended;
-        ulong score = (ulong)ScoreCalculator.GetScore(this);
+        var score = ScoreCalculator.GetScore(this);
         uicontroller?.GameOver(endType, score);
         if (gameID != -1) Highscore.AddHighscore(new Highscore(gameID, colonyController.cityName, score, endType));
         SetPause(true);                              
@@ -871,7 +882,6 @@ public sealed class GameMaster : MonoBehaviour
             if (refreshUI) UIController.GetCurrent().GameWasReloaded();
 
             DEBUG_STOP = true;
-
             return true;
         }
         else
@@ -905,23 +915,34 @@ public sealed class GameMaster : MonoBehaviour
         fs.Close();
         return true;
     }
-    public bool LoadTerrain(string fullname)
+    private void LoadTerrain(FileStream fs)
     {
-        FileStream fs = File.Open(fullname, FileMode.Open);
         var data = new byte[4];
         fs.Read(data, 0, 4);
         uint saveVersion = System.BitConverter.ToUInt32(data, 0);
         if (mainChunk == null)
         {
-            GameObject g = new GameObject("chunk");
-            mainChunk = g.AddComponent<Chunk>();
+            mainChunk = Chunk.InitializeChunk();
         }
         loading = true;
         mainChunk.LoadChunkData(fs);
         loading = false;
         fs.Close();
         FollowingCamera.main.WeNeedUpdate();
+    }
+
+    public bool LoadTerrain(string fullname)
+    {
+        FileStream fs = File.Open(fullname, FileMode.Open);
+        if (fs != null) LoadTerrain(fs);
         return true;
+    }
+    public void LoadTerrainFromAssets(string name)
+    {
+        using (var fs = File.Open("Assets/Terrains/" + name, FileMode.Open))
+        {
+            LoadTerrain(fs);
+        }
     }
 
     public double GetHashSum(FileStream fs, bool ignoreLastEightBytes)

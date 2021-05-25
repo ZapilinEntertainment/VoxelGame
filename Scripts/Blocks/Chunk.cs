@@ -149,7 +149,7 @@ public sealed partial class Chunk : MonoBehaviour
         if (needCameraUpdate) CameraUpdate();
     }
 
-    public Nature GetNature()
+    public Nature InitializeNature()
     {
         if (nature == null)
         {
@@ -189,10 +189,10 @@ public sealed partial class Chunk : MonoBehaviour
 
     public void Rebuild(int[,,] newData)
     {
-        int size = newData.GetLength(0);
-        chunkSize = (byte)size;
         if (blocks != null) ClearChunk();
-        else blocks = new Dictionary<ChunkPos, Block>();
+
+        int size = newData.GetLength(0);
+        chunkSize = (byte)size;       
         Prepare();
 
         ChunkPos cpos;
@@ -1019,6 +1019,7 @@ public sealed partial class Chunk : MonoBehaviour
         InitializeMarkersHolder();
         surfaces = null;
         Destroy(nature);
+        nature = null;
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
         RenderDataFullRecalculation();        
@@ -1591,7 +1592,7 @@ public sealed partial class Chunk : MonoBehaviour
         var rb = fs.ReadByte();
         if (rb == 1)
         {
-            if (nature == null) nature = GetNature();
+            if (nature == null) nature = InitializeNature();
             nature.Load(fs, this);
         }
         

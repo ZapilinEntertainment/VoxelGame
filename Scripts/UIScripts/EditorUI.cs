@@ -73,6 +73,10 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
         {
             if (Input.GetMouseButtonDown(0)) Click();
         }
+        if (Input.GetKeyDown("m"))
+        {
+            GameMaster.geologyModule.SpreadMinerals(GameMaster.realMaster.mainChunk.GetSurfaces());
+        }
     }
 
     public void Click()
@@ -360,7 +364,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
         Constructor.GenerateSpiralsData(size, ref data);
         var chunk = GameMaster.realMaster.mainChunk;
         chunk.Rebuild(data);
-        chunk.GetNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
+        chunk.InitializeNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
     }
     
 

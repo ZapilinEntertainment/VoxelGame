@@ -1,25 +1,60 @@
 ﻿using System.IO;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Collections.Generic;
 
 [System.Serializable]
 public class Highscore
 {
     public readonly int gameID;
     public readonly string colonyName;
-    public readonly ulong score;
+    public readonly uint score;
     public readonly GameEndingType endType;
 
     public const int MAX_HIGHSCORES_COUNT = 10;
 
-    public Highscore(int i_gameID, string i_cname, ulong i_score, GameEndingType i_endType )
+    public Highscore(int i_gameID, string i_cname, uint i_score, GameEndingType i_endType )
     {
         gameID = i_gameID;
         colonyName = i_cname;
         score = i_score;
         endType = i_endType;
     }
+    #region save-load
+    public void Save(FileStream fs)
+    {
+        var data = System.Text.Encoding.Default.GetBytes(colonyName);
+        int bytesCount = data.Length;
+        fs.Write(System.BitConverter.GetBytes(bytesCount), 0, 4); // 0-3 | количество байтов, не длина строки
+        fs.Write(data, 0, bytesCount);
+        fs.Write(System.BitConverter.GetBytes(gameID), 0, 4);  // 0-3
+        fs.Write(System.BitConverter.GetBytes(score), 0, 4); // 4 - 7
+        fs.WriteByte((byte)endType); // 8
+    }
+    public static Highscore Load(FileStream fs, System.Text.Decoder decoder)
+    {
+        const int length = 4;
+        byte[] data = new byte[length];
+        char[] chars;
+        string name;
+
+        fs.Read(data, 0, length);
+        var bytesCount = System.BitConverter.ToInt32(data, 0);
+        if (bytesCount > 0 && bytesCount < 100000)
+        {
+            data = new byte[bytesCount];
+            fs.Read(data, 0, bytesCount);
+            chars = new char[decoder.GetCharCount(data, 0, bytesCount)];
+            decoder.GetChars(data, 0, bytesCount, chars, 0, true);
+            name = new string(chars);
+        }
+        else name = "highscore";
+        //
+        bytesCount = 9;
+        data = new byte[bytesCount];
+        fs.Read(data, 0, bytesCount);
+        return new Highscore(System.BitConverter.ToInt32(data, 0), name, System.BitConverter.ToUInt32(data, 4), (GameEndingType)data[8]);
+    }
+    #endregion
 
     public static void AddHighscore(Highscore h)
     {
@@ -134,18 +169,9 @@ public class Highscore
         highscores = newHighscores;
         FileStream fs = File.Create(Application.persistentDataPath + "/Highscores.lwhs");
         fs.WriteByte((byte)highscores.Length);
-        byte[] data;
-        int bytesCount = 0;
         foreach (var hs in highscores)
         {
-            data = System.Text.Encoding.Default.GetBytes(hs.colonyName);
-            bytesCount = data.Length;
-            fs.Write(System.BitConverter.GetBytes(bytesCount), 0, 4); //  количество байтов, не длина строки
-            fs.Write(data, 0, bytesCount);
-            data = System.BitConverter.GetBytes(hs.score);
-            fs.Write(data, 0, data.Length);
-            fs.Write(System.BitConverter.GetBytes(hs.gameID),0,4);
-            fs.WriteByte((byte)hs.endType);
+            hs.Save(fs);
         }
         fs.Close();
     }
@@ -166,29 +192,10 @@ public class Highscore
             {
                 if (count > MAX_HIGHSCORES_COUNT) count = MAX_HIGHSCORES_COUNT;
                 var hsa = new Highscore[count];
-                string name = "highscore";
-                var data = new byte[4];
                 System.Text.Decoder decoder = System.Text.Encoding.Default.GetDecoder();
-                char[] chars;
-                int bytesCount = 0;
                 for (int i = 0; i < count; i++)
                 {
-                    fs.Read(data, 0, 4);
-                    bytesCount = System.BitConverter.ToInt32(data, 0);
-                    if (bytesCount > 0 && bytesCount < 100000)
-                    {
-                        data = new byte[bytesCount];
-                        fs.Read(data, 0, bytesCount);
-                        chars = new char[decoder.GetCharCount(data, 0, bytesCount)];
-                        decoder.GetChars(data, 0, bytesCount, chars, 0, true);
-                        name = new string(chars);
-                    }
-                    else name = "highscore";
-                    //
-                    bytesCount = 13;
-                    data = new byte[bytesCount];
-                    fs.Read(data, 0, bytesCount);
-                    hsa[i] = new Highscore(System.BitConverter.ToInt32(data, 9), name, System.BitConverter.ToUInt64(data, 0), (GameEndingType)data[bytesCount - 1]);
+                    hsa[i] = Load(fs, decoder);
                 }
                 fs.Close();
                 return hsa;

@@ -57,8 +57,8 @@ public class Farm : WorkBuilding
             GameMaster.realMaster.labourUpdateEvent += LabourUpdate;
             subscribedToUpdate = true;
         }
-        if (basement.GetGrassland() == null) Grassland.CreateAt(basement, true);
         b.ChangeMaterial(ResourceType.FERTILE_SOIL_ID, true);
+        if (basement.GetGrassland() == null) Grassland.CreateAt(basement, true);        
 
         var emaster = GameMaster.realMaster.environmentMaster;
         lifepowerSupport = emaster.lifepowerSupport;

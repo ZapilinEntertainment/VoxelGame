@@ -394,7 +394,7 @@ public static partial class Localization
                         }
                     case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID:
-                     return "Запасает до " + Building.GetEnergyCapacity(id) + "единиц энергии. Может конвертировать кристаллы в энергию.";
+                     return "Запасает до " + Building.GetEnergyCapacity(id) + " единиц энергии. Может конвертировать кристаллы в энергию.";
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "Специально подготовленная площадка для выращивания еды. Потребляет жизненную энергию острова. Может быть построена только на грунте.";
@@ -442,7 +442,7 @@ public static partial class Localization
                     case Structure.MONUMENT_ID: return "Активирует и использует до четырёх артефактов. Внимание: перебои с питанием могут привести к повреждению артефактов.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Вокруг центра автоматически начнут появляться дома, которые центр будет снабжать всем необходимым. Его можно улучшать, чтобы начали строиться улучшенные здания, и спонсировать, чтобы мгновенно закончить текущее строительство.";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Вырабатывает энергию с помощью человеческих усилий, эффективность зависит от количества рабочих. Не требует топлива, но снижает настроение колонии.";
-                    case Structure.SCIENCE_LAB_ID: return "Исследует найденные Закономерности или вырабатывает очки Знания.";
+                    case Structure.SCIENCE_LAB_ID: return "Открывает доступ к окну Знания.";
                     case Structure.COMPOSTER_ID: return "Превращает органику в плодородную почву.";
                     case Structure.ENGINE_ID: return "Перемещает остров внутри кольца.";
                     case Structure.CONTROL_CENTER_ID: return "Расширяет возможности Движителя.";
@@ -480,7 +480,7 @@ public static partial class Localization
                         }
                     case Structure.ENERGY_CAPACITOR_1_ID:
                     case Structure.ENERGY_CAPACITOR_2_ID:
-                       return "Store up to " + Building.GetEnergyCapacity(id) + "energy points. Converts energy crystals to energy points.";
+                       return "Store up to " + Building.GetEnergyCapacity(id) + " energy points. Converts energy crystals to energy points.";
                     case Structure.FARM_1_ID:
                     case Structure.FARM_2_ID:
                     case Structure.FARM_3_ID: return "A field prepared for growing up food. Consumes island lifepower. Must be located on dirt.";
@@ -529,7 +529,7 @@ public static partial class Localization
                     case Structure.MONUMENT_ID: return "Activates and utilizes artifacts. Be careful : switching power supply may hurt artifacts.";
                     case Structure.SETTLEMENT_CENTER_ID: return "Automatically builds houses. Can be upgraded for creating advanced houses or sponsored to finish current construction immediately.";
                     case Structure.PSYCHOKINECTIC_GEN_ID: return "Produces energy through colonists effort, energy production depends on the number of workers. Does not require fuel, but lowers colony's happiness.";
-                    case Structure.SCIENCE_LAB_ID: return "Investigates Regularities found or generates Knowledge points.";
+                    case Structure.SCIENCE_LAB_ID: return "Gives access to the Knowledge Tab.";
                     case Structure.COMPOSTER_ID: return "Converts organic materials to fertile soil";
                     case Structure.ENGINE_ID: return "Moves island within the ring";
                     case Structure.CONTROL_CENTER_ID: return "Adds new engine abilities.";
@@ -3148,7 +3148,7 @@ public static partial class Localization
         switch (currentLanguage)
         {
             case Language.Russian:
-                return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2020гг н.э. \n" +
+                return "Выдумано и реализовано Zapilin Entertainment (мной), 2018 - 2021гг н.э. \n" +
                     "Собрано на Unity Engine 2019.3.15 \n" +
                     "В процессе разработки использовались следующие freeware - программы: \n" +
                     " - Blender от Blender Foundations \n" +
@@ -3156,7 +3156,7 @@ public static partial class Localization
                     " - Audacity \n" +
                     " - MS Visual Studio Community 2017\n" +
                     "\n" +
-                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу) и Amplify Occlusion Plugin \n" +                    
+                    "Использован шрифт \"neuropolitical rg\" от Typodermic Fonts Inc. (добавил адаптированную кириллицу) \n" +                    
                     "\n" +
                     "\n" +
                     "Вы можете поддержать мои разработки, купив сюжетные дополнения к Limited Worlds (в недалеком будущем) или сделав пожертвование на один из следующих кошельков: \n" +
@@ -3164,7 +3164,7 @@ public static partial class Localization
                     "Paypal: paypal.me/mahariusls\n" +
                     "Не забудьте приложить к дотации комментарий :)";
             case Language.English:
-                return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2020 AD \n" +
+                return "Imaginated and created by Zapilin Entertainment (me), 2018 - 2021 AD \n" +
                     "Builded on Unity Engine 2018.3.11 \n" +
                     "The following freeware was used in the development: \n" +
                     " - Blender by Blender Foundations \n" +
@@ -3172,7 +3172,7 @@ public static partial class Localization
                     " - Audacity \n" +
                     " - MS Visual Studio Community 2017\n" +
                     "\n" +
-                    "Used font \"neuropolitical rg\" by Typodermic Fonts Inc. and Amplify Occlusion Plugin\n" +
+                    "Used font \"neuropolitical rg\" by Typodermic Fonts Inc.\n" +
                     "\n" +
                     "\n" +
                     "You can support my development by buying storyline addons for Limited Worlds (not released yet) or making a donation to one of this accounts: \n" +

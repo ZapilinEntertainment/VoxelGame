@@ -267,12 +267,11 @@ public class Plane : MyObject
         s?.SetBasement(this);
         return s;
     }
-    public void BlockByStructure(Structure s)
+    public void BlockByStructure(Structure s, bool deleteStructures)
     {
-        // anchor basement
         if (mainStructure == null)
         {
-            if (extension != null)
+            if (extension != null & deleteStructures)
             {
                 extension.Annihilate(PlaneAnnihilationOrder.ExtensionRemovedByFullScaledStructure);
             }

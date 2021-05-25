@@ -22,7 +22,7 @@ public sealed class FollowingCamera : MonoBehaviour {
 
 	Vector3 lookPoint;
 	private bool changingBasePos = false,  zoom_oneChangeIgnore = false, camRotationBlocked = false, useEnvironmentalCamera = false,
-        positionLoaded = false;
+        positionLoaded = false, lookOnTarget = false;
     public static float camRotateTrace { get; private set; } // чтобы не кликалось после поворота камеры
 #pragma warning disable 0649
     [SerializeField] private bool initializeEnvCameraOnStart = false;
@@ -81,9 +81,13 @@ public sealed class FollowingCamera : MonoBehaviour {
 
         if (initializeEnvCameraOnStart) EnableEnvironmentalCamera();
     }
+    private void ResetInnerCamera()
+    {
+        camTransform.position = transform.position + transform.TransformDirection(DEFAULT_CAM_POINT);        
+    }
     public void CameraToStartPosition()
     {
-        camTransform.position = transform.position + transform.TransformDirection(DEFAULT_CAM_POINT);
+        ResetInnerCamera();
         camTransform.LookAt(transform.position);
 
         var cpos = GameMaster.sceneCenter;
@@ -122,6 +126,10 @@ public sealed class FollowingCamera : MonoBehaviour {
 
         if (mv != Vector3.zero)
         {
+            if (lookOnTarget)
+            {
+                ResetInnerCamera();
+            }
             if (mv.x / moveSmoothCoefficient.x > 0) mv.x += moveSmoothAcceleration; else moveSmoothCoefficient.x = 0;
             if (mv.y / moveSmoothCoefficient.y > 0) mv.y += moveSmoothAcceleration; else moveSmoothCoefficient.y = 0;
             if (mv.z / moveSmoothCoefficient.z > 0) mv.z += moveSmoothAcceleration; else moveSmoothCoefficient.z = 0;
@@ -301,14 +309,15 @@ public sealed class FollowingCamera : MonoBehaviour {
         {
             camTransform.position = transform.position + transform.TransformDirection(DEFAULT_CAM_POINT);
             camTransform.LookAt(transform.position);
-        } 
+        }       
 	}
-    public void SetObservingPosition(Vector3 point, Vector3 direction)
+    public void SetObservingPosition(Vector3 point, Vector3 target)
     {
         camBasisTransform.position = point;
-        camBasisTransform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(direction, Vector3.up));
-        camTransform.localPosition = Vector3.zero;
-        camTransform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        camBasisTransform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(target-point, Vector3.up));
+        camTransform.localPosition = Vector3.up * 0.1f;
+        camTransform.LookAt(target);
+        lookOnTarget = true;
     }
 
     private void StopCameraMovement()

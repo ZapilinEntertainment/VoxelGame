@@ -288,7 +288,7 @@ public sealed class Gardens : WorkBuilding
         SetBuildingData(b, pos);
         if (lifepowerAffectID == -1)
         {
-            var n = GameMaster.realMaster.mainChunk.GetNature();
+            var n = GameMaster.realMaster.mainChunk.InitializeNature();
             if (n != null)
             {
                 lifepowerAffectID =  n.AddLifepowerAffection(isEnergySupplied ? LIFEPOWER_AFFECTION : LIFEPOWER_AFFECTION / 2f);
@@ -300,12 +300,12 @@ public sealed class Gardens : WorkBuilding
         base.SwitchActivityState();
         if (lifepowerAffectID != -1)
         {
-            GameMaster.realMaster.mainChunk.GetNature()?.ChangeLifepowerAffection(lifepowerAffectID, isEnergySupplied ? LIFEPOWER_AFFECTION : LIFEPOWER_AFFECTION / 2f);
+            GameMaster.realMaster.mainChunk.InitializeNature()?.ChangeLifepowerAffection(lifepowerAffectID, isEnergySupplied ? LIFEPOWER_AFFECTION : LIFEPOWER_AFFECTION / 2f);
         }
         else
         {
             if (isEnergySupplied)
-                lifepowerAffectID = GameMaster.realMaster.mainChunk.GetNature().AddLifepowerAffection(isEnergySupplied ? LIFEPOWER_AFFECTION : LIFEPOWER_AFFECTION / 2f);
+                lifepowerAffectID = GameMaster.realMaster.mainChunk.InitializeNature().AddLifepowerAffection(isEnergySupplied ? LIFEPOWER_AFFECTION : LIFEPOWER_AFFECTION / 2f);
         }
     }
 }

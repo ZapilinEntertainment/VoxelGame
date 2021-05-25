@@ -21,6 +21,7 @@ public class GeologyModule : MonoBehaviour {
         int res = PlaneExtension.INNER_RESOLUTION;
         foreach (var p in planes)
         {
+            if (p.fulfillStatus == FullfillStatus.Full) continue;
             pe = p.FORCED_GetExtension();
             List<PixelPosByte> positions = pe.GetRandomCells(MAX_OBJECTS_PER_PLANE);
             if (positions.Count == 0) continue;

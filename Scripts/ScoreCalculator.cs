@@ -1,6 +1,6 @@
 ﻿public class ScoreCalculator
 {
-    public static double GetScore(GameMaster gm)
+    public static uint GetScore(GameMaster gm)
     {
         double score = 0;
         // подготовка
@@ -161,8 +161,9 @@
         }
         score *= (int)GameMaster.realMaster.difficulty / 3f;
 
-        // + за артефакты
 
-        return score;
+        // + за артефакты
+        if (score < 0f) score = 0f; // lol
+        return (uint)score;
     }
 }

@@ -51,7 +51,7 @@ public sealed class HangingTMast : WorkBuilding
         {
             if (lifepowerAffectionID != -1)
             {
-                basement.myChunk.GetNature().RemoveLifepowerAffection(lifepowerAffectionID);
+                basement.myChunk.InitializeNature().RemoveLifepowerAffection(lifepowerAffectionID);
                 lifepowerAffectionID = -1;
             }
         }
@@ -70,8 +70,8 @@ public sealed class HangingTMast : WorkBuilding
             if (newLPSurplus != lifepowerSurplus)
             {
                 if (lifepowerAffectionID == -1)
-                    lifepowerAffectionID = basement.myChunk.GetNature().AddLifepowerAffection(newLPSurplus);
-                else basement.myChunk.GetNature().ChangeLifepowerAffection(lifepowerAffectionID, newLPSurplus);
+                    lifepowerAffectionID = basement.myChunk.InitializeNature().AddLifepowerAffection(newLPSurplus);
+                else basement.myChunk.InitializeNature().ChangeLifepowerAffection(lifepowerAffectionID, newLPSurplus);
             }
         }
     }

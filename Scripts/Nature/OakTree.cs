@@ -267,7 +267,7 @@ public sealed class OakTree : Plant
 
         if (!typeRegistered)
         {
-            GameMaster.realMaster.mainChunk.GetNature().RegisterNewLifeform(type);
+            GameMaster.realMaster.mainChunk.InitializeNature().RegisterNewLifeform(type);
             typeRegistered = true;
         }
 
@@ -285,7 +285,7 @@ public sealed class OakTree : Plant
         {
             if (typeRegistered)
             {
-                GameMaster.realMaster.mainChunk.GetNature().UnregisterLifeform(GetPlantType());
+                GameMaster.realMaster.mainChunk.InitializeNature().UnregisterLifeform(GetPlantType());
                 typeRegistered = false;
             }
         }

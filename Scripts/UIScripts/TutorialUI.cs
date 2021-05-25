@@ -3,167 +3,169 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TutorialScenarioNS;
-
-public sealed class TutorialUI : MonoBehaviour
+namespace TutorialScenarioNS
 {
-    
-    [SerializeField] private Text hugeLabel, mainText;
-    [SerializeField] private GameObject adviceWindow, outerProceedButton;
-    [SerializeField] private RectTransform showframe, showArrow;
-    private UIController uicontroller;
-    private MainCanvasController mcc;
-    private GraphicRaycaster grcaster;
-    private TutorialScenario currentScenario;
-    private float timer;
-    private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
-    public static TutorialUI current { get; private set; }
+    public sealed class TutorialUI : MonoBehaviour
+    {
+        [SerializeField] private Text hugeLabel, mainText;
+        [SerializeField] private GameObject adviceWindow, outerProceedButton;
+        [SerializeField] private RectTransform showframe, showArrow;
+        private UIController uicontroller;
+        private MainCanvasController mcc;
+        private GraphicRaycaster grcaster;
+        public TutorialScenario currentScenario { get; private set; }
+        private float timer;
+        private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
+        public static TutorialUI current { get; private set; }
 
 
-    public static void Initialize()
-    {
-        var g = Instantiate(Resources.Load<GameObject>("UIPrefs/tutorialCanvas"));
-        current = g.GetComponent<TutorialUI>();
-        UIController.GetCurrent().AddSpecialCanvasToHolder(g.transform);
-    }
-
-    private void Start()
-    {
-        GameMaster.realMaster.PrepareColonyController(true);
-        uicontroller = UIController.GetCurrent();
-        mcc = uicontroller.GetMainCanvasController();
-        grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
-        //
-        GameConstants.DisableTutorialNote();
-        TutorialScenario.Initialize(this, mcc);
-        //TestMaster.CreateColony();
-        StartScenario(TutorialScenario.GetScenario(0));
-    }
-    private void StartScenario(TutorialScenario s)
-    {
-        currentScenario = s;
-        GameMaster.realMaster.BindScenario(s);
-        grcaster.enabled = !s.blockCanvasRaycaster;
-        currentScenario.StartScenario();
-    }
-
-    private void Update()
-    {
-        if (timer > 0f)
+        public static void Initialize()
         {
-            timer = Mathf.MoveTowards(timer, 0f, Time.deltaTime);
-            if (timer <= 0f)
+            var g = Instantiate(Resources.Load<GameObject>("UIPrefs/tutorialCanvas"));
+            current = g.GetComponent<TutorialUI>();
+            UIController.GetCurrent().AddSpecialCanvasToHolder(g.transform);
+        }
+
+        private void Start()
+        {
+            GameMaster.realMaster.PrepareColonyController(true);
+            uicontroller = UIController.GetCurrent();
+            mcc = uicontroller.GetMainCanvasController();
+            grcaster = mcc.GetMainCanvasTransform().GetComponent<GraphicRaycaster>();
+            //
+            GameConstants.DisableTutorialNote();
+            TutorialScenario.Initialize(this, mcc);
+            //TestMaster.CreateColony();
+            StartScenario(TutorialScenario.GetScenario(0));
+        }
+        private void StartScenario(TutorialScenario s)
+        {
+            currentScenario = s;
+            GameMaster.realMaster.BindScenario(s);
+            grcaster.enabled = !s.blockCanvasRaycaster;
+            currentScenario.StartScenario();
+        }
+
+        private void Update()
+        {
+            if (timer > 0f)
             {
-                timer = 0f;
-                if (activateOuterProceedAfterTimer == true && currentScenario != null) outerProceedButton.SetActive(true);                
+                timer = Mathf.MoveTowards(timer, 0f, Time.deltaTime);
+                if (timer <= 0f)
+                {
+                    timer = 0f;
+                    if (activateOuterProceedAfterTimer == true && currentScenario != null) outerProceedButton.SetActive(true);
+                }
             }
         }
-    }
 
-  
 
-    public void OKButton()
-    {
-        if (adviceWindow.activeSelf) adviceWindow.SetActive(false);
-        timer = 0f;
-        currentScenario.OKButton();
-        grcaster.enabled = true;
-    }
-    public void ProceedButton()
-    {
-        currentScenario?.Proceed();
-        timer = 0f;
-        outerProceedButton.SetActive(false);
-    }
 
-    //
-    public void OpenTextWindow(string[] s)
-    {
-        hugeLabel.text = s[0];
-        mainText.text = s[1];
-        INLINE_OpenTextWindow();
-    }
-    public void OpenTextWindow(string label, string description)
-    {
-        hugeLabel.text = label;
-        mainText.text = description;
-        INLINE_OpenTextWindow();
-    }
-    private void INLINE_OpenTextWindow()
-    {
-        if (currentScenario.DropAnySelectionWhenWindowOpens()) mcc.ChangeChosenObject(ChosenObjectType.None);
-        adviceWindow.SetActive(true);
-        grcaster.enabled = currentScenario.blockCanvasRaycaster;
-    }
+        public void OKButton()
+        {
+            if (adviceWindow.activeSelf) adviceWindow.SetActive(false);
+            timer = 0f;
+            currentScenario.OKButton();
+            grcaster.enabled = true;
+        }
+        public void ProceedButton()
+        {
+            currentScenario?.Proceed();
+            timer = 0f;
+            outerProceedButton.SetActive(false);
+        }
 
-    public void SetShowframe(RectTransform target)
-    {
-        showframe.position = target.position;
-        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, target.rect.width);
-        showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
-        if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
-    }
-    public void ShowarrowToShowframe_Left()
-    {
-        if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
-        showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
-        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
-        showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
-        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
-    }
-    public void ShowarrowToShowframe_Up()
-    {
-        showArrow.Rotate(Vector3.up * 90f);
-        showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
-        if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
-    }
-    public void DisableShowArrow() { showArrow.gameObject.SetActive(false); }
-    public void DisableShowframe() { showframe.gameObject.SetActive(false); }
-    public void ActivateProceedTimer(float t)
-    {
-        if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
-        timer = t;
-        activateOuterProceedAfterTimer = true;
-    }
-    public void SetCanvasRaycasterStatus(bool active)
-    {
-        grcaster.enabled = active;
-    }
-
-    public RectTransform GetAdviceWindow() {
-        return adviceWindow.GetComponent<RectTransform>();        
-    }
-    public void AdviceWindowToStartPosition()
-    {
-        var rt = adviceWindow.GetComponent<RectTransform>();
-        rt.anchorMax = Vector2.one * 0.5f;
-        rt.anchorMin = Vector2.one * 0.5f;
-        rt.localPosition = Vector2.zero;
-    }
-    //
-    public void NextScenario()
-    {
-        //endscenario
-        if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
-        timer = 0f;
-        if (showframe.gameObject.activeSelf) showframe.gameObject.SetActive(false);
-        if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
-        if (!grcaster.enabled) grcaster.enabled = true;
-        mcc.ChangeChosenObject(ChosenObjectType.None);
         //
-        if (currentScenario.step != TutorialStep.UpgradeHQ)
+        public void OpenTextWindow(string[] s)
         {
-            var nextStep = currentScenario.step + 1;
-            StartScenario(TutorialScenario.GetScenario(nextStep));
+            hugeLabel.text = s[0];
+            mainText.text = s[1];
+            INLINE_OpenTextWindow();
         }
-        else
+        public void OpenTextWindow(string label, string description)
         {
-            GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Easy, StartFoundingType.Nothing));
-            var qs = currentScenario.DefineQuestSection();
-            if (qs == QuestSection.Endgame) mcc.questUI.BlockQuestPosition(qs);
-            GameMaster.realMaster.UnbindScenario(currentScenario);
-            currentScenario = null;
-            Destroy(gameObject);
+            hugeLabel.text = label;
+            mainText.text = description;
+            INLINE_OpenTextWindow();
         }
+        private void INLINE_OpenTextWindow()
+        {
+            if (currentScenario.DropAnySelectionWhenWindowOpens()) mcc.ChangeChosenObject(ChosenObjectType.None);
+            adviceWindow.SetActive(true);
+            grcaster.enabled = currentScenario.blockCanvasRaycaster;
+        }
+
+        public void SetShowframe(RectTransform target)
+        {
+            showframe.position = target.position;
+            showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, target.rect.width);
+            showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
+            if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
+        }
+        public void ShowarrowToShowframe_Left()
+        {
+            if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
+            showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
+            showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
+            showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
+            if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
+        }
+        public void ShowarrowToShowframe_Up()
+        {
+            showArrow.Rotate(Vector3.up * 90f);
+            showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
+            if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
+        }
+        public void DisableShowArrow() { showArrow.gameObject.SetActive(false); }
+        public void DisableShowframe() { showframe.gameObject.SetActive(false); }
+        public void ActivateProceedTimer(float t)
+        {
+            if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
+            timer = t;
+            activateOuterProceedAfterTimer = true;
+        }
+        public void SetCanvasRaycasterStatus(bool active)
+        {
+            grcaster.enabled = active;
+        }
+
+        public RectTransform GetAdviceWindow()
+        {
+            return adviceWindow.GetComponent<RectTransform>();
+        }
+        public void AdviceWindowToStartPosition()
+        {
+            var rt = adviceWindow.GetComponent<RectTransform>();
+            rt.anchorMax = Vector2.one * 0.5f;
+            rt.anchorMin = Vector2.one * 0.5f;
+            rt.localPosition = Vector2.zero;
+        }
+        //
+        public void NextScenario()
+        {
+            //endscenario
+            if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
+            timer = 0f;
+            if (showframe.gameObject.activeSelf) showframe.gameObject.SetActive(false);
+            if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
+            if (!grcaster.enabled) grcaster.enabled = true;
+            mcc.ChangeChosenObject(ChosenObjectType.None);
+            //
+            if (currentScenario.step != TutorialStep.UpgradeHQ)
+            {
+                var nextStep = currentScenario.step + 1;
+                StartScenario(TutorialScenario.GetScenario(nextStep));
+            }
+            else
+            {
+                GameMaster.realMaster.ChangePlayMode(GameStartSettings.GetModeChangingSettings(GameMode.Survival, Difficulty.Easy, StartFoundingType.Nothing));
+                var qs = currentScenario.DefineQuestSection();
+                if (qs == QuestSection.Endgame) mcc.questUI.BlockQuestPosition(qs);
+                GameMaster.realMaster.UnbindScenario(currentScenario);
+                currentScenario = null;
+                Destroy(gameObject);
+            }
+        }
+        //
     }
-    //
 }

@@ -36,9 +36,9 @@ public sealed class LifeSource : Structure {
                     {
                         chunk.DeleteBlock(position.OneBlockForward(), BlockAnnihilationOrder.SystemDestruction);
                     }
-                    var g = chunk.GetNature()?.CreateGrassland(p, 2000f);
+                    var g = chunk.InitializeNature()?.CreateGrassland(p, 2000f);
                     g?.SYSTEM_UseLifepower();
-                    p.BlockByStructure(this);
+                    p.BlockByStructure(this,false);
                 }
             }
             ChunkPos cpos2 = new ChunkPos(cpos.x - 1, cpos.y, cpos.z + 1);  if (cpos2.isOkay) CheckAndCreate(cpos2);
@@ -76,7 +76,7 @@ public sealed class LifeSource : Structure {
                 subscribedToRestoreBlockersUpdate = true;
             }
         }
-        basement.myChunk.GetNature().AddLifesource(this);
+        basement.myChunk.InitializeNature().AddLifesource(this);
         basement.ChangeMaterial(PoolMaster.MATERIAL_GRASS_100_ID, true);
     }
     public void RestoreBlockers()
@@ -131,7 +131,7 @@ public sealed class LifeSource : Structure {
             cpos2 = new ChunkPos(cpos.x, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
             cpos2 = new ChunkPos(cpos.x + 1, cpos.y, cpos.z - 1); if (cpos2.isOkay) CheckAndUnblock(cpos2);
 
-            basement.myChunk.GetNature().RemoveLifesource(this);
+            basement.myChunk.InitializeNature().RemoveLifesource(this);
             basement.ChangeMaterial(ResourceType.DIRT_ID, true);
             if (GameMaster.realMaster.gameMode != GameMode.Editor)
             {               

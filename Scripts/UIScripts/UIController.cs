@@ -172,7 +172,7 @@ public class UIController : MonoBehaviour
                     }
                 case UIMode.Endgame:
                     {                        
-                        if (endPanelController != null) Destroy(endPanelController);
+                        if (endPanelController != null) Destroy(endPanelController.gameObject);
                         break;
                     }
             }
@@ -255,7 +255,7 @@ public class UIController : MonoBehaviour
         globalMapCanvasController?.SetGlobalMap(GameMaster.realMaster.globalMap);
     }
 
-    public void GameOver( GameEndingType endType, ulong score )
+    public void GameOver( GameEndingType endType, uint score )
     {        
         GetEndPanelController().Prepare(endType, score);
         ChangeUIMode(UIMode.Endgame, true);           

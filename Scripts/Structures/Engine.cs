@@ -12,7 +12,7 @@ public class Engine : Building
 
     override protected void SwitchActivityState()
     {
-        if (engineID == -1) engineID = GameMaster.realMaster.globalMap.AddEngine(this);
+        if (engineID == -1) engineID = GameMaster.realMaster.InitializeGlobalMap().AddEngine(this);
         ChangeRenderersView(isActive & isEnergySupplied);        
     }
 

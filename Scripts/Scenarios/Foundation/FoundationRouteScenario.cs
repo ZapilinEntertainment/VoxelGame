@@ -29,7 +29,8 @@ public sealed class FoundationRouteScenario : Scenario
     {
         localizer = new Localizer();
         colony = GameMaster.realMaster.colonyController;
-        questUI = UIController.GetCurrent().GetMainCanvasController().questUI;        
+        questUI = UIController.GetCurrent().GetMainCanvasController().questUI;
+        Knowledge.GetCurrent()?.SetExecutingScenarioIndex((int)Knowledge.ResearchRoute.Foundation);
     }
     public void PrepareUI()
     {
@@ -123,7 +124,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
     private void CheckSettlingConditions()
     {
-        if (GameMaster.loading) return;
+        if (completed || GameMaster.loading) return;
         settleQuest.CheckQuestConditions(); // for resource
         int x = anchorBasement.colonistsArrived;
         settleQuest.stepsAddInfo[0] = x.ToString() + " / " + COLONISTS_SEND_LIMIT.ToString();
@@ -137,6 +138,7 @@ public sealed class FoundationRouteScenario : Scenario
 
     private void SendColonists()
     {
+        if (completed) return;
         if (anchorBasement.colonistsArrived >= COLONISTS_SEND_LIMIT)
         {
             if (colony.storage.GetResourceCount(COST_RESOURCE_ID) >= COLONISTS_SEND_COST)
@@ -159,16 +161,32 @@ public sealed class FoundationRouteScenario : Scenario
 
     public override void EndScenario()
     {
-        Debug.Log("route finished");
+        completed = true;
         GameMaster.SetPause(true);
         GameMaster.realMaster.UnbindScenario(this);
-        scenarioUI?.ScenarioEnds(this);
+
+        if (scenarioUI != null)
+        {
+            scenarioUI.DisableConditionPanel(0);
+            scenarioUI.DisableConditionPanel(1);            
+            scenarioUI.ScenarioEnds(this);
+        }
+        settleWindow = null;
+        if (settleQuest != null)
+        {
+            settleQuest.MakeQuestCompleted(); settleQuest = null;
+            UIController.GetCurrent().updateEvent -= CheckSettlingConditions;
+        }
+        scenarioQuest?.MakeQuestCompleted();scenarioQuest = null;
+        //hexBuilder.
         //
         FollowingCamera.main.SetObservingPosition(
             hexBuilder.GetHexWorldPosition(new HexPosition(3, Random.Range(0, 18))) + Vector3.up * 5f,
-          (GameMaster.sceneCenter + Vector3.down * 5f - FollowingCamera.camPos) * -1
+          GameMaster.sceneCenter + Vector3.down * 5f
         );
-        UIController.GetCurrent().ChangeUIMode(UIMode.Endgame, true);
+        //UIController.GetCurrent().ChangeUIMode(UIMode.Endgame, true);
+        GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
+        GameMaster.SetPause(false); // minus one pause request
     }
     public override void ClearScenarioDecorations()
     {
@@ -672,7 +690,7 @@ public sealed class FoundationRouteScenario : Scenario
     sealed class FDR_Finish : FDR_Subscenario
     {
         public const int COLONISTS_GOAL = 100;
-        private const float CITIZENS_PART = 0.02f;
+        private const float CITIZENS_PART = 0.2f;
         private bool windowShowed = false, ignoreCitizenUpdate = false;
         private int savedCitizensCount = -1;
         private ConditionQuest conditionQuest;
@@ -724,7 +742,7 @@ public sealed class FoundationRouteScenario : Scenario
                 int delta = c - savedCitizensCount;
                 if (delta > 0)
                 {
-                    delta = (int)(CITIZENS_PART * delta);
+                    delta = (int)((CITIZENS_PART * (0.8f + Random.value * 1.3f)) * delta);
                     if (delta > 0)
                     {
                         anchorBasement.SYSTEM_AddColonists(delta);

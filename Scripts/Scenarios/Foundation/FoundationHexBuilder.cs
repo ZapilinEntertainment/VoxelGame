@@ -211,7 +211,7 @@ namespace FoundationRoute
                 colony.storage.GetResources(ResourceType.Food, totalFoodProduction * foodCf * rm.gameRules.foodSpendRate);
             }
             else colony.storage.AddResource(ResourceType.Food, totalFoodProduction * foodCf);
-            var n = rm.mainChunk.GetNature();
+            var n = rm.mainChunk.InitializeNature();
             if (n != null)
             {
                 if (totalLifepower > 0f) n.AddLifepower(totalLifepower * natureCf);
