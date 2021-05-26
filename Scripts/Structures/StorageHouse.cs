@@ -17,10 +17,10 @@ public class StorageHouse : Building {
     {
         switch (level)
         {
-            case 0: return 10000;
-            case 1: return 15000;
-            case 2: return 25000;
-            case 3: return 50000;
+            case 0: return 20000;
+            case 1: return 30000;
+            case 2: return 45000;
+            case 3: return 80000;
             case 5: return 200000;
             default: return 1000;
         }

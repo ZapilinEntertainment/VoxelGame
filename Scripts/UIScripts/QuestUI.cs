@@ -291,11 +291,11 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
     {
         bool createNewQuests = prepareQuestIfNone & GameMaster.realMaster.UseQuestAutoCreating();
         questAccessMap[0] = true; 
-        if (prepareQuestIfNone && activeQuests[0] == Quest.NoQuest) StartNewQuestAwaiting(0);
+        if (createNewQuests && activeQuests[0] == Quest.NoQuest) StartNewQuestAwaiting(0);
         questAccessMap[1] = true;
-        if (prepareQuestIfNone && activeQuests[1] == Quest.NoQuest) StartNewQuestAwaiting(1);
+        if (createNewQuests && activeQuests[1] == Quest.NoQuest) StartNewQuestAwaiting(1);
         questAccessMap[2] = true;
-        if (prepareQuestIfNone && activeQuests[2] == Quest.NoQuest) StartNewQuestAwaiting(2);
+        if (createNewQuests && activeQuests[2] == Quest.NoQuest) StartNewQuestAwaiting(2);
         HeadQuarters hq = GameMaster.realMaster.colonyController?.hq;
         if (hq != null)
         {
@@ -305,35 +305,35 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
                 if (questAccessMap[3] == false) UnblockQuestPosition(QuestSection.Three, prepareQuestIfNone);
                 else
                 {
-                    if (prepareQuestIfNone && activeQuests[3] == Quest.NoQuest) StartNewQuestAwaiting(3);
+                    if (createNewQuests && activeQuests[3] == Quest.NoQuest) StartNewQuestAwaiting(3);
                 }
                 if (lvl >= 3)
                 {
                     if (questAccessMap[4] == false) UnblockQuestPosition(QuestSection.Five, prepareQuestIfNone);
                     else
                     {
-                        if (prepareQuestIfNone && activeQuests[4] == Quest.NoQuest) StartNewQuestAwaiting(4);
+                        if (createNewQuests && activeQuests[4] == Quest.NoQuest) StartNewQuestAwaiting(4);
                     }
                     if (lvl >= 4)
                     {
                         if (questAccessMap[6] == false) UnblockQuestPosition(QuestSection.Six, prepareQuestIfNone);
                         else
                         {
-                            if (prepareQuestIfNone && activeQuests[6] == Quest.NoQuest) StartNewQuestAwaiting(5);
+                            if (createNewQuests && activeQuests[6] == Quest.NoQuest) StartNewQuestAwaiting(5);
                         }
                         if (lvl >= 5)
                         {
                             if (questAccessMap[7] == false) UnblockQuestPosition(QuestSection.Seven, prepareQuestIfNone);
                             else
                             {
-                                if (prepareQuestIfNone && activeQuests[7] == Quest.NoQuest) StartNewQuestAwaiting(7);
+                                if (createNewQuests && activeQuests[7] == Quest.NoQuest) StartNewQuestAwaiting(7);
                             }
                             if (lvl >= 6)
                             {
                                 if (questAccessMap[8] == false) UnblockQuestPosition(QuestSection.Eight, prepareQuestIfNone);
                                 else
                                 {
-                                    if (prepareQuestIfNone && activeQuests[8] == Quest.NoQuest) StartNewQuestAwaiting(8);
+                                    if (createNewQuests && activeQuests[8] == Quest.NoQuest) StartNewQuestAwaiting(8);
                                 }
                             }
                         }

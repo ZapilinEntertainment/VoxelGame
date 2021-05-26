@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
 {
     [SerializeField] private Transform buttonsHolder,savePanelSpace;
-    [SerializeField] private GameObject optionsPanel;
+    [SerializeField] private GameObject optionsPanel, advicePanel;
 
     private enum MenuSection { NoSelection, Save, Load, Options, Advice }
     private MenuSection selectedMenuSection = MenuSection.NoSelection;
@@ -110,6 +110,10 @@ public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
                     buttonsHolder.GetChild(OPTIONS_BTN_INDEX).GetComponent<Image>().overrideSprite = null;
                     optionsPanel.SetActive(false);
                     break;
+                case MenuSection.Advice:
+                    buttonsHolder.GetChild(ADVICE_BTN_INDEX).GetComponent<Image>().overrideSprite = null;
+                    advicePanel.SetActive(false);
+                    break;
             }
             selectedMenuSection = ms;
             switch (selectedMenuSection)
@@ -118,6 +122,11 @@ public class GameOptionsSubpanel : MonoBehaviour, ILocalizable
                 case MenuSection.Load: buttonsHolder.GetChild(LOAD_BTN_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite; break;
                 case MenuSection.Options:
                     buttonsHolder.GetChild(OPTIONS_BTN_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    break;
+                case MenuSection.Advice:
+                    buttonsHolder.GetChild(ADVICE_BTN_INDEX).GetComponent<Image>().overrideSprite = PoolMaster.gui_overridingSprite;
+                    advicePanel.GetComponent<AdvicesUI>().PrepareAdvice();
+                    advicePanel.SetActive(true);
                     break;
                 case MenuSection.NoSelection:
                     break;

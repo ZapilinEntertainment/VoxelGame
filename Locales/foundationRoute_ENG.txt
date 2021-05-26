@@ -1,16 +1,16 @@
 2 63
 [01]We decided that our population will be our stability. Our people are many, and united we stand tall. So lets transform our small home into a powerful country!
-[02]For owning our own lands we will need a lot of resources, workpower and transport mechanisms. At first we need an
+[02]For owning our own lands we will need a lot of resources, workforce and transport mechanisms. At first we need an
 [03]. This massive construction needs a very powerful energy source with a 3x3 free space and shall be built at the bottom side of the island.
 [04]Build
-[05]. Make attention that it needs a lot of energy supply. Also its workspeed will be in dependency of excess energy reserves. Be sure that you have got well-prepared power base.
+[05]. Make attention that it needs a lot of energy supply. Be sure that you have got well-prepared power base!
 [06]Now continue supplying the Anchor with power.
 [07]thousands of energy to start anchoring your island!
 [08]Collect
 [09] energy and then press "
 [10]" button to start anchoring.
 [15]Anchor enabled, start charging!
-[11]Now when the anchor is stable we have to finish first inner ring to support further construction. Note again, that lift speed will be affected by excess power supply - up to
+[11]Now when the anchor is stable we have to finish first inner ring to support further construction.
 [12]Inner ring construction
 [13]Construct inner platforms ring before further expansion. Track objectives on right panel and build new sectors when possible.
 [14]Sectors built
@@ -18,7 +18,7 @@
 [17]Wait until passenger pier will stand in position.
 [18]New pier is ready to access. Press the "ready" button to start colonization!
 [19]Colonists arrived:
-[20]Outer ring construction includes both building and colonizing. Be sure that you match <conditions>!
+[20]Outer ring construction includes both building and colonizing. Check sector building conditions at the right panel.
 [21]Outer ring construction
 -
 [22]Residential
@@ -40,11 +40,11 @@
 [38]Lake
 [39]A place of nature.
 [40]Industrial
-[41]Different facilities, supporting your colonists, and also supplying trade ships.
+[41]Different facilities, supporting your colonists. Also increases the buildings limit.
 [42]Experimental Industrial
 [43]High-tech machinery with research labs- the place where future forges.
 [44]Powerplant
-[45]Supplies newfound colony, make them more independent frmm island energy grid. 
+[45]Supplies newfound colony, make them more independent from island energy grid. 
 [46]Total count
 -
 [47]Residential areas

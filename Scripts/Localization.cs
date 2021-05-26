@@ -1,7 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.IO;
 
 public enum Language : ushort { English, Russian }; // menuUI - options preparing
+public static class LanguageExtension
+{
+    public static string GetFilePostfix(this Language lang)
+    {
+        switch (lang)
+        {
+            case Language.Russian: return "_RU";
+            default: return "_ENG";
+        }
+    }
+}
+
 public enum LocalizedWord : ushort
 {
      Buy, Cancel, Close, Crew, Crews, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
@@ -3319,4 +3332,36 @@ public static partial class Localization
     }
     #endregion
 
+
+    public static void LoadLocalesData(string filename, ref string[] lines)
+    {
+        string path = "Assets/Locales/" + filename + currentLanguage.GetFilePostfix() + ".txt";
+        if (!File.Exists(path)) path = "Assets/Locales/" + filename + default(Language).GetFilePostfix() + ".txt";
+
+        // using Unicode
+        using (StreamReader sr = File.OpenText(path))
+        {
+            string s = sr.ReadLine();
+            int i = 0, indexLength = (int)char.GetNumericValue(s[0]),
+                count = int.Parse(s.Substring(2, 2)), index, length;
+            lines = new string[count];
+            while (i < count && !sr.EndOfStream)
+            {
+                s = sr.ReadLine();
+                length = s.Length;
+                if (length == 0 || s[0] == '-') continue;
+                else
+                {
+                    if (s[0] == '[' && s[indexLength + 1] == ']')
+                    {
+                        index = int.Parse(s.Substring(1, indexLength));
+                        if (lines[index] != null) Debug.Log("string " + index.ToString() + " was rewrited");
+                        lines[index] = s.Substring(indexLength + 2, length - indexLength - 2);
+                        i++;
+                    }
+                    else Debug.Log("error in line " + i.ToString() + ": " + s[0] + s[indexLength]);
+                }
+            }
+        }
+    }
 }

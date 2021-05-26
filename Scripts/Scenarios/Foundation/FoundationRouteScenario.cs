@@ -826,30 +826,7 @@ public sealed class FoundationRouteScenario : Scenario
 
         public Localizer()
         {
-            using (StreamReader sr = File.OpenText("Assets/Locales/foundationRoute_ENG.txt"))
-            {
-                string s = sr.ReadLine();
-                int i = 0, indexLength = (int)char.GetNumericValue(s[0]),
-                    count = int.Parse(s.Substring(2, 2)), index, length;
-                lines = new string[count];
-                while (i < count && !sr.EndOfStream)
-                {
-                    s = sr.ReadLine();
-                    length = s.Length;
-                    if (length == 0 || s[0] == '-') continue;
-                    else
-                    {
-                        if (s[0] == '[' && s[indexLength + 1] == ']')
-                        {
-                            index = int.Parse(s.Substring(1, indexLength));
-                            if (lines[index] != null) Debug.Log("string " + index.ToString() + " was rewrited");
-                            lines[index] = s.Substring(indexLength + 2, length - indexLength - 2);
-                            i++;
-                        }
-                        else Debug.Log("error in line " + i.ToString() + ": " + s[0] + s[indexLength]);
-                    }
-                }
-            }
+           Localization.LoadLocalesData("foundationRoute", ref lines);
         }
         public string GetAnnounceTitle(FoundationScenarioStep step, byte subIndex)
         {
@@ -878,7 +855,7 @@ public sealed class FoundationRouteScenario : Scenario
                     {
                         switch (subIndex)
                         {
-                            case WINDOW_INFO_0: return lines[11] + ' ' + ((int)AnchorBasement.MAX_EXCESS_POWER);
+                            case WINDOW_INFO_0: return lines[11];
                             case WINDOW_INFO_1: return lines[16];
                         }
                         break;

@@ -1,37 +1,37 @@
 3 92
-[001]Welcome to Limited Worlds!
-[002]Glad to see you in my real-time city building game. Here will be a short instruction how it is works. In this tutorial mode advices and goals will be doubled in the quests menu for your convenience. Click on quests button after this window closes!
-[003]Click me
-[004]Yes, right there! When you will play, you can see other quests here. Now close this window to proceed - click the small cross in the right upper corner first time to close this quest description and second time to close the quests window. You can return here anytime in this tutorial to read the current step instruction again.
-[005]Close quests window to proceed
+[001]Приветствую тебя в игре Limited Worlds!
+[002]Рад видеть тебя в моей градостроительной стратегии в реальном времени. Сейчас я вкратце постараюсь объяснить основные принципы моей игры. Все инструкции, которые будут появляться в этом всплывающем окне, будут для удобства дублироваться также в окне заданий. Сразу после того, как это окно закроется, нажми на подсвеченную иконку, чтобы туда попасть!
+[003]Нажми меня
+[004]Да, вот это меню. Во время игры здесь будут появляться различные задания. Теперь, чтобы продолжить, закрой это окно - нажми в правом верхнем углу на иконку крестика - первый раз, чтобы вернуться в общее окно квестов, и второй, чтобы полностью закрыть панель.Сюда можно будет вернуться в любое время, чтобы прочитать текущие инструкции.
+[005]Закройте окно заданий чтобы продолжить.
 -/-
-[006]Camera movement
-[007]Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input. At this moment works touchscreen input - note the controlling cross in the left bottom corner. It is using for shift camera. To up and down use the double-arrow buttons nearby. Press the Proceed butoon when you'll be ready to continue.
-[008]Before we start the main tutorial lets talk about camera controls. My game supports both touchscreen and keyboard input. At this moment works keyboard input. Use standart WASD controls to shift camera, Ctrl to down and Space to up. Press the Proceed button when you'll be ready to continue.
-[009]If you have keyboard: \nUse WASD to move, Ctrl to down, Space to up.\nIf you use touchscreen: \nUse Control Cross in the bottom left corner to move, double-arrow buttons nearby to up and down.
-[010]Try camera controls and then press Proceed button
+[006]Передвижение камеры
+[007]Прежде чем мы приступим к игровым механикам, давай сначала научимся управлять камерой. Моя игра поддерживает как сенсорное управление, так и ввод мышь-клавиатура. Сейчас, как я вижу, ты используешь тачскрин - обрати внимание на управляющую крестовину в левом нижнем углу экрана. Используй его для передвижения камеры в горизонтальной плоскости. Чтобы поднять/опустить камеру используй стрелочки рядом с крестовиной. Нажми кнопку "Продолжить", когда будешь готов.
+[008]Прежде чем мы приступим к игровым механикам, давай сначала научимся управлять камерой. Моя игра поддерживает как сенсорное управление, так и ввод мышь-клавиатура. Сейчас, как я вижу, ты используешь клавиатуру и мышь. Используй WASD чтобы передвигать камеру в горизонтальной плоскости, Ctrl чтобы опустить камеру и Space чтобы поднять повыше. Нажми кнопку "Продолжить", когда будешь готов.
+[009]Если у тебя клавиатура: \n WASD чтобы двигать камеру по горизонтали, Ctrl чтобы опустить и Space чтобы поднять.\nЕсли у тебя сенсорный ввод:\nиспользуй контрольную крестовину в левом нижнем углу для перемещения по горизонтали и стрелочки рядом чтобы поднять/опустить камеру.
+[010]Опробуй управление камерой и затем нажми кнопку "Продолжить".
 -/-
-[011]Camera controls
-[012]You can rotate camera just sliding your finger across the screen horizontally and vertically.
-[013]Rotate camera by holding middle mouse button and move the mouse itself.
-[014]If you have keyboard: \nHold middle mouse button and move the mouse\nIf you use touchscreen: \nSlide through screen to rotate horizontally and vertically
-[015]Try camera controls and then press Proceed button
+[011]Вращение камеры
+[012]Направляй камеру, просто проводя пальцем по экрану.
+[013]Вращай камеру, удерживая колёсико мыши и сдвигая саму мышь.
+[014]Если у тебя клавиатура: \nУдерживай колёсико мыши и сдвигай её.\nЕсли у тебя тачскрин: \nНаводи камеру, проводя пальцем по экрану.
+[015]Попробуй повращать камеру и затем нажми кнопку "Продолжить".
 -/-
-[016]Slicing
-[017]You may also need to look through blocks. You can slice terrain by using specified button. A number displays the height of current block. Click the button second time to off the slicing mode.
-[018]Use the Slice button to look through blocks. Click it second time to return to normal state.
-[019]Try slicing and then press Proceed button
+[016]Срез
+[017]Возможно, тебе понадобится увидеть что-то сквозь блоки. Используй кнопку "Срез", чтобы удалить все блоки выше определенной высоты. Нажми кнопку среза второй раз, чтобы выключить этот режим.
+[018]Используй кнопку Среза, чтобы поглядеть сквозь блоки. Нажми её второй раз, чтобы вернуться в обычный режим.
+[019]Опробуй режим среза и затем нажми кнопку "Продолжить".
 -/-
-[020]Landing!
-[021]And now we will found a new colony on this island. At first, you shall select a place to land your colony's zeppelin. Where it lands will be a main colony building, a storage building, and a residential area. Click on selected surface and then press Land button.
-[022]Select a three-blocks surface and then click on Land button.
-[023]Colony founded
+[020]Садимся!
+[021]Ну а теперь мы можем приступить к основанию колонии на этом острове. В первую очередь нужно выбрать место, где посадить дирижабль колонистов. В точке приземления будут основаны главное здание колонии, здание склада и жилая зона. Нажми на выбранную повержность и затем на кнопку "Приземлиться".
+[022]Выбери ровную поверхность в три блока длиной и нажми на кнопку посадки.
+[023]Колония основана
 -/-
-[024]Interface
-[025]Numbers in upper left upper part of the screen displays main colony characteristics. On the up as citizens count, represented by three numbers: free workers count / total citizens count / housing space. If housing space is not enough, your citizens moral will decrease.
-[026]This values displays Power situation. They are power stored / power capacity / power surplus. Most buildings require power supply, and if it will be not enough, some of your structures go malfunction. Power generators and power capacitors marked in buildings list with a small lighting icon.
+[024]Показатели
+[025]Числа в верхней левой части экрана отображают основные характеристики колонии. Верхняя строчка содержит показатели населения, представленные тремя числами: свободные рабочие / всего жителей / жилое пространство. Если количество жилья недостаточно, мораль населения будет падать.
+[026]Вторая строчка оторажения ситуацию с энергоснабжением. Слева направо: энергии запасено / максимум энергии / прирост энергии. Большинство зданий требует обеспечения электроэнергией, и если её будет недостаточно, часть построек выйдет из строя. Иконки зданий, производящих электроэнергию, или запасающие её, отмечены маленьким значком молнии.
 -/-
-[027]Electricity production
+[027]Производство электроэнергии
 [028]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. Look for a Stream Generator in the buildings list and construct it.
 [029]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
 [030]Build Stream generator

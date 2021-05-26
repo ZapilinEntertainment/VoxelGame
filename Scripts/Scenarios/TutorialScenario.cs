@@ -436,6 +436,7 @@ namespace TutorialScenarioNS
                     tutorialUI.SetShowframe(dd.GetComponent<RectTransform>());
                     dd.onValueChanged.AddListener(this.RecipeChanged);
                     mcc.Select(observingFactory);
+                    UIController.GetCurrent().ReactivateSpecialCanvas();
                 }
                 else
                 {
@@ -631,7 +632,8 @@ namespace TutorialScenarioNS
                 tutorialUI.SetShowframe(obs.SYSTEM_GetImmigrationPanel());
                 var aw = tutorialUI.GetAdviceWindow();
                 aw.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Left, 0, aw.rect.width);
-                UIController.GetCurrent().SpecialCanvasUpwards();                
+                UIController.GetCurrent().ReactivateSpecialCanvas();
+                UIController.GetCurrent().SpecialCanvasUpwards();                   
             }
             public override void OKButton()
             {
@@ -687,30 +689,7 @@ namespace TutorialScenarioNS
             private string[] lines;
             public Localizer()
             {
-                using (StreamReader sr = File.OpenText("Assets/Locales/tutorialText_ENG.txt"))
-                {
-                    string s = sr.ReadLine();
-                    int i = 0, indexLength = (int)char.GetNumericValue(s[0]),
-                        count = int.Parse(s.Substring(2, 2)), index, length;
-                    lines = new string[count];
-                    while (i < count && !sr.EndOfStream)
-                    {
-                        s = sr.ReadLine();
-                        length = s.Length;
-                        if (length == 0 || s[0] == '-') continue;
-                        else
-                        {                            
-                            if (s[0] == '[' && s[indexLength + 1] == ']')
-                            {
-                                index = int.Parse(s.Substring(1, indexLength));
-                                if (lines[index] != null) UnityEngine.Debug.Log("string " + index.ToString() + " was rewrited");
-                                lines[index] = s.Substring(indexLength + 2, length - indexLength - 2);
-                                i++;
-                            }
-                            else Debug.Log("error in line " + i.ToString() + ": " + s[0] + s[indexLength]);
-                        }
-                    }
-                }
+              Localization.LoadLocalesData("tutorialText", ref lines);
             }
 
             public string[] GetText(TutorialStep step, byte subIndex)
