@@ -746,7 +746,7 @@ public sealed class GameMaster : MonoBehaviour
             #region gms mainPartLoading            
             data = new byte[5];
             fs.Read(data, 0, data.Length);
-            uint saveSystemVersion = System.BitConverter.ToUInt32(data, 0); // может пригодиться в дальнейшем
+            int saveSystemVersion = System.BitConverter.ToInt32(data, 0); // может пригодиться в дальнейшем
             gameMode = (GameMode)data[4];
             //
             if (sessionPrepared)
@@ -783,9 +783,9 @@ public sealed class GameMaster : MonoBehaviour
             gameID = System.BitConverter.ToInt32(data, i); i += 4;
             #endregion
 
-            DockSystem.LoadDockSystem(fs);
+            DockSystem.LoadDockSystem(fs, saveSystemVersion);
             var b = fs.ReadByte();
-            if (b == 1) globalMap.Load(fs);            
+            if (b == 1) globalMap.Load(fs,saveSystemVersion);            
             if (loadingFailed)
             {
                 errorReason = "global map error";

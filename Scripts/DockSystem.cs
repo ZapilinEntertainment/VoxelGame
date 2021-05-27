@@ -23,7 +23,7 @@ public sealed class DockSystem
             current.Save(fs);
         }
     }
-    public static void LoadDockSystem(System.IO.FileStream fs)
+    public static void LoadDockSystem(System.IO.FileStream fs, int saveVersion)
     {
         current = null;
         int x = fs.ReadByte();

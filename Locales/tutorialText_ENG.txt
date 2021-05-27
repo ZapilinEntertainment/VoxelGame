@@ -39,7 +39,7 @@
 [032]Stream generator built 
 -/-
 [033]Gather resources
-[034]After had constructed the power generator, you shall build a food source for colonists. But start resources not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber from that cell. You can add more workers to a worksite by press the plus button at the right part of the appeared worksite window.
+[034]After had constructed the power generator, you shall build a food source for colonists. But start resources not contain enough raw materials needed for farm building, because you can gather them on the island. Select a surface with trees and click the GATHER button to take all lumber from that cell. You can add more workers to a worksite by press the plus button at the right part of the appeared worksite window.
 [035]Gather lumber
 [036]Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
 [037]Lumber collected 
@@ -64,7 +64,7 @@
 -/-
 [053]Resource processing
 [054]Smeltery is your main resource processing unit. Select any surface and construct it. You also may want to construct another Stream generator if your energy supply is less than Smeltery needs (you can see this parameter in construction info).
-[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that add some workers and use the power up button at the observer panel to switch the building to active mode. Build a Stream generator if energy supply is not enough.
+[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that add some workers and use the power up button at the observer panel to switch the building to active mode (with small lightning icon). Build a Stream generator if energy supply is not enough.
 [056]Smeltery built
 [057]Recipe set
 [089]Workers added
@@ -73,7 +73,7 @@
 [060]How to set a Recipe
 [061]In the newfound Smeltery click the "No Recipe" dropdown and set it to "Stone -> L-Concrete". Also note the small dropdown at the bottom: there are production modes. "No limit" means that the smeltery will work, until the resources exhaust, "Iterations" means exact count of operations and the "Limit" mode means that factory will produce until the final product count wont reach the limit.
 [062]Start processing!
-[063]Now add some workers and press the power button at the top of the observer panel to start processing. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted.
+[063]Now add some workers and press the power button at the top of the observer panel to start processing. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted. You can also power off factory when it not needed - just press the activation button again.
 [087]No workers added
 [088]Click the slider or press plus buttons to add workers to the factory!
 [090]Factory is working!
@@ -83,7 +83,7 @@
 [064]Building dock
 [065]Concrete production is first need for building a dock! It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
 [066] L-concrete to build a new dock!
-[067]Collect enough concrete, digging stone and convert it into Concrete in Smeltery, and then build a dock at the island shore. Use rotation arrows in the observer if dock is looking in wrong direction. If rotation not helps, use demolition button at the top-right corner.
+[067]Collect enough concrete, digging stone and convert it at the Smeltery, and then build a dock at the island shore. Use rotation arrows in the observer if dock is looking in wrong direction. If rotation not helps, use demolition button at the top-right corner.
 [068]Concrete collected
 [069]Dock built
 [070]Dock placed right

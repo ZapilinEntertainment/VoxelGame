@@ -807,7 +807,7 @@ public sealed class GlobalMap : MonoBehaviour
 
         RingSector.StaticSave(fs, mapSectors);
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.FileStream fs, int saveSystemVersion)
     {
         var data = new byte[40];
         fs.Read(data, 0, data.Length);

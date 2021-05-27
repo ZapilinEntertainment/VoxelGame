@@ -1,8 +1,8 @@
 3 92
-[001]Приветствую тебя в игре Limited Worlds!
+[001]Приветствую в игре Limited Worlds!
 [002]Рад видеть тебя в моей градостроительной стратегии в реальном времени. Сейчас я вкратце постараюсь объяснить основные принципы моей игры. Все инструкции, которые будут появляться в этом всплывающем окне, будут для удобства дублироваться также в окне заданий. Сразу после того, как это окно закроется, нажми на подсвеченную иконку, чтобы туда попасть!
 [003]Нажми меня
-[004]Да, вот это меню. Во время игры здесь будут появляться различные задания. Теперь, чтобы продолжить, закрой это окно - нажми в правом верхнем углу на иконку крестика - первый раз, чтобы вернуться в общее окно квестов, и второй, чтобы полностью закрыть панель.Сюда можно будет вернуться в любое время, чтобы прочитать текущие инструкции.
+[004]Да, вот это меню. Во время игры здесь будут появляться различные задания. Теперь, чтобы продолжить, закрой это окно - нажми в правом верхнем углу на иконку крестика - первый раз, чтобы вернуться в общее окно квестов, и второй, чтобы полностью закрыть панель. Сюда можно будет вернуться в любое время, чтобы прочитать текущие инструкции.
 [005]Закройте окно заданий чтобы продолжить.
 -/-
 [006]Передвижение камеры
@@ -23,88 +23,87 @@
 [019]Опробуй режим среза и затем нажми кнопку "Продолжить".
 -/-
 [020]Садимся!
-[021]Ну а теперь мы можем приступить к основанию колонии на этом острове. В первую очередь нужно выбрать место, где посадить дирижабль колонистов. В точке приземления будут основаны главное здание колонии, здание склада и жилая зона. Нажми на выбранную повержность и затем на кнопку "Приземлиться".
+[021]Ну а теперь мы можем приступить к основанию колонии на этом острове. В первую очередь нужно выбрать место, где посадить дирижабль колонистов. В точке приземления будут основаны главное здание колонии, здание склада и жилая зона. Нажми на выбранную поверхность и затем на кнопку "Приземлиться".
 [022]Выбери ровную поверхность в три блока длиной и нажми на кнопку посадки.
 [023]Колония основана
 -/-
 [024]Показатели
 [025]Числа в верхней левой части экрана отображают основные характеристики колонии. Верхняя строчка содержит показатели населения, представленные тремя числами: свободные рабочие / всего жителей / жилое пространство. Если количество жилья недостаточно, мораль населения будет падать.
-[026]Вторая строчка оторажения ситуацию с энергоснабжением. Слева направо: энергии запасено / максимум энергии / прирост энергии. Большинство зданий требует обеспечения электроэнергией, и если её будет недостаточно, часть построек выйдет из строя. Иконки зданий, производящих электроэнергию, или запасающие её, отмечены маленьким значком молнии.
+[026]Вторая строчка отражает ситуацию с энергоснабжением. Слева направо: энергии запасено / максимум энергии / прирост энергии. Большинство зданий требует обеспечения электроэнергией, и если её будет недостаточно, часть построек выйдет из строя. Иконки зданий, производящих электроэнергию, или запасающие её, отмечены маленьким значком молнии.
 -/-
 [027]Производство электроэнергии
-[028]So now we will build first colony's generator - a Stream Generator, looking like an ordinary wind turbine. Select highest surface possible, then click on BUILD button at right panel. Look for a Stream Generator in the buildings list and construct it.
-[029]Now you can notice that electricity supply value is positive. Stream generators is not very reliable sources however - power of Stream may be lower or higher sometimes, but it doesnt need any workers to operate. Just dont forget to place it as high as possible.
-[030]Build Stream generator
-[031]Select highest surface possible, then click on BUILD button at right panel. In the list find Stream Generator and build it.
-[032]Stream generator built 
+[028]Теперь давай построим для колонии самый первый генератор - Потоковый, выглядящий как ветряная турбина. Найди самую высокую поверхность, кликни по ней, в появившемся окне открой режим строительства и возведи Потоковый Генератор.
+[029]Твоя энергосеть теперь стала немного производительнее. Потоковые генераторы, однако, не очень надежны - сила Потока бывает временами как высокой, так и низкой, но тем не менее, для него не требуются работники. Просто не забывай размещать их как можно выше.
+[030]Постройка Потокового генератора
+[031]Выбери максимально высокую поверхность и кликни по ней. В появившемся окне выбери режим постройки, выбери Потоковый генератор и возведи его.
+[032]Потоковый генератор построен
 -/-
-[033]Gather resources
-[034]After had constructed the power generator, you shall build a food source for colonists. But start resources not contain enough raw materials, because you can gather it on island. Select a surface with trees and click the GATHER button to take all lumber from that cell. You can add more workers to a worksite by press the plus button at the right part of the appeared worksite window.
-[035]Gather lumber
-[036]Select a surface with trees and click the GATHER button to take all lumber for that cell. You can add more worker to a worksite, just pressing the plus buttons in the right part of the appeared worksite window.
-[037]Lumber collected 
+[033]Собирательство
+[034]После постройки силового генератора нужно озаботиться снабжением колонистов едой. Стартовые материалы не включают в себя необработанные материалы, нужные для постройки фермы, так как ты можешь добыть их прямо на острове. Выбери поверхность, где растут деревья и отдай команду на сбор. Также можно добавить больше рабочих на рабочую площадку, кликнув на одну из кнопок-плюсиков в правой части окна обозревателя.
+[035]Сбор дерева
+[036]Выбери поверхность, где растут деревья и отдай приказ на сбор. Можно ускорить процесс, добавив больше рабочих, нажав на одну из кнопок-плюсиков.
+[037]Дерева собрано
 -/-
-[038]Farm construction
-[039]Now, using collected lumber, build a farm and assign at least
-[040]workers on it. Note that farm cannot be built on stone surfaces.
-[041]Build farm and assign no less than
-[042]Farm built
-[043]Workers assigned 
+[038]Постройка фермы
+[039]Теперь, когда собрано достаточно дерева, построй ферму и назначь туда по крайней мере
+[040]рабочих. Обрати внимание, что фермы нельзя строить на каменных поверхностях.
+[041]Построй ферму и доведи число её рабочих до
+[042]Ферма построена
+[043]Рабочих отправлено
 -/-
-[044]Farm construction completed
-[045]Good, the farm is now working! After lumber and food we shall develop underground deposits. Select any side of a stone blocks and click the DIG button.
-[046]Stone digging
-[047]Click on any side of a stone block and the press the DIG button.
-[048]Stone collected
+[044]Строительство фермы завершено
+[045]Отлично, теперь ферма начала свою работу! После еды и дерева стоит приступить к разработке подземных месторождений. Выбери любую сторону какого-нибудь каменного блока и отдай команду КОПАТЬ.
+[046]Добыча камня
+[047]Выбери любую сторону какого-нибудь каменного блока и отдай команду КОПАТЬ.
+[048]Камня выкопано
 -/-
-[049]Storage system
-[050]Rocks, drilled by your colonists, consist not only of stone, but a different ores too. Click on the Storage Button to see all of your colony's resources. Click again to close it after.
-[051]Ores
-[052]Note all resources with an (ore) addition. For using them as a component of your buildings and machines, they firstly need to be smelted. So our next step is to build Smeltery!
+[049]Хранение ресурсов
+[050]Порода, что добывают твои колонисты, помимо камня содержит также и разнообразные руды. Нажми на кнопку склада чтобы просмотреть все ресурсы колонии. Нажми её второй раз, чтобы закрыть склад.
+[051]Руды
+[052]Обрати внимание на все ресурсы со словом "руда" в названии. Чтобы как-то начать использовать их, тебе сначала понадобится их переплавить. Так что нашим следующим шагом будет постройка Плавильни.
 -/-
-[053]Resource processing
-[054]Smeltery is your main resource processing unit. Select any surface and construct it. You also may want to construct another Stream generator if your energy supply is less than Smeltery needs (you can see this parameter in construction info).
-[055]Build Smeltery and set its production to "Stone -> L-Concrete". After that add some workers and use the power up button at the observer panel to switch the building to active mode. Build a Stream generator if energy supply is not enough.
-[056]Smeltery built
-[057]Recipe set
-[089]Workers added
-[058]Power supply enabled
-[059](Optional) Stream Generator built
-[060]How to set a Recipe
-[061]In the newfound Smeltery click the "No Recipe" dropdown and set it to "Stone -> L-Concrete". Also note the small dropdown at the bottom: there are production modes. "No limit" means that the smeltery will work, until the resources exhaust, "Iterations" means exact count of operations and the "Limit" mode means that factory will produce until the final product count wont reach the limit.
-[062]Start processing!
-[063]Now add some workers and press the power button at the top of the observer panel to start processing. Even if you power supply is lower than needs, factory will work until your power reverves is not depleted.
-[087]No workers added
-[088]Click the slider or press plus buttons to add workers to the factory!
-[090]Factory is working!
-[091]Good job, your Smeltery will now produce concrete using collected stone. You may ask why we need Concrete?
-
+[053]Переработка ресурсов
+[054]Плавильня это основное перерабатывающее здание колонии. Выбери любую поверхность и построй Плавильню. Также не будет лишним построить еще одни Потоковый генератор, если мощности энергосети недостаточно для работы Плавильни (потребление здания можно увидеть в окне постройки).
+[055]Построй Плавильню и выбери в ней рецепт "Камень -> Бетон". После этого добавь рабочих и нажми на кнопку активации в верхней части окна обозревателя (с маленьким значком молнии). Построй также еще один Потоковый генератор, если производство энергии недостаточно.
+[056]Плавильня построена
+[057]Рецепт выбран
+[089]Рабочих добавлено
+[058]Плавильня активирована
+[059](Дополнительно) Потоковый генератор построен
+[060]Как поменять рецепт
+[061]В новой Плавильне нажми на кнопку "Нет рецепта", и в появившемся списке выбери "Камень -> Бетон". Также обрати внимание на небольшую панель снизу обозревателя - это переключатели режима производства. В неограниченном режиме Плавильня будет работать, пока есть доступные ресурсы для переработки. В режиме с установленным пределом производство будет вестись, пока количество продукции на складе не достигнет заданного уровня. Режим итераций подразумевает определенно число проведенных операций. 
+[062]Начинаем производство
+[063]Теперь добавь рабочих и нажми кнопку питания вверху панели обозревателя, чтобы запустить фабрику. Даже если энергоснабжение колонии будет отрицательным, Плавильня будет продолжать работать, пока запасы энергии не будут исчерпаны. Когда фабрика не нужна, её можно отключить, вновь нажав на значок активации.
+[087]Нет рабочих
+[088]Используй слайдер или кнопки в центре обозревателя, чтобы добавить рабочих на фабрику!
+[090]Плавильня работает!
+[091]Отлично, теперь твоя Плавильня будет производить бетон, используя добытый камень. Можно задаться вопросом - а зачем нам бетон?
 -/-
-[064]Building dock
-[065]Concrete production is first need for building a dock! It is very important building, allows you to trade, increase population and upgrade to tier 2. Collect
-[066] L-concrete to build a new dock!
-[067]Collect enough concrete, digging stone and convert it into Concrete in Smeltery, and then build a dock at the island shore. Use rotation arrows in the observer if dock is looking in wrong direction. If rotation not helps, use demolition button at the top-right corner.
-[068]Concrete collected
-[069]Dock built
-[070]Dock placed right
+[064]Постройка дока
+[065]Производство бетона это первый шаг к постройке дока! Это очень важное сооружение, позволяющее колонии вести торговлю и принимать новых поселенцев, а также открыть второй уровень развития колонии. Произведи
+[066] единиц бетона, чтобы построить док!
+[067]Произведи достаточно бетона, добывая камень и перерабатывая его в Плавильне, а затем построй док на побережье острова. Используй стрелочки для вращения неправильно ориентированного дока. Если вращение не помогает, используй кнопку сноса в правом верхнем углу обозревателя.
+[068]Бетона произведено
+[069]Док построен
+[070]Док размещен верно
 -/-
-[071]Dock building conditions
-[072]For proper functionality your dock must be build on the edge to be able to serve ships. For first level ships it needs
-[073]corridor. If dock is placed correctly, all path will be filled with little stars, otherwise you will see a red box when select the dock. If dock is directed wrong, you can rotate it manually: use small arrows at the top of right panel.
+[071]Особенности постройки дока
+[072]Для правильного функционирования док должен быть размещен на краю поверхности, чтобы иметь возможность обслуживать суда. Для кораблей первого уровня нужен коридор
+[073]блока. Если док размещен правильно, коридор будет отмечен маленькими звёздочками, иначе ты увидишь вместо него красную зону, когда выделишь док. Если док неправильно направлен, его можно развернуть вручную - используй кнопки со стрелочками в самом верху окна обозревателя.
 -/-
-[074]Dock is not working yet
-[075]Rotate dock using small arrows at the top of the right panel, if this position may be suitable. If not, demolish it using button at the top-right corner.
+[074]Док еще не функционирует
+[075]Разверни док, используя кнопки-стрелочки в верхней части окна обозревателя, если эта позиция вообще подходящая. Если нет, используй кнопку сноса в парвом верхнем углу.
 -/-
-[076]Immigration
-[077]Functional dock allows you to bring new colonists to your island. Use input field at the immigration tab to set how many colonists you want to invite. However, new people wont come, if your colony haven't got enough houses or have low morale.
+[076]Иммигранты
+[077]Работающий док позволяет колонии принимать пассажирские корабли с новыми колонистами. Для этого в разделе "Иммиграция" обозревателя дока установи количество поселенцев, которое колония готова принять. Однако, никто не прибудет, если в колонии недостаточно жилья или довольство населения на низком уровне.
 -/-
-[078]Trading
-[079]And this is a trading tab. You can select any of available resources and set its trade status - no action, sell (arrow down), buy (arrow up). The number means limit for buy and sell operations - dock will buy/sell until resources count wont reach it.
+[078]Торговля
+[079]А это окно торговли. Можно выбрать любой из представленных ресурсов и изменить его торговый статус - не торговать, продавать(стрелочка вниз), покупать (стрелочка вверх). Число рядом отражает ограничение на торговые операции - док будет покупать/продавать ресурсы, пока количество на складе не достигнет этого значения.
 -/-
-[080]Tier 2
-[081]Now you can Upgrade your main colony Building and get access to Tier 2. Select HQ and press the Upgrade Button.
-[082]HQ Upgrade
-[083]Select your main building and press the UPGRADE button at the upper part of the observer. In dropped window you will see the resources list. Gain enough and press accept button to upgrade HQ and start Tier 2.
-[084]HQ Upgraded
-[085]End of tutorial
-[086]More game aspects information you can see in Advices section of the game - click Menu button and then Advices. Thank you for playing and enjoy)
+[080]Следующий уровень колонии
+[081]Теперь ты можешь улучшить своё главное здание и повысить уровень колонии до 2. Выбери его и нажми кнопку "Улучшить".
+[082]Улучшение главного здания
+[083]Выбери главное здание колонии и нажми кнопку "Улучшить" в верхней части обозревателя. В появившемся окне ты увидишь количество ресурсов, необходимое для улучшения. Набери достаточно ресурсов и повысь уровень колонии!
+[084]Главное здание было улучшено
+[085]Конец обучения
+[086]Больше информации по игровым механикам ты сможешь получить в разделы "Советы" в игровом меню (кнопка в правом верхнем углу экрана). Спасибо за уделенное внимание, развлекайся)
