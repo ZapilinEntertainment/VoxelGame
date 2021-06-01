@@ -166,23 +166,23 @@ public abstract class Worksite : ILabourable
     }
 
     #region save-load system   
-    public virtual void Save( System.IO.FileStream fs)
+    public virtual void Save( System.IO.Stream fs)
     {
         fs.WriteByte((byte)WorksiteType.Abstract);
         SerializeWorksite(fs);
     }
-    protected void SerializeWorksite(System.IO.FileStream fs)
+    protected void SerializeWorksite(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(workersCount), 0,4);
         fs.Write(System.BitConverter.GetBytes(workflow),0,4);
     }
 
 
-    virtual protected void Load(System.IO.FileStream fs, ChunkPos pos)
+    virtual protected void Load(System.IO.Stream fs, ChunkPos pos)
     {
         LoadWorksiteData(fs);
     }
-    protected void LoadWorksiteData(System.IO.FileStream fs)
+    protected void LoadWorksiteData(System.IO.Stream fs)
     {
         byte[] data = new byte[8];
         fs.Read(data, 0, 8);
@@ -190,7 +190,7 @@ public abstract class Worksite : ILabourable
         workflow = System.BitConverter.ToSingle(data, 4);
     }
 
-    public static void StaticLoad(System.IO.FileStream fs, int count)
+    public static void StaticLoad(System.IO.Stream fs, int count)
     {
         if (count < 0 | count > 1000)
         {

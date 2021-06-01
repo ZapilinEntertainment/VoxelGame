@@ -769,7 +769,7 @@ public sealed class GlobalMap : MonoBehaviour
     }
 
     #region save-load system
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[0]), 0, 4); // 0 - 3
         fs.Write(System.BitConverter.GetBytes(rotationSpeed[1]), 0, 4); // 4 - 7
@@ -807,7 +807,7 @@ public sealed class GlobalMap : MonoBehaviour
 
         RingSector.StaticSave(fs, mapSectors);
     }
-    public void Load(System.IO.FileStream fs, int saveSystemVersion)
+    public void Load(System.IO.Stream fs, int saveSystemVersion)
     {
         var data = new byte[40];
         fs.Read(data, 0, data.Length);

@@ -1353,7 +1353,7 @@ public class Quest : MyObject
         }
         return data;
     }
-    public static Quest Load(System.IO.FileStream fs)
+    public static Quest Load(System.IO.Stream fs)
     {
         Quest q = new Quest((QuestType)fs.ReadByte(), (byte)fs.ReadByte());
         var data = new byte[4];

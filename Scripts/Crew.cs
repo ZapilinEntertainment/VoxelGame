@@ -579,7 +579,7 @@ public sealed class Crew : MonoBehaviour {
     }
 
     #region save-load system
-    public static void SaveStaticData( System.IO.FileStream fs)
+    public static void SaveStaticData( System.IO.Stream fs)
     {
         int realCount = 0;
         var data = new List<byte>();
@@ -602,7 +602,7 @@ public sealed class Crew : MonoBehaviour {
         }
         fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
     }
-    public static void LoadStaticData(System.IO.FileStream fs)
+    public static void LoadStaticData(System.IO.Stream fs)
     {
         if (crewsList == null) crewsList = new List<Crew>();
         if (crewsContainer == null) crewsContainer = new GameObject("crews container");
@@ -677,7 +677,7 @@ public sealed class Crew : MonoBehaviour {
         
         return data;
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         int LENGTH = 47;
         var data = new byte[LENGTH];

@@ -311,7 +311,7 @@ public class Factory : WorkBuilding
         //changed copy to AdvancedFactory
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

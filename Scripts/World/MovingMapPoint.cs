@@ -20,7 +20,7 @@ public class MovingMapPoint : MapPoint
         bytes.AddRange(System.BitConverter.GetBytes(moveVector.y));
         return bytes;
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         var data = new byte[8];
         fs.Read(data, 0, 8);

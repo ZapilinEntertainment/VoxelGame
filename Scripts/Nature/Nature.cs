@@ -25,7 +25,7 @@ public sealed class Nature : MonoBehaviour
         MONUMENT_AFFECTION_CF = 10f, LIFEPOWER_STORAGE_LIMIT = 100000f;
     private const int MAXIMUM_LIFESOURCES_COUNT = 100;
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 0 -3
         fs.Write(System.BitConverter.GetBytes(grasslandCreateTimer), 0, 4); // 4 - 7
@@ -120,7 +120,7 @@ public sealed class Nature : MonoBehaviour
         }
         else fs.WriteByte(ct);
     }
-    public void Load(System.IO.FileStream fs, Chunk c)
+    public void Load(System.IO.Stream fs, Chunk c)
     {
         env = GameMaster.realMaster.environmentMaster;
         lifepowerSupport = env.lifepowerSupport;

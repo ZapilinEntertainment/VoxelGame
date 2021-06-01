@@ -37,7 +37,7 @@ public sealed class Block : MyObject {
     }  
 
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         if (destroyed) return;
         fs.WriteByte(pos.x);
@@ -49,7 +49,7 @@ public sealed class Block : MyObject {
         }
         else fs.WriteByte(0);
     }
-    public static bool TryToLoadBlock(System.IO.FileStream fs, Chunk c, ref Block b)
+    public static bool TryToLoadBlock(System.IO.Stream fs, Chunk c, ref Block b)
     {
         b = new Block(c, new ChunkPos(fs.ReadByte(), fs.ReadByte(), fs.ReadByte()));
         var csize = Chunk.chunkSize;

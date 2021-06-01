@@ -11,11 +11,9 @@ public sealed class FollowingCamera : MonoBehaviour {
     public static Vector3 camPos { get; private set; }
     public static bool touchscreen { get; private set; }
 
-    public float rotationSpeed = 65, zoomSpeed = 50, moveSpeed = 30;   
-    float rotationSmoothCoefficient = 0;
-	float rotationSmoothAcceleration = 0.1f;
-	Vector3 moveSmoothCoefficient = Vector3.zero;
-	float moveSmoothAcceleration= 0.03f;
+    private float rotationSpeed = 130, zoomSpeed = 40, moveSpeed = 15;   
+    private float rotationSmoothCoefficient = 0, rotationSmoothAcceleration = 0.1f, moveSmoothAcceleration = 0.03f;
+	private Vector3 moveSmoothCoefficient = Vector3.zero;
     private float touchRightBorder = Screen.width;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
 	private readonly Vector3 DEFAULT_CAM_POINT = new Vector3(0,3,-3);
@@ -434,7 +432,7 @@ public sealed class FollowingCamera : MonoBehaviour {
     }
 
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         var v = camBasisTransform.position;
         fs.Write(System.BitConverter.GetBytes(v.x),0,4);
@@ -453,7 +451,7 @@ public sealed class FollowingCamera : MonoBehaviour {
         fs.Write(System.BitConverter.GetBytes(v.y), 0, 4);
         fs.Write(System.BitConverter.GetBytes(v.z), 0, 4);
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         const int length = 48;
         var data = new byte[length];

@@ -165,7 +165,7 @@ public class Powerplant : WorkBuilding
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane p)
+    override public void Load(System.IO.Stream fs, Plane p)
     {
         LoadStructureData(fs, p);
         LoadBuildingData(fs);

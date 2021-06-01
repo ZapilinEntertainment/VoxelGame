@@ -9,7 +9,7 @@ public class MultimaterialPlane : Plane
     new public bool isQuad { get { return false; } }
 
     #region save-load system
-    override public void Save(System.IO.FileStream fs)
+    override public void Save(System.IO.Stream fs)
     {
         if (destroyed) return;
         fs.WriteByte(MULTIMATERIAL_PLANE_CODE);

@@ -11,7 +11,7 @@ namespace TutorialScenarioNS
     }   
 
 
-    public abstract class TutorialScenario : Scenario
+    public class TutorialScenario : Scenario
     {
         protected static TutorialUI tutorialUI;
         protected static MainCanvasController mcc;
@@ -26,17 +26,13 @@ namespace TutorialScenarioNS
         protected const byte WINDOW_INFO_0 = 0, QUEST_INFO_0 = 1, WINDOW_INFO_1 = 2, QUEST_INFO_1 = 3, WINDOW_INFO_2 = 4,
             QUEST_INFO_2 = 5, SPECIAL_0 = 6, WINDOW_INFO_3 = 7;
         protected static Localizer localizer { get; private set; }
-        public static string tutorialTerrainName { get { return "tutorialTerrain.itd"; } }
+        public static string tutorialTerrainName { get { return "tutorialTerrain"; } }
 
-
-        static TutorialScenario()
-        {
-            localizer = new Localizer();
-        }
         public static void Initialize(TutorialUI i_tutorialUI, MainCanvasController i_mcc)
         {
             tutorialUI = i_tutorialUI;
             mcc = i_mcc;
+            if (localizer == null) localizer = new Localizer();
         }
         public static TutorialScenario GetScenario(TutorialStep step)
         {
@@ -58,6 +54,12 @@ namespace TutorialScenarioNS
                 default: return null;
             }
         }
+        public static ScenarioRepresentator GetRepresentator()
+        {
+            var nd = Localizer.GetNameAndDescription();
+            return new ScenarioRepresentator(TUTORIAL_SCENARIO_ID, nd.name, nd.description);
+        }
+ 
 
 
         protected TutorialScenario() : base(0)
@@ -687,9 +689,10 @@ namespace TutorialScenarioNS
         public class Localizer
         {
             private string[] lines;
+            private static string localeName { get { return "tutorialText"; } }
             public Localizer()
             {
-              Localization.LoadLocalesData("tutorialText", ref lines);
+              Localization.LoadLocalesData(localeName, ref lines, true);
             }
 
             public string[] GetText(TutorialStep step, byte subIndex)
@@ -827,6 +830,11 @@ namespace TutorialScenarioNS
                         }
                 }
                 return null;
+            }
+
+            public static (string name, string description) GetNameAndDescription()
+            {
+                return Localization.GetScenarioNameAndDescription(localeName);
             }
         }       
         #endregion

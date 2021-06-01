@@ -20,7 +20,7 @@ public enum LocalizedWord : ushort
      Buy, Cancel, Close, Crew, Crews, Dig, Expedition, Launch, Level, Mission, Offline, Owner, Pass, Progress, Repair, Roll, Sell,Stability,Stamina, Step, Upgrade, UpgradeCost, Limitation, Demand, Price, Trading, Gather, Colonization, Normal, Improved, Lowered, Dismiss, Disassemble, Total,
     Save, Load, Options, Exit, Build, Shuttles,Reward, Delete, Rewrite, Yes, No, MainMenu, Accept, PourIn, Year_short, Month_short, Day_short, Day, Score, Disabled, Land_verb, Editor, Highscores, Generate, Size,
     Difficulty, Start, Language, Quality, Apply, Continue, Menu, Stop, Play, Info, Goals, Reject, Return, Tutorial, Ready, Anchor_verb, FreeWorkers, Sector,
-    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice, GearsLevel
+    Persistence, SurvivalSkills, Perception, SecretKnowledge, Intelligence, TechSkills, Effectiveness, HospitalsCoverage, Advice, GearsLevel, Proceed
 };
 
 public enum LocalizedPhrase : ushort
@@ -294,6 +294,7 @@ public static partial class Localization
                     case Structure.CAPACITOR_MAST_ID: return "Накопительная мачта";
                     case Structure.CONTROL_CENTER_ID: return "Контроллер движителя";
                     case Structure.ANCHOR_BASEMENT_ID: return "Крепления якоря";
+                    case Structure.TREE_OF_LIFE_ID: return "Древо жизни";
                     default: return "Неизвестное здание";
                 }
             case Language.English:
@@ -370,6 +371,7 @@ public static partial class Localization
                     case Structure.CAPACITOR_MAST_ID: return "Capacitor Mast";
                     case Structure.CONTROL_CENTER_ID: return "Engine Control";
                     case Structure.ANCHOR_BASEMENT_ID: return "Anchor brace";
+                    case Structure.TREE_OF_LIFE_ID: return "Tree of life";
                     default: return "Unknown building";
                 }
         }
@@ -2529,6 +2531,7 @@ public static partial class Localization
                         case LocalizedWord.Language: return "Язык";
                         case LocalizedWord.Quality: return "Качество графики";
                         case LocalizedWord.Apply: return "Применить";
+                        case LocalizedWord.Proceed:
                         case LocalizedWord.Continue: return "Продолжить";
                         case LocalizedWord.Menu: return "Меню";
                         case LocalizedWord.Stop: return "Остановить";
@@ -2627,6 +2630,7 @@ public static partial class Localization
                         case LocalizedWord.Quality: return "Quality";
                         case LocalizedWord.Apply: return "Apply";
                         case LocalizedWord.Continue: return "Continue";
+                        case LocalizedWord.Proceed: return "Proceed";
                         case LocalizedWord.Menu: return "Menu";
                         case LocalizedWord.Stop: return "Stop";
                         case LocalizedWord.Play: return "Play";
@@ -3333,17 +3337,32 @@ public static partial class Localization
     #endregion
 
 
-    public static void LoadLocalesData(string filename, ref string[] lines)
+    private static TextAsset LoadTextAsset(string name)
     {
-        string path = "Assets/Locales/" + filename + currentLanguage.GetFilePostfix() + ".txt";
-        if (!File.Exists(path)) path = "Assets/Locales/" + filename + default(Language).GetFilePostfix() + ".txt";
-
-        // using Unicode
-        using (StreamReader sr = File.OpenText(path))
+        var r =Resources.Load<TextAsset>("Locales/" + name + currentLanguage.GetFilePostfix());
+        if (r == null) r = Resources.Load<TextAsset>("Locales/" + name + default(Language).GetFilePostfix());
+        return r;
+    }
+    public static void LoadLocalesData(string filename, ref string[] lines, bool skipNameAndDescription)
+    {
+        var r = LoadTextAsset(filename);
+        using (StreamReader sr = new StreamReader(new MemoryStream(r.bytes), System.Text.Encoding.UTF8))
         {
-            string s = sr.ReadLine();
+            string s;
+            if (skipNameAndDescription)
+            {
+                // skip name:
+                sr.ReadLine();
+                // skip description:
+                char c;
+                do { s = sr.ReadLine(); c = s[0]; }
+                while (!sr.EndOfStream && s != null && c != '-' && c != '[');
+            }
+            //start reading
+            s = sr.ReadLine();
             int i = 0, indexLength = (int)char.GetNumericValue(s[0]),
-                count = int.Parse(s.Substring(2, 2)), index, length;
+                count = int.Parse(s.Substring(2, 2)), 
+                index, length;
             lines = new string[count];
             while (i < count && !sr.EndOfStream)
             {
@@ -3363,5 +3382,27 @@ public static partial class Localization
                 }
             }
         }
+        Resources.UnloadAsset(r);
+    }
+    public static (string, string) GetScenarioNameAndDescription(string filename)
+    {
+        var r = LoadTextAsset(filename);
+        string a = string.Empty, b = a;
+        using (StreamReader sr = new StreamReader(new MemoryStream(r.bytes), System.Text.Encoding.UTF8))
+        {
+            a = sr.ReadLine();
+            b = sr.ReadLine();
+            string s = string.Empty;
+            char c = b[0];
+            while (!sr.EndOfStream && b != null)
+            {
+                s = sr.ReadLine();
+                c = s[0];
+                if (c != '-' && c != '[') b += s;
+                else break;
+            }            
+        }
+        Resources.UnloadAsset(r);
+        return (a, b);
     }
 }

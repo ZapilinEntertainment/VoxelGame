@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
+#if UNITY_EDITOR
 public class TestMaster : MonoBehaviour
 {
     [SerializeField] private GameObject replacingMatsHost;
@@ -403,3 +403,4 @@ public class TestMasterEditor : Editor
         if (GUILayout.Button("Face to zero")) script.FaceObj();
     }
 }
+#endif

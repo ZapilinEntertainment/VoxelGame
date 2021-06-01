@@ -303,14 +303,14 @@ public sealed class Storage : MonoBehaviour {
         return true;
 	}
 	#region save-load system
-	public void Save( System.IO.FileStream fs) {
+	public void Save( System.IO.Stream fs) {
         if (standartResources == null) standartResources = new float[ResourceType.TYPES_COUNT];
         foreach (float f in standartResources)
         {
             fs.Write(System.BitConverter.GetBytes(f), 0, 4);
         }
 	}
-	public void Load(System.IO.FileStream fs) {
+	public void Load(System.IO.Stream fs) {
         var val = new byte[4];
         if (standartResources == null) standartResources = new float[ResourceType.TYPES_COUNT];
         totalVolume = 0f;

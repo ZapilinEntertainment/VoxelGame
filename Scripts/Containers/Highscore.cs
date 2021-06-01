@@ -20,7 +20,7 @@ public class Highscore
         endType = i_endType;
     }
     #region save-load
-    public void Save(FileStream fs)
+    public void Save(Stream fs)
     {
         var data = System.Text.Encoding.Default.GetBytes(colonyName);
         int bytesCount = data.Length;
@@ -30,7 +30,7 @@ public class Highscore
         fs.Write(System.BitConverter.GetBytes(score), 0, 4); // 4 - 7
         fs.WriteByte((byte)endType); // 8
     }
-    public static Highscore Load(FileStream fs, System.Text.Decoder decoder)
+    public static Highscore Load(Stream fs, System.Text.Decoder decoder)
     {
         const int length = 4;
         byte[] data = new byte[length];
@@ -167,7 +167,7 @@ public class Highscore
         }
 
         highscores = newHighscores;
-        FileStream fs = File.Create(Application.persistentDataPath + "/Highscores.lwhs");
+        Stream fs = File.Create(Application.persistentDataPath + "/Highscores.lwhs");
         fs.WriteByte((byte)highscores.Length);
         foreach (var hs in highscores)
         {
@@ -181,7 +181,7 @@ public class Highscore
         string path = Application.persistentDataPath + "/Highscores.lwhs";
         if (File.Exists(path))
         {
-            FileStream fs = File.Open(path, FileMode.Open);
+            Stream fs = File.Open(path, FileMode.Open);
             int count = fs.ReadByte();
             if (count == 0)
             {

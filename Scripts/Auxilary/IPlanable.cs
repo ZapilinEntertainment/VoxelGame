@@ -30,8 +30,8 @@ public interface IPlanable
     void Damage(float f, byte faceIndex);
     void Delete(BlockAnnihilationOrder order);
 
-    void SavePlanesData(System.IO.FileStream fs);
-    void LoadPlanesData(System.IO.FileStream fs);
+    void SavePlanesData(System.IO.Stream fs);
+    void LoadPlanesData(System.IO.Stream fs);
     List<BlockpartVisualizeInfo> GetVisualizeInfo(byte visualMask);
     BlockpartVisualizeInfo GetFaceVisualData(byte faceIndex);
 }

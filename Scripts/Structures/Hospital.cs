@@ -77,7 +77,7 @@ public class Hospital : WorkBuilding {
     }
 
     #region save-load
-    public override void Load(FileStream fs, Plane sblock)
+    public override void Load(Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         RecalculateCoverage();

@@ -102,7 +102,7 @@ public sealed class SceneAmbientSettings
         m.SetFloat("_HorizonDistortion", horizonDistortion);
     }
 
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(lightIntensityMultiplier), 0, 4);
 
@@ -119,7 +119,7 @@ public sealed class SceneAmbientSettings
         fs.Write(System.BitConverter.GetBytes(skyColor.b), 0, 4);
         // 40
     }
-    public SceneAmbientSettings(System.IO.FileStream fs)
+    public SceneAmbientSettings(System.IO.Stream fs)
     {
         var data = new byte[40];
         int i = 0;
@@ -386,11 +386,11 @@ public sealed class Environment
                   Color.black,
                    Color.cyan * 0.75f,
                   Color.white,
-                  0.75f);              
+                  0.72f); // на планшетах смотрится тусклее     
                 break;
         }
     }    
-    private Environment(System.IO.FileStream fs)
+    private Environment(System.IO.Stream fs)
     {
         presetType = EnvironmentPreset.Custom;
         var data = new byte[16];
@@ -683,7 +683,7 @@ public sealed class Environment
         return e;
     }
 
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         fs.WriteByte((byte)presetType);
         if (presetType == EnvironmentPreset.Custom)
@@ -696,7 +696,7 @@ public sealed class Environment
             lightSettings.Save(fs);
         }
     }
-    public static Environment Load(System.IO.FileStream fs)
+    public static Environment Load(System.IO.Stream fs)
     {
         EnvironmentPreset ep = (EnvironmentPreset)fs.ReadByte();
         if (ep != EnvironmentPreset.Custom) return GetEnvironment(ep);

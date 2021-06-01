@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+#if UNITY_EDITOR
 public class TestBehaviour : MonoBehaviour
 {
     private RectTransform testWindow;
@@ -124,3 +125,5 @@ public class TestBehaviourEditor : Editor
        // if (GUILayout.Button("Reposition")) script.SetPosition();
     }
 }
+
+#endif

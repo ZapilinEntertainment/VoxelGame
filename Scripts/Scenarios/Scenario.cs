@@ -6,16 +6,16 @@ public abstract class Scenario : MyObject
     protected byte _scenarioIndex;
     public bool completed { get; protected set; }
         protected bool useSpecialQuestFilling = false, useSpecialWindowFilling = false;
-    public const int FOUNDATION_ROUTE_ID = 1;
+    public const int TUTORIAL_SCENARIO_ID = 0,FOUNDATION_ROUTE_ID = 1;
     //
     private static (int id, string filename)[] scenarioFiles;
     //
     #region save-load
-    public virtual void Save(System.IO.FileStream fs)
+    public virtual void Save(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(ID),0,4);
     }
-    public static Scenario StaticLoad(System.IO.FileStream fs)
+    public static Scenario StaticLoad(System.IO.Stream fs)
     {
         var data = new byte[4];
         fs.Read(data, 0, 4);
@@ -34,7 +34,7 @@ public abstract class Scenario : MyObject
         }
         return s;
     }
-    virtual public void Load(System.IO.FileStream fs) { }
+    virtual public void Load(System.IO.Stream fs) { }
     #endregion
 
 
@@ -76,8 +76,11 @@ public abstract class Scenario : MyObject
         // check directory and load names into scenario files
     }
     public static ScenarioRepresentator GetRepresentator(int id) {
-        if (id == 0) return ScenarioRepresentator.GetTutorialRepresentator();
-        else return null;
+        return TutorialScenarioNS.TutorialScenario.GetRepresentator();
+        //switch (id)
+       // {
+        //    case TUTORIAL_SCENARIO_ID:    
+       // }
     }
     public static ScenarioRepresentator[] GetRepresentators(int startPosition, int length)
     {        
@@ -101,14 +104,9 @@ public abstract class Scenario : MyObject
     public sealed class ScenarioRepresentator
     {
         public readonly int scenarioID;
-        public readonly string name, description;
+        public readonly string name, description;       
 
-        public static ScenarioRepresentator GetTutorialRepresentator()
-        {
-            return new ScenarioRepresentator(0, "Tutorial", "Tutorial description");
-        }
-
-        private ScenarioRepresentator(int i_ID, string i_name, string i_descr)
+        public ScenarioRepresentator(int i_ID, string i_name, string i_descr)
         {
             scenarioID = i_ID;
             name = i_name;

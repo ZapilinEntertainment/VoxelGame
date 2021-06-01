@@ -494,7 +494,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
     }
 
     #region save-load
-    public void Save( System.IO.FileStream fs)
+    public void Save( System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(newWindVector.x),0,4); // 0 - 3
         fs.Write(System.BitConverter.GetBytes(newWindVector.y), 0, 4);// 4 - 7
@@ -508,7 +508,7 @@ public sealed class EnvironmentMaster : MonoBehaviour {
         //сохранение декораций?
         //save environment
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         var data = new byte[24];
         fs.Read(data, 0, data.Length);

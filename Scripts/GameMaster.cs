@@ -142,6 +142,7 @@ public sealed class GameMaster : MonoBehaviour
         sceneClearing = true;        
         SceneManager.LoadScene(index);
         if (realMaster != null) ResetComponentsStaticValues();
+        Resources.UnloadUnusedAssets();
         sceneClearing = false;
     }
     public void ChangePlayMode(GameStartSettings gss)
@@ -662,7 +663,7 @@ public sealed class GameMaster : MonoBehaviour
         {
             Directory.CreateDirectory(path);
         }
-        FileStream fs = File.Create(path + name + '.' + SaveSystemUI.SAVE_FNAME_EXTENSION);
+        Stream fs = File.Create(path + name + '.' + SaveSystemUI.SAVE_FNAME_EXTENSION);
         currentSavename = name;
         //сразу передавать файловый поток для записи, чтобы не забивать озу
         #region gms mainPartFilling
@@ -729,7 +730,7 @@ public sealed class GameMaster : MonoBehaviour
     public bool LoadGame(string fullname)
     {
         bool debug_noresource = weNeedNoResources, refreshUI = false;
-        FileStream fs = File.Open(fullname, FileMode.Open);        
+        Stream fs = File.Open(fullname, FileMode.Open);        
         double realHashSum = GetHashSum(fs, true);
         var data = new byte[8];
         fs.Read(data, 0, 8);
@@ -909,13 +910,13 @@ public sealed class GameMaster : MonoBehaviour
         {
             Directory.CreateDirectory(path);
         }
-        FileStream fs = File.Create(path + name + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
+        Stream fs = File.Create(path + name + '.' + SaveSystemUI.TERRAIN_FNAME_EXTENSION);
         fs.Write(System.BitConverter.GetBytes(GameConstants.SAVE_SYSTEM_VERSION), 0, 4);
         mainChunk.SaveChunkData(fs);
         fs.Close();
         return true;
     }
-    private void LoadTerrain(FileStream fs)
+    private void LoadTerrain(Stream fs)
     {
         var data = new byte[4];
         fs.Read(data, 0, 4);
@@ -933,19 +934,21 @@ public sealed class GameMaster : MonoBehaviour
 
     public bool LoadTerrain(string fullname)
     {
-        FileStream fs = File.Open(fullname, FileMode.Open);
+        Stream fs = File.Open(fullname, FileMode.Open);
         if (fs != null) LoadTerrain(fs);
         return true;
     }
     public void LoadTerrainFromAssets(string name)
     {
-        using (var fs = File.Open("Assets/Terrains/" + name, FileMode.Open))
+        var r = Resources.Load<TextAsset>("Terrains/" + name); // дописывать .bytes не нужно
+        using (var fs = new MemoryStream(r.bytes))
         {
             LoadTerrain(fs);
         }
+        Resources.UnloadAsset(r);
     }
 
-    public double GetHashSum(FileStream fs, bool ignoreLastEightBytes)
+    public double GetHashSum(Stream fs, bool ignoreLastEightBytes)
     {
         double hsum = 0d, full = 255d;
         int x = 0;

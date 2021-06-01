@@ -208,7 +208,7 @@ public class Platform : Structure, IPlanable
     #endregion
 
     #region save-load
-    public void SavePlanesData(System.IO.FileStream fs)
+    public void SavePlanesData(System.IO.Stream fs)
     {
         if (upperPlane != null)
         {
@@ -217,7 +217,7 @@ public class Platform : Structure, IPlanable
         }
         else fs.WriteByte(0);
     }
-    public void LoadPlanesData(System.IO.FileStream fs)
+    public void LoadPlanesData(System.IO.Stream fs)
     {
         var b = fs.ReadByte();
         IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, false);

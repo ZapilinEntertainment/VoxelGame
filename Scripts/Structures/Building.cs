@@ -903,13 +903,13 @@ public class Building : Structure
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);
         // dependence in Settlement PsychokineticGenerator  QuantumEnergyTransmitter Hotel
     }
-    protected void LoadBuildingData(System.IO.FileStream fs)
+    protected void LoadBuildingData(System.IO.Stream fs)
     {
         var data = new byte[BUILDING_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

@@ -219,7 +219,7 @@ public class Farm : WorkBuilding
         data.AddRange(System.BitConverter.GetBytes(lastPlantIndex));
         return data;
     }
-    public override void Load(FileStream fs, Plane sblock)
+    public override void Load(Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var data = new byte[4];

@@ -291,7 +291,7 @@ public sealed class Ship : MonoBehaviour {
         return data;
     }
 
-    public static Ship Load(System.IO.FileStream fs, Dock d)
+    public static Ship Load(System.IO.Stream fs, Dock d)
     {
         byte slevel = (byte)fs.ReadByte();
         ShipType stype = (ShipType)fs.ReadByte();

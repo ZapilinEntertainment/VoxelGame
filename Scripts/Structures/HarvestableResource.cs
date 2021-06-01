@@ -340,13 +340,13 @@ public class HarvestableResource : Structure
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         // не используется
         Debug.Log("Harvestable Resource - wrong call");
     }
 
-    public static HarvestableResource LoadContainer(System.IO.FileStream fs, Plane sblock)
+    public static HarvestableResource LoadContainer(System.IO.Stream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + CONTAINER_SERIALIZER_LENGTH];
         fs.Read(data, 0, data.Length);

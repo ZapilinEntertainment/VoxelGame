@@ -111,7 +111,7 @@
             isPassed ? (byte)1 : (byte)0
         };
     }
-    public static ChallengeField[,] Load(System.IO.FileStream fs, int size)
+    public static ChallengeField[,] Load(System.IO.Stream fs, int size)
     {
         var cfa = new ChallengeField[size, size];
         const int length = 4;

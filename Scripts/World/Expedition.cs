@@ -356,7 +356,7 @@ public sealed class Expedition
         data.Add(missionCompleted ? truebyte : falsebyte); // 0
         return data;
     }
-    public Expedition Load(System.IO.FileStream fs)
+    public Expedition Load(System.IO.Stream fs)
     {
         int LENGTH = 28; // (id excluded)
         var data = new byte[LENGTH];
@@ -394,7 +394,7 @@ public sealed class Expedition
         return this;
     }
 
-    public static void SaveStaticData(System.IO.FileStream fs)
+    public static void SaveStaticData(System.IO.Stream fs)
     {
         int realCount = 0;
         var savedata = new List<byte>();
@@ -420,7 +420,7 @@ public sealed class Expedition
         fs.Write(System.BitConverter.GetBytes(expeditionsLaunched), 0, 4);
         fs.Write(System.BitConverter.GetBytes(expeditionsSucceed), 0, 4);
     }
-    public static void LoadStaticData(System.IO.FileStream fs)
+    public static void LoadStaticData(System.IO.Stream fs)
     {
         var data = new byte[4];
         fs.Read(data, 0, data.Length);

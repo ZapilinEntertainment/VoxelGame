@@ -1057,7 +1057,7 @@ public sealed class ColonyController : MonoBehaviour
 
 
     #region save-load system
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         storage.Save(fs);
         
@@ -1130,7 +1130,7 @@ public sealed class ColonyController : MonoBehaviour
         fs.Write(System.BitConverter.GetBytes(count), 0, 4); // количество байтов, не длина строки
         if (count > 0) fs.Write(nameArray, 0, nameArray.Length);
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         if (storage == null) storage = gameObject.AddComponent<Storage>();
         storage.Load(fs);

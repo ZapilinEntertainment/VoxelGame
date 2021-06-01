@@ -447,12 +447,12 @@ namespace FoundationRoute
             return "ring: " + ringIndex + ", position: " + ringPosition.ToString();
         }
 
-        public void Save(System.IO.FileStream fs)
+        public void Save(System.IO.Stream fs)
         {
             fs.WriteByte(ringIndex);
             fs.WriteByte(ringPosition);
         }
-        public static HexPosition Load(System.IO.FileStream fs)
+        public static HexPosition Load(System.IO.Stream fs)
         {
             return new HexPosition(fs.ReadByte(), fs.ReadByte());
         }
@@ -1073,7 +1073,7 @@ namespace FoundationRoute
         public float GetMaxFoodProduction() { return _maxFoodProduction; }
 
         #region save-load
-        public void Save(System.IO.FileStream fs)
+        public void Save(System.IO.Stream fs)
         {
             fs.WriteByte((byte)htype);
             fs.Write(System.BitConverter.GetBytes(_maxPowerConsumption),0,4);
@@ -1084,7 +1084,7 @@ namespace FoundationRoute
             fs.Write(System.BitConverter.GetBytes(maxPersonnel), 0, 4);
             fs.Write(System.BitConverter.GetBytes(housing), 0, 4);
         }
-        public static HexBuildingStats Load(System.IO.FileStream fs)
+        public static HexBuildingStats Load(System.IO.Stream fs)
         {
             const int length = 29;
             var data = new byte[length];
@@ -1546,12 +1546,12 @@ namespace FoundationRoute
         }
 
         #region save-load
-        public void Save(System.IO.FileStream fs)
+        public void Save(System.IO.Stream fs)
         {
             hexPosition.Save(fs);
             hexStats.Save(fs);            
         }
-        public void Load(System.IO.FileStream fs, HexBuilder i_builder)
+        public void Load(System.IO.Stream fs, HexBuilder i_builder)
         {
             Initialize(HexPosition.Load(fs), i_builder, HexBuildingStats.Load(fs));
         }

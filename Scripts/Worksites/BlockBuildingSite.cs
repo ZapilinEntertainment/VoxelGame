@@ -202,7 +202,7 @@ public class BlockBuildingSite : Worksite
     }
 
     #region save-load system
-    override public void Save(System.IO.FileStream fs)
+    override public void Save(System.IO.Stream fs)
     {
         if (workplace == null)
         {
@@ -218,7 +218,7 @@ public class BlockBuildingSite : Worksite
         fs.Write(System.BitConverter.GetBytes(rtype.ID),0,4);
         SerializeWorksite(fs);
     }
-    public static BlockBuildingSite Load(System.IO.FileStream fs, Chunk chunk)
+    public static BlockBuildingSite Load(System.IO.Stream fs, Chunk chunk)
     {
         var data = new byte[8];
         fs.Read(data, 0, data.Length);

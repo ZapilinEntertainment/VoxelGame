@@ -10,7 +10,7 @@ public sealed class DockSystem
     public uint immigrantsArrived = 0, emigrantsGone = 0;
 
     #region save-load system
-    public static void SaveDockSystem(System.IO.FileStream fs)
+    public static void SaveDockSystem(System.IO.Stream fs)
     {
         if (current == null)
         {
@@ -23,7 +23,7 @@ public sealed class DockSystem
             current.Save(fs);
         }
     }
-    public static void LoadDockSystem(System.IO.FileStream fs, int saveVersion)
+    public static void LoadDockSystem(System.IO.Stream fs, int saveVersion)
     {
         current = null;
         int x = fs.ReadByte();
@@ -36,7 +36,7 @@ public sealed class DockSystem
             current.Load(fs);
         }
     }
-    private void Save(System.IO.FileStream fs)
+    private void Save(System.IO.Stream fs)
     {
         byte truebyte = 1, falsebyte = 0, nullbyte = 2;        
         byte resCount = ResourceType.TYPES_COUNT;
@@ -60,7 +60,7 @@ public sealed class DockSystem
         fs.Write(System.BitConverter.GetBytes(immigrantsArrived), 0, 4);
         fs.Write(System.BitConverter.GetBytes(emigrantsGone), 0, 4);
     }   
-    private void Load(System.IO.FileStream fs)
+    private void Load(System.IO.Stream fs)
     {
         int resCount = fs.ReadByte();
         isForSale = new bool?[resCount];

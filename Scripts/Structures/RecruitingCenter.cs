@@ -170,7 +170,7 @@ public sealed class RecruitingCenter : WorkBuilding {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         finding = fs.ReadByte() == 1;

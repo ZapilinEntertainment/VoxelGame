@@ -46,7 +46,7 @@ public sealed class PsychokineticGenerator : WorkBuilding
         data.AddRange(System.BitConverter.GetBytes(workersCount));
         return data;
     }
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         LoadStructureData(fs, sblock);
         LoadBuildingData(fs);

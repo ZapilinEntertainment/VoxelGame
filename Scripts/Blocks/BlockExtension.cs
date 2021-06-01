@@ -32,7 +32,7 @@ public sealed class BlockExtension : MyObject, IPlanable
         return myBlock.GetHashCode() + materialID + existingPlanesMask;
     }
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         fs.Write(System.BitConverter.GetBytes(materialID), 0, 4); // 0 -3
         fs.WriteByte(isNatural ? (byte)1 : (byte)0); // 4
@@ -41,7 +41,7 @@ public sealed class BlockExtension : MyObject, IPlanable
         fs.Write(System.BitConverter.GetBytes(volume), 0, 4); // 10 - 13
         SavePlanesData(fs);
     }
-    public void SavePlanesData(System.IO.FileStream fs)
+    public void SavePlanesData(System.IO.Stream fs)
     {
         byte count = 0; 
         if (planes != null)
@@ -68,7 +68,7 @@ public sealed class BlockExtension : MyObject, IPlanable
         }
         else fs.WriteByte(count);
     }
-    public static BlockExtension Load(System.IO.FileStream fs, Block b)
+    public static BlockExtension Load(System.IO.Stream fs, Block b)
     {
         var data = new byte[14];
         fs.Read(data, 0, data.Length);
@@ -81,7 +81,7 @@ public sealed class BlockExtension : MyObject, IPlanable
         be.LoadPlanesData(fs);        
         return be;
     }
-    public void LoadPlanesData(System.IO.FileStream fs)
+    public void LoadPlanesData(System.IO.Stream fs)
     {
         int count = fs.ReadByte();
         if (count > 0)

@@ -476,7 +476,7 @@ public abstract class WorkBuilding : Building, ILabourable
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var data = new byte[WORKBUILDING_SERIALIZER_LENGTH];

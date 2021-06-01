@@ -41,7 +41,7 @@ public sealed class PlaneExtension : MyObject
     }
 
     #region save-load system
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         //base.Save(fs);
         int structuresCount = 0;
@@ -90,7 +90,7 @@ public sealed class PlaneExtension : MyObject
         }
     }
 
-    public static PlaneExtension Load(System.IO.FileStream fs, Plane p)
+    public static PlaneExtension Load(System.IO.Stream fs, Plane p)
     {        
         var pe = new PlaneExtension(p, null);
         var data = new byte[4];

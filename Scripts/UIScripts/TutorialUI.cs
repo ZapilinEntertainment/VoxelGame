@@ -23,7 +23,7 @@ namespace TutorialScenarioNS
         {
             var g = Instantiate(Resources.Load<GameObject>("UIPrefs/tutorialCanvas"));
             current = g.GetComponent<TutorialUI>();
-            UIController.GetCurrent().AddSpecialCanvasToHolder(g.transform);
+            UIController.GetCurrent().AddSpecialCanvasToHolder(g.transform);            
         }
 
         private void Start()
@@ -35,7 +35,7 @@ namespace TutorialScenarioNS
             //
             GameConstants.DisableTutorialNote();
             TutorialScenario.Initialize(this, mcc);
-            //TestMaster.CreateColony();
+            outerProceedButton.GetComponentInChildren<Text>().text = Localization.GetWord(LocalizedWord.Continue);
             StartScenario(TutorialScenario.GetScenario(0));
         }
         private void StartScenario(TutorialScenario s)

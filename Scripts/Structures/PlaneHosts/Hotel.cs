@@ -474,13 +474,13 @@ public sealed class Hotel : Building, IPlanable
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         lodgersCount = (byte)fs.ReadByte();
     }
 
-    public void SavePlanesData(System.IO.FileStream fs)
+    public void SavePlanesData(System.IO.Stream fs)
     {
         if (upperPlane != null)
         {
@@ -495,7 +495,7 @@ public sealed class Hotel : Building, IPlanable
         }
         else fs.WriteByte(0);
     }
-    public void LoadPlanesData(System.IO.FileStream fs)
+    public void LoadPlanesData(System.IO.Stream fs)
     {
         var b = fs.ReadByte();
         IPlanableSupportClass.AddBlockRepresentation(this, basement, ref myBlock, false);

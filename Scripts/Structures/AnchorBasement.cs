@@ -588,7 +588,7 @@ public sealed class AnchorBasement : WorkBuilding
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var x = fs.ReadByte();

@@ -12,7 +12,7 @@ public sealed class AdvicesUI : MonoBehaviour
 
     private void LoadAdvices()
     {
-        Localization.LoadLocalesData("advice", ref lines);
+        Localization.LoadLocalesData("advice", ref lines, false);
         totalAdvicesCount = lines.Length / 2;
         textLoaded = true;
     }

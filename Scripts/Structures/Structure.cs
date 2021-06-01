@@ -1320,14 +1320,14 @@ public class Structure : MonoBehaviour
 
 
     #region save-load system
-    public static void LoadStructures(int count, System.IO.FileStream fs, Plane p)
+    public static void LoadStructures(int count, System.IO.Stream fs, Plane p)
     {        
         for (int i = 0; i < count; i++)
         {
             LoadStructure(fs, p);
         }
     }
-    public static Structure LoadStructure(System.IO.FileStream fs, Plane p)
+    public static Structure LoadStructure(System.IO.Stream fs, Plane p)
     {
         var data = new byte[4];
         fs.Read(data, 0, 4);
@@ -1374,12 +1374,12 @@ public class Structure : MonoBehaviour
         return SaveStructureData();
     }
 
-    public virtual void Load(System.IO.FileStream fs, Plane p)
+    public virtual void Load(System.IO.Stream fs, Plane p)
     {
         LoadStructureData(fs, p);
     }
     // в финальном виде копипастить в потомков
-    protected void LoadStructureData(System.IO.FileStream fs, Plane p)
+    protected void LoadStructureData(System.IO.Stream fs, Plane p)
     {
         //copy in harvestable resource.load - changed
         Prepare();

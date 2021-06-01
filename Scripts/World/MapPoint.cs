@@ -263,7 +263,7 @@ public class MapPoint
         return bytes;
     }    
 
-    public static List<MapPoint> LoadPoints(System.IO.FileStream fs)
+    public static List<MapPoint> LoadPoints(System.IO.Stream fs)
     {
         var pts = new List<MapPoint>();
         var data = new byte[4];
@@ -378,7 +378,7 @@ public sealed class SunPoint : MapPoint
         data.AddRange(System.BitConverter.GetBytes(color.b));
         return data;
     }
-    public void LoadSunPointData(System.IO.FileStream fs)
+    public void LoadSunPointData(System.IO.Stream fs)
     {
         var data = new byte[12];
         fs.Read(data, 0, data.Length);

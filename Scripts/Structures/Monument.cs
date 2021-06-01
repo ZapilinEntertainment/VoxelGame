@@ -290,7 +290,7 @@ public sealed class Monument : Building
         data.AddRange(System.BitConverter.GetBytes(artifacts[3] == null ? -1 : artifacts[3].ID));
         return data;
     }
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         artifacts = new Artifact[MAX_ARTIFACTS_COUNT];

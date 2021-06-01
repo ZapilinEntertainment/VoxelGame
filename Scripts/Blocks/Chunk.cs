@@ -1521,7 +1521,7 @@ public sealed partial class Chunk : MonoBehaviour
     #endregion
 
     #region save-load system
-    public void SaveChunkData(System.IO.FileStream fs)
+    public void SaveChunkData(System.IO.Stream fs)
     {
         fs.WriteByte(chunkSize);
         int count = 0;
@@ -1550,7 +1550,7 @@ public sealed partial class Chunk : MonoBehaviour
         else fs.WriteByte(0);
     }
 
-    public void LoadChunkData(System.IO.FileStream fs)
+    public void LoadChunkData(System.IO.Stream fs)
     {
         if (blocks != null) ClearChunk();   
         chunkSize = (byte)fs.ReadByte();

@@ -112,6 +112,10 @@ public class UIController : MonoBehaviour
     {
         specialElementsHolder?.transform.SetAsLastSibling();
     }
+    public void SpecialCanvasDown()
+    {
+        specialElementsHolder?.transform.SetAsFirstSibling();
+    }
     public void DisableSpecialCanvas()
     {
         if (specialElementsHolder != null)

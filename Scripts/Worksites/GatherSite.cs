@@ -84,7 +84,7 @@ public class GatherSite : Worksite
 
 
     #region save-load system
-    override public void Save(System.IO.FileStream fs)
+    override public void Save(System.IO.Stream fs)
     {
         if (workplace == null)
         {
@@ -103,7 +103,7 @@ public class GatherSite : Worksite
             SerializeWorksite(fs);
         }
     }
-    public static GatherSite Load(System.IO.FileStream fs, Chunk chunk)
+    public static GatherSite Load(System.IO.Stream fs, Chunk chunk)
     {
         var data = new byte[8];
         fs.Read(data, 0, data.Length);

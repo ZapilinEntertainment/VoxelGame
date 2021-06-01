@@ -241,8 +241,8 @@ public sealed class FoundationRouteScenario : Scenario
             return true;
         }
 
-        virtual public void Save(FileStream fs) { }
-        virtual public void Load(FileStream fs) { }
+        virtual public void Save(Stream fs) { }
+        virtual public void Load(Stream fs) { }
 
         public virtual FoundationScenarioStep GetScenarioStep() { return FoundationScenarioStep.Empty; }
         public static FDR_Subscenario GetSubscenario(FoundationScenarioStep step, FoundationRouteScenario baseScenario)
@@ -353,11 +353,11 @@ public sealed class FoundationRouteScenario : Scenario
             conditionQuest.SubscribeToUpdate(questUI);                 
         }
 
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             conditionQuest.Save();
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             base.Load(fs);
         }
@@ -386,10 +386,10 @@ public sealed class FoundationRouteScenario : Scenario
                 scenario.Next();
             }
         }
-        override public void Save(FileStream fs) {
+        override public void Save(Stream fs) {
             fs.WriteByte(stage);
         }
-        override public void Load(FileStream fs) {
+        override public void Load(Stream fs) {
             stage = (byte)fs.ReadByte();
             if (stage == 1) scenarioUI.ChangeAnnouncementText(localizer.GetAnnounceTitle(FoundationScenarioStep.Begin, WINDOW_INFO_1));
         }
@@ -464,11 +464,11 @@ public sealed class FoundationRouteScenario : Scenario
                 else conditionWindow.Refresh();
             }
         }
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             fs.WriteByte(stage);
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             var nstage = (byte)fs.ReadByte();
             if (nstage != 0)
@@ -546,11 +546,11 @@ public sealed class FoundationRouteScenario : Scenario
             }
             else conditionWindow.Refresh();
         }
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             fs.WriteByte(stage);
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             byte nstage = (byte)fs.ReadByte();
             if (nstage != 0)
@@ -604,11 +604,11 @@ public sealed class FoundationRouteScenario : Scenario
                     break;
             }
         }
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             fs.WriteByte(stage);
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             byte nstage = (byte)fs.ReadByte();
             if (nstage != 0)
@@ -673,11 +673,11 @@ public sealed class FoundationRouteScenario : Scenario
             }
             else conditionWindow.Refresh();
         }
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             fs.WriteByte(stage);
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             byte nstage = (byte)fs.ReadByte();
             if (nstage != 0)
@@ -783,11 +783,11 @@ public sealed class FoundationRouteScenario : Scenario
             else conditionWindow.Refresh();
         }
 
-        public override void Save(FileStream fs)
+        public override void Save(Stream fs)
         {
             fs.WriteByte(windowShowed ? (byte)1 : (byte)0);
         }
-        public override void Load(FileStream fs)
+        public override void Load(Stream fs)
         {
             bool ws = fs.ReadByte() == 1;
             if (ws) OKButton();
@@ -826,7 +826,7 @@ public sealed class FoundationRouteScenario : Scenario
 
         public Localizer()
         {
-           Localization.LoadLocalesData("foundationRoute", ref lines);
+           Localization.LoadLocalesData("foundationRoute", ref lines, false);
         }
         public string GetAnnounceTitle(FoundationScenarioStep step, byte subIndex)
         {
@@ -948,7 +948,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
 
     #region save-load
-    public override void Save(FileStream fs)
+    public override void Save(Stream fs)
     {
         base.Save(fs);
         fs.WriteByte((byte)currentStep);
@@ -974,7 +974,7 @@ public sealed class FoundationRouteScenario : Scenario
         }
         else fs.WriteByte(0);
     }
-    public override void Load(FileStream fs)
+    public override void Load(Stream fs)
     {
         currentStep = (FoundationScenarioStep)fs.ReadByte();
         if (currentStep >= FoundationScenarioStep.AnchorBuilding)

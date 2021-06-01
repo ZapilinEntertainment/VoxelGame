@@ -118,7 +118,7 @@ public sealed class QuantumTransmitter : Building {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         base.Load(fs, sblock);
         var data = new byte[4];

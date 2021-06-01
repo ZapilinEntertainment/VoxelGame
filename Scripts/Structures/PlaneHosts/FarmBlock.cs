@@ -362,7 +362,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
     #endregion
 
     #region save-load
-    public void SavePlanesData(System.IO.FileStream fs)
+    public void SavePlanesData(System.IO.Stream fs)
     {
         if (planes != null && planes.Count > 0)
         {
@@ -374,7 +374,7 @@ public sealed class FarmBlock : CoveredFarm, IPlanable
         }
         else fs.WriteByte(0);
     }
-    public void LoadPlanesData(System.IO.FileStream fs)
+    public void LoadPlanesData(System.IO.Stream fs)
     {
         var count = fs.ReadByte();
         if (count > 0)

@@ -587,7 +587,7 @@ public class PointOfInterest : MapPoint
         else data.Add(0); // 17
         return data;
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         int LENGTH = 18;
         var data = new byte[LENGTH];

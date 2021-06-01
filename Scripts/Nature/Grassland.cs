@@ -41,7 +41,7 @@ public sealed class Grassland : MyObject
     }
 
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {        
         var cpos = plane.pos;
         fs.WriteByte(cpos.x); // 0
@@ -56,7 +56,7 @@ public sealed class Grassland : MyObject
         fs.WriteByte(level); //11
         fs.Write(System.BitConverter.GetBytes(lifepower),0,4); // 12 - 15
     }
-    public static Grassland Load(System.IO.FileStream fs, Chunk c)
+    public static Grassland Load(System.IO.Stream fs, Chunk c)
     {
         var data = new byte[16];
         fs.Read(data, 0, data.Length);

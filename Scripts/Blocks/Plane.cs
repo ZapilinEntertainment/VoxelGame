@@ -89,13 +89,13 @@ public class Plane : MyObject
     }
 
     #region save-load system
-    virtual public void Save(System.IO.FileStream fs)
+    virtual public void Save(System.IO.Stream fs)
     {        
         if (destroyed) return;
         fs.WriteByte(BASIC_PLANE_CODE);
         SaveData(fs);
     }
-    protected void SaveData(System.IO.FileStream fs)
+    protected void SaveData(System.IO.Stream fs)
     {
         // 0 - идентификатор
         //сохранить meshrotation, если это крыша, или если grassland
@@ -124,7 +124,7 @@ public class Plane : MyObject
             else fs.WriteByte(0);
         }
     }
-    public static Plane Load(System.IO.FileStream fs, IPlanable host)
+    public static Plane Load(System.IO.Stream fs, IPlanable host)
     {
         var data = new byte[9];
         fs.Read(data, 0, data.Length);

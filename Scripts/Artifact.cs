@@ -445,7 +445,7 @@ public sealed class Artifact {
         return data;
     }
 
-   public static void SaveStaticData(System.IO.FileStream fs)
+   public static void SaveStaticData(System.IO.Stream fs)
     {
         var data = new List<byte>();
         int artsCount = artifactsList.Count;
@@ -475,7 +475,7 @@ public sealed class Artifact {
         }
         fs.Write(System.BitConverter.GetBytes(nextID), 0, 4);
     }
-    public static void LoadStaticData(System.IO.FileStream fs)
+    public static void LoadStaticData(System.IO.Stream fs)
     {
         if (artifactsList == null) artifactsList = new List<Artifact>();
         else artifactsList.Clear();

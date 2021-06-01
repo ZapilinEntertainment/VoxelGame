@@ -572,7 +572,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
     }
 
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         // access map
         CheckQuestsAccessibility(false);
@@ -617,7 +617,7 @@ public sealed class QuestUI : MonoBehaviour, ILocalizable
             }
         }
     }
-    public void Load(System.IO.FileStream fs)
+    public void Load(System.IO.Stream fs)
     {
         if (!prepared) Prepare(false);
         int questsCount = (int)QuestSection.TotalCount;

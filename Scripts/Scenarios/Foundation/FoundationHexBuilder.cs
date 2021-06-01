@@ -334,7 +334,7 @@ namespace FoundationRoute
         }
 
         #region save-load
-        public void Save(System.IO.FileStream fs)
+        public void Save(System.IO.Stream fs)
         {
             if (hexList.Count > 0)
             {
@@ -362,7 +362,7 @@ namespace FoundationRoute
             //
             fs.Write(System.BitConverter.GetBytes(colonistsCount),0,4);
         }
-        public void Load(System.IO.FileStream fs)
+        public void Load(System.IO.Stream fs)
         {
             if (anchor == null)
             {

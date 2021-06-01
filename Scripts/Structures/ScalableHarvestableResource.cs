@@ -176,7 +176,7 @@ public sealed class ScalableHarvestableResource : Structure {
         return data;
     }
 
-    override public void Load(System.IO.FileStream fs, Plane sblock)
+    override public void Load(System.IO.Stream fs, Plane sblock)
     {
         var data = new byte[STRUCTURE_SERIALIZER_LENGTH + 5];
         fs.Read(data, 0, data.Length);

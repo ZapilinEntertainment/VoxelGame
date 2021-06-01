@@ -1203,7 +1203,7 @@ public sealed class Knowledge
     }
 
     #region save-load
-    public void Save(System.IO.FileStream fs)
+    public void Save(System.IO.Stream fs)
     {
         const byte truebyte = 1, falsebyte = 0;
         int i;
@@ -1231,7 +1231,7 @@ public sealed class Knowledge
             fs.WriteByte(routeBonusesMask[i]);
         }
     }
-    public static void Load(System.IO.FileStream fs)
+    public static void Load(System.IO.Stream fs)
     {
         int i;
         var pins = new bool[PUZZLE_PINS_COUNT];

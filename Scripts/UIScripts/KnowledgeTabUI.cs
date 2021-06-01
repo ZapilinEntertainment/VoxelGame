@@ -163,7 +163,7 @@ public sealed class KnowledgeTabUI : MonoBehaviour, IObserverController
             puzzleparts_tx.Apply();
 
             var data = puzzleparts_tx.EncodeToPNG();
-            using (System.IO.FileStream fs = new System.IO.FileStream(name, System.IO.FileMode.Create))
+            using (var fs = new System.IO.FileStream(name, System.IO.FileMode.Create))
             {
                 fs.Write(data, 0, data.Length);
             }

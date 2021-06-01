@@ -81,7 +81,7 @@ public class CleanSite : Worksite {
     }
 
     #region save-load mission
-    override public void Save(System.IO.FileStream fs) {
+    override public void Save(System.IO.Stream fs) {
         if (workplace == null)
         {
             StopWork(true);
@@ -100,7 +100,7 @@ public class CleanSite : Worksite {
         }
 	}
 
-    public static CleanSite Load(System.IO.FileStream fs, Chunk chunk )
+    public static CleanSite Load(System.IO.Stream fs, Chunk chunk )
     {
         var data = new byte[5];
         fs.Read(data, 0, data.Length);

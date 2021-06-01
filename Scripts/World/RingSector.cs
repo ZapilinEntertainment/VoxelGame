@@ -161,7 +161,7 @@ public sealed class RingSector
     }
 
     #region save-load
-    public static void StaticSave(System.IO.FileStream fs, RingSector[] sectorsArray)
+    public static void StaticSave(System.IO.Stream fs, RingSector[] sectorsArray)
     {
         fs.Write(System.BitConverter.GetBytes(sectorsArray.Length),0,4);
 
@@ -199,7 +199,7 @@ public sealed class RingSector
         fs.Write(System.BitConverter.GetBytes(lastFreeID),0,4);
     }
 
-    public static RingSector[] StaticLoad(System.IO.FileStream fs)
+    public static RingSector[] StaticLoad(System.IO.Stream fs)
     {
         var data = new byte[4];
         fs.Read(data, 0, 4);
