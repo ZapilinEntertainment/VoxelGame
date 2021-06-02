@@ -469,7 +469,23 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading | gameSpeed == 0) return;
 
-        //if (Input.GetKeyDown("o")) mainChunk.GetNature()?.DEBUG_HaveGrasslandDublicates();
+        if (Input.GetKeyDown("o")) {
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+            Crew.CreateNewCrew(colonyController, 9);
+        }
         gameSpeed = _gameSpeed;
     }
     private void FixedUpdate()

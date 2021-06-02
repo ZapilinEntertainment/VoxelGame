@@ -158,7 +158,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                             if (Mathf.Abs(delta) > 0.01f)
                             {
                                 StopCameraMovement();
-                                transform.RotateAround(transform.position, Vector3.up, rspeed * delta * 0.1f);
+                                transform.RotateAround(transform.position, Vector3.up, rspeed * delta * 20f);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 a = true;
                             }
@@ -167,7 +167,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                             if (Mathf.Abs(delta) > 0.01f)
                             {
                                 StopCameraMovement();
-                                cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta * 0.1f);
+                                cam.transform.RotateAround(transform.position, cam.transform.TransformDirection(Vector3.left), rspeed * delta * 20f);
                                 rotationSmoothCoefficient += rotationSmoothAcceleration;
                                 b = true;
                             }

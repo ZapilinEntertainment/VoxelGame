@@ -4,21 +4,22 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 
-public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
+public sealed class SaveSystemUI : MonoBehaviour, ILocalizable, IListable
 {
     public bool saveMode = false;
-    private bool deleteSubmit = false, terrainsLoading;
-    string[] saveNames;
+    private bool deleteSubmit = false, workWithTerrains, linkedToListController = false;
+    private string[] savenames;
+    private int[] IDs;
+    private int selectedIndex = -1;
 #pragma warning disable 0649
-    [SerializeField] private RectTransform exampleButton, saveNamesContainer; // fiti
     [SerializeField] private Text saveLoadButtonText, deleteButtonText, submitButtonText, rejectButtonText, submitQuestionText, saveDateString; // fiti
     [SerializeField] private GameObject submitWindow, inputFieldBasis;
     [SerializeField] private InputField savenameField;
 #pragma warning restore 0649
-    private int lastSelectedIndex = -1;
+    [SerializeField] private ListController listController;
 
     public const string SAVE_FNAME_EXTENSION = "sav", TERRAIN_FNAME_EXTENSION = "itd"; // island terrain data    
-
+    private const int NO_FILE_ID = -1, NEW_SAVE_ID = -2;
 
     public static SaveSystemUI Initialize(Transform basis)
     {
@@ -52,189 +53,141 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
 
     public void Activate(bool openSaveMode, bool i_terrainsLoading)
     {
+        if (!linkedToListController)
+        {
+            listController.AssignSelectItemAction(this.SelectSave);
+            linkedToListController = true;
+        }
         gameObject.SetActive(true);
         if (inputFieldBasis.activeSelf) inputFieldBasis.SetActive(false);
-        if (submitWindow.activeSelf) submitWindow.SetActive(false);
-        if (lastSelectedIndex != -1)
-        {
-            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-            if (t != null)
-            {
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-            }
-        }
-        lastSelectedIndex = -1;
+        if (submitWindow.activeSelf) submitWindow.SetActive(false);        
         saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = false;
         deleteButtonText.transform.parent.GetComponent<Button>().interactable = false;
         deleteSubmit = false;
         saveDateString.enabled = false;
 
         saveMode = openSaveMode;
-        terrainsLoading = i_terrainsLoading;
-        RefreshSavesList();
+        workWithTerrains = i_terrainsLoading;
+        PrepareSavesList();
     }
 
-    void RefreshSavesList()
+    private void PrepareSavesList()
     {
-        string directoryPath = terrainsLoading ? GetTerrainsPath() : GetSavesPath();
-        if (saveMode)
+        selectedIndex = -1;
+        string directoryPath = workWithTerrains ? GetTerrainsPath() : GetSavesPath();
+
+        string CutName(string s)
         {
-            saveMode = true;
+            int lastSlashPos = s.LastIndexOf('\\'); // в редакторе так
+            if (lastSlashPos == -1) lastSlashPos = s.LastIndexOf('/');
+            return s.Substring(lastSlashPos + 1, s.Length - lastSlashPos - 5); //  от последнего слеша до ".sav"
+        }
+
+        if (saveMode)
+        { //SAVING
             if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
-                saveNames = new string[0];
+                savenames = new string[1] ;
+                IDs = new int[1] ;               
             }
             else
             {
-                saveNames = Directory.GetFiles(directoryPath, "*." + (terrainsLoading ? TERRAIN_FNAME_EXTENSION : SAVE_FNAME_EXTENSION));
+                var sn = Directory.GetFiles(directoryPath, "*." + (workWithTerrains ? TERRAIN_FNAME_EXTENSION : SAVE_FNAME_EXTENSION));
+                int len = sn.Length;
+                savenames = new string[len + 1];
+                IDs = new int[len + 1];
+                int j;
+                for (int i = 0; i < sn.Length; i++)
+                {
+                    j = i + 1;
+                    savenames[j] = CutName(sn[i]);
+                    IDs[j] = j;
+                }
+                sn = null;
             }
-            exampleButton.gameObject.SetActive(true);
-            exampleButton.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.CreateNewSave);
-            exampleButton.GetComponent<Button>().interactable = true;
-            exampleButton.GetComponent<Button>().onClick.AddListener(() =>
-            {
-                this.CreateNewSave();
-            });
+
+            savenames[0] = Localization.GetPhrase(LocalizedPhrase.CreateNewSave);
+            IDs[0] = NEW_SAVE_ID;            
             saveLoadButtonText.text = Localization.GetWord(LocalizedWord.Save);
         }
         else
-        {
-            saveMode = false; // load mode enabled
+        { // LOADING
             if (!Directory.Exists(directoryPath))
             {
-                saveNames = new string[0];
+                savenames = null;
+                IDs = null;
             }
             else
             {
-                saveNames = Directory.GetFiles(directoryPath, "*." + (terrainsLoading ? TERRAIN_FNAME_EXTENSION : SAVE_FNAME_EXTENSION));
+                savenames = Directory.GetFiles(directoryPath, "*." + (workWithTerrains ? TERRAIN_FNAME_EXTENSION : SAVE_FNAME_EXTENSION));
+                int len = savenames.Length;
+                if (len > 0)
+                {
+                    IDs = new int[len];
+                    for (int i = 0; i < len; i++)
+                    {
+                        IDs[i] = i + 1;
+                        savenames[i] = CutName(savenames[i]);
+                    }
+                }
             }
-            if (saveNames.Length == 0)
+            if (savenames.Length == 0)
             {
-                exampleButton.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.NoSavesFound);
-                exampleButton.GetComponent<Button>().interactable = false;
-                exampleButton.gameObject.SetActive(true);
-            }
-            else
-            {
-                exampleButton.gameObject.SetActive(false);
+                listController.ChangeEmptyLabelText(Localization.GetPhrase(LocalizedPhrase.NoSavesFound));
+                savenames = null;
+                IDs = null;
             }
             saveLoadButtonText.text = Localization.GetWord(LocalizedWord.Load);
         }
 
-        int c = saveNamesContainer.childCount;
-        if (saveNames.Length > 0)
+        listController.PrepareList(this);
+   }
+    public void SelectSave(int index) 
+    {
+        if (index < 0 | IDs.Length <= index) return;
+        if (IDs[index] == NEW_SAVE_ID)
         {
-            int i = 0;
-            for (; i < saveNames.Length; i++)
-            {
-                string s = saveNames[i];
-                int lastSlashPos = s.LastIndexOf('\\'); // в редакторе так
-                if (lastSlashPos == -1) lastSlashPos = s.LastIndexOf('/');
-                saveNames[i] = s.Substring(lastSlashPos + 1, s.Length - lastSlashPos - 5); //  от последнего слеша до ".sav"
-                Transform t;
-                if (i + 1 < c)
-                {
-                    t = saveNamesContainer.GetChild(i + 1); // 0 - example
-                }
-                else
-                {
-                    t = Instantiate(exampleButton, saveNamesContainer).transform;
-                    t.transform.localPosition = exampleButton.localPosition + Vector3.down * (exampleButton.rect.height * (i + 1) + 16);
-                }
-                t.gameObject.SetActive(true);
-                t.GetComponent<Button>().onClick.RemoveAllListeners(); // т.к. на example тоже может висеть listener
-                t.GetChild(0).GetComponent<Text>().text = saveNames[i];
-                int index = i;
-                t.GetComponent<Button>().onClick.AddListener(() =>
-                {
-                    this.SelectSave(index);
-                });
-            }
-            if (i < c)
-            {
-                i++;
-                for (; i < c; i++)
-                {
-                    saveNamesContainer.GetChild(i).gameObject.SetActive(false);
-                }
-            }
+            CreateNewSave();
+            return;
         }
         else
         {
-            if (c > 1)
+            saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
+            deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
+            var name = savenames[index];
+            string fullPath = workWithTerrains ?
+            GetTerrainSaveFullpath(name)
+            :
+            GetGameSaveFullpath(name);
+            if (File.Exists(fullPath))
             {
-                for (int i = 1; i < c; i++)
-                {
-                    saveNamesContainer.GetChild(i).gameObject.SetActive(false);
-                }
+                saveDateString.enabled = true;
+                saveDateString.text = File.GetLastWriteTime(fullPath).ToString();
             }
+            else PrepareSavesList();
         }
     }
 
     public void CreateNewSave()
     {
-        //#visual unselecting
-        if (lastSelectedIndex != -1)
-        {
-            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-            if (t != null)
-            {
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-            }
-        }
-        //
+        listController.selectedButtonIndex = -1;
         inputFieldBasis.SetActive(true);
-        savenameField.text = terrainsLoading ? "new terrain" : GameMaster.realMaster.colonyController.cityName;
+        savenameField.text = workWithTerrains ? "new terrain" : GameMaster.realMaster.colonyController.cityName;
     }
     public void InputField_SaveGame()
     {
-        if (terrainsLoading) GameMaster.realMaster.SaveTerrain(savenameField.text);
+        if (workWithTerrains) GameMaster.realMaster.SaveTerrain(savenameField.text);
         else GameMaster.realMaster.SaveGame(savenameField.text);
         inputFieldBasis.SetActive(false);
         gameObject.SetActive(false);
-    }
-
-    public void SelectSave(int index) // индекс имени, индекс среди child будет index+1
-    {
-        Transform t;
-        //#visual unselecting
-        if (lastSelectedIndex != -1)
-        {
-            t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-            if (t != null)
-            {
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-            }
-        }
-        //
-        t = saveNamesContainer.GetChild(index + 1);
-        t.GetComponent<Image>().color = Color.black;
-        t.GetChild(0).GetComponent<Text>().color = Color.cyan;
-        lastSelectedIndex = index;
-        saveLoadButtonText.transform.parent.GetComponent<Button>().interactable = true;
-        deleteButtonText.transform.parent.GetComponent<Button>().interactable = true;
-        string fullPath = terrainsLoading ?
-            GetTerrainSaveFullpath(saveNames[index])
-            :
-            GetGameSaveFullpath(saveNames[index]);
-        if (File.Exists(fullPath))
-        {
-            saveDateString.enabled = true;
-            saveDateString.text = File.GetLastWriteTime(fullPath).ToString();
-        }
-        else
-        {
-            RefreshSavesList();
-        }
-    }
+        PrepareSavesList();
+    }   
 
     public void SaveLoadButton()
     {
-        if (lastSelectedIndex == -1) return;
+        int sid = listController.selectedButtonIndex;
+        if (sid == -1) return;
         if (saveMode)
         {
             submitWindow.SetActive(true);
@@ -246,9 +199,10 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
         else
         {
             bool ingame = GameMaster.realMaster != null;
-            if (terrainsLoading)
+            string name = savenames[sid];
+            if (workWithTerrains)
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  РЕДАКТОРА
-                string fullPath = GetTerrainSaveFullpath(saveNames[lastSelectedIndex]);
+                string fullPath = GetTerrainSaveFullpath(name);
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadTerrain(fullPath)) gameObject.SetActive(false);
@@ -259,18 +213,18 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
                     if (File.Exists(fullPath))
                     {
                         GameMaster.StartNewGame(
-                            GameStartSettings.GetEditorStartSettings(saveNames[lastSelectedIndex])
+                            GameStartSettings.GetEditorStartSettings(name)
                             );
                     }
                     else
                     {
-                        saveNames[lastSelectedIndex] = "File not exist";
+                        PrepareSavesList();
                     }
                 }
             }
             else
             {// ЗАГРУЗКА  УРОВНЕЙ  ДЛЯ  ИГРЫ
-                string fullPath = GetGameSaveFullpath(saveNames[lastSelectedIndex]);
+                string fullPath = GetGameSaveFullpath(name);
                 if (ingame)
                 {
                     if (GameMaster.realMaster.LoadGame(fullPath))
@@ -285,12 +239,12 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
                     if (File.Exists(fullPath))
                     {
                         GameMaster.StartNewGame(
-                            GameStartSettings.GetLoadingSettings(GameMode.Survival, saveNames[lastSelectedIndex])
+                            GameStartSettings.GetLoadingSettings(GameMode.Survival, name)
                             );
                     }
                     else
                     {
-                        saveNames[lastSelectedIndex] = "File not exist";
+                        PrepareSavesList();
                     }
                 }
             }
@@ -299,61 +253,56 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
 
     public void SubmitButton() // for save option only
     {
-        if (terrainsLoading)
+        int si = listController.selectedButtonIndex;
+        if (si < 0 || savenames == null || si >= savenames.Length) return;
+        string name = savenames[listController.selectedButtonIndex];
+        bool redrawList = false;
+        if (workWithTerrains)
         {// ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ТЕРРЕЙНА
             if (deleteSubmit)
             {
-                File.Delete(GetTerrainSaveFullpath(saveNames[lastSelectedIndex]));
-                Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-                lastSelectedIndex = -1;
-                RefreshSavesList();
+                File.Delete(GetTerrainSaveFullpath(name));
+                redrawList = true;
             }
             else
             {
-                if (lastSelectedIndex != -1)
-                {
-                    GameMaster.realMaster.SaveTerrain(saveNames[lastSelectedIndex]);
-                }
+                GameMaster.realMaster.SaveTerrain(name);
+                redrawList = true;
             }
         }
         else
         {   // ПЕРЕЗАПИСЬ СОХРАНЕНИЯ ИГРЫ
             if (deleteSubmit)
             {
-                File.Delete( GetGameSaveFullpath(saveNames[lastSelectedIndex]));
-                Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-                lastSelectedIndex = -1;
-                RefreshSavesList();
+                File.Delete( GetGameSaveFullpath(name));
+                redrawList = true;
             }
             else
             {
-                if (lastSelectedIndex != -1)
+                if (GameMaster.realMaster.SaveGame(name))
                 {
-                    string s = saveNames[lastSelectedIndex];
-                    if (GameMaster.realMaster.SaveGame(s))
-                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameSaved));
-                    else
-                    {
-                        AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SavingFailed));
-                        if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
-                    }
+                    AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.GameSaved));
+                    redrawList = true;
+                }
+                else
+                {
+                    AnnouncementCanvasController.MakeAnnouncement(Localization.GetAnnouncementString(GameAnnouncements.SavingFailed));
+                    if (GameMaster.soundEnabled) GameMaster.audiomaster.Notify(NotificationSound.SystemError);
                 }
             }
         }
         submitWindow.SetActive(false);
+        if (redrawList) PrepareSavesList();
     }
 
     public void DeleteButton()
     {
-        if (lastSelectedIndex == -1 | lastSelectedIndex >= saveNames.Length) return;
-        string path = terrainsLoading ?
-            GetTerrainSaveFullpath(saveNames[lastSelectedIndex])
+        if (listController.selectedButtonIndex < 0) return;
+        string name = savenames[listController.selectedButtonIndex];
+        string path = workWithTerrains ?
+            GetTerrainSaveFullpath(name)
             :
-            GetGameSaveFullpath(saveNames[lastSelectedIndex]);
+            GetGameSaveFullpath(name);
         if (File.Exists(path))
         {
             deleteSubmit = true;
@@ -362,20 +311,12 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
             submitButtonText.text = Localization.GetWord(LocalizedWord.Yes);
             rejectButtonText.text = Localization.GetWord(LocalizedWord.Cancel);
         }
-        else saveNames[lastSelectedIndex] = "File not exists";
+        else PrepareSavesList();
     }
 
     public void CloseButton()
     {
-        if (lastSelectedIndex != -1)
-        {
-            Transform t = saveNamesContainer.GetChild(lastSelectedIndex + 1);
-            if (t != null)
-            {
-                t.GetComponent<Image>().color = Color.white;
-                t.GetChild(0).GetComponent<Text>().color = Color.white;
-            }
-        }
+        listController.selectedButtonIndex = -1;
         gameObject.SetActive(false);
     }
 
@@ -391,4 +332,17 @@ public sealed class SaveSystemUI : MonoBehaviour, ILocalizable
         Localization.RemoveFromLocalizeList(this);
     }
 
+    #region IListable
+    public string GetName(int index)
+    {
+        if (savenames != null && savenames.Length > index)
+        {
+            return savenames[index];
+        }
+        else return "no save";
+    }
+    public int GetItemsCount() { return savenames?.Length ?? 0; }
+    public bool HaveSelectedObject() { return false; }
+    public int GetID(int index) { if (IDs != null && IDs.Length > index) return IDs[index]; else return NO_FILE_ID; }
+    #endregion
 }

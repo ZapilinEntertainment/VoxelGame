@@ -51,7 +51,6 @@ public sealed class Zeppelin : MonoBehaviour {
         landingCanvas = Instantiate(Resources.Load<GameObject>("UIPrefs/landingCanvas")).transform;
         landingCanvas.GetComponentInChildren<UnityEngine.UI.Text>().text = Localization.GetWord(LocalizedWord.Land_verb);
         UIController.GetCurrent().AddSpecialCanvasToHolder(landingCanvas);
-        UIController.GetCurrent().SpecialCanvasDown(); // иначе будет закрываться крестовина
         landingCanvas.GetChild(0).GetComponent<UnityEngine.UI.Button>().onClick.AddListener(this.Raycasting);
         landButton = landingCanvas.GetChild(1).gameObject;
         landButton.SetActive(false);

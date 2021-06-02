@@ -57,6 +57,10 @@ public sealed class PoolMaster : MonoBehaviour {
     // зависимость - ResourceType.GetResourceByID
     private const int SHIPS_BUFFER_SIZE = 5, MAX_QUALITY_LEVEL = 2, BASIC_MAT_INDEX = 0, METAL_MAT_INDEX = 1, GREEN_MAT_INDEX = 2, GLASS_MAT_INDEX = 3, GLASS_OFF_MAT_INDEX = 4;
   
+    public static Sprite LoadOverridingSprite()
+    {
+        return Resources.Load<Sprite>("Textures/gui_overridingSprite");
+    }
 
     public void Load() {
 		if (current != null) return;
@@ -93,7 +97,7 @@ public sealed class PoolMaster : MonoBehaviour {
         celestialBillboardMaterial.SetFloat("_Tick", 1);
 
         //mineElevator_pref = Resources.Load<GameObject>("Structures/MineElevator");
-        gui_overridingSprite = Resources.Load<Sprite>("Textures/gui_overridingSprite");
+        gui_overridingSprite = LoadOverridingSprite();
         starsSprites = Resources.LoadAll<Sprite>("Textures/stars");
 
         GameMaster.realMaster.labourUpdateEvent += LabourUpdate;

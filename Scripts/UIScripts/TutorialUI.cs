@@ -2,19 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TutorialScenarioNS;
 namespace TutorialScenarioNS
 {
     public sealed class TutorialUI : MonoBehaviour
     {
+        private enum FramedElementStatus : byte { NotAssigned, DrawnOver, ComponentAdded, AddedAsChild}
+
         [SerializeField] private Text hugeLabel, mainText;
         [SerializeField] private GameObject adviceWindow, outerProceedButton;
-        [SerializeField] private RectTransform showframe, showArrow;
+        [SerializeField] private RectTransform showArrow;
+        [SerializeField] private Sprite frameSprite;
         private UIController uicontroller;
         private MainCanvasController mcc;
         private GraphicRaycaster grcaster;
         public TutorialScenario currentScenario { get; private set; }
         private float timer;
+        private Image framedElement = null;
+        private FramedElementStatus framedElementStatus;
         private bool activateOuterProceedAfterTimer = false, nextStepReady = false;
         public static TutorialUI current { get; private set; }
 
@@ -97,27 +101,83 @@ namespace TutorialScenarioNS
 
         public void SetShowframe(RectTransform target)
         {
-            showframe.position = target.position;
-            showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, target.rect.width);
-            showframe.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, target.rect.height);
-            if (!showframe.gameObject.activeSelf) showframe.gameObject.SetActive(true);
+            DisableShowframe();
+            var gc = target.GetComponent<Graphic>();
+
+            void PrepareImage()
+            {                
+                framedElement.sprite = frameSprite;
+                framedElement.pixelsPerUnitMultiplier = 20;
+                framedElement.type = Image.Type.Sliced;                
+            }
+
+            if (gc != null)
+            {
+                if (gc is Image)
+                {
+                    framedElement = gc as Image;
+                    framedElement.overrideSprite = frameSprite;
+                    framedElementStatus = FramedElementStatus.DrawnOver;
+                }
+                else
+                {
+                    var g = new GameObject("tutorial marker");
+                    g.transform.parent = target;
+                    framedElement = g.AddComponent<Image>();
+                    PrepareImage();
+                    var rt = g.GetComponent<RectTransform>();
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.sizeDelta = Vector2.zero;
+                    rt.anchoredPosition = Vector2.zero;
+                    rt.localScale = Vector3.one;
+                    framedElementStatus = FramedElementStatus.AddedAsChild;
+                }
+            }
+            else
+            {
+                framedElement = target.gameObject.AddComponent<Image>();
+                PrepareImage();
+                framedElementStatus = FramedElementStatus.ComponentAdded;
+            }
+        }
+        public void DisableShowframe() {
+            switch (framedElementStatus) {
+                case FramedElementStatus.DrawnOver:
+                    if (framedElement.overrideSprite == frameSprite)  framedElement.overrideSprite = null;
+                    break;
+                case FramedElementStatus.ComponentAdded: Destroy(framedElement); break;
+                case FramedElementStatus.AddedAsChild: Destroy(framedElement.gameObject);break;
+            }
+            framedElement = null;
+            framedElementStatus = FramedElementStatus.NotAssigned;
         }
         public void ShowarrowToShowframe_Left()
         {
             if (showArrow.rotation != Quaternion.identity) showArrow.rotation = Quaternion.identity;
-            showArrow.position = showframe.position + Vector3.right * showframe.rect.width;
-            showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, showframe.rect.width);
-            showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, showframe.rect.height);
+
+            if (framedElement != null)
+            {
+                var rt = framedElement.rectTransform;
+                var rect = rt.rect;
+                float s = Screen.height / 11f;
+                showArrow.position = rt.position + Vector3.right * s * 2f;                
+                showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, s * 2f);
+                showArrow.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, s);
+            }
             if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
         }
         public void ShowarrowToShowframe_Up()
         {
             showArrow.Rotate(Vector3.up * 90f);
-            showArrow.position = showframe.position + Vector3.down * showframe.rect.height;
+            if (framedElement != null)
+            {
+                var rt = framedElement.rectTransform;
+                showArrow.position = rt.position + Vector3.down * Screen.height / 11f * 2f;
+            }            
             if (!showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(true);
         }
-        public void DisableShowArrow() { showArrow.gameObject.SetActive(false); }
-        public void DisableShowframe() { showframe.gameObject.SetActive(false); }
+        public void DisableShowArrow() { showArrow.gameObject.SetActive(false); }       
         public void ActivateProceedTimer(float t)
         {
             if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
@@ -146,7 +206,7 @@ namespace TutorialScenarioNS
             //endscenario
             if (outerProceedButton.activeSelf) outerProceedButton.SetActive(false);
             timer = 0f;
-            if (showframe.gameObject.activeSelf) showframe.gameObject.SetActive(false);
+            if (framedElement != null) DisableShowframe();         
             if (showArrow.gameObject.activeSelf) showArrow.gameObject.SetActive(false);
             if (!grcaster.enabled) grcaster.enabled = true;
             mcc.ChangeChosenObject(ChosenObjectType.None);
