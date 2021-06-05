@@ -12,6 +12,7 @@ public sealed class GameSettingsUI : MonoBehaviour, ILocalizable
     [SerializeField] GameObject graphicsApplyButton;
     [SerializeField] Slider lodDistanceSlider;
     [SerializeField] Toggle touchscreenToggle;
+    [SerializeField] private Text qualityDropdownLabel, lodDistanceLabel;
 #pragma warning restore 0649
     private bool ignoreTouchscreenToggle = false, ignoreDistanceSliderChanging = false, localized = false;
 
@@ -61,8 +62,8 @@ public sealed class GameSettingsUI : MonoBehaviour, ILocalizable
     public void LocalizeTitles()
     {
         Transform t = transform;
-        lodDistanceSlider.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
-        qualityDropdown.transform.GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
+        lodDistanceLabel.text = Localization.GetPhrase(LocalizedPhrase.LODdistance);
+        qualityDropdownLabel.text = Localization.GetPhrase(LocalizedPhrase.GraphicQuality);
         graphicsApplyButton.SetActive(false);
         graphicsApplyButton.transform.GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Apply);
         Localization.AddToLocalizeList(this);

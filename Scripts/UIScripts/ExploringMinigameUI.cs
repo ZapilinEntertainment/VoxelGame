@@ -47,12 +47,11 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
 
     private void Awake()
     {
-       // RectTransform rt = deckHolder.GetComponent<RectTransform>();
-       // float height = Screen.height;
-       // if (rt.rect.width < height) height = rt.rect.width;
-       // rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, height);
-       // rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
-       // rt.anchoredPosition = new Vector3(-height / 2f, 0f, 0f);
+        RectTransform rt = deckHolder.GetComponent<RectTransform>();
+        float height = Screen.height;
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, height);
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+        rt.anchoredPosition = new Vector3(-height / 2f, 0f, 0f);
 
         infoPanel.gameObject.SetActive(false);
         infoPanel.GetChild(1).GetChild(0).GetComponent<Text>().text = Localization.GetPhrase(LocalizedPhrase.StopMission);
@@ -76,7 +75,6 @@ public sealed class ExploringMinigameUI : MonoBehaviour, IObserverController
     {
         if (buttons == null) buttons = new GameObject[0];
         challengePanel.SetActive(false);
-
         int sqr = size * size, len = buttons.Length, ypos;
 
         if (len < sqr)

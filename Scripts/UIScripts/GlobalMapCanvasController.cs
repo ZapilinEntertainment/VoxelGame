@@ -21,7 +21,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
 
     public static bool needExpeditionsRedraw = false; 
     private bool prepared = false, showExpeditionInfo = false;
-    private float infoPanelWidth = 0f;
+    private float infoPanelWidth = 0f, canvasScale = 1f;
     private float[] ringsRotation;
     private int lastDrawnStateHash = 0;
     private GlobalMap globalMap;
@@ -263,10 +263,6 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         uicontroller.ChangeUIMode(UIMode.Standart, true);
     }
     // ======================== PRIVATE METHODS
-    private void Start()
-    {
-        if (!prepared & gameObject.activeSelf) Prepare();
-    }
     private void Prepare()
     {
         if (globalMap == null) return;
@@ -274,6 +270,16 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         transform.position = Vector3.up * 0.1f;
 
         mapRect.gameObject.SetActive(false);
+        canvasScale = mapCanvas.GetComponent<RectTransform>().localScale.y;
+        float h = mapRect.rect.height * canvasScale;        
+        RectTransform rt;
+        foreach (var t in rings)
+        {
+            rt = t as RectTransform;
+            rt.sizeDelta = Vector2.one * h;
+            rt.anchoredPosition = Vector2.zero;
+        }
+
         GameObject sector;
         RingSector[] sectorsData = globalMap.mapSectors;
         sectorsImages = new RawImage[sectorsData.Length];
@@ -307,7 +313,11 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
     }
     public void RedrawMap()
     {
-        if (!prepared) return;
+        if (!prepared)
+        {
+            Prepare();
+            return;
+        }
         else
         {
             mapPoints = globalMap.mapPoints;
@@ -339,6 +349,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                 RectTransform rt;
                 MapPoint mp;
                 Vector3 dir = Vector3.back, up = Vector3.up * mapRect.rect.height / 2f;
+                float msz = Screen.height / 15f;
                 bool checkForChosen = (chosenPoint != null);
                 for (int i = 0; i < n; i++)
                 {
@@ -356,6 +367,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                     b.onClick.AddListener(() => { this.SelectPoint(mpLink); }); // переписываем каждый раз, поскольку массив видимых точек соответствует массиву всех точек по индексам
 
                     rt.localPosition = Quaternion.AngleAxis(mapPoints[i].angle, dir) * (up * mapPoints[i].height);
+                    rt.sizeDelta = Vector3.one * msz;
 
                     if (!rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
                 }
@@ -555,7 +567,7 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
 
         if (deltaZoom != 0)
         {
-            float newScale = mapRect.localScale.y + deltaZoom * mapRect.localScale.y;
+            float newScale = mapRect.localScale.y * (1f+ deltaZoom);
             if (newScale > ZOOM_BORDER) newScale = ZOOM_BORDER;
             else
             {
@@ -772,9 +784,10 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
         rt.parent = rings[ringIndex];
 
         float s = Mathf.Sin(globalMap.sectorsDegrees[ringIndex] * Mathf.Deg2Rad);
-        float size = mapRect.rect.height / 2f * globalMap.ringsBorders[ringIndex] * s;
+        float size = mapRect.rect.height / 2f * globalMap.ringsBorders[ringIndex] * s / canvasScale;
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
         rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+        //
         rt.pivot = Vector3.down * (1f / s - 1);
         rt.localPosition = Vector3.zero;
 
