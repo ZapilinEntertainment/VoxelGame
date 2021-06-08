@@ -603,7 +603,7 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
                 case ChosenObjectType.Plane: if (selectedPlane == null) return; else break;
                 case ChosenObjectType.Worksite: if (chosenWorksite == null) return; else break;
             }
-            FollowingCamera.main.SetTouchRightBorder(Screen.width - rightPanel.GetComponent<RectTransform>().rect.width);
+            FollowingCamera.main.SetTouchRightBorder(Screen.width - rightPanel.GetComponent<RectTransform>().rect.width * gameCanvas.localScale.y);
             selectedObjectType = newChosenType;
             rightPanel.transform.SetAsLastSibling();
             rightPanel.SetActive(true);

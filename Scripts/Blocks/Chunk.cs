@@ -999,7 +999,21 @@ public sealed partial class Chunk : MonoBehaviour
         chunkRenderUpdateRequired = true;
     }
     public void ClearChunk()
-    {        
+    {
+        GameMaster.SetPause(true);
+        if (nature != null)
+        {
+            Destroy(nature);
+            nature = null;
+        }
+        if (surfaces != null)
+        {
+            foreach (var s in surfaces)
+            {
+                s.extension?.ClearSurface(PlaneAnnihilationOrder.ClearByChunk);
+            }
+            surfaces = null;
+        }
         int count = blocks.Count;
         if (count > 0)
         {
@@ -1016,13 +1030,11 @@ public sealed partial class Chunk : MonoBehaviour
         blocks = new Dictionary<ChunkPos, Block>();
         Destroy(markersHolder?.gameObject);
         markersHolder = null;
-        InitializeMarkersHolder();
-        surfaces = null;
-        Destroy(nature);
-        nature = null;
+        InitializeMarkersHolder();        
         chunkDataUpdateRequired = true;
         shadowsUpdateRequired = true;
-        RenderDataFullRecalculation();        
+        RenderDataFullRecalculation();
+        GameMaster.SetPause(false);
     }
 
     #region blocking

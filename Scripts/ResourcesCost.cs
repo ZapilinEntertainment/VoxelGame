@@ -171,12 +171,12 @@
                 break;
             case Structure.LUMBERMILL_2_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 8), new ResourceContainer(ResourceType.metal_M, 6)
+                new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 20), new ResourceContainer(ResourceType.metal_M, 20)
             };
                 break;
             case Structure.LUMBERMILL_3_ID:
                 cost = new ResourceContainer[]{
-                new ResourceContainer(ResourceType.Plastics, 20), new ResourceContainer(ResourceType.metal_K, 10), new ResourceContainer(ResourceType.metal_M, 8)
+                new ResourceContainer(ResourceType.Plastics, 40), new ResourceContainer(ResourceType.metal_K, 30), new ResourceContainer(ResourceType.metal_M, 30)
             };
                 break;
             case Structure.COVERED_LUMBERMILL:

@@ -447,8 +447,9 @@ public sealed class GlobalMapCanvasController : MonoBehaviour, IObserverControll
                         b = Instantiate(expeditionsFastButtons[0], expeditionFastButtonsPanel);
                         rt = b.GetComponent<RectTransform>();
                         rt.anchorMin = new Vector2(0f, 0.95f - 0.05f * i);
-                        rt.anchorMax = new Vector2(0f, 1f - i * 0.05f);
-                        rt.anchoredPosition = new Vector2(rt.sizeDelta.x / 2f, 0f);
+                        rt.anchorMax = new Vector2(1f, 1f - i * 0.05f);
+                        rt.anchoredPosition = Vector2.zero;
+                        rt.sizeDelta = Vector2.zero;
                         b.onClick.RemoveAllListeners();
                         e = elist[i];
                         int id = e.ID;

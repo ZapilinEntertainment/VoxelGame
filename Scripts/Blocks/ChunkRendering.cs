@@ -729,10 +729,10 @@ public sealed partial class Chunk : MonoBehaviour {
         if (blocks != null && blocks.Count > 0)
         {
             float sqrdistance;
-            float x, y, z, lod_cf = LODController.lodCoefficient;
-            float dist1 = SMALL_OBJECTS_HIDE_DISTANCE_SQR * (0.2f + lod_cf),
-                dist2 = MEDIUM_OBJECTS_LOD_DISTANCE_SQR * (0.2f + lod_cf),
-                dist3 = HUGE_OBJECTS_LOD_DISTANCE_SQR * (0.2f + lod_cf);
+            float x, y, z, lod_cf = GameSettings.GetSettings().lodCoefficient;
+            float dist1 = SMALL_OBJECTS_HIDE_DISTANCE_SQR * lod_cf,
+                dist2 = MEDIUM_OBJECTS_LOD_DISTANCE_SQR * lod_cf,
+                dist3 = HUGE_OBJECTS_LOD_DISTANCE_SQR * lod_cf;
             foreach (var b in blocks.Values) {
                 //#set block visibility - copy
                 x = b.pos.x * Block.QUAD_SIZE; y = b.pos.y * Block.QUAD_SIZE; z = b.pos.z * Block.QUAD_SIZE;

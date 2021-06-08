@@ -1308,6 +1308,7 @@ MonoBehaviour:
   loadButtonImage: {fileID: 114906825539179254}
   materialNameTextField: {fileID: 114666669463408018}
   generateAnewButtonLabel: {fileID: 5731760300953543651}
+  menuButtonLabel: {fileID: 114335618134179574}
 --- !u!1 &1289148508927768
 GameObject:
   m_ObjectHideFlags: 0
@@ -4983,7 +4984,7 @@ PrefabInstance:
     - target: {fileID: 224135994420407590, guid: 47bae149069f1254cb6992f4ff590e4f,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.15200806
+      value: -0.15197754
       objectReference: {fileID: 0}
     - target: {fileID: 224135994420407590, guid: 47bae149069f1254cb6992f4ff590e4f,
         type: 3}

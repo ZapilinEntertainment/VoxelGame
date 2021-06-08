@@ -10,7 +10,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
     [SerializeField] RawImage currentActionIcon, materialButtonImage;
     [SerializeField] Image[] buttonsImages;
     [SerializeField] Image saveButtonImage, loadButtonImage;
-    [SerializeField] Text materialNameTextField, generateAnewButtonLabel;
+    [SerializeField] Text materialNameTextField, generateAnewButtonLabel, menuButtonLabel;
 #pragma warning restore 0649  
 
     private Image chosenMaterialButton;
@@ -72,10 +72,6 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
         if (!touchscreen)
         {
             if (Input.GetMouseButtonDown(0)) Click();
-        }
-        if (Input.GetKeyDown("m"))
-        {
-            GameMaster.geologyModule.SpreadMinerals(GameMaster.realMaster.mainChunk.GetSurfaces());
         }
     }
 
@@ -359,12 +355,15 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
     }
     public void GenerateNewTerrain()
     {
+
+        GameMaster.SetPause(true);
         byte size = Chunk.chunkSize;
         var data = new int[size, size, size];
         Constructor.GenerateSpiralsData(size, ref data);
         var chunk = GameMaster.realMaster.mainChunk;
         chunk.Rebuild(data);
         chunk.InitializeNature().FirstLifeformGeneration(Chunk.chunkSize * Chunk.chunkSize * 500f);
+        GameMaster.SetPause(false);
     }
     
 
@@ -416,7 +415,7 @@ public sealed class EditorUI : MonoBehaviour, IObserverController, ILocalizable
     //
     public void LocalizeTitles()
     {
-        transform.GetChild(3).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Menu);
+        menuButtonLabel.text = Localization.GetWord(LocalizedWord.Menu);
         actionsPanel.transform.GetChild(10).GetChild(0).GetComponent<Text>().text = Localization.GetWord(LocalizedWord.Play);
 
         generateAnewButtonLabel.text = Localization.GetPhrase(LocalizedPhrase.GenerateNewTerrain);

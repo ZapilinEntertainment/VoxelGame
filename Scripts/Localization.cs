@@ -30,7 +30,8 @@ public enum LocalizedPhrase : ushort
      NoActivity, NoArtifact, NoArtifacts, CrewSlots, NoFreeSlots, NotResearched, HireNewCrew, NoCrew, ConstructShuttle, ShuttleConstructed, ShuttleReady, ShuttleOnMission, NoShuttle, ObjectsLeft, NoSavesFound, CreateNewSave, LODdistance, GraphicQuality, Ask_DestroyIntersectingBuildings,
     MakeSurface, BufferOverflow, NoEnergySupply, PowerFailure, NoMission, NoHighscores, NoTransmitters, AddCrew, NewGame, UsePresets, GenerationType, NoLimit, UpperLimit, IterationsCount, ChangeSurfaceMaterial, CreateColumn, CreateBlock,
     AddPlatform, OpenMap, OpenResearchTab, FreeAttributePoints, YouAreHere, SendExpedition, FreeTransmitters, FreeShuttles, FuelNeeded, OpenExpeditionWindow, StopMission, NoSuitableParts, NewBuildingUnblocked, Ask_StartFinalQuest, EnergyStored,
-    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute
+    NotEnoughStamina, CannotMove, NotEnoughSupplies, CannotAcceptChallenge, LodgersCount, TotalRent, AwaitingShip, AwaitingDocking, ShipServicing, GenerateNewTerrain, AskReturnToMainMenu, AskExit, AskNeedTutorial, FoundationRoute,
+    CameraRotationSpeed, CameraMoveSpeed
 }
 public enum LocalizationActionLabels : ushort
 {
@@ -2768,6 +2769,9 @@ public static partial class Localization
 
                         case LocalizedPhrase.FoundationRoute: return "Путь Основания";
                         case LocalizedPhrase.EnergyStored: return "Энергии накоплено";
+
+                        case LocalizedPhrase.CameraMoveSpeed: return "Скорость движения камеры";
+                        case LocalizedPhrase.CameraRotationSpeed: return "Скорость вращения камеры";
                         default: return "<...>";
                     }
                 }
@@ -2881,6 +2885,9 @@ public static partial class Localization
                         case LocalizedPhrase.AskNeedTutorial: return "Maybe you want a tutorial first?";
                         case LocalizedPhrase.FoundationRoute: return "Foundation Route";
                         case LocalizedPhrase.EnergyStored: return "Energy stored";
+
+                        case LocalizedPhrase.CameraMoveSpeed: return "Camera movement speed";
+                        case LocalizedPhrase.CameraRotationSpeed: return "Camera rotation speed";
                         default: return "<...>";
                     }
                 }

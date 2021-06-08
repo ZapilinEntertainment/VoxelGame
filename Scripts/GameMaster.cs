@@ -50,6 +50,7 @@ public sealed class GameMaster : MonoBehaviour
 
     private static byte pauseRequests = 0;
 
+    //
     public Chunk mainChunk { get; private set; }
     public ColonyController colonyController { get; private set; }
     public EnvironmentMaster environmentMaster { get; private set; }
@@ -206,6 +207,8 @@ public sealed class GameMaster : MonoBehaviour
             audiomaster.Prepare();
         }
         if (geologyModule == null) geologyModule = gameObject.AddComponent<GeologyModule>();
+
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
     private void Start()
     {
@@ -666,6 +669,7 @@ public sealed class GameMaster : MonoBehaviour
         Time.timeScale = 1;
         gameSpeed = 1;
         pauseRequests = 0;
+        Screen.sleepTimeout = SleepTimeout.SystemSetting;
     }
 
 #region save-load system

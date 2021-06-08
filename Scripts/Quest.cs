@@ -70,8 +70,8 @@ public class Quest : MyObject
         needToCheckConditions = true;
         reward = 0f;
         completed = false;
-        bool standartQuest = (type == QuestType.Scenario) || (type == QuestType.Condition);
-        if (!standartQuest)
+        bool specialQuest = (type == QuestType.Scenario) || (type == QuestType.Condition);
+        if (!specialQuest)
         {
             byte stepsCount = 1;
             switch (i_type)
@@ -301,35 +301,19 @@ public class Quest : MyObject
                         break;
                     case ProgressQuestID.Progress_CoveredFarm:
                         {
-                            List<Building> powerGrid = colony.powerGrid;
-                            foreach (Building b in powerGrid)
+                            if (colony.HaveBuilding(Structure.COVERED_FARM) || colony.HaveBuilding(Structure.FARM_BLOCK_ID))
                             {
-                                if (b == null) continue;
-                                else
-                                {
-                                    if (b.ID == Structure.COVERED_FARM | b.ID == Structure.FARM_BLOCK_ID)
-                                    {
-                                        MakeQuestCompleted();
-                                        break;
-                                    }
-                                }
+                                MakeQuestCompleted();
+                                break;
                             }
                         }
                         break;
                     case ProgressQuestID.Progress_CoveredLumbermill:
                         {
-                            List<Building> powerGrid = colony.powerGrid;
-                            foreach (Building b in powerGrid)
+                            if (colony.HaveBuilding(Structure.COVERED_LUMBERMILL) || colony.HaveBuilding(Structure.LUMBERMILL_BLOCK_ID))
                             {
-                                if (b == null) continue;
-                                else
-                                {
-                                    if (b.ID == Structure.COVERED_LUMBERMILL | b.ID == Structure.LUMBERMILL_BLOCK_ID)
-                                    {
-                                        MakeQuestCompleted();
-                                        break;
-                                    }
-                                }
+                                MakeQuestCompleted();
+                                break;
                             }
                         }
                         break;
@@ -1145,7 +1129,7 @@ public class Quest : MyObject
                     case ProgressQuestID.Progress_Tier4: if (lvl == 3) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_CoveredFarm:
                     case ProgressQuestID.Progress_CoveredLumbermill:
-                    case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3) acceptableQuest.Add(q); break;
+                    case ProgressQuestID.Progress_FirstExpedition: if (lvl > 3 && Expedition.expeditionsSucceed == 0) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Reactor: if (lvl > 4) acceptableQuest.Add(q); break;
                     case ProgressQuestID.Progress_Tier5: if (lvl == 4) acceptableQuest.Add(q); break;
                     //case ProgressQuestID.Progress_FactoryComplex: if (lvl > 4) acceptableQuest.Add(q); break;

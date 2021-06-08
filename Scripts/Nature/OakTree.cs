@@ -515,9 +515,9 @@ public sealed class OakTree : Plant
             }
         }
         if (basementNotNull) basement = null;
-        ReturnModelToPool();
+       ReturnModelToPool();
         Destroy(gameObject);
-        UpdatePool();
+       UpdatePool();
     }
 
     private void ReturnModelToPool()

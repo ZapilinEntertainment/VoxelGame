@@ -51,7 +51,6 @@ public sealed class MenuUI : MonoBehaviour, ILocalizable
 
         if ( (k & 2) == 0) // first launch
         {
-            LODController.SetLODdistance(0.5f);
             GameObject g = Instantiate(Resources.Load<GameObject>("UIPrefs/firstLaunchPanel"), transform);
             g.GetComponent<FirstLaunchUI>().menuScript = this;
             transform.GetChild(0).gameObject.SetActive(false);

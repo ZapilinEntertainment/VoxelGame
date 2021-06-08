@@ -393,14 +393,14 @@ public sealed class PlaneExtension : MyObject
                     if (se != null) 
                     se.Annihilate(strOrder); 
                 }
-                structures = null;
-                grassland?.Annihilate(order.GetGrasslandOrder());
+                structures = null;                
             }
             if (order.recalculateSurface) RecalculateSurface();
             else
             {
                 if (order.deleteExtensionLink) myPlane.NullifyExtensionLink(this);
             }
+            grassland?.Annihilate(order.GetGrasslandOrder());
         }
     }
     /// <summary>

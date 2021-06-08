@@ -11,8 +11,9 @@ public sealed class FollowingCamera : MonoBehaviour {
     public static Vector3 camPos { get; private set; }
     public static bool touchscreen { get; private set; }
 
-    private float rotationSpeed = 130, zoomSpeed = 40, moveSpeed = 15;   
-    private float rotationSmoothCoefficient = 0, rotationSmoothAcceleration = 0.1f, moveSmoothAcceleration = 0.03f;
+    private float rotationSpeed = 130f, zoomSpeed = 40f, moveSpeed = 8f;   
+    private float rotationSmoothCoefficient = 0, rotationSmoothAcceleration = 0.1f, moveSmoothAcceleration = 0.03f,
+        settings_movecf, settings_rotatecf;
 	private Vector3 moveSmoothCoefficient = Vector3.zero;
     private float touchRightBorder = Screen.width;
 	public Vector3 deltaLimits = new Vector3 (0.1f, 0.1f, 0.1f);
@@ -67,6 +68,9 @@ public sealed class FollowingCamera : MonoBehaviour {
         camTransform = camBasisTransform.GetChild(0);
         cam = camTransform.GetComponent<Camera>();
         SetTouchControl(Input.touchSupported);
+        var gset = GameSettings.GetSettings();
+        settings_movecf = gset.cameraMoveCf;
+        settings_rotatecf = gset.cameraRotationCf;
     }
 
     private void Start()
@@ -134,7 +138,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             mv.x *= (1 + moveSmoothCoefficient.x);
             mv.y *= (1 + moveSmoothCoefficient.y);
             mv.z *= (1 + moveSmoothCoefficient.z);
-            Vector3 endPoint = transform.position + transform.TransformDirection(mv) * moveSpeed * Time.deltaTime ;
+            Vector3 endPoint = transform.position + transform.TransformDirection(mv) * moveSpeed * settings_movecf * Time.deltaTime ;
             float d = (endPoint - GameMaster.sceneCenter).magnitude;
             if (d < MAX_VISIBILITY_RANGE || (transform.position - GameMaster.sceneCenter).magnitude > d) transform.position = endPoint;
             //transform.Translate(mv * 30 * Time.deltaTime,Space.Self);
@@ -153,7 +157,7 @@ public sealed class FollowingCamera : MonoBehaviour {
                         if (t.phase == TouchPhase.Began | t.phase == TouchPhase.Moved)
                         {
                             bool a = false, b = false; //rotation detectors
-                            float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
+                            float rspeed = rotationSpeed * settings_rotatecf * Time.deltaTime * (1 + rotationSmoothCoefficient);
                             delta = t.deltaPosition.x / (float)Screen.width;
                             if (Mathf.Abs(delta) > 0.01f)
                             {
@@ -215,7 +219,7 @@ public sealed class FollowingCamera : MonoBehaviour {
             if (Input.GetMouseButton(2))
             {
                 bool a = false, b = false; //rotation detectors
-                float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient);
+                float rspeed = rotationSpeed * Time.deltaTime * (1 + rotationSmoothCoefficient) * settings_rotatecf;
                 delta = Input.GetAxis("Mouse X");
                 if (delta != 0)
                 {
@@ -399,6 +403,11 @@ public sealed class FollowingCamera : MonoBehaviour {
     public void ResetTouchRightBorder()
     {
         touchRightBorder = Screen.width;
+    }
+    public void ApplySettings(float mvcf, float rtcf)
+    {
+        settings_movecf = mvcf;
+        settings_rotatecf = rtcf;
     }
 
     public void EnableEnvironmentalCamera()

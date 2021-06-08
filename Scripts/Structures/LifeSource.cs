@@ -34,7 +34,7 @@ public sealed class LifeSource : Structure {
                 {
                     if (chunk.IsUnderOtherBlock(p))
                     {
-                        chunk.DeleteBlock(position.OneBlockForward(), BlockAnnihilationOrder.SystemDestruction);
+                        chunk.DeleteBlock(position.OneBlockHigher(), BlockAnnihilationOrder.SystemDestruction);
                     }
                     var g = chunk.InitializeNature()?.CreateGrassland(p, 2000f);
                     g?.SYSTEM_UseLifepower();
