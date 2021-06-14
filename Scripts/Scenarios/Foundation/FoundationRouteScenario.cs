@@ -66,7 +66,7 @@ public sealed class FoundationRouteScenario : Scenario
     }
     private void StartQuest(FDR_Subscenario s)
     {
-        var sq = new ScenarioQuest(s);
+        var sq = new ScenarioQuest(s, QuestIcon.FoundationRouteIcon);
         questUI.SYSTEM_NewScenarioQuest(sq);
         scenarioQuest = sq;
         scenarioQuest.FillText(localizer.GetQuestData(s.GetScenarioStep()));
@@ -114,7 +114,7 @@ public sealed class FoundationRouteScenario : Scenario
             SimpleCondition.GetDummyCondition(null),
             SimpleCondition.GetResourceCondition(ResourceType.Supplies, COLONISTS_SEND_COST)
         },
-        colony, false, ConditionQuest.ConditionQuestIcon.PeopleIcon  );
+        colony, false, QuestIcon.PeopleIcon  );
         settleQuest.steps[0] = localizer.colonistArrivedLabel;
         settleQuest.steps[1] = localizer.livingSpaceLabel;
         UIController.GetCurrent().updateEvent += CheckSettlingConditions;
@@ -129,8 +129,12 @@ public sealed class FoundationRouteScenario : Scenario
         int x = anchorBasement.colonistsArrived;
         settleQuest.stepsAddInfo[0] = x.ToString() + " / " + COLONISTS_SEND_LIMIT.ToString();
         settleQuest.stepsFinished[0] = x >= COLONISTS_SEND_LIMIT;
-        x = hexBuilder.totalHousing;
-        int y = hexBuilder.colonistsCount;
+        int y = 0;
+        if (hexBuilder != null)
+        {
+            x = hexBuilder.totalHousing;
+            y = hexBuilder.colonistsCount;
+        }
         settleQuest.stepsAddInfo[1] = y.ToString() + " / " + x.ToString();
         settleQuest.stepsFinished[1] = x > y;        
         settleWindow.Refresh();
@@ -188,10 +192,18 @@ public sealed class FoundationRouteScenario : Scenario
         GameMaster.realMaster.GameOver(GameEndingType.FoundationRoute);
         GameMaster.SetPause(false); // minus one pause request
     }
-    public override void ClearScenarioDecorations()
+    public override void StopScenario()
     {
-        hexBuilder?.ClearDecorations();
-        if (scenarioUI != null) Object.Destroy(scenarioUI);
+        if (hexBuilder != null)
+        {
+            hexBuilder.ClearDecorations();
+            hexBuilder = null;
+        }
+        if (scenarioUI != null)
+        {
+            scenarioUI.DisableCanvas();
+            scenarioUI = null;
+        }
     }
     //
     override public void OKButton()
@@ -286,15 +298,15 @@ public sealed class FoundationRouteScenario : Scenario
                     case 2:
                         conditions[0] = SimpleCondition.GetMoneyCondition(2500f);
                         conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.metal_P, 500f);
-                        conditions[2] = SimpleCondition.GetFreeWorkersCondition(1500);
+                        conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.mineral_L, 2000f);
                         break;
                     case 3:
-                        conditions[0] = SimpleCondition.GetFreeWorkersCondition(500);
+                        conditions[0] = SimpleCondition.GetResourceCondition(ResourceType.metal_S, 1500f);
                         conditions[1] = SimpleCondition.GetResourceCondition(ResourceType.Concrete, 7530f);
                         conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.Plastics, 7530f);
                         break;
                     case 4:
-                        conditions[0] = SimpleCondition.GetFreeWorkersCondition(800);
+                        conditions[0] = SimpleCondition.GetFreeWorkersCondition(500);
                         conditions[1] = SimpleCondition.GetMoneyCondition(1200f);
                         conditions[2] = SimpleCondition.GetResourceCondition(ResourceType.Food, 40000f);
                         break;
@@ -304,7 +316,7 @@ public sealed class FoundationRouteScenario : Scenario
                         conditions[2] = SimpleCondition.GetMoneyCondition(1500f);
                         break;
                 }
-                conditionQuest = new ConditionQuest(conditions, colony, false, ConditionQuest.ConditionQuestIcon.FoundationRouteIcon);
+                conditionQuest = new ConditionQuest(conditions, colony, false, QuestIcon.FoundationRouteIcon);
                 
             }
             else // OUTER RING
@@ -344,7 +356,7 @@ public sealed class FoundationRouteScenario : Scenario
                         break;
                 }
                 // 
-                conditionQuest = new ConditionQuest(conditions, colony, false, ConditionQuest.ConditionQuestIcon.FoundationRouteIcon);
+                conditionQuest = new ConditionQuest(conditions, colony, false, QuestIcon.FoundationRouteIcon);
                 
             }
             conditionQuest.CheckQuestConditions();
@@ -438,7 +450,7 @@ public sealed class FoundationRouteScenario : Scenario
                     SimpleCondition.GetStoredEnergyCondition(ANCHOR_LAUNCH_ENERGYCOST),
                     colony,
                     false,
-                    ConditionQuest.ConditionQuestIcon.FoundationRouteIcon
+                    QuestIcon.FoundationRouteIcon
                     );
                 scenario.StartQuest(conditionQuest);
                 scenarioQuest.FillText(localizer.GetQuestData(FoundationScenarioStep.AnchorStart));
@@ -710,7 +722,7 @@ public sealed class FoundationRouteScenario : Scenario
                 },
                     colony,
                     false,
-                    ConditionQuest.ConditionQuestIcon.FoundationRouteIcon
+                    QuestIcon.FoundationRouteIcon
                     );
             conditionQuest.steps[0] = localizer.colonistsLabel;
             conditionQuest.steps[1] = localizer.islandStatsLabel;

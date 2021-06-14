@@ -46,7 +46,7 @@ public enum GameAnnouncements : ushort
 };
 public enum RestrictionKey : ushort { SideConstruction, UnacceptableSurfaceMaterial, HeightBlocked }
 public enum RefusalReason : ushort { Unavailable, MaxLevel, HQ_RR1, HQ_RR2, HQ_RR3, HQ_RR4, HQ_RR5, HQ_RR6, SpaceAboveBlocked, NoBlockBelow, NotEnoughSlots, WorkNotFinished,
-    MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight, Need3x3Basement}
+    MustBeBuildedOnFoundationBlock, NoEmptySpace, AlreadyBuilt, UnacceptableHeight, Need3x3Basement, BlockedBySystem}
 public enum ExpeditionComposingErrors : byte { ShuttleUnavailable, CrewUnavailable, NotEnoughFuel}
 public enum LocalizedCrewAction : byte { CannotCompleteMission, LeaveUs, CrewTaskCompleted, CannotReachDestination, Returned, Ready }
 
@@ -294,7 +294,7 @@ public static partial class Localization
                     case Structure.ENGINE_ID: return "Движитель";
                     case Structure.CAPACITOR_MAST_ID: return "Накопительная мачта";
                     case Structure.CONTROL_CENTER_ID: return "Контроллер движителя";
-                    case Structure.ANCHOR_BASEMENT_ID: return "Крепления якоря";
+                    case Structure.ANCHOR_BASEMENT_ID: return "Крепление Якоря";
                     case Structure.TREE_OF_LIFE_ID: return "Древо жизни";
                     default: return "Неизвестное здание";
                 }
@@ -587,7 +587,7 @@ public static partial class Localization
                         case ResourceType.FERTILE_SOIL_ID: return "Плодородная почва";
                         case ResourceType.FUEL_ID: return "Топливо";
                         case ResourceType.GRAPHONIUM_ID: return "Графоний";
-                        case ResourceType.SUPPLIES_ID: return "Снаряжение";
+                        case ResourceType.SUPPLIES_ID: return "Припасы";
                         case ResourceType.SNOW_ID: return "Снег";
                         default: return "Незарегистрированный ресурс";
                     }
@@ -2673,7 +2673,7 @@ public static partial class Localization
                         case LocalizedPhrase.ConnectionLost: return "Связь потеряна";
                         case LocalizedPhrase.ConvertToBlock: return "Перестроить в блок"; // settlement
                         case LocalizedPhrase.CrewFoundArtifact: return "Наша команда нашла артефакт!";
-                        case LocalizedPhrase.CrystalsCollected: return "Кристаллов найдено";
+                        case LocalizedPhrase.CrystalsCollected: return "Кристаллов собрано";
                         case LocalizedPhrase.FreeShuttles: return "Свободные челноки: ";
                         case LocalizedPhrase.FreeTransmitters: return "Незанятые передатчики: ";
                         case LocalizedPhrase.FuelNeeded: return "Требуется топлива: ";
@@ -2918,6 +2918,7 @@ public static partial class Localization
                         case RefusalReason.AlreadyBuilt: return "Уже построено";
                         case RefusalReason.UnacceptableHeight: return "Неподходящая высота";
                         case RefusalReason.Need3x3Basement: return "Нужно основание 3x3";
+                        case RefusalReason.BlockedBySystem: return "Заблокировано";
                     }
                 }
             case Language.English:
@@ -2942,6 +2943,7 @@ public static partial class Localization
                         case RefusalReason.AlreadyBuilt: return "Already built";
                         case RefusalReason.UnacceptableHeight: return "Height is not suitable";
                         case RefusalReason.Need3x3Basement: return "Need 3x3 basement";
+                        case RefusalReason.BlockedBySystem: return "Not allowed";
                     }
                 }
         }
@@ -3010,7 +3012,7 @@ public static partial class Localization
         switch(currentLanguage)
         {
             case Language.Russian:
-                return "Купили \"" + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
+                return "Купили " + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
             default:
                 return "Bought " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " for a " + string.Format("{0:0.##}", price);
         }
@@ -3020,7 +3022,7 @@ public static partial class Localization
         switch (currentLanguage)
         {
             case Language.Russian:
-                return "Продали \"" + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
+                return "Продали " + GetResourceName(rtype.ID) + " в количестве " + string.Format("{0:0.##}", count) + " за " + string.Format("{0:0.##}", price);
             default:
                 return "Sold " + string.Format("{0:0.##}", count) + " of " + GetResourceName(rtype.ID) + " for a " + string.Format("{0:0.##}", price);
         }

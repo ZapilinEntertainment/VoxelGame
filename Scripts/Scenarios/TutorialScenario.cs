@@ -73,7 +73,7 @@ namespace TutorialScenarioNS
             else SpecialWindowFilling();
             if (useQuest)
             {
-                scenarioQuest = new ScenarioQuest(this);
+                scenarioQuest = new ScenarioQuest(this, QuestIcon.TutorialIcon);
                 mcc.questUI.SYSTEM_NewScenarioQuest(scenarioQuest);
                 if (useSpecialQuestFilling) SpecialQuestFilling();
                 else
@@ -92,6 +92,10 @@ namespace TutorialScenarioNS
                 scenarioQuest = null;
             }
             tutorialUI.NextScenario();
+        }
+        public override void StopScenario()
+        {
+            Object.Destroy(tutorialUI);
         }
 
         public override bool QuestMustCheckConditions() { return false; }

@@ -91,7 +91,8 @@ public sealed class GameMaster : MonoBehaviour
     public const float DAY_LONG = 60;
     // updating
     public const float LIFEPOWER_TICK = 1, LABOUR_TICK = 0.5f; // cannot be zero
-    private float labourTimer = 0;
+    private float labourTimer = 0f, autosaveTimer = 0f;
+    private const float AUTOSAVE_TIME = 600f;
     private bool sessionPrepared = false;
     // FOR TESTING
     [SerializeField] private bool testMode = false;
@@ -335,6 +336,7 @@ public sealed class GameMaster : MonoBehaviour
         startSettings = null;
         sessionPrepared = true;
         if (testMode) AnnouncementCanvasController.MakeAnnouncement("game master loaded");
+        autosaveTimer = AUTOSAVE_TIME;
     }
     public ColonyController PrepareColonyController(bool assignNewGameID)
     {
@@ -445,11 +447,12 @@ public sealed class GameMaster : MonoBehaviour
         }
         if (executingScenario != null)
         {
-            executingScenario.ClearScenarioDecorations();
+            executingScenario.StopScenario();
             executingScenario = null;
         }
         mainChunk?.ClearChunk();
         Ship.DeleteShips();
+        uicontroller.GetMainCanvasController().SessionEnded();
         // очистка подписчиков на ивенты невозможна, сами ивенты к этому моменту недоступны
         ResetComponentsStaticValues();
         colonyController?.ResetToDefaults(); // подчищает все списки
@@ -472,22 +475,14 @@ public sealed class GameMaster : MonoBehaviour
     {
         if (loading | gameSpeed == 0) return;
 
-        if (Input.GetKeyDown("o")) {
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
-            Crew.CreateNewCrew(colonyController, 9);
+        autosaveTimer -= Time.deltaTime;
+        if (autosaveTimer <= 0f)
+        {
+            SetPause(true);
+            AnnouncementCanvasController.MakeAnnouncement("autosaving!");
+            SaveGame("autosave_time");
+            SetPause(false);
+            autosaveTimer = AUTOSAVE_TIME;
         }
         gameSpeed = _gameSpeed;
     }

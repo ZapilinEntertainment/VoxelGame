@@ -92,6 +92,28 @@ sealed public class MainCanvasController : MonoBehaviour, IObserverController, I
     {
         return gameCanvas;
     }
+    public void SessionEnded()
+    {
+        // clear fast button
+        activeFastButtons.Clear();
+        var t = rightFastPanel.transform;
+        int cc = t.childCount;
+        if (cc > 1)
+        {
+            var clist = new GameObject[cc - 1];
+            int i = 1;
+            for (; i < cc; i++)
+            {
+                clist[i - 1] = t.GetChild(i).gameObject;
+            }
+            for (i = 0; i < cc - 1;i++)
+            {
+                Destroy(clist[i]);
+            }
+            clist = null;
+        }
+        //
+    }
 
     public void LinkColonyController()
     {

@@ -1,12 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+
+
 public class ScenarioQuest : Quest
 {
     protected Scenario myScenario;
+    protected QuestIcon iconType;
 
-    public ScenarioQuest(Scenario i_scenario) : base(QuestType.Scenario, 0)
+    public ScenarioQuest(Scenario i_scenario, QuestIcon qi) : base(QuestType.Scenario, 0)
     {
         myScenario = i_scenario;
+        iconType = qi;
         needToCheckConditions = myScenario.QuestMustCheckConditions();
         INLINE_PrepareSteps(myScenario?.GetStepsCount() ?? 1);
     }
@@ -34,9 +38,7 @@ public class ScenarioQuest : Quest
 
     public void GetIconInfo(ref Texture icon, ref Rect rect)
     {
-        //scenario get info
-        icon = GlobalMapCanvasController.GetMapMarkersTexture();
-        rect = GlobalMapCanvasController.GetMarkerRect(MapPointType.QuestMark);
+        iconType.GetIconInfo(ref icon, ref rect);
     }
 
 }

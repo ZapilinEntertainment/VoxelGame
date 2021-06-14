@@ -96,19 +96,32 @@ public class Factory : WorkBuilding
                 if (productionMode == FactoryProductionMode.Limit)
                 {
                     if (!workPaused) INLINE_WorkCalculation();
-                    else
-                    {
-                        if (storage.GetResourceCount(recipe.output) < productionModeValue)
-                        {
-                            workPaused = false;
-                            INLINE_WorkCalculation();
-                        }
-                    }
+                    else CheckProductionModeConditions();
                 }
                 else INLINE_WorkCalculation();
             }
         }
         // eo copy
+    }
+   protected virtual void CheckProductionModeConditions()
+    {
+        if (recipe == Recipe.NoRecipe)
+        {
+            workPaused = true;
+            return;
+        }
+        else {
+            switch (productionMode)
+            {
+                case FactoryProductionMode.Limit:
+                    workPaused = colony.storage.GetResourceCount(recipe.output.ID) >= productionModeValue;
+                    break;
+                case FactoryProductionMode.Iterations:
+                    workPaused = productionModeValue == 0;
+                    break;
+                default: workPaused = false; break;
+            }
+        }
     }
 
     override protected void LabourResult(int iterations)
@@ -119,7 +132,7 @@ public class Factory : WorkBuilding
         if (storage.GetResourceCount(recipe.input) + inputResourcesBuffer >= recipe.inputValue)
         {
             inputResourcesBuffer += storage.GetResources(recipe.input, recipe.inputValue * iterations - inputResourcesBuffer);
-            iterations = Mathf.FloorToInt(inputResourcesBuffer / recipe.inputValue);
+            iterations = (int)(inputResourcesBuffer / recipe.inputValue);
             switch (productionMode)
             {
                 case FactoryProductionMode.Limit:
@@ -127,7 +140,8 @@ public class Factory : WorkBuilding
                         float stVal = storage.GetResourceCount(recipe.output);
                         if (stVal + recipe.outputValue * iterations > productionModeValue)
                         {
-                            iterations = (int)((productionModeValue - stVal) / recipe.outputValue);
+                            float delta = productionModeValue - stVal;
+                            iterations = (int)(delta / recipe.outputValue);
                         }
                         break;
                     }
@@ -144,20 +158,7 @@ public class Factory : WorkBuilding
                 outputResourcesBuffer = storage.AddResource(recipe.output, outputResourcesBuffer);
             }
         }
-        switch (productionMode)
-        {
-            case FactoryProductionMode.Limit:
-                workPaused = (storage.GetResourceCount(recipe.output) >= productionModeValue);
-                break;
-            case FactoryProductionMode.Iterations:
-                productionModeValue -= iterations;
-                if (productionModeValue <= 0)
-                {
-                    productionModeValue = 0;
-                    SetActivationStatus(false, true);
-                }
-                break;
-        }
+        CheckProductionModeConditions();
         //changed copy to AdvancedFactory
     }
 
@@ -185,7 +186,7 @@ public class Factory : WorkBuilding
         recipe = r;
         productionModeValue = 0;
         workComplexityCoefficient = recipe.workComplexity;
-        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.GetResourceCount(recipe.output) >= productionModeValue;
+        CheckProductionModeConditions();
     }
     public void SetRecipe(int x)
     {
@@ -201,12 +202,13 @@ public class Factory : WorkBuilding
         {
             productionMode = m;
             productionModeValue = 0;
-            workPaused = false;
+            CheckProductionModeConditions();
         }
     }
     public void SetProductionValue(int x)
     {
         productionModeValue = x;
+        CheckProductionModeConditions();
     }
 
     override public void LevelUp(bool returnToUI)

@@ -1596,7 +1596,7 @@ public sealed partial class Chunk : MonoBehaviour
                     Debug.Log("chunk load error - block data corrupted");
                     //if (prevstrs != null) { foreach (var s in prevstrs) Debug.Log(s.name); }
                 }
-            }
+            }            
         }
         PreparePlanes();
         RecalculateSurfacesList();

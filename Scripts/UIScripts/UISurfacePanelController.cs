@@ -105,7 +105,8 @@ public sealed class UISurfacePanelController : UIObserver {
                 blockCreateButton.gameObject.SetActive(true);
             }
             else blockCreateButton.gameObject.SetActive(false);
-            if (IsColumnAvailable() && !isTerminal)
+            bool down = observingSurface.faceIndex == Block.DOWN_FACE_INDEX | observingSurface.faceIndex == Block.CEILING_FACE_INDEX;
+            if (IsColumnAvailable() && !isTerminal &&  !down)
             {
                 columnCreateButton.transform.GetChild(0).GetComponent<Text>().color = col;
                 columnCreateButton.interactable = buildingAllowed;

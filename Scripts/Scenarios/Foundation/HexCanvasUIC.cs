@@ -49,7 +49,7 @@ namespace FoundationRoute
         }
         public void RecalculateAvailabilityMask()
         {
-            hexBuilder.CountBuildings(ref buildingsCount);
+            hexBuilder.CountBuildingsByTypes(ref buildingsCount);
             livingQuartersCount = buildingsCount[(int)HexType.Residential] + buildingsCount[(int)HexType.ResidentialDense] + buildingsCount[(int)HexType.ResidentialEco];
             commCount = buildingsCount[(int)HexType.Commercial] + buildingsCount[(int)HexType.CommercialDense];
             natureCount = buildingsCount[(int)HexType.Forest] + buildingsCount[(int)HexType.Mountain] + buildingsCount[(int)HexType.Lake];
@@ -62,7 +62,7 @@ namespace FoundationRoute
                 availabilityMask[(int)htype] = (a == null) || ((a == true) & (b == true | b == null));
             }
             //
-            if (hexBuilder.buildingsCount >= hexBuilder.hexLimit)
+            if (hexBuilder.GetBuildingsCount() >= hexBuilder.hexLimit)
             {
                 for (int i = 0; i < (int)HexType.TotalCount; i++)
                 {
@@ -509,7 +509,7 @@ namespace FoundationRoute
             t.text = sa  + " / " + sh;
             // 5 - hexes
             t = GetText(5);
-            a = hexBuilder.buildingsCount;
+            a = hexBuilder.GetBuildingsCount();
             b = hexBuilder.hexLimit;
             t.text = a.ToString() + '/' + b.ToString();
             if (a == b) t.color = Color.yellow;

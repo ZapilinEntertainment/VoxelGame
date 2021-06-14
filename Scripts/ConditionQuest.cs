@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class ConditionQuest : Quest
-{
-    public enum ConditionQuestIcon : byte { FoundationRouteIcon, PeopleIcon}
-
+{    
     private bool completeQuestWhenPossible = true, subscribedToQuestUpdate = false;
     private System.Action uiRepresentationFunction;
-    private ConditionQuestIcon iconType;
+    private QuestIcon iconType;
     private readonly SimpleCondition[] conditions;
     private readonly ColonyController colony;    
 
-    public ConditionQuest(SimpleCondition[] i_conditions, ColonyController i_colony, bool i_completeQuestWhenPossible, ConditionQuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
+    public ConditionQuest(SimpleCondition[] i_conditions, ColonyController i_colony, bool i_completeQuestWhenPossible, QuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
     {
         colony = i_colony;
         needToCheckConditions = true;
@@ -27,7 +25,7 @@ public sealed class ConditionQuest : Quest
         iconType = cqi;
         CheckQuestConditions();
     }
-    public ConditionQuest(SimpleCondition i_condition, ColonyController i_colony, bool i_completeQuestWhenPossible, ConditionQuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
+    public ConditionQuest(SimpleCondition i_condition, ColonyController i_colony, bool i_completeQuestWhenPossible, QuestIcon cqi) : base(QuestType.Condition, (byte)cqi)
     {
         colony = i_colony;
         needToCheckConditions = true;
@@ -205,25 +203,9 @@ public sealed class ConditionQuest : Quest
             subscribedToQuestUpdate = false;
         }
     }
-
     public void GetIconInfo(ref Texture icon, ref Rect rect)
     {
-        //use subIndex where stores construction info
-        // 
-        switch (iconType) {
-            case ConditionQuestIcon.FoundationRouteIcon:
-                {
-                    icon = UIController.iconsTexture;
-                    rect = UIController.GetIconUVRect(Icons.FoundationRoute);
-                    break;
-                }
-            case ConditionQuestIcon.PeopleIcon:
-                {
-                    icon = UIController.iconsTexture;
-                    rect = UIController.GetIconUVRect(Icons.Citizen);
-                    break;
-                }
-            }
+        iconType.GetIconInfo(ref icon, ref rect);
     }
 
     public override void MakeQuestCompleted()

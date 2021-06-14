@@ -21,6 +21,7 @@ public sealed class StandartScenarioUI : MonoBehaviour
     public static StandartScenarioUI GetCurrent(Scenario requester)
     {
         if (current == null) current = Instantiate(Resources.Load<GameObject>("UIPrefs/scenarioCanvas")).GetComponent<StandartScenarioUI>();
+        else current.gameObject.SetActive(true);
         current.SetScenario(requester);
         return current;
     }
@@ -117,9 +118,22 @@ public sealed class StandartScenarioUI : MonoBehaviour
     {
         announceText.text = s;
     }
+
+    public void DisableCanvas()
+    {
+        if (current == this)
+        {
+            specialButton.SetActive(false);
+            foreach (var cw in conditionWindows)
+            {
+                cw.gameObject.SetActive(false);
+            }
+            gameObject.SetActive(false);
+        }
+        else Destroy(gameObject);
+    }
     public void ScenarioEnds(Scenario s)
     {
-        if (s == workingScenario) Destroy(gameObject);
+        if (s == workingScenario | workingScenario == null) DisableCanvas();
     }
-
 }

@@ -1002,7 +1002,7 @@ public sealed class ColonyController : MonoBehaviour
     #region parameters
     public float GetLevelSoftingCf()
     {
-        return 1 - (hq.level - GameConstants.HQ_MAX_LEVEL / 2) / GameConstants.HQ_MAX_LEVEL;
+        return 1 - (hq?.level ?? 1 - GameConstants.HQ_MAX_LEVEL / 2) / GameConstants.HQ_MAX_LEVEL;
         // 1 - 1.33
         // 2 - 1.17
         // 3 - 1

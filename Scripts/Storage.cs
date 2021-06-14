@@ -53,9 +53,6 @@ public sealed class Storage : MonoBehaviour {
 	/// <summary>
 	/// returns the residual of sended value
 	/// </summary>
-	/// <returns>The resources.</returns>
-	/// <param name="rtype">Rtype.</param>
-	/// <param name="count">Count.</param>
 	public float AddResource(ResourceType rtype, float count) {
         if (count < 0)
         {
@@ -87,7 +84,6 @@ public sealed class Storage : MonoBehaviour {
 	/// <summary>
 	/// Attention: container will be destroyed after resources transfer!
 	/// </summary>
-	/// <param name="rc">Rc.</param>
 	public void AddResource(ResourceContainer rc) {
 		AddResource(rc.type, rc.volume);
 	}
@@ -217,10 +213,14 @@ public sealed class Storage : MonoBehaviour {
         {
             if (standartResources[rc.resourceID] < rc.volume) return false;
         }
+        float f;
         foreach (var rc in cost)
         {
-            standartResources[rc.resourceID] -= rc.volume;
+            f = rc.volume;
+            standartResources[rc.resourceID] -= f;
+            totalVolume -= f;
         }
+        operationsDone++;
         return true;
     }
     public void GetResources(ResourceContainer[] cost)

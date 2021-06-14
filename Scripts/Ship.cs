@@ -166,7 +166,7 @@ public sealed class Ship : MonoBehaviour {
 	}
 
 	void Update() { 
-		if (GameMaster.gameSpeed == 0 | docked) return;
+		if (GameMaster.gameSpeed == 0 | GameMaster.loading | docked) return;
         float brakingDistances = speed * speed / acceleration / 2f, t = Time.deltaTime * GameMaster.gameSpeed;
         RaycastHit rh;
         bool braking = false;
@@ -304,6 +304,11 @@ public sealed class Ship : MonoBehaviour {
         else s.docked = false;
         var data = new byte[34];
         fs.Read(data, 0, data.Length);
+        if (s == null)
+        {
+            Debug.Log("ship loading error again");
+            return null;
+        }
         s.transform.position = new Vector3(
             System.BitConverter.ToSingle(data,0),
             System.BitConverter.ToSingle(data, 4),

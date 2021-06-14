@@ -37,7 +37,7 @@ public sealed class ResourceType
         resourceTypesArray = new ResourceType[TYPES_COUNT];
         prices = new float[TYPES_COUNT]; demand = new float[TYPES_COUNT];
         Nothing = new ResourceType(0, 0, 0);
-        float p = 0.01f;
+        float p = 0.1f;
 
         Food = new ResourceType(FOOD_ID, 0.1f, 0.1f);
         prices[FOOD_ID] = p; demand[FOOD_ID] = 2;

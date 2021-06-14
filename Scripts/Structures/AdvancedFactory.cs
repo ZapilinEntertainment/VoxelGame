@@ -42,14 +42,7 @@ public sealed class AdvancedFactory : Factory
                 if (productionMode == FactoryProductionMode.Limit)
                 {
                     if (!workPaused) INLINE_WorkCalculation();
-                    else
-                    {
-                        if (storage.GetResourceCount(recipe.output) < productionModeValue)
-                        {
-                            workPaused = false;
-                            INLINE_WorkCalculation();
-                        }
-                    }
+                    else CheckProductionModeConditions();
                 }
                 else INLINE_WorkCalculation();
             }
@@ -101,19 +94,27 @@ public sealed class AdvancedFactory : Factory
                 }
             }
         }
-        switch (productionMode)
+        CheckProductionModeConditions();
+    }
+    protected override void CheckProductionModeConditions()
+    {
+        if (recipe == AdvancedRecipe.NoRecipe)
         {
-            case FactoryProductionMode.Limit:
-                workPaused = (storage.GetResourceCount(recipe.output) >= productionModeValue);
-                break;
-            case FactoryProductionMode.Iterations:
-                productionModeValue -= iterations;
-                if (productionModeValue <= 0)
-                {
-                    productionModeValue = 0;
-                    SetActivationStatus(false, true);
-                }
-                break;
+            workPaused = true;
+            return;
+        }
+        else
+        {
+            switch (productionMode)
+            {
+                case FactoryProductionMode.Limit:
+                    workPaused = colony.storage.GetResourceCount(recipe.output.ID) >= productionModeValue;
+                    break;
+                case FactoryProductionMode.Iterations:
+                    workPaused = productionModeValue == 0;
+                    break;
+                default: workPaused = false; break;
+            }
         }
     }
 
@@ -152,7 +153,7 @@ public sealed class AdvancedFactory : Factory
         recipe = ar;
         productionModeValue = 0;
         workComplexityCoefficient = ar.workComplexity;
-        workPaused = (productionMode == FactoryProductionMode.Limit) & colony.storage.GetResourceCount(ar.output) >= productionModeValue;
+        CheckProductionModeConditions();
     }
     override public string UI_GetInfo()
     {

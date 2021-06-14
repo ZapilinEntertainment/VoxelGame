@@ -17,7 +17,6 @@ namespace FoundationRoute
         public int colonistsCount { get; private set; }
         public int freeColonists { get; private set; }
         public int totalHousing { get; private set; }
-        public int buildingsCount { get { int x = hexList.Count; return x > 6 ? x - 6 : 0; } }
         public int hexLimit { get; private set; }
         public bool completed { get { return (totalPowerConsumption <= 0f) && (totalIncome > 0f) && (totalFoodProduction > 0f) && (totalLifepower > 0f); } }
         public System.Action<int> colonistUpdateEvent;
@@ -27,7 +26,7 @@ namespace FoundationRoute
         public HexCanvasUIC uic { get; private set; }
         private ColonyController colony;
         private AnchorBasement anchor;
-        private Dictionary<(byte, byte), Hex> hexList;        
+        private Dictionary<(byte ring, byte position), Hex> hexList;        
         private Dictionary<HexPosition, GameObject> maquettesList;
         private List<GameObject> maquettesPool;
         private Vector3 zeroPoint;
@@ -66,7 +65,7 @@ namespace FoundationRoute
             rm.everydayUpdate += this.EverydayUpdate;
         }
 
-        public void CountBuildings(ref int[] buildingsCount)
+        public void CountBuildingsByTypes(ref int[] buildingsCount)
         {
             for (int i = 0; i < (int)HexType.TotalCount; i++)
             {
@@ -79,6 +78,19 @@ namespace FoundationRoute
                     if (h.type < HexType.TotalCount)  buildingsCount[(int)h.type]++;
                 }
             }
+        }
+        public int GetBuildingsCount()
+        {
+            if (hexList != null && hexList.Count != 0)
+            {
+                int x = hexList.Count;
+                foreach (var h in hexList)
+                {
+                    if (h.Key.ring == 0) x--;
+                }
+                return x;
+            }
+            else return 0;
         }
         
 
@@ -118,7 +130,7 @@ namespace FoundationRoute
                     var m = maquettesList[hpos];
                     m.SetActive(false);
                     maquettesList.Remove(hpos);
-                    if (maquettesPool.Count + buildingsCount <= TOTAL_HEXES) maquettesPool.Add(m);
+                    if (maquettesPool.Count + GetBuildingsCount() <= TOTAL_HEXES) maquettesPool.Add(m);
                     else Object.Destroy(m);
                 }
                 //
@@ -314,6 +326,7 @@ namespace FoundationRoute
             DeleteMaquettes();
             maquettesList = null;
             Object.Destroy(hexHolder.gameObject);
+            if (uic != null) Object.Destroy(uic.gameObject);
         }
         private void DeleteMaquettes()
         {

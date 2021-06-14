@@ -227,5 +227,10 @@ namespace TutorialScenarioNS
             }
         }
         //
+
+        private void OnDestroy()
+        {
+            DisableShowframe();
+        }
     }
 }

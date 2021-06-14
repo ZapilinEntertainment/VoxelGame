@@ -901,17 +901,17 @@ public sealed class Knowledge
         index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 4];
         if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.XSTATION_3_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.CloudWhale, STEPS_COUNT - 3];
-        if ((IsButtonUnblocked(index) | testmode) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
+        //if ((IsButtonUnblocked(index) | testmode) && !surf) bdlist.Add(Structure.STABILITY_ENFORCER_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 4];
-        if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.ENGINE_ID);
+       // if (IsButtonUnblocked(index) && !side) bdlist.Add(Structure.ENGINE_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Engine, STEPS_COUNT - 3];
-        if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.CONTROL_CENTER_ID);
+        //if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.CONTROL_CENTER_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 4];
         if ((IsButtonUnblocked(index) | testmode) && surf) bdlist.Add(Structure.QUANTUM_ENERGY_TRANSMITTER_5_ID);
         index = routeButtonsIndexes[(byte)ResearchRoute.Pipes, STEPS_COUNT - 3];
-        if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CAPACITOR_MAST_ID);
+       // if (IsButtonUnblocked(index) && !side && !surf) bdlist.Add(Structure.CAPACITOR_MAST_ID);
         //
         index = routeButtonsIndexes[(byte)ResearchRoute.Crystal, STEPS_COUNT - 4];
         //if (IsButtonUnblocked(index) && surf) bdlist.Add(Structure.Crystalliser);

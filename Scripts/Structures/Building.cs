@@ -830,7 +830,18 @@ public class Building : Structure
 
     public virtual bool IsLevelUpPossible(ref string refusalReason)
     {
-        if (level < GameMaster.realMaster.colonyController.hq.level) return true;
+        if (level < GameMaster.realMaster.colonyController.hq.level)
+        {
+            if (!IsIPlanable()) return true;
+            else {
+                if (basement.isTerminal)
+                {
+                    refusalReason = Localization.GetRefusalReason(RefusalReason.BlockedBySystem);
+                    return false;
+                }
+                else return true;
+            }
+        }
         else
         {
             refusalReason = Localization.GetRefusalReason(RefusalReason.Unavailable);
